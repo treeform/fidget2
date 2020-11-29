@@ -1,3 +1,2 @@
-## Public interface to you library.
-
-import fidget2/common
+import fidget2/schema, fidget2/render, fidget2/mirror
+export schema, render, mirror
