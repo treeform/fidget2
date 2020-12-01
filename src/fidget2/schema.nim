@@ -1,7 +1,15 @@
-import json, jsons, tables, chroma, vmath, pixie,
-    httpclient2, json, strutils, os, typography, strformat
+import  tables, chroma, vmath, pixie, jsony, json,
+    httpclient2, strutils, os, typography, strformat
 
 type
+
+  NodeKind* = enum
+    nkDocument, nkCanvas
+    nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance
+    nkVector, nkStar, nkEllipse, nkLine, nkRegularPolygon
+    nkText
+    nkBooleanOperation
+
   Component* = ref object
     key*: string
     name*: string
@@ -23,7 +31,7 @@ type
     position*: float32
 
   Paint* = ref object
-    blendMode*: string
+    blendMode*: BlendMode
     `type`*: string
     visible*: bool
     opacity*: float32
@@ -39,7 +47,7 @@ type
     `type`*: string
     visible*: bool
     color*: Color
-    blendMode*: string
+    blendMode*: BlendMode
     offset*: Vec2
     radius*: float32
     spread*: float32
@@ -65,7 +73,7 @@ type
     lineHeightPx*: float32
     lineHeightPercent*: float32
     lineHeightUnit*: string
-    textCase*: string
+    textCase*: TextCase
     opentypeFlags*: OpenTypeFlags
 
   Geometry* = ref object
@@ -75,7 +83,7 @@ type
   Node* = ref object
     id*: string ## A string uniquely identifying this node within the document.
     name*: string ## The name given to the node by the user in the tool.
-    `type`*: string ## The type of the node, refer to table below for details.
+    `type`*: NodeKind ## The type of the node, refer to table below for details.
     opacity*: float32
     visible*: bool ## default true, Whether or not the node is visible on the canvas.
     #pluginData: JsonNode ## Data written by plugins that is visible only to the plugin that wrote it. Requires the `pluginData` to include the ID of the plugin.
@@ -131,31 +139,18 @@ var
   figmaFile*: FigmaFile
   figmaFileKey*: string
 
-proc newNode*(): Node =
-  result = Node()
-  result.visible = true
-
 func xy*(b: Box): Vec2 =
   vec2(b.x, b.y)
 
 func wh*(b: Box): Vec2 =
   vec2(b.width, b.height)
 
-proc parseTextCase*(s: string): TextCase =
-  case s:
-  of "UPPER":  tcUpper
-  of "LOWER": tcLower
-  of "TITLE": tcTitle
-  #of "SMALL_CAPS": tcSmallCaps
-  #of "SMALL_CAPS_FORCED": tcCapsForced
-  else: tcNormal
-
 var imageRefToUrl: Table[string, string]
 
 proc downloadImageRef*(imageRef: string) =
-  if not existsFile("figma/images/" & imageRef & ".png"):
+  if not fileExists("figma/images/" & imageRef & ".png"):
     if imageRef in imageRefToUrl:
-      if not existsDir("figma/images"):
+      if not dirExists("figma/images"):
         createDir("figma/images")
       let url = imageRefToUrl[imageRef]
       echo "Downloading ", url
@@ -164,7 +159,7 @@ proc downloadImageRef*(imageRef: string) =
       writeFile("figma/images/" & imageRef & ".png", data)
 
 proc getImageRefs*(fileKey: string) =
-  if not existsDir("figma/images"):
+  if not dirExists("figma/images"):
     createDir("figma/images")
 
   var client = newHttpClient()
@@ -180,10 +175,10 @@ proc getImageRefs*(fileKey: string) =
     imageRefToUrl[imageRef] = url.getStr()
 
 proc downloadFont*(fontPSName: string) =
-  if existsFile("figma/fonts/" & fontPSName & ".ttf"):
+  if fileExists("figma/fonts/" & fontPSName & ".ttf"):
     return
 
-  if not existsDir("figma/fonts"):
+  if not dirExists("figma/fonts"):
     createDir("figma/fonts")
 
   if not fileExists("figma/fonts/fonts.csv"):
@@ -218,13 +213,70 @@ proc download(url, filePath: string) =
   writeFile(filePath, pretty(json))
   getImageRefs(figmaFileKey)
 
-proc parseFigma*(file: JsonNode): FigmaFile =
-  if "schemaVersion" in file:
-    doAssert file["schemaVersion"].getInt() == 0
-  result = file.fromJson(FigmaFile)
+proc newHook(v: var Node) =
+  v = Node()
+  v.visible = true
+  v.opacity = 1.0
+
+proc newHook(v: var Paint) =
+  v = Paint()
+  v.visible = true
+  v.opacity = 1.0
+
+proc enumHook(s: string, v: var BlendMode) =
+  v = case s:
+    of "PASS_THROUGH": bmNormal
+    of "NORMAL": bmNormal
+    of "DARKEN": bmDarken
+    of "MULTIPLY": bmMultiply
+    of "LINEAR_BURN": bmLinearBurn
+    of "COLOR_BURN": bmColorBurn
+    of "LIGHTEN": bmLighten
+    of "SCREEN": bmScreen
+    of "LINEAR_DODGE": bmLinearDodge
+    of "COLOR_DODGE": bmColorDodge
+    of "OVERLAY": bmOverlay
+    of "SOFT_LIGHT": bmSoftLight
+    of "HARD_LIGHT": bmHardLight
+    of "DIFFERENCE": bmDifference
+    of "EXCLUSION": bmExclusion
+    of "HUE": bmHue
+    of "SATURATION": bmSaturation
+    of "COLOR": bmColor
+    of "LUMINOSITY": bmLuminosity
+    else: bmNormal
+
+proc enumHook(s: string, v: var TextCase) =
+  v = case s:
+    of "UPPER":  tcUpper
+    of "LOWER": tcLower
+    of "TITLE": tcTitle
+    #of "SMALL_CAPS": tcSmallCaps
+    #of "SMALL_CAPS_FORCED": tcCapsForced
+    else: tcNormal
+
+proc enumHook(s: string, v: var NodeKind) =
+  v = case s:
+    of "DOCUMENT": nkDocument
+    of "CANVAS": nkCanvas
+    of "RECTANGLE": nkRectangle
+    of "FRAME": nkFrame
+    of "GROUP": nkGroup
+    of "COMPONENT": nkComponent
+    of "INSTANCE": nkInstance
+    of "VECTOR": nkVector
+    of "STAR": nkStar
+    of "ELLIPSE": nkEllipse
+    of "LINE": nkLine
+    of "REGULAR_POLYGON": nkRegularPolygon
+    of "TEXT": nkText
+    of "BOOLEAN_OPERATION": nkBooleanOperation
+    else: raise newException(ValueError, "Invalid node type:" & s)
 
 proc use*(url: string) =
-  if not existsDir("figma"):
+  if not dirExists("figma"):
     createDir("figma")
   download(url, "figma/figma.json")
-  figmaFile = parseFigma(parseJson(readFile("figma/figma.json")))
+  var data = readFile("figma/figma.json")
+  figmaFile = fromJson[FigmaFile](data)
+  writeFile("figma/dump.json", pretty %figmaFile)

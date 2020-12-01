@@ -15,7 +15,11 @@ var
 
 proc drawNodeInternal*(node: Node)
 proc drawNodeScreen*(node: Node)
+proc drawNodeScreenSimple*(node: Node)
 proc selfAndChildrenMask*(node: Node): Image
+
+proc wh(image: Image): Vec2 =
+  vec2(image.width.float32, image.height.float32)
 
 proc drawChildren(node: Node) =
   parentNode = node
@@ -239,11 +243,11 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
 
   # Optimization: if its the first paint and blend mode is normal,
   # pixels are just the effects.
-  if parseBlendMode(paint.blendMode) == bmNormal and paintNum == 0:
+  if paint.blendMode == bmNormal and paintNum == 0:
   #   #echo "skip re-draw"
     node.pixels = effects
   else:
-    node.pixels.draw(effects, blendMode = parseBlendMode(paint.blendMode))
+    node.pixels.draw(effects, blendMode = paint.blendMode)
 
 proc applyDropShadowEffect(effect: Effect, node: Node) =
   ## Draws the drop shadow.
@@ -404,7 +408,7 @@ proc drawCompleteFrame*(node: Node): Image =
   )
 
   drawNodeInternal(node)
-  drawNodeScreen(node)
+  drawNodeScreenSimple(node)
 
   return screen
 
@@ -454,10 +458,10 @@ proc drawNodeInternal*(node: Node) =
   var applyMask = true
 
   case node.`type`
-  of "DOCUMENT", "CANVAS":
-    quit(node.`type` & " can't be drawn.")
+  of nkDocument, nkCanvas:
+    quit($(node.`type`) & " can't be drawn.")
 
-  of "RECTANGLE", "FRAME", "GROUP", "COMPONENT", "INSTANCE":
+  of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
     if node.fills.len > 0:
       #echo "making rect", node.size
       fillMask = newImage(w, h)
@@ -572,7 +576,7 @@ proc drawNodeInternal*(node: Node) =
         mat
       )
 
-  of "VECTOR", "STAR", "ELLIPSE", "LINE", "REGULAR_POLYGON":
+  of nkVector, nkStar, nkEllipse, nkLine, nkRegularPolygon:
     if node.fills.len > 0:
       fillMask = newImage(w, h)
       var geometry = newImage(w, h)
@@ -593,20 +597,20 @@ proc drawNodeInternal*(node: Node) =
           mat
         )
 
-  of "TEXT":
+  of nkText:
 
     func hAlignCase(s: string): HAlignMode =
       case s
-      of "CENTER": return Center
-      of "LEFT": return Left
-      of "RIGHT": return Right
-      else: return Left
+      of "CENTER": Center
+      of "LEFT": Left
+      of "RIGHT": Right
+      else: Left
 
     func vAlignCase(s: string): VAlignMode =
       case s
-      of "CENTER": return Middle
-      of "TOP": return Top
-      of "BOTTOM": return Bottom
+      of "CENTER": Middle
+      of "TOP": Top
+      of "BOTTOM": Bottom
       else: Top
 
     let pos = vec2(mat[2, 0], mat[2, 1])
@@ -643,7 +647,7 @@ proc drawNodeInternal*(node: Node) =
       clip = false,
       wrap = wrap,
       kern = kern,
-      textCase = parseTextCase(node.style.textCase),
+      textCase = node.style.textCase,
     )
     fillMask = newImage(w, h)
     fillMask.drawText(layout)
@@ -651,7 +655,7 @@ proc drawNodeInternal*(node: Node) =
     # if node.strokes.len > 0:
     #   strokeMask = fillMask.outlineBorder2(node.strokeWeight.int)
 
-  of "BOOLEAN_OPERATION":
+  of nkBooleanOperation:
     drawChildren(node)
 
     fillMask = newImage(w, h)
@@ -717,7 +721,7 @@ proc selfAndChildrenMask(node: Node): Image =
       node.pixelBox.xy,
       blendMode = bmNormal
     )
-  if node.`type` != "BOOLEAN_OPERATION":
+  if node.`type` != nkBooleanOperation:
     for c in node.children:
       let childMask = selfAndChildrenMask(c)
       result.draw(
@@ -725,7 +729,7 @@ proc selfAndChildrenMask(node: Node): Image =
         blendMode = bmNormal
       )
 
-proc drawNodeScreen(node: Node) =
+proc drawNodeScreenSimple(node: Node) =
 
   var stopDraw = false
 
@@ -784,12 +788,12 @@ proc drawNodeScreen(node: Node) =
           node.pixelBox.xy,
           parseBlendMode(node.blendMode)
         )
-  if node.`type` != "BOOLEAN_OPERATION":
+  if node.`type` != nkBooleanOperation:
     parentNode = node
     nodeStack.add(node)
 
     for c in node.children:
-      drawNodeScreen(c)
+      drawNodeScreenSimple(c)
 
     discard nodeStack.pop()
     if nodeStack.len > 0:
@@ -797,3 +801,107 @@ proc drawNodeScreen(node: Node) =
 
   while maskStack.len > 0 and maskStack[^1][0] == node:
     discard maskStack.pop()
+
+
+type
+  ScreenDrawRegion = object
+    draw: bool
+    x, y: int32
+    w, h: int32
+    image: Image
+    blendMode: BlendMode
+    maskUntil: int
+
+
+proc drawNodeScreen(node: Node) =
+
+  var regions = newSeq[ScreenDrawRegion]()
+
+  proc drawNodeScreenRegion(node: Node) =
+    var maskIndex = 0
+    if node.pixels != nil:
+      if node.isMask:
+        maskIndex = regions.len
+        #node.pixels = node.selfAndChildrenMask()
+
+      regions.add(ScreenDrawRegion(
+        x: node.pixelBox.x.int32,
+        y: node.pixelBox.y.int32,
+        w: node.pixels.width.int32,
+        h: node.pixels.height.int32,
+        image: node.pixels,
+        blendMode: parseBlendMode(node.blendMode),
+      ))
+
+    if node.`type` != nkBooleanOperation and not node.isMask:
+      for c in node.children:
+        drawNodeScreenRegion(c)
+
+    if node.isMask:
+      let currentIndex = regions.len
+      regions[maskIndex].maskUntil = currentIndex
+
+  drawNodeScreenRegion(node)
+
+  for i, r in regions:
+    echo i, ": ", r.x, ",", r.y, " ", r.w, "x", r.h, " ", r.blendMode, " m:", r.maskUntil
+
+  var maskStack: seq[(uint8, int)]
+
+  for y in 0 ..< screen.height:
+    for region in regions.mitems:
+      region.draw = (y.int32 >= region.y) and (y.int32 < region.y + region.h)
+
+    for x in 0 ..< screen.width:
+
+      maskStack.setLen(0)
+
+      var rgba: ColorRGBA
+
+      # reverse/early return when no blending
+      # maybe optimization?
+      # for r in countDown(regions.len - 1, 0):
+      #   let region = regions[r]
+
+      #   if region.draw and ((x.int32 >= region.x) and (x.int32 < region.x + region.w)):
+      #     let
+      #       atX = x - region.x
+      #       atY = y - region.y
+      #     let rgba2 = region.image.getRgbaUnsafe(atX, atY)
+      #     rgba = mix2(region.blendMode, rgba2, rgba)
+      #     if rgba.a == 255 and region.blendMode == bmNormal:
+      #       break
+
+
+      for regionIdx, region in regions:
+        #if x == 100 and y == 100:
+          #print region.maskUntil
+        let
+            atX = x - region.x.int
+            atY = y - region.y.int
+
+        if region.maskUntil > 0:
+          var mask: uint8
+          if region.draw and ((x.int32 >= region.x) and (x.int32 < region.x + region.w)):
+            mask = region.image.getRgbaUnsafe(atX, atY).a
+          maskStack.add((mask, region.maskUntil))
+
+        elif region.draw and ((x.int32 >= region.x) and (x.int32 < region.x + region.w)):
+
+          var rgba2 = region.image.getRgbaUnsafe(atX, atY)
+
+          if maskStack.len > 0:
+            #if x == 100 and y == 100:
+            #  echo "masking!"
+            rgba2.a = ((rgba2.a.int32 * maskStack[^1][0].int32) div 255).uint8
+
+          rgba = mix2(region.blendMode, rgba, rgba2)
+
+        #while maskStack[^1][1] < regionIdx:
+          #echo "pop mask!"
+        #  discard maskStack.pop()
+
+        #if x == 100 and y == 100:
+        #  print maskStack
+
+      screen.setRgbaUnsafe(x, y, rgba)
