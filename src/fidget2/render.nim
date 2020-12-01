@@ -18,9 +18,6 @@ proc drawNodeScreen*(node: Node)
 proc drawNodeScreenSimple*(node: Node)
 proc selfAndChildrenMask*(node: Node): Image
 
-proc wh(image: Image): Vec2 =
-  vec2(image.width.float32, image.height.float32)
-
 proc drawChildren(node: Node) =
   parentNode = node
   nodeStack.add(node)
@@ -59,28 +56,6 @@ proc gradientPut(effects: Image, x, y: int, a: float32, paint: Paint) =
     )
   effects.setRgbaUnsafe(x, y, color.rgba)
 
-proc parseBlendMode*(s: string): BlendMode =
-  case s:
-    of "NORMAL": bmNormal
-    of "DARKEN": bmDarken
-    of "MULTIPLY": bmMultiply
-    of "LINEAR_BURN": bmLinearBurn
-    of "COLOR_BURN": bmColorBurn
-    of "LIGHTEN": bmLighten
-    of "SCREEN": bmScreen
-    of "LINEAR_DODGE": bmLinearDodge
-    of "COLOR_DODGE": bmColorDodge
-    of "OVERLAY": bmOverlay
-    of "SOFT_LIGHT": bmSoftLight
-    of "HARD_LIGHT": bmHardLight
-    of "DIFFERENCE": bmDifference
-    of "EXCLUSION": bmExclusion
-    of "HUE": bmHue
-    of "SATURATION": bmSaturation
-    of "COLOR": bmColor
-    of "LUMINOSITY": bmLuminosity
-    else: bmNormal
-
 proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int, applyMask=true) =
 
   if not paint.visible:
@@ -93,8 +68,8 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
 
   proc toImageSpace(handle: Vec2): Vec2 =
     vec2(
-      handle.x * node.absoluteBoundingBox.width + pos.x,
-      handle.y * node.absoluteBoundingBox.height + pos.y,
+      handle.x * node.absoluteBoundingBox.w + pos.x,
+      handle.y * node.absoluteBoundingBox.h + pos.y,
     )
 
   proc toLineSpace(at, to, point: Vec2): float32 =
@@ -105,7 +80,8 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
 
   var effects = newImage(mask.width, mask.height)
 
-  if paint.kind == pkImage:
+  case paint.kind
+  of pkImage:
     var image: Image
     if paint.imageRef notin imageCache:
       downloadImageRef(paint.imageRef)
@@ -118,7 +94,8 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
     else:
       image = imageCache[paint.imageRef]
 
-    if paint.scaleMode == "FILL":
+    case paint.scaleMode
+    of smFill:
       let
         ratioW = image.width.float32 / node.size.x
         ratioH = image.height.float32 / node.size.y
@@ -129,7 +106,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         mat * translate(topRight) * scale(vec2(1/scale))
       )
 
-    elif paint.scaleMode == "FIT":
+    of smFit:
       let
         ratioW = image.width.float32 / node.size.x
         ratioH = image.height.float32 / node.size.y
@@ -140,7 +117,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         mat * translate(topRight) * scale(vec2(1/scale))
       )
 
-    elif paint.scaleMode == "STRETCH": # Figma ui calls this "crop".
+    of smStretch: # Figma ui calls this "crop".
       var mat: Mat3
       mat[0, 0] = paint.imageTransform[0][0]
       mat[0, 1] = paint.imageTransform[0][1]
@@ -153,28 +130,28 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
       mat[2, 2] = 1
 
       mat = mat.inverse()
-      mat[2, 0] = pos.x + mat[2, 0] * node.absoluteBoundingBox.width
-      mat[2, 1] = pos.y + mat[2, 1] * node.absoluteBoundingBox.height
+      mat[2, 0] = pos.x + mat[2, 0] * node.absoluteBoundingBox.w
+      mat[2, 1] = pos.y + mat[2, 1] * node.absoluteBoundingBox.h
       let
-        ratioW = image.width.float32 / node.absoluteBoundingBox.width
-        ratioH = image.height.float32 / node.absoluteBoundingBox.height
+        ratioW = image.width.float32 / node.absoluteBoundingBox.w
+        ratioH = image.height.float32 / node.absoluteBoundingBox.h
         scale = min(ratioW, ratioH)
       mat = mat * scale(vec2(1/scale))
       effects.draw(image, mat)
 
-    elif paint.scaleMode == "TILE":
+    of smTile:
       image = image.resize(
         int(image.width.float32 * paint.scalingFactor),
         int(image.height.float32 * paint.scalingFactor))
       var x = 0.0
-      while x < node.absoluteBoundingBox.width:
+      while x < node.absoluteBoundingBox.w:
         var y = 0.0
-        while y < node.absoluteBoundingBox.height:
+        while y < node.absoluteBoundingBox.h:
           effects.draw(image, vec2(x, y))
           y += image.height.float32
         x += image.width.float32
 
-  elif paint.kind == pkGradientLinear:
+  of pkGradientLinear:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -184,7 +161,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         let a = toLineSpace(at, to, xy)
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.kind == pkGradientRadial:
+  of pkGradientRadial:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -195,7 +172,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         let a = (at - xy).length() / distance
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.kind == pkGradientAngular:
+  of pkGradientAngular:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -208,7 +185,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
           a = (angle + gradientAngle + PI/2).fixAngle() / 2 / PI + 0.5
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.kind == pkGradientDiamond:
+  of pkGradientDiamond:
     # TODO: implement GRADIENT_DIAMOND, now will just do GRADIENT_RADIAL
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
@@ -220,11 +197,10 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         let a = (at - xy).length() / distance
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.kind == pkSolid:
+  of pkSolid:
     var color = paint.color
     effects.fill(color.rgba)
-  else:
-    echo "Not supported paint: ", paint.kind
+
 
   ## Apply opacity
   if paint.opacity != 1.0:
@@ -403,8 +379,8 @@ proc drawCompleteFrame*(node: Node): Image =
 
   framePos = -node.absoluteBoundingBox.xy
   screen = newImage(
-    node.absoluteBoundingBox.width.int,
-    node.absoluteBoundingBox.height.int
+    node.absoluteBoundingBox.w.int,
+    node.absoluteBoundingBox.h.int
   )
 
   drawNodeInternal(node)
@@ -525,15 +501,14 @@ proc drawNodeInternal*(node: Node) =
         inner = 0.0
         outer = 0.0
         path: Path
-      if node.strokeAlign == "INSIDE":
+      case node.strokeAlign
+      of saInside:
         inner = node.strokeWeight
-      elif node.strokeAlign == "OUTSIDE":
+      of saOutside:
         outer = node.strokeWeight
-      elif node.strokeAlign == "CENTER":
+      of saCenter:
         inner = node.strokeWeight / 2
         outer = node.strokeWeight / 2
-      else:
-        quit("invalid strokeWeight")
 
       if node.cornerRadius > 0:
         # Rectangle with common corners.
@@ -599,20 +574,6 @@ proc drawNodeInternal*(node: Node) =
 
   of nkText:
 
-    func hAlignCase(s: string): HAlignMode =
-      case s
-      of "CENTER": Center
-      of "LEFT": Left
-      of "RIGHT": Right
-      else: Left
-
-    func vAlignCase(s: string): VAlignMode =
-      case s
-      of "CENTER": Middle
-      of "TOP": Top
-      of "BOTTOM": Bottom
-      else: Top
-
     let pos = vec2(mat[2, 0], mat[2, 1])
 
     var font: Font
@@ -630,7 +591,7 @@ proc drawNodeInternal*(node: Node) =
     font.lineHeight = node.style.lineHeightPx
 
     var wrap = false
-    if node.style.textAutoResize == "HEIGHT":
+    if node.style.textAutoResize == tarHeight:
       wrap = true
 
     var kern = true
@@ -642,8 +603,8 @@ proc drawNodeInternal*(node: Node) =
       text = node.characters,
       pos = pos,
       size = node.size,
-      hAlign = hAlignCase(node.style.textAlignHorizontal),
-      vAlign = vAlignCase(node.style.textAlignVertical),
+      hAlign = node.style.textAlignHorizontal,
+      vAlign = node.style.textAlignVertical,
       clip = false,
       wrap = wrap,
       kern = kern,
@@ -675,16 +636,11 @@ proc drawNodeInternal*(node: Node) =
         blendMode
       )
 
-  else:
-    echo "Not supported node type: ", node.kind
-
-  #echo "simpleMaskCase ", simpleMaskCase
-
   for i, fill in node.fills:
     applyPaint(fillMask, fill, node, mat, i, applyMask = applyMask)
 
   for i, stroke in node.strokes:
-   applyPaint(strokeMask, stroke, node, mat, i)
+    applyPaint(strokeMask, stroke, node, mat, i)
 
   for effect in node.effects:
     if effect.kind == ekInnerShadow:
@@ -766,7 +722,7 @@ proc drawNodeScreenSimple(node: Node) =
         withMask.draw(
           node.pixels,
           node.pixelBox.xy,
-          parseBlendMode(node.blendMode)
+          node.blendMode
         )
         withMask.draw(
           maskStack[0][1],
@@ -774,13 +730,13 @@ proc drawNodeScreenSimple(node: Node) =
         )
         screen.draw(
           withMask,
-          blendMode = parseBlendMode(node.blendMode)
+          blendMode = node.blendMode
         )
       else:
         screen.draw(
           node.pixels,
           node.pixelBox.xy,
-          parseBlendMode(node.blendMode)
+          node.blendMode
         )
   if node.kind != nkBooleanOperation:
     parentNode = node
@@ -822,7 +778,7 @@ proc drawNodeScreen(node: Node) =
         w: node.pixels.width.int32,
         h: node.pixels.height.int32,
         image: node.pixels,
-        blendMode: parseBlendMode(node.blendMode),
+        blendMode: node.blendMode,
       ))
 
     if node.kind != nkBooleanOperation and not node.isMask:

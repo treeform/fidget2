@@ -55,8 +55,8 @@ proc findByName*(name: string): Node =
 proc rect*(node: Node): Rect =
   result.x = node.absoluteBoundingBox.x + framePos.x
   result.y = node.absoluteBoundingBox.y + framePos.y
-  result.w = node.absoluteBoundingBox.width
-  result.h = node.absoluteBoundingBox.height
+  result.w = node.absoluteBoundingBox.w
+  result.h = node.absoluteBoundingBox.h
 
 proc onMouseButton(
   window: staticglfw.Window, button, action, modifiers: cint
@@ -77,8 +77,8 @@ proc startFidget*() =
   if windowSizeFixed:
     let frameNode = findByName(mainFrame)
     assert frameNode != nil, "Frame " & mainFrame & " not found!"
-    w = frameNode.absoluteBoundingBox.width.int32
-    h = frameNode.absoluteBoundingBox.height.int32
+    w = frameNode.absoluteBoundingBox.w.int32
+    h = frameNode.absoluteBoundingBox.h.int32
 
   var
     window: Window

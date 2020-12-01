@@ -1,4 +1,4 @@
-import  tables, chroma, vmath, pixie, jsony, json,
+import tables, chroma, vmath, pixie, jsony, json,
     httpclient2, strutils, os, typography, strformat
 
 type
@@ -19,9 +19,6 @@ type
     `type`*: string
     rotation*: string
 
-  Box* = ref object
-    x*, y*, width*, height*: float32
-
   Constraints* = ref object
     vertical*: string
     horizontal*: string
@@ -38,13 +35,19 @@ type
     pkGradientAngular
     pkGradientDiamond
 
+  ScaleMode* = enum
+    smFill
+    smFit
+    smStretch
+    smTile
+
   Paint* = ref object
     blendMode*: BlendMode
     kind*: PaintKind
     visible*: bool
     opacity*: float32
     color*: Color
-    scaleMode*: string
+    scaleMode*: ScaleMode
     imageRef*: string
     imageTransform*: seq[seq[float32]]
     scalingFactor*: float32
@@ -75,14 +78,18 @@ type
   OpenTypeFlags* = ref object
     KERN*: int
 
+  TextAutoResize* = enum
+    tarHeight
+    tarWidthAndHeight
+
   TextStyle* = ref object
     fontFamily*: string
     fontPostScriptName*: string
     fontWeight*: float32
-    textAutoResize*: string
+    textAutoResize*: TextAutoResize
     fontSize*: float32
-    textAlignHorizontal*: string
-    textAlignVertical*: string
+    textAlignHorizontal*: HAlignMode
+    textAlignVertical*: VAlignMode
     letterSpacing*: float32
     lineHeightPx*: float32
     lineHeightPercent*: float32
@@ -100,6 +107,11 @@ type
     boExclude
     boUnion
 
+  StrokeAlign* = enum
+    saInside
+    saOutside
+    saCenter
+
   Node* = ref object
     id*: string ## A string uniquely identifying this node within the document.
     name*: string ## The name given to the node by the user in the tool.
@@ -108,11 +120,11 @@ type
     visible*: bool ## default true, Whether or not the node is visible on the canvas.
     #pluginData: JsonNode ## Data written by plugins that is visible only to the plugin that wrote it. Requires the `pluginData` to include the ID of the plugin.
     #sharedPluginData: JsonNode ##  Data written by plugins that is visible to all plugins. Requires the `pluginData` parameter to include the string "shared".
-    blendMode*: string
+    blendMode*: BlendMode
     children*: seq[Node]
     prototypeStartNodeID*: string
     prototypeDevice*: Device
-    absoluteBoundingBox*: Box
+    absoluteBoundingBox*: Rect
     size*: Vec2
     relativeTransform*: seq[seq[float32]]
     constraints*: Constraints
@@ -122,7 +134,7 @@ type
     fills*: seq[Paint]
     strokes*: seq[Paint]
     strokeWeight*: float32
-    strokeAlign*: string
+    strokeAlign*: StrokeAlign
     backgroundColor*: Color
     layoutGrids*: seq[Grid]
     layoutMode*: string
@@ -158,12 +170,6 @@ type
 var
   figmaFile*: FigmaFile
   figmaFileKey*: string
-
-func xy*(b: Box): Vec2 =
-  vec2(b.x, b.y)
-
-func wh*(b: Box): Vec2 =
-  vec2(b.width, b.height)
 
 var imageRefToUrl: Table[string, string]
 
@@ -255,6 +261,12 @@ proc renameHook(v: var Effect, fieldName: var string) =
   if fieldName == "type":
     fieldName = "kind"
 
+proc renameHook(v: var Rect, fieldName: var string) =
+  if fieldName == "width":
+    fieldName = "w"
+  if fieldName == "height":
+    fieldName = "h"
+
 proc enumHook(s: string, v: var BlendMode) =
   v = case s:
     of "PASS_THROUGH": bmNormal
@@ -283,6 +295,7 @@ proc enumHook(s: string, v: var TextCase) =
     of "UPPER":  tcUpper
     of "LOWER": tcLower
     of "TITLE": tcTitle
+    # TODO add:
     #of "SMALL_CAPS": tcSmallCaps
     #of "SMALL_CAPS_FORCED": tcCapsForced
     else: tcNormal
@@ -330,6 +343,41 @@ proc enumHook(s: string, v: var BooleanOperation) =
     of "EXCLUDE": boExclude
     of "UNION": boUnion
     else: raise newException(ValueError, "Invalid effect type:" & s)
+
+proc enumHook(s: string, v: var ScaleMode) =
+  v = case s:
+    of "FILL": smFill
+    of "FIT": smFit
+    of "STRETCH": smStretch
+    of "TILE": smTile
+    else: raise newException(ValueError, "Invalid effect type:" & s)
+
+proc enumHook(s: string, v: var TextAutoResize) =
+  v = case s:
+    of "HEIGHT": tarHeight
+    of "WIDTH_AND_HEIGHT": tarWidthAndHeight
+    else: raise newException(ValueError, "Invalid text auto resize:" & s)
+
+proc enumHook(s: string, v: var StrokeAlign) =
+  v = case s:
+    of "INSIDE": saInside
+    of "OUTSIDE": saOutside
+    of "CENTER": saCenter
+    else: raise newException(ValueError, "Invalid stroke align:" & s)
+
+proc enumHook(s: string, v: var HAlignMode) =
+  v = case s:
+    of "CENTER": Center
+    of "LEFT": Left
+    of "RIGHT": Right
+    else: raise newException(ValueError, "Invalid text align mode:" & s)
+
+proc enumHook(s: string, v: var VAlignMode) =
+  v = case s:
+    of "CENTER": Middle
+    of "TOP": Top
+    of "BOTTOM": Bottom
+    else: raise newException(ValueError, "Invalid text align mode:" & s)
 
 proc use*(url: string) =
   if not dirExists("figma"):

@@ -29,7 +29,7 @@ proc main(r = "", e = "", l = 10000) =
 
     var diffScore = 0
 
-    if existsFile(&"tests/frames/masters/{frame.name}.png"):
+    if fileExists(&"tests/frames/masters/{frame.name}.png"):
       var master = readImage(&"tests/frames/masters/{frame.name}.png")
       for x in 0 ..< master.width:
         for y in 0 ..< master.height:
