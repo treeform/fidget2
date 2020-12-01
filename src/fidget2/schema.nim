@@ -30,9 +30,17 @@ type
     color*: Color
     position*: float32
 
+  PaintKind* = enum
+    pkSolid
+    pkImage
+    pkGradientLinear
+    pkGradientRadial
+    pkGradientAngular
+    pkGradientDiamond
+
   Paint* = ref object
     blendMode*: BlendMode
-    `type`*: string
+    kind*: PaintKind
     visible*: bool
     opacity*: float32
     color*: Color
@@ -43,8 +51,14 @@ type
     gradientHandlePositions*: seq[Vec2]
     gradientStops*: seq[GradientStops]
 
+  EffectKind* = enum
+    ekDropShadow
+    ekInnerShadow
+    ekLayerBlur
+    ekBackgroundBlur
+
   Effect* = ref object
-    `type`*: string
+    kind*: EffectKind
     visible*: bool
     color*: Color
     blendMode*: BlendMode
@@ -80,10 +94,16 @@ type
     path*: string
     windingRule*: string
 
+  BooleanOperation* = enum
+    boSubtract
+    boIntersect
+    boExclude
+    boUnion
+
   Node* = ref object
     id*: string ## A string uniquely identifying this node within the document.
     name*: string ## The name given to the node by the user in the tool.
-    `type`*: NodeKind ## The type of the node, refer to table below for details.
+    kind*: NodeKind ## The type of the node, refer to table below for details.
     opacity*: float32
     visible*: bool ## default true, Whether or not the node is visible on the canvas.
     #pluginData: JsonNode ## Data written by plugins that is visible only to the plugin that wrote it. Requires the `pluginData` to include the ID of the plugin.
@@ -117,7 +137,7 @@ type
     #styleOverrideTable:
     fillGeometry*: seq[Geometry]
     strokeGeometry*: seq[Geometry]
-    booleanOperation*: string
+    booleanOperation*: BooleanOperation
 
     # Non figma parameters:
     dirty*: bool     ## Do the pixels need redrawing?
@@ -218,10 +238,22 @@ proc newHook(v: var Node) =
   v.visible = true
   v.opacity = 1.0
 
+proc renameHook(v: var Node, fieldName: var string) =
+  if fieldName == "type":
+    fieldName = "kind"
+
 proc newHook(v: var Paint) =
   v = Paint()
   v.visible = true
   v.opacity = 1.0
+
+proc renameHook(v: var Paint, fieldName: var string) =
+  if fieldName == "type":
+    fieldName = "kind"
+
+proc renameHook(v: var Effect, fieldName: var string) =
+  if fieldName == "type":
+    fieldName = "kind"
 
 proc enumHook(s: string, v: var BlendMode) =
   v = case s:
@@ -272,6 +304,32 @@ proc enumHook(s: string, v: var NodeKind) =
     of "TEXT": nkText
     of "BOOLEAN_OPERATION": nkBooleanOperation
     else: raise newException(ValueError, "Invalid node type:" & s)
+
+proc enumHook(s: string, v: var PaintKind) =
+  v = case s:
+    of "SOLID": pkSolid
+    of "IMAGE": pkImage
+    of "GRADIENT_LINEAR": pkGradientLinear
+    of "GRADIENT_RADIAL": pkGradientRadial
+    of "GRADIENT_ANGULAR": pkGradientAngular
+    of "GRADIENT_DIAMOND": pkGradientDiamond
+    else: raise newException(ValueError, "Invalid paint type:" & s)
+
+proc enumHook(s: string, v: var EffectKind) =
+  v = case s:
+    of "DROP_SHADOW": ekDropShadow
+    of "INNER_SHADOW": ekInnerShadow
+    of "LAYER_BLUR": ekLayerBlur
+    of "BACKGROUND_BLUR": ekBackgroundBlur
+    else: raise newException(ValueError, "Invalid effect type:" & s)
+
+proc enumHook(s: string, v: var BooleanOperation) =
+  v = case s:
+    of "SUBTRACT": boSubtract
+    of "INTERSECT": boIntersect
+    of "EXCLUDE": boExclude
+    of "UNION": boUnion
+    else: raise newException(ValueError, "Invalid effect type:" & s)
 
 proc use*(url: string) =
   if not dirExists("figma"):

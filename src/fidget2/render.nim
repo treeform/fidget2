@@ -105,7 +105,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
 
   var effects = newImage(mask.width, mask.height)
 
-  if paint.`type` == "IMAGE":
+  if paint.kind == pkImage:
     var image: Image
     if paint.imageRef notin imageCache:
       downloadImageRef(paint.imageRef)
@@ -174,7 +174,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
           y += image.height.float32
         x += image.width.float32
 
-  elif paint.`type` == "GRADIENT_LINEAR":
+  elif paint.kind == pkGradientLinear:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -184,7 +184,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         let a = toLineSpace(at, to, xy)
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.`type` == "GRADIENT_RADIAL":
+  elif paint.kind == pkGradientRadial:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -195,7 +195,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         let a = (at - xy).length() / distance
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.`type` == "GRADIENT_ANGULAR":
+  elif paint.kind == pkGradientAngular:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -208,7 +208,7 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
           a = (angle + gradientAngle + PI/2).fixAngle() / 2 / PI + 0.5
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.`type` == "GRADIENT_DIAMOND":
+  elif paint.kind == pkGradientDiamond:
     # TODO: implement GRADIENT_DIAMOND, now will just do GRADIENT_RADIAL
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
@@ -220,11 +220,11 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
         let a = (at - xy).length() / distance
         effects.gradientPut(x, y, a, paint)
 
-  elif paint.`type` == "SOLID":
+  elif paint.kind == pkSolid:
     var color = paint.color
     effects.fill(color.rgba)
   else:
-    echo "Not supported paint: ", paint.`type`
+    echo "Not supported paint: ", paint.kind
 
   ## Apply opacity
   if paint.opacity != 1.0:
@@ -357,7 +357,7 @@ proc computePixelBox*(node: Node) =
 
   # Take drop shadow into account:
   for effect in node.effects:
-    if effect.`type` in ["DROP_SHADOW", "INNER_SHADOW", "LAYER_BLUR"]:
+    if effect.kind in {ekDropShadow, ekInnerShadow, ekLayerBlur}:
       # Note: INNER_SHADOW needs just as much area around as drop shadow
       # because it needs to blur in.
       s = max(
@@ -457,9 +457,9 @@ proc drawNodeInternal*(node: Node) =
 
   var applyMask = true
 
-  case node.`type`
+  case node.kind
   of nkDocument, nkCanvas:
-    quit($(node.`type`) & " can't be drawn.")
+    quit($(node.kind) & " can't be drawn.")
 
   of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
     if node.fills.len > 0:
@@ -665,16 +665,10 @@ proc drawNodeInternal*(node: Node) =
           bmNormal
         else:
           case node.booleanOperation
-            of "SUBTRACT":
-              bmSubtractMask
-            of "INTERSECT":
-              bmIntersectMask
-            of "EXCLUDE":
-              bmExcludeMask
-            of "UNION":
-              bmNormal
-            else:
-              bmNormal
+            of boSubtract: bmSubtractMask
+            of boIntersect: bmIntersectMask
+            of boExclude: bmExcludeMask
+            of boUnion: bmNormal
       fillMask.draw(
         child.pixels,
         child.pixelBox.xy - node.pixelBox.xy,
@@ -682,7 +676,7 @@ proc drawNodeInternal*(node: Node) =
       )
 
   else:
-    echo "Not supported node type: ", node.`type`
+    echo "Not supported node type: ", node.kind
 
   #echo "simpleMaskCase ", simpleMaskCase
 
@@ -693,14 +687,14 @@ proc drawNodeInternal*(node: Node) =
    applyPaint(strokeMask, stroke, node, mat, i)
 
   for effect in node.effects:
-    if effect.`type` == "INNER_SHADOW":
+    if effect.kind == ekInnerShadow:
       applyInnerShadowEffect(effect, node, fillMask)
 
   if node.children.len > 0:
     drawChildren(node)
 
   for effect in node.effects:
-    if effect.`type` == "DROP_SHADOW":
+    if effect.kind == ekDropShadow:
       if node.pixels != nil:
         applyDropShadowEffect(effect, node)
 
@@ -721,7 +715,7 @@ proc selfAndChildrenMask(node: Node): Image =
       node.pixelBox.xy,
       blendMode = bmNormal
     )
-  if node.`type` != nkBooleanOperation:
+  if node.kind != nkBooleanOperation:
     for c in node.children:
       let childMask = selfAndChildrenMask(c)
       result.draw(
@@ -734,14 +728,14 @@ proc drawNodeScreenSimple(node: Node) =
   var stopDraw = false
 
   for effect in node.effects:
-    if effect.`type` == "LAYER_BLUR":
+    if effect.kind == ekLayerBlur:
       var maskWithColors = node.selfAndChildrenMask()
       maskWithColors = maskWithColors.blur(effect.radius)
       screen.draw(
         maskWithColors
       )
       stopDraw = true
-    if effect.`type` == "BACKGROUND_BLUR":
+    if effect.kind == ekBackgroundBlur:
       var blur = screen.blur(effect.radius)
       var mask = node.selfAndChildrenMask()
       mask = mask.sharpOpacity()
@@ -788,7 +782,7 @@ proc drawNodeScreenSimple(node: Node) =
           node.pixelBox.xy,
           parseBlendMode(node.blendMode)
         )
-  if node.`type` != nkBooleanOperation:
+  if node.kind != nkBooleanOperation:
     parentNode = node
     nodeStack.add(node)
 
@@ -802,7 +796,6 @@ proc drawNodeScreenSimple(node: Node) =
   while maskStack.len > 0 and maskStack[^1][0] == node:
     discard maskStack.pop()
 
-
 type
   ScreenDrawRegion = object
     draw: bool
@@ -811,7 +804,6 @@ type
     image: Image
     blendMode: BlendMode
     maskUntil: int
-
 
 proc drawNodeScreen(node: Node) =
 
@@ -833,7 +825,7 @@ proc drawNodeScreen(node: Node) =
         blendMode: parseBlendMode(node.blendMode),
       ))
 
-    if node.`type` != nkBooleanOperation and not node.isMask:
+    if node.kind != nkBooleanOperation and not node.isMask:
       for c in node.children:
         drawNodeScreenRegion(c)
 
