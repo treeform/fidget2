@@ -434,8 +434,8 @@ proc drawNodeInternal*(node: Node) =
   var applyMask = true
 
   case node.kind
-  of nkDocument, nkCanvas:
-    quit($(node.kind) & " can't be drawn.")
+  of nkDocument, nkCanvas, nkComponentSet:
+    quit($node.kind & " can't be drawn.")
 
   of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
     if node.fills.len > 0:

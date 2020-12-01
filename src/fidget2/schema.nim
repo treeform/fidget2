@@ -9,6 +9,7 @@ type
     nkVector, nkStar, nkEllipse, nkLine, nkRegularPolygon
     nkText
     nkBooleanOperation
+    nkComponentSet
 
   Component* = ref object
     key*: string
@@ -316,6 +317,7 @@ proc enumHook(s: string, v: var NodeKind) =
     of "REGULAR_POLYGON": nkRegularPolygon
     of "TEXT": nkText
     of "BOOLEAN_OPERATION": nkBooleanOperation
+    of "COMPONENT_SET": nkComponentSet
     else: raise newException(ValueError, "Invalid node type:" & s)
 
 proc enumHook(s: string, v: var PaintKind) =
