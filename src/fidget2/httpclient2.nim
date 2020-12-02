@@ -514,7 +514,6 @@ proc generateHeaders(requestUrl: Uri, httpMethod: string, headers: HttpHeaders,
     add(result, "Proxy-Authorization: basic " & auth & httpNewLine)
 
   for key, val in headers:
-    #if httpMethod != "get" and key != "content-length":
     add(result, key & ": " & val & httpNewLine)
 
   add(result, httpNewLine)
@@ -981,7 +980,7 @@ proc requestAux(client: HttpClient | AsyncHttpClient, url, httpMethod: string,
   var data: seq[string]
   if multipart != nil and multipart.content.len > 0:
     data = await client.format(multipart)
-  elif httpMethod != "GET" and body.len == 0:
+  elif httpMethod in ["POST", "PATCH", "PUT"] or body.len != 0:
     client.headers["Content-Length"] = $body.len
 
   when client is AsyncHttpClient:

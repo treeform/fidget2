@@ -233,7 +233,7 @@ proc download(url, filePath: string) =
   var client = newHttpClient()
   client.headers = newHttpHeaders({"Accept": "*/*"})
   client.headers["User-Agent"] = "curl/7.58.0"
-  client.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey")
+  client.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
   figmaFileKey = url.split("/")[4]
   let data = client.getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
   let json = parseJson(data)

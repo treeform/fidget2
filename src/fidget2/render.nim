@@ -484,7 +484,7 @@ proc drawNodeInternal*(node: Node) =
           )
 
       if applyMask:
-        fillMask = fillMask.fillPath(
+        fillMask.fillPath(
           path,
           white,
           mat,
@@ -545,7 +545,7 @@ proc drawNodeInternal*(node: Node) =
         path.lineTo(x+inner,   y+inner)
         path.closePath()
 
-      strokeMask = strokeMask.fillPath(
+      strokeMask.fillPath(
         path,
         white,
         mat
@@ -556,7 +556,7 @@ proc drawNodeInternal*(node: Node) =
       fillMask = newImage(w, h)
       var geometry = newImage(w, h)
       for geom in node.fillGeometry:
-        geometry = geometry.fillPath(
+        geometry.fillPath(
           geom.path,
           white,
           mat
@@ -566,7 +566,7 @@ proc drawNodeInternal*(node: Node) =
     if node.strokes.len > 0:
       strokeMask = newImage(w, h)
       for geometry in node.strokeGeometry:
-        strokeMask = strokeMask.fillPath(
+        strokeMask.fillPath(
           geometry.path,
           white,
           mat
