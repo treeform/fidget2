@@ -1,0 +1,22 @@
+# ignore files with no extention:
+*
+!*/
+!*.*
+
+# normal ignores:
+*.exe
+nimcache
+*.pdb
+*.ilk
+.*
+
+# figma tmp files
+figma
+
+# test tmp
+tests/frames/index.html
+tests/files/index.html
+tests/frames/*.png
+tests/files/*.png
+tests/frames/diffs/*.png
+tests/files/diffs/*.png
