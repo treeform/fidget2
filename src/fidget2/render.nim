@@ -204,11 +204,8 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
 
   ## Apply opacity
   if paint.opacity != 1.0:
-    var opacity = newImageFill(
-      effects.width,
-      effects.height,
-      color(0,0,0, paint.opacity).rgba
-    )
+    var opacity = newImage(effects.width, effects.height)
+    effects.fill(color(0,0,0, paint.opacity).rgba)
     effects.draw(opacity, blendMode = bmMask)
 
   # Optimization: if mask it simple, skip mask!
@@ -246,8 +243,8 @@ proc applyInnerShadowEffect(effect: Effect, node: Node, fillMask: Image) =
   # Blur the inverted fill.
   shadow = shadow.blurAlpha(effect.radius)
   # Color the inverted blurred fill.
-  var color = newImageFill(
-    shadow.width, shadow.height, effect.color.rgba)
+  var color = newImage(shadow.width, shadow.height)
+  color.fill(effect.color.rgba)
   color.draw(shadow, blendMode = bmMask)
   # Only have the shadow be on the fill.
   color.draw(fillMask, blendMode = bmMask)
