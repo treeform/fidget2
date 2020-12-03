@@ -1,5 +1,5 @@
 import tables, chroma, vmath, pixie, jsony, json,
-    httpclient2, strutils, os, typography, strformat
+    httpclient, strutils, os, typography, strformat
 
 type
 
