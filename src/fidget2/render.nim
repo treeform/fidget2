@@ -653,7 +653,7 @@ proc drawNodeInternal*(node: Node) =
 
   # Apply node.opacity to alpha
   if node.opacity != 1.0:
-    node.pixels = node.pixels.applyOpacity(node.opacity)
+    node.pixels.applyOpacity(node.opacity)
 
   node.dirty = false
   assert node.pixels != nil
@@ -691,7 +691,7 @@ proc drawNodeScreenSimple(node: Node) =
     if effect.kind == ekBackgroundBlur:
       var blur = screen.blur(effect.radius)
       var mask = node.selfAndChildrenMask()
-      mask = mask.sharpOpacity()
+      mask.sharpOpacity()
       blur.draw(
         mask,
         blendMode = bmMask
