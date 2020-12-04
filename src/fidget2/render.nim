@@ -683,13 +683,14 @@ proc drawNodeScreenSimple(node: Node) =
   for effect in node.effects:
     if effect.kind == ekLayerBlur:
       var maskWithColors = node.selfAndChildrenMask()
-      maskWithColors = maskWithColors.blur(effect.radius)
+      maskWithColors.blur(effect.radius)
       screen.draw(
         maskWithColors
       )
       stopDraw = true
     if effect.kind == ekBackgroundBlur:
-      var blur = screen.blur(effect.radius)
+      var blur = screen.copy()
+      blur.blur(effect.radius)
       var mask = node.selfAndChildrenMask()
       mask.sharpOpacity()
       blur.draw(
