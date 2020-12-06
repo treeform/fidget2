@@ -676,8 +676,37 @@ proc selfAndChildrenMask(node: Node): Image =
         blendMode = bmNormal
       )
 
-proc nodeMerged(node: Node): (Vec2, Image) =
+proc nodeMergedMask(node: Node): (Vec2, Image) =
+  ## Returns a mask of current node and its children.
+  ## Used for shadows and background blurs.
+  ## TODO return mask
+  var boundingBox = node.pixelBox
+  proc visitBounds(node: Node) =
+    if node.pixels != nil:
+      boundingBox = boundingBox or node.pixelBox
+    if node.kind != nkBooleanOperation:
+      for c in node.children:
+        visitBounds(c)
+  visitBounds(node)
 
+  var image = newImage(boundingBox.w.int, boundingBox.h.int)
+  proc drawInner(node: Node) =
+    if node.pixels != nil:
+      image.draw(
+        node.pixels,
+        node.pixelBox.xy - boundingBox.xy,
+        blendMode = bmNormal
+      )
+    if node.kind != nkBooleanOperation:
+      for c in node.children:
+        drawInner(c)
+  drawInner(node)
+
+  return (boundingBox.xy, image)
+
+proc nodeMerged(node: Node): (Vec2, Image) =
+  ## Returns node and children merged.
+  ## Used for layer blur.
   var boundingBox = node.pixelBox
   proc visitBounds(node: Node) =
     if node.pixels != nil:
@@ -716,16 +745,24 @@ proc drawNodeScreenSimple(node: Node) =
       )
       stopDraw = true
     if effect.kind == ekBackgroundBlur:
-      var blur = screen.copy()
+      let extraPx = effect.radius.ceil.int
+      var (at, mask) = node.nodeMergedMask()
+      var blur = screen.subImage(
+        at.x.int - extraPx,
+        at.y.int - extraPx,
+        mask.width + extraPx * 2,
+        mask.height + extraPx * 2
+      )
       blur.blur(effect.radius)
-      var mask = node.selfAndChildrenMask()
       mask.sharpOpacity()
       blur.draw(
         mask,
-        blendMode = bmMask
+        vec2(extraPx.float32, extraPx.float32),
+        blendMode = bmIntersectMask
       )
       screen.draw(
-        blur
+        blur,
+        at - vec2(extraPx.float32, extraPx.float32)
       )
 
   if stopDraw:
