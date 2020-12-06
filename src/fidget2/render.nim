@@ -676,16 +676,43 @@ proc selfAndChildrenMask(node: Node): Image =
         blendMode = bmNormal
       )
 
+proc nodeMerged(node: Node): (Vec2, Image) =
+
+  var boundingBox = node.pixelBox
+  proc visitBounds(node: Node) =
+    if node.pixels != nil:
+      boundingBox = boundingBox or node.pixelBox
+    if node.kind != nkBooleanOperation:
+      for c in node.children:
+        visitBounds(c)
+  visitBounds(node)
+
+  var image = newImage(boundingBox.w.int, boundingBox.h.int)
+  proc drawInner(node: Node) =
+    if node.pixels != nil:
+      image.draw(
+        node.pixels,
+        node.pixelBox.xy - boundingBox.xy,
+        blendMode = bmNormal
+      )
+    if node.kind != nkBooleanOperation:
+      for c in node.children:
+        drawInner(c)
+  drawInner(node)
+
+  return (boundingBox.xy, image)
+
 proc drawNodeScreenSimple(node: Node) =
 
   var stopDraw = false
 
   for effect in node.effects:
     if effect.kind == ekLayerBlur:
-      var maskWithColors = node.selfAndChildrenMask()
-      maskWithColors.blur(effect.radius)
+      var (at, merged) = node.nodeMerged()
+      merged.blur(effect.radius)
       screen.draw(
-        maskWithColors
+        merged,
+        at
       )
       stopDraw = true
     if effect.kind == ekBackgroundBlur:

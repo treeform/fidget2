@@ -2,6 +2,7 @@ import staticglfw, opengl, math, schema, render, pixie, vmath, bumpy
 export bumpy
 
 var
+  windowTitle* = "Fidget"
   mainFrame*: string
   windowSizeFixed*: bool
   mousePos*: Vec2
@@ -133,7 +134,7 @@ proc startFidget*() =
     raise newException(Exception, "Failed to Initialize GLFW")
 
   # Open window.
-  window = createWindow(w, h, "Figma/Mirror", nil, nil)
+  window = createWindow(w, h, windowTitle, nil, nil)
   # Connect the GL context.
   window.makeContextCurrent()
   # This must be called to make any GL function work

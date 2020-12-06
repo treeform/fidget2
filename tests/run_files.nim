@@ -45,7 +45,7 @@ proc main(r = "", l = 10000) =
     echo " *** ", frame.name, " *** "
     count += 1
 
-    if existsFile(&"tests/files/masters/{frame.name}.png"):
+    if fileExists(&"tests/files/masters/{frame.name}.png"):
       var master = readImage(&"tests/files/masters/{frame.name}.png")
       for x in 0 ..< master.width:
         for y in 0 ..< master.height:

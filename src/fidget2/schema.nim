@@ -229,15 +229,29 @@ proc downloadFont*(fontPSName: string) =
 
   echo &"Please download figma/fonts/{fontPSName}.ttf"
 
-proc download(url, filePath: string) =
+proc figmaClient(): HttpClient =
   var client = newHttpClient()
   client.headers = newHttpHeaders({"Accept": "*/*"})
   client.headers["User-Agent"] = "curl/7.58.0"
   client.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
-  figmaFileKey = url.split("/")[4]
-  let data = client.getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
+  return client
+
+proc download(figmaFileKey: string) =
+  let jsonPath = &"figma/{figmaFileKey}.json"
+  let modifiedPath = &"figma/{figmaFileKey}.lastModified"
+  if fileExists(modifiedPath):
+    ## Check if we really need to download the whole thing.
+    let
+      data1 = figmaClient().getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?depth=1")
+      figmaModified = parseJson(data1)["lastModified"].getStr()
+      haveModified = readFile(modifiedPath)
+    if figmaModified == haveModified:
+      echo "Using cached"
+      return
+  let data = figmaClient().getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
   let json = parseJson(data)
-  writeFile(filePath, pretty(json))
+  writeFile(modifiedPath, json["lastModified"].getStr())
+  writeFile(jsonPath, pretty(json))
   getImageRefs(figmaFileKey)
 
 proc newHook(v: var Node) =
@@ -384,7 +398,14 @@ proc enumHook(s: string, v: var VAlignMode) =
 proc use*(url: string) =
   if not dirExists("figma"):
     createDir("figma")
-  download(url, "figma/figma.json")
-  var data = readFile("figma/figma.json")
+  let figmaFileKey = url.split("/")[4]
+  download(figmaFileKey)
+  var data = readFile(&"figma/{figmaFileKey}.json")
   figmaFile = fromJson[FigmaFile](data)
-  writeFile("figma/dump.json", pretty %figmaFile)
+
+proc useNodeFile*(filePath: string) =
+  var data = readFile(filePath)
+  echo data
+  figmaFile = FigmaFile()
+  figmaFile.document = Node()
+  figmaFile.document.children = fromJson[seq[Node]](data)
