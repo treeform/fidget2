@@ -745,7 +745,7 @@ proc drawNodeScreenSimple(node: Node) =
       )
       stopDraw = true
     if effect.kind == ekBackgroundBlur:
-      let extraPx = effect.radius.ceil.int
+      let extraPx = effect.radius.ceil.int * 2
       var (at, mask) = node.nodeMergedMask()
       var blur = screen.subImage(
         at.x.int - extraPx,
