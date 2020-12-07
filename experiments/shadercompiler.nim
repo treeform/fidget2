@@ -258,11 +258,19 @@ proc gatherFunction(
   topLevelNode: NimNode, functions: var Table[string, string]) =
   ## Looks for functions this function calls and brings them up
   let glslProcs = @[
-    "rgb=", "rgb", "xyz", "xy", "xy=", "vec4"
+    "rgb=", "rgb", "xyz", "xy", "xy=", "vec4",
+    "Vec2", "Vec3", "Vec4",
+    "gl_Position", "gl_FragCoord",
   ]
   for n in topLevelNode:
-    #echo n.kind
+    if n.kind == nnkSym:
+      # Looking for globals.
+      let name = n.strVal
+      if name notin glslProcs:
+        echo show(n)
+        echo declaredInScope(n)
     if n.kind == nnkCall:
+      # Looking for functions.
       let procName = n[0].strVal()
       if procName notin glslProcs and procName notin functions:
         ## not a build int proc, we need to bring definition
