@@ -1,4 +1,4 @@
-import math, opengl, staticglfw, times, vmath, shadercompiler
+import math, opengl, staticglfw, times, vmath, shadercompiler, svg4
 
 # init libraries
 if init() == 0:
@@ -52,7 +52,8 @@ var
 # """
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
-  fragShaderSrc = readFile("svg2.glsl")
+  #fragShaderSrc = readFile("svg3.glsl")
+  fragShaderSrc = toShader(svgMain, "300 es")
 
   vertShaderArray = allocCStringArray([vertShaderSrc])  # dealloc'd at the end
   fragShaderArray = allocCStringArray([fragShaderSrc])  # dealloc'd at the end
@@ -62,6 +63,7 @@ var
   isLinked: GLint
 
 echo vertShaderSrc
+echo fragShaderSrc
 
 # Bind the vertices
 glGenBuffers(1, vertexVBO.addr)
