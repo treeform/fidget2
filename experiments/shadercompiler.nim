@@ -2,6 +2,23 @@
 
 import chroma, macros, strutils, vmath, print, tables
 
+proc show(n: NimNode): string =
+  result.add $n.kind
+  case n.kind
+  of nnkStrLit..nnkTripleStrLit, nnkCommentStmt, nnkSym, nnkIdent:
+    result.add "\""
+    result.add n.strVal
+    result.add "\""
+  else:
+    discard
+  result.add "("
+  for i, c in n:
+    if i > 0: result.add ","
+    result.add $i
+    result.add ":"
+    result.add show(c)
+  result.add ")"
+
 type
   uniform*[T] = T
 
@@ -125,6 +142,11 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       res.add " = "
       n[j + 2].toCode(res)
 
+  of nnkReturnStmt:
+    res.addIndent level
+    res.add "return "
+    n[0][1].toCode(res)
+
   # of nnkProcDef:
   #   var procCode = ""
   #   toCodeTopLevel(n, procCode)
@@ -186,7 +208,11 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
 
 proc procDef(topLevelNode: NimNode): string =
 
+  echo show(topLevelNode)
+
   var procName = ""
+  var paramsStr = ""
+  var returnType = "void"
 
   assert topLevelNode.kind == nnkProcDef
   for n in topLevelNode:
@@ -196,48 +222,37 @@ proc procDef(topLevelNode: NimNode): string =
     of nnkSym:
       procName = $n
     of nnkFormalParams:
-      for param in n:
+      if n[0].kind != nnkEmpty:
+        returnType = typeRename(n[0].strVal)
+      for param in n[1 .. ^1]:
         if param.kind != nnkEmpty:
+          paramsStr.add "  "
           if param[1].kind == nnkVarTy:
             if param[1][0].strVal == "int":
-              result.add "flat "
-            result.add "out "
-            result.add typeRename(param[1][0].strVal)
+              paramsStr.add "flat "
+            paramsStr.add "out "
+            paramsStr.add typeRename(param[1][0].strVal)
           else:
             if param[1].kind == nnkBracketExpr:
-              result.add param[1][0].strVal
-              result.add " "
-              result.add typeRename(param[1][1].strVal)
+              paramsStr.add param[1][0].strVal
+              paramsStr.add " "
+              paramsStr.add typeRename(param[1][1].strVal)
             else:
               if param[1].strVal == "int":
-                result.add "flat "
-              result.add "in "
-              result.add typeRename(param[1].strVal)
-          result.add " "
-          result.add param[0].strVal
-          result.add ";\n"
+                paramsStr.add "flat "
+              paramsStr.add typeRename(param[1].strVal)
+          paramsStr.add " "
+          paramsStr.add param[0].strVal
+          paramsStr.add ",\n"
     else:
       result.add "\n"
-      result.add "void " & procName & "() {\n"
+      if paramsStr.len > 0:
+        paramsStr = paramsStr[0 .. ^3] & "\n"
+      result.add returnType & " " & procName & "(\n" & paramsStr & ") {\n"
       n.toCodeStmts(result, 1)
       result.add "}"
 
-proc show(n: NimNode): string =
-  result.add $n.kind
-  case n.kind
-  of nnkStrLit..nnkTripleStrLit, nnkCommentStmt, nnkSym, nnkIdent:
-    result.add "\""
-    result.add n.strVal
-    result.add "\""
-  else:
-    discard
-  result.add "("
-  for i, c in n:
-    if i > 0: result.add ","
-    result.add $i
-    result.add ":"
-    result.add show(c)
-  result.add ")"
+
 
 proc gatherFunction(
   topLevelNode: NimNode, functions: var Table[string, string]) =
