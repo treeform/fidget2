@@ -325,7 +325,8 @@ proc gatherFunction(
             #   defStr.add "out "
             #   defStr.add typeRename(impl[1][0].strVal) & " " & name
             # else:
-            defStr.add typeRename(impl[1].strVal) & " " & name
+            echo "could?", show(n.getType())
+            defStr.add typeRename(n.getTypeInst.repr) & " " & name
             if impl[2].kind != nnkEmpty:
               defStr.add " = " & repr(impl[2])
             defStr.add ";"

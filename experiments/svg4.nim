@@ -1,13 +1,13 @@
 import vmath, shadercompiler
 
-var FILL: float = 1.0
+var FILL = 1.0
 var CONTOUR: float = 1.0
 
 var COL: Vec4
-var fill: float = 1.0
-var S: float = 1.0
-var contrast: float = 1.0
-var d: float = 1e38
+var fill = 1.0
+var S = 1.0
+var contrast = 1.0
+var d = 1e38
 var x0, y0, x1, y1: float
 var uv: Vec2
 
@@ -43,7 +43,7 @@ proc interpolate(G1: Vec2, G2: Vec2, G3: Vec2, G4: Vec2, t: float): Vec2 =
 proc bezier(uv: Vec2, A: Vec2, B: Vec2, C: Vec2, D: Vec2): float =
   var
     p: Vec2 = A
-    discretization: int = 10
+    discretization = 10
   for t in 1 .. discretization:
     var q: Vec2 = interpolate(A, B, C, D, float(t)/float(discretization))
     var l: float = line(uv, p, q)
