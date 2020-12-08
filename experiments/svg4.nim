@@ -1,7 +1,7 @@
 import vmath, shadercompiler
 
 var FILL = 1.0
-var CONTOUR: float = 1.0
+var CONTOUR = 1.0
 
 var COL: Vec4
 var fill = 1.0
@@ -11,47 +11,47 @@ var d = 1e38
 var x0, y0, x1, y1: float
 var uv: Vec2
 
-proc M(x: float, y: float) =
+proc M(x, y: float) =
   x1 = x
   x0 = x
   y1 = y
   y0 = y
 
-proc line(p: Vec2, a: Vec2, b: Vec2): float =
-  var
-    pa: Vec2 = p - a
-    ba: Vec2 = b - a
+proc line(p, a, b: Vec2): float =
+  let
+    pa = p - a
+    ba = b - a
     # distance to segment
-    d: Vec2 = pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)
-  if (a.y > p.y) != (b.y > p.y) and pa.x < ba.x * pa.y / ba.y:
-    S = -S    # track interior vs exterior
+    d = pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)
+  if (a.y > p.y) != (b.y > p.y) and (pa.x < ba.x * pa.y / ba.y):
+    S = -S # track interior vs exterior
   return dot(d, d) # optimization by deferring sqrt
 
-proc L(x: float, y: float) =
+proc L(x, y: float) =
   d = min(d, line(uv, vec2(x0, y0), vec2(x, y)))
   x0 = x
   y0 = y
 
-proc interpolate(G1: Vec2, G2: Vec2, G3: Vec2, G4: Vec2, t: float): Vec2 =
-  var
-    A: Vec2 = G4 - G1 + 3.0 * (G2 - G3)
-    B: Vec2 = 3.0 * (G1 - 2.0 * G2 + G3)
-    C: Vec2 = 3.0 * (G2 - G1)
-    D: Vec2 = G1
+proc interpolate(G1, G2, G3, G4: Vec2, t: float): Vec2 =
+  let
+    A = G4 - G1 + 3.0 * (G2 - G3)
+    B = 3.0 * (G1 - 2.0 * G2 + G3)
+    C = 3.0 * (G2 - G1)
+    D = G1
   return t * (t * (t * A + B) + C) + D
 
-proc bezier(uv: Vec2, A: Vec2, B: Vec2, C: Vec2, D: Vec2): float =
-  var
-    p: Vec2 = A
-    discretization = 10
+proc bezier(uv, A, B, C, D: Vec2): float =
+  var p = A
+  let discretization = 10
   for t in 1 .. discretization:
-    var q: Vec2 = interpolate(A, B, C, D, float(t)/float(discretization))
-    var l: float = line(uv, p, q)
+    let
+      q = interpolate(A, B, C, D, float(t)/float(discretization))
+      l = line(uv, p, q)
     d = min(d, l)
     p = q
   return d
 
-proc C(x1: float, y1: float, x2: float, y2: float, x: float, y: float) =
+proc C(x1, y1, x2, y2, x, y: float) =
   d = min(d, bezier(uv, vec2(x0,y0), vec2(x1,y1), vec2(x2,y2), vec2(x,y)))
   x0 = x
   y0 = y
@@ -68,8 +68,9 @@ proc startPath() =
   d = 1e38
 
 proc draw(d0: float, O: var Vec4) =
-  var d: float = min(sqrt(d0) * contrast * 2.0, 1.0) # optimization by deferring sqrt here
-  var value: float = 0.0
+  # optimization by deferring sqrt here
+  let d = min(sqrt(d0) * contrast * 2.0, 1.0)
+  var value = 0.0
   if fill > 0.0:
     value = 0.5 + 0.5 * S * d
   else:
@@ -160,7 +161,7 @@ proc SVG(inUv: Vec2, O: var Vec4) =
 
 proc mainImage(O: var Vec4, U0: Vec2) =
   O = vec4(1)
-  var R = vec2(1000, 1000) # resolution
+  let R = vec2(1000, 1000) # resolution
   var U = U0
   U.y = R.y - U.y
   U = U / R.x

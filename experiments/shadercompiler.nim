@@ -55,11 +55,13 @@ proc toCode(n: NimNode, res: var string, level = 0) =
   if n.kind == nnkEmpty:
     return
   case n.kind
+
   of nnkAsgn:
     res.addIndent level
     n[0].toCode(res)
     res.add " = "
     n[1].toCode(res)
+
   of nnkInfix:
     res.add "("
     n[1].toCode(res)
@@ -68,8 +70,10 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add " ("
     n[2].toCode(res)
     res.add ")"
+
   of nnkHiddenDeref, nnkHiddenAddr:
     n[0].toCode(res)
+
   of nnkCall:
     var procName = procRename(n[0].strVal)
     if procName in ["rgb=", "rgb", "xyz", "xy", "xy="]:
@@ -94,11 +98,14 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     n[0].toCode(res)
     res.add "."
     n[1].toCode(res)
+
   of nnkIdent, nnkSym:
     res.add procRename(n.strVal)
+
   of nnkStmtListExpr:
     for j in 0 ..< n.len:
       n[j].toCode(res, level)
+
   of nnkStmtList:
     for j in 0 ..< n.len:
       if n[j].kind in [nnkCall]:
@@ -106,6 +113,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       n[j].toCode(res, level)
       if n[j].kind notin [nnkLetSection, nnkVarSection]:
         res.add ";\n"
+
   of nnkIfStmt:
     res.addIndent level
     res.add "if ("
@@ -115,30 +123,39 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.addIndent level
     res.add "}"
     if n.len > 1:
-      # TODO else if?
+      # TODO elif?
       if n[1].kind == nnkElse:
         res.add " else {\n"
         n[1][0].toCodeStmts(res, level + 1)
         res.addIndent level
         res.add "}"
+
   of nnkHiddenStdConv:
     for j in 0 .. n.len-1:
       n[j].toCode(res)
-  of nnkEmpty, nnkNilLit:
-    discard # same as nil node in this representation
+
+  of nnkEmpty, nnkNilLit, nnkDiscardStmt:
+    # Skip all nil, empty and discard statements.
+    discard
+
   of nnkCharLit .. nnkInt64Lit:
     res.add $n.intVal
+
   of nnkFloatLit .. nnkFloat64Lit:
     res.add $n.floatVal
+
   of nnkStrLit .. nnkTripleStrLit, nnkCommentStmt:
     res.add $n.strVal.newLit.repr
+
   of nnkNone:
     assert false
+
   of nnkVarSection, nnkLetSection:
     for j in 0 ..< n.len:
       res.addIndent level
       n[j].toCode(res, level)
       res.add ";\n"
+
   of nnkIdentDefs:
     for j in countup(0, n.len - 1, 3):
       res.add typeRename(n[j + 2].getTypeInst().strVal)
@@ -151,9 +168,6 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.addIndent level
     res.add "return "
     n[0][1].toCode(res)
-
-  of nnkDiscardStmt:
-    discard
 
   of nnkPrefix:
     res.add procRename(n[0].strVal) & " ("
@@ -174,7 +188,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     elif n[1][0].strVal == "..":
       res.add " <= "
     else:
-      quit "for loop needs .. or ..<"
+      quit "For loop only supports integer .. or ..<."
     n[1][2].toCode(res)
     res.add "; "
     res.add n[0].strVal
@@ -190,10 +204,8 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     n[1].toCode(res)
     res.add ")"
 
-  # of nnkProcDef:
-  #   var procCode = ""
-  #   toCodeTopLevel(n, procCode)
-  #   echo "->>>", procStr
+  of nnkProcDef:
+    quit "Nested proc definitions are not allowed."
 
   else:
     res.add ($n.kind)
@@ -212,6 +224,7 @@ proc toCodeStmts(n: NimNode, res: var string, level = 0) =
 
 proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
   ## Top level block such as in and out params.
+  ## Generates the main function (which is not like all the other functions)
   assert topLevelNode.kind == nnkProcDef
   for n in topLevelNode:
     case n.kind
@@ -222,6 +235,7 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
       res.add $n
       res.add "\n\n"
     of nnkFormalParams:
+      ## Main function parameters are different in they they go in as globals.
       for param in n:
         if param.kind != nnkEmpty:
           if param[1].kind == nnkVarTy:
@@ -248,10 +262,8 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
       n.toCodeStmts(res, level+1)
       res.add "}"
 
-
 proc procDef(topLevelNode: NimNode): string =
-
-  #echo show(topLevelNode)
+  ## Process whole function (that is not the main function).
 
   var procName = ""
   var paramsStr = ""
@@ -265,28 +277,37 @@ proc procDef(topLevelNode: NimNode): string =
     of nnkSym:
       procName = $n
     of nnkFormalParams:
+      # Reading parameter list `(x, y, z: float)`
       if n[0].kind != nnkEmpty:
         returnType = typeRename(n[0].strVal)
-      for param in n[1 .. ^1]:
-        if param.kind != nnkEmpty:
-          paramsStr.add "  "
-          if param[1].kind == nnkVarTy:
-            if param[1][0].strVal == "int":
-              paramsStr.add "flat "
-            paramsStr.add "inout "
-            paramsStr.add typeRename(param[1][0].strVal)
-          else:
-            if param[1].kind == nnkBracketExpr:
-              paramsStr.add param[1][0].strVal
-              paramsStr.add " "
-              paramsStr.add typeRename(param[1][1].strVal)
-            else:
-              if param[1].strVal == "int":
+      for paramDef in n[1 .. ^1]:
+        # The paramDef is like `x, y, z: float`.
+        if paramDef.kind != nnkEmpty:
+          for param in paramDef[0 ..< ^2]:
+            # Process each `x`, `y`, `z` in a loop.
+            paramsStr.add "  "
+            let paramName = param.repr()
+            let paramType = param.getTypeInst()
+            if paramType.kind == nnkVarTy:
+              # Process `x: var float`
+              if paramType[0].strVal == "int":
                 paramsStr.add "flat "
-              paramsStr.add typeRename(param[1].strVal)
-          paramsStr.add " "
-          paramsStr.add param[0].strVal
-          paramsStr.add ",\n"
+              paramsStr.add "inout "
+              paramsStr.add typeRename(paramType[0].strVal)
+            elif paramType.kind == nnkBracketExpr:
+              # process varying[uniform]
+              # TODO test?
+              paramsStr.add paramType[0].strVal
+              paramsStr.add " "
+              paramsStr.add typeRename(paramType[1].strVal)
+            else:
+              # Just a simple `x: float` case.
+              if paramType.strVal == "int":
+                paramsStr.add "flat "
+              paramsStr.add typeRename(paramType.strVal)
+            paramsStr.add " "
+            paramsStr.add paramName
+            paramsStr.add ",\n"
     else:
       result.add "\n"
       if paramsStr.len > 0:
@@ -313,19 +334,11 @@ proc gatherFunction(
       # Looking for globals.
       let name = n.strVal
       if name notin glslProcs:
-        #echo show(n)
-        #echo n.owner().symKind
         if n.owner().symKind == nskModule:
           let impl = n.getImpl()
-          if impl.kind notin {nnkIteratorDef, nnkProcDef} and impl.kind != nnkNilLit:
-            echo "!!!"
-            echo show(impl)
+          if impl.kind notin {nnkIteratorDef, nnkProcDef} and
+              impl.kind != nnkNilLit:
             var defStr = ""
-            # if impl[1].kind == nnkVarTy:
-            #   defStr.add "out "
-            #   defStr.add typeRename(impl[1][0].strVal) & " " & name
-            # else:
-            echo "could?", show(n.getType())
             defStr.add typeRename(n.getTypeInst.repr) & " " & name
             if impl[2].kind != nnkEmpty:
               defStr.add " = " & repr(impl[2])
@@ -336,9 +349,7 @@ proc gatherFunction(
       # Looking for functions.
       let procName = n[0].strVal()
       if procName notin glslProcs and procName notin functions:
-        ## not a build int proc, we need to bring definition
-        #echo show(n)
-        echo "-->", procName
+        ## If its not a builtin proc, we need to bring definition.
         let impl = n[0].getImpl()
         gatherFunction(impl, functions, globals)
         functions[procName] = procDef(impl)
@@ -353,40 +364,41 @@ macro toShader*(s: typed, version = "410", precision = "mediump float"): string 
 
   var n = getImpl(s)
 
+  # Gather all globals and functions, and globals and functions they use.
   var functions: Table[string, string]
   var globals: Table[string, string]
   gatherFunction(n, functions, globals)
 
+  # Put globals first.
   for k, v in globals:
     code.add(v)
     code.add "\n"
 
+  # Put functions definition (just name and types part).
   for k, v in functions:
     code.add v.split("{")[0]
     code.add ";\n"
 
+  # Put functions (with bodies) next.
   for k, v in functions:
     code.add v
     code.add "\n"
 
+  # Put the main function last.
   toCodeTopLevel(n, code)
+
   result = newLit(code)
+
+## GLSL helper functions
 
 type
   Color* = object
-    ## Main color type, float32 points
-    r*: float32 ## red (0-1)
-    g*: float32 ## green (0-1)
-    b*: float32 ## blue (0-1)
-    a*: float32 ## alpha (0-1, 0 is fully transparent)
+    r*: float32
+    g*: float32
+    b*: float32
+    a*: float32
 
 proc color*(r, g, b: float32, a: float32 = 1.0): Color {.inline.} =
-  ## Creates from floats like:
-  ## * color(1,0,0) -> red
-  ## * color(0,1,0) -> green
-  ## * color(0,0,1) -> blue
-  ## * color(0,0,0,1) -> opaque  black
-  ## * color(0,0,0,0) -> transparent black
   Color(r: r, g: g, b: b, a: a)
 
 proc rgb*(c: Color): Vec3 =
