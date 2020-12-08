@@ -1,6 +1,6 @@
 ## Shader macro, converts nim code into GLSL
 
-import chroma, macros, strutils, vmath, print, tables
+import chroma, macros, strutils, vmath, print, tables, algorithm
 
 proc show(n: NimNode): string =
   result.add $n.kind
@@ -39,6 +39,9 @@ proc procRename(t: string): string =
   ## Some GLSL proc names don't match nim names, rename here.
   case t
   of "color": "vec4"
+  of "not": "!"
+  of "and": "&&"
+  of "or": "||"
   else: t
 
 proc addIndent(res: var string, level: int) =
@@ -58,11 +61,13 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add " = "
     n[1].toCode(res)
   of nnkInfix:
+    res.add "("
     n[1].toCode(res)
-    res.add " "
+    res.add ") "
     n[0].toCode(res)
-    res.add " "
+    res.add " ("
     n[2].toCode(res)
+    res.add ")"
   of nnkHiddenDeref, nnkHiddenAddr:
     n[0].toCode(res)
   of nnkCall:
@@ -90,7 +95,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add "."
     n[1].toCode(res)
   of nnkIdent, nnkSym:
-    res.add n.strVal
+    res.add procRename(n.strVal)
   of nnkStmtListExpr:
     for j in 0 ..< n.len:
       n[j].toCode(res, level)
@@ -146,6 +151,44 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.addIndent level
     res.add "return "
     n[0][1].toCode(res)
+
+  of nnkDiscardStmt:
+    discard
+
+  of nnkPrefix:
+    res.add procRename(n[0].strVal) & " ("
+    n[1].toCode(res)
+    res.add ")"
+
+  of nnkForStmt:
+    res.addIndent level
+    res.add "for("
+    res.add "int "
+    res.add n[0].strVal
+    res.add " = "
+    n[1][1].toCode(res)
+    res.add "; "
+    res.add n[0].strVal
+    if n[1][0].strVal == "..<":
+      res.add " < "
+    elif n[1][0].strVal == "..":
+      res.add " <= "
+    else:
+      quit "for loop needs .. or ..<"
+    n[1][2].toCode(res)
+    res.add "; "
+    res.add n[0].strVal
+    res.add "++"
+    res.add ") {\n"
+    n[2].toCode(res, level + 1)
+    res.addIndent level
+    res.add "}"
+
+  of nnkConv:
+    res.add typeRename(n[0].strVal)
+    res.add "("
+    n[1].toCode(res)
+    res.add ")"
 
   # of nnkProcDef:
   #   var procCode = ""
@@ -208,7 +251,7 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
 
 proc procDef(topLevelNode: NimNode): string =
 
-  echo show(topLevelNode)
+  #echo show(topLevelNode)
 
   var procName = ""
   var paramsStr = ""
@@ -230,7 +273,7 @@ proc procDef(topLevelNode: NimNode): string =
           if param[1].kind == nnkVarTy:
             if param[1][0].strVal == "int":
               paramsStr.add "flat "
-            paramsStr.add "out "
+            paramsStr.add "inout "
             paramsStr.add typeRename(param[1][0].strVal)
           else:
             if param[1].kind == nnkBracketExpr:
@@ -252,32 +295,54 @@ proc procDef(topLevelNode: NimNode): string =
       n.toCodeStmts(result, 1)
       result.add "}"
 
-
-
 proc gatherFunction(
-  topLevelNode: NimNode, functions: var Table[string, string]) =
+  topLevelNode: NimNode,
+  functions: var Table[string, string],
+  globals: var Table[string, string]
+) =
   ## Looks for functions this function calls and brings them up
   let glslProcs = @[
-    "rgb=", "rgb", "xyz", "xy", "xy=", "vec4",
+    "rgb=", "rgb", "xyz", "xy", "xy=",
+    "vec2", "vec4", "vec4",
     "Vec2", "Vec3", "Vec4",
     "gl_Position", "gl_FragCoord",
+    "clamp", "min", "max", "dot", "sqrt", "lerp", "mix"
   ]
   for n in topLevelNode:
     if n.kind == nnkSym:
       # Looking for globals.
       let name = n.strVal
       if name notin glslProcs:
-        echo show(n)
-        echo declaredInScope(n)
+        #echo show(n)
+        #echo n.owner().symKind
+        if n.owner().symKind == nskModule:
+          let impl = n.getImpl()
+          if impl.kind notin {nnkIteratorDef, nnkProcDef} and impl.kind != nnkNilLit:
+            echo "!!!"
+            echo show(impl)
+            var defStr = ""
+            # if impl[1].kind == nnkVarTy:
+            #   defStr.add "out "
+            #   defStr.add typeRename(impl[1][0].strVal) & " " & name
+            # else:
+            defStr.add typeRename(impl[1].strVal) & " " & name
+            if impl[2].kind != nnkEmpty:
+              defStr.add " = " & repr(impl[2])
+            defStr.add ";"
+            globals[name] = defStr
+
     if n.kind == nnkCall:
       # Looking for functions.
       let procName = n[0].strVal()
       if procName notin glslProcs and procName notin functions:
         ## not a build int proc, we need to bring definition
-        echo show(n)
+        #echo show(n)
         echo "-->", procName
-        functions[procName] = procDef(n[0].getImpl())
-    gatherFunction(n, functions)
+        let impl = n[0].getImpl()
+        gatherFunction(impl, functions, globals)
+        functions[procName] = procDef(impl)
+
+    gatherFunction(n, functions, globals)
 
 macro toShader*(s: typed, version = "410", precision = "mediump float"): string =
   ## Converts proc to a glsl string.
@@ -288,10 +353,19 @@ macro toShader*(s: typed, version = "410", precision = "mediump float"): string 
   var n = getImpl(s)
 
   var functions: Table[string, string]
-  gatherFunction(n, functions)
+  var globals: Table[string, string]
+  gatherFunction(n, functions, globals)
+
+  for k, v in globals:
+    code.add(v)
+    code.add "\n"
 
   for k, v in functions:
-    code.add(v)
+    code.add v.split("{")[0]
+    code.add ";\n"
+
+  for k, v in functions:
+    code.add v
     code.add "\n"
 
   toCodeTopLevel(n, code)
@@ -331,9 +405,18 @@ proc vec4*(v: Vec3, w: float32): Vec4 =
 proc mix*(a, b: Vec3, v: float32): Vec3 =
   lerp(a, b, v)
 
+proc mix*(a, b: Vec4, v: float32): Vec4 =
+  result.x = lerp(a.x, b.x, v)
+  result.y = lerp(a.y, b.y, v)
+  result.z = lerp(a.z, b.z, v)
+  result.w = lerp(a.w, b.w, v)
+
 proc `*`*(m: Mat4, v: Vec4): Vec4 =
   vec4(m * v.xyz, 1.0)
 
 proc `xy=`*(a: var Vec4, b: Vec2) =
   a.x = b.x
   a.y = b.y
+
+proc `xy`*(a: Vec4): Vec2 =
+  vec2(a.x, a.y)
