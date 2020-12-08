@@ -86,7 +86,7 @@ proc SVG(inUv: Vec2, O: var Vec4) =
   contrast = 1.0
 
   # startPath()
-  # style(FILL, vec4(0.45, 0.71, 0.10, 1.0))
+  # style(FILL, vec4(1.0, 0, 0, 1))
   # M(100.0, 100.0)
   # L(100.0, 200.0)
   # L(225.0, 225.0)

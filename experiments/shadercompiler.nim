@@ -295,7 +295,7 @@ proc procDef(topLevelNode: NimNode): string =
               paramsStr.add "inout "
               paramsStr.add typeRename(paramType[0].strVal)
             elif paramType.kind == nnkBracketExpr:
-              # process varying[uniform]
+              # Process varying[uniform].
               # TODO test?
               paramsStr.add paramType[0].strVal
               paramsStr.add " "
@@ -333,7 +333,7 @@ proc gatherFunction(
     if n.kind == nnkSym:
       # Looking for globals.
       let name = n.strVal
-      if name notin glslProcs:
+      if name notin glslProcs and name notin globals:
         if n.owner().symKind == nskModule:
           let impl = n.getImpl()
           if impl.kind notin {nnkIteratorDef, nnkProcDef} and
@@ -359,6 +359,8 @@ proc gatherFunction(
 macro toShader*(s: typed, version = "410", precision = "mediump float"): string =
   ## Converts proc to a glsl string.
   var code: string
+
+  # Add GLS header stuff.
   code.add "#version " & version.strVal & "\n"
   code.add "precision " & precision.strVal & ";\n\n"
 
