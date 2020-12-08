@@ -170,4 +170,4 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
 
   mainImage(fragColor, gl_FragCoord.xy)
 
-  # fragColor = vec4(0, 0, 0, 0)
+  #fragColor = vec4(0, 0, 0, 0)

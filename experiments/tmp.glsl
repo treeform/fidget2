@@ -229,7 +229,7 @@ float bezier(
 ) {
   vec2 p = A;
   int discretization = 10;
-  for(int t = 1; t < discretization; t++) {
+  for(int t = 1; t <= discretization; t++) {
     vec2 q = interpolate(A, B, C, D, (float(t)) / (float(discretization)));
     float l = line(uv, p, q);
     d = min(d, l);

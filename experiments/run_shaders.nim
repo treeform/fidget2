@@ -52,8 +52,8 @@ var
 # """
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
-  fragShaderSrc = readFile("svg4.glsl")
-  #fragShaderSrc = toShader(svgMain, "300 es")
+  #fragShaderSrc = readFile("svg4.glsl")
+  fragShaderSrc = toShader(svgMain, "300 es")
 
   vertShaderArray = allocCStringArray([vertShaderSrc])  # dealloc'd at the end
   fragShaderArray = allocCStringArray([fragShaderSrc])  # dealloc'd at the end
@@ -65,7 +65,7 @@ var
 # echo vertShaderSrc
 # echo fragShaderSrc
 
-#writeFile("tmp.glsl", fragShaderSrc)
+writeFile("tmp.glsl", fragShaderSrc)
 
 # Bind the vertices
 glGenBuffers(1, vertexVBO.addr)
