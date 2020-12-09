@@ -905,7 +905,7 @@ proc drawNodeScreen(node: Node) =
             #  echo "masking!"
             rgba2.a = ((rgba2.a.int32 * maskStack[^1][0].int32) div 255).uint8
 
-          rgba = mix(region.blendMode, rgba, rgba2)
+          rgba = region.blendMode.mixer()(rgba, rgba2)
 
         #while maskStack[^1][1] < regionIdx:
           #echo "pop mask!"
