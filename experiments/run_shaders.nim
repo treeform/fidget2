@@ -52,9 +52,9 @@ var
 # """
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
-  fragShaderSrc = readFile("bufferTest.glsl")
+  #fragShaderSrc = readFile("bufferTest.glsl")
   #fragShaderSrc = readFile("svg4.glsl")
-  #fragShaderSrc = toShader(svgMain, "300 es")
+  fragShaderSrc = toShader(svgMain, "300 es")
 
   vertShaderArray = allocCStringArray([vertShaderSrc])  # dealloc'd at the end
   fragShaderArray = allocCStringArray([fragShaderSrc])  # dealloc'd at the end
@@ -66,7 +66,7 @@ var
 # echo vertShaderSrc
 # echo fragShaderSrc
 
-#writeFile("tmp.glsl", fragShaderSrc)
+writeFile("tmp.glsl", fragShaderSrc)
 
 # Bind the vertices
 glGenBuffers(1, vertexVBO.addr)
@@ -83,6 +83,16 @@ glEnableVertexAttribArray(0)
 # Data Buffer Object
 
 var dataBufferSeq = @[100.float32, 300, 2, 3, 4]
+
+  # startPath()
+  # style(FILL, vec4(1.0, 0, 0, 1))
+  # M(100.0, 100.0)
+  # L(100.0, 200.0)
+  # L(225.0, 225.0)
+  # L(200.0, 100.0)
+  # L(100.0, 100.0)
+  # z()
+  # endPath(O)
 
 var dataBufferId: GLuint
 glGenBuffers(1, dataBufferId.addr)

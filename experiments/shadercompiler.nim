@@ -19,9 +19,6 @@ proc show(n: NimNode): string =
     result.add show(c)
   result.add ")"
 
-type
-  uniform*[T] = T
-
 proc typeRename(t: string): string =
   ## Some GLSL type names don't match nim names, rename here.
   case t
@@ -33,6 +30,8 @@ proc typeRename(t: string): string =
   of "Vec2": "vec2"
   of "float32": "float"
   of "float64": "float"
+  of "Uniform": "uniform"
+  of "SamplerBuffer": "samplerBuffer"
   else: t
 
 proc procRename(t: string): string =
@@ -327,7 +326,8 @@ proc gatherFunction(
     "vec2", "vec4", "vec4",
     "Vec2", "Vec3", "Vec4",
     "gl_Position", "gl_FragCoord",
-    "clamp", "min", "max", "dot", "sqrt", "lerp", "mix"
+    "clamp", "min", "max", "dot", "sqrt", "lerp", "mix",
+    "texelFetch"
   ]
   for n in topLevelNode:
     if n.kind == nnkSym:
@@ -339,7 +339,18 @@ proc gatherFunction(
           if impl.kind notin {nnkIteratorDef, nnkProcDef} and
               impl.kind != nnkNilLit:
             var defStr = ""
-            defStr.add typeRename(n.getTypeInst.repr) & " " & name
+            let typeInst = n.getTypeInst
+            if typeInst.kind == nnkBracketExpr:
+              # might be a uniform
+              if typeInst[0].repr == "Uniform":
+                defStr.add typeRename(typeInst[0].repr)
+                defStr.add " "
+                defStr.add typeRename(typeInst[1].repr)
+              else:
+                quit("Invalid x[y].")
+            else:
+              defStr.add typeRename(typeInst.repr)
+            defStr.add " " & name
             if impl[2].kind != nnkEmpty:
               defStr.add " = " & repr(impl[2])
             defStr.add ";"
@@ -394,6 +405,9 @@ macro toShader*(s: typed, version = "410", precision = "mediump float"): string 
 ## GLSL helper functions
 
 type
+  Uniform*[T] = T
+  SamplerBuffer* = object
+
   Color* = object
     r*: float32
     g*: float32
@@ -435,3 +449,6 @@ proc `xy=`*(a: var Vec4, b: Vec2) =
 
 proc `xy`*(a: Vec4): Vec2 =
   vec2(a.x, a.y)
+
+proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): float32 =
+  return 0.0

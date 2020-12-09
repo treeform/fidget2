@@ -1,5 +1,7 @@
 import vmath, shadercompiler
 
+var dataBuffer: Uniform[SamplerBuffer]
+
 var FILL = 1.0
 var CONTOUR = 1.0
 
@@ -167,8 +169,16 @@ proc mainImage(O: var Vec4, U0: Vec2) =
   U = U / R.x
   SVG(U, O)
 
+
+
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
 
-  mainImage(fragColor, gl_FragCoord.xy)
+  #mainImage(fragColor, gl_FragCoord.xy)
 
   #fragColor = vec4(0, 0, 0, 0)
+
+  let first = texelFetch(dataBuffer, 0)
+  if gl_FragCoord.x > first:
+    fragColor = vec4(0.0, 1.0, 1.0, 1.0)
+  else:
+    fragColor = vec4(1.0, 1.0, 1.0, 1.0)
