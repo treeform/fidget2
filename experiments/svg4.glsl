@@ -62,13 +62,13 @@ void SVG(vec2 inUv, inout vec4 O)
     uv = inUv * 400.0; // scaling
     contrast = 1.0;
 
-    // startPath();
-    // M(100.0, 100.0);
-    // L(100.0, 200.0);
-    // L(225.0, 225.0);
-    // L(200.0, 100.0);
-    // L(100.0, 100.0);
-    // endPath(O);
+    startPath();
+    M(100.0, 100.0);
+    L(100.0, 200.0);
+    L(225.0, 225.0);
+    L(200.0, 100.0);
+    L(100.0, 100.0);
+    endPath(O);
 
     startPath();
     // left exterior arc

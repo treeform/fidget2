@@ -53,6 +53,7 @@ var
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
   fragShaderSrc = readFile("bufferTest.glsl")
+  #fragShaderSrc = readFile("svg4.glsl")
   #fragShaderSrc = toShader(svgMain, "300 es")
 
   vertShaderArray = allocCStringArray([vertShaderSrc])  # dealloc'd at the end
@@ -81,12 +82,12 @@ glEnableVertexAttribArray(0)
 
 # Data Buffer Object
 
-var dataBufferSeq = @[500.float32, 1, 2, 3, 4]
+var dataBufferSeq = @[100.float32, 300, 2, 3, 4]
 
 var dataBufferId: GLuint
 glGenBuffers(1, dataBufferId.addr)
-glBindBuffer(GL_ARRAY_BUFFER, dataBufferId)
-glBufferData(GL_ARRAY_BUFFER, dataBufferSeq.len * 4, dataBufferSeq.addr, GL_STATIC_DRAW)
+glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
+glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
 glActiveTexture(GL_TEXTURE0)
 
@@ -164,10 +165,21 @@ if isLinked == 0:
 else:
   echo "Shader Program ready!"
 
+# glBindImageTexture(
+#   0,
+#   dataBufferTextureId,
+#   0,
+#   GL_FALSE,
+#   0,
+#   GL_READ_ONLY,
+#   GL_R32F
+# )
 
-# var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
-# print dataBufferLoc
-# glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
+glUseProgram(shaderProgram)
+
+var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
+print dataBufferLoc
+glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
 
 
 # If everything is linked, that means we're good to go!
