@@ -1,4 +1,4 @@
-import chroma, os, fidget2, pixie, strutils, strformat, cligen
+import chroma, os, fidget2, pixie, strutils, strformat, cligen, times
 
 var files = @[
   (
@@ -40,7 +40,9 @@ proc main(r = "", l = 10000) =
 
     use(url)
     let frame = figmaFile.document.children[0].findByName(mainFrame)
+    let start = epochTime()
     let image = drawCompleteFrame(frame)
+    echo epochTime() - start
     image.writeFile("tests/files/" & frame.name & ".png")
     echo " *** ", frame.name, " *** "
     count += 1
