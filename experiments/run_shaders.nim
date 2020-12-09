@@ -1,4 +1,4 @@
-import math, opengl, staticglfw, times, vmath, shadercompiler, svg4
+import math, opengl, staticglfw, times, vmath, shadercompiler, svg4, print
 
 # init libraries
 if init() == 0:
@@ -52,8 +52,8 @@ var
 # """
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
-  #fragShaderSrc = readFile("svg4.glsl")
-  fragShaderSrc = toShader(svgMain, "300 es")
+  fragShaderSrc = readFile("bufferTest.glsl")
+  #fragShaderSrc = toShader(svgMain, "300 es")
 
   vertShaderArray = allocCStringArray([vertShaderSrc])  # dealloc'd at the end
   fragShaderArray = allocCStringArray([fragShaderSrc])  # dealloc'd at the end
@@ -65,7 +65,7 @@ var
 # echo vertShaderSrc
 # echo fragShaderSrc
 
-writeFile("tmp.glsl", fragShaderSrc)
+#writeFile("tmp.glsl", fragShaderSrc)
 
 # Bind the vertices
 glGenBuffers(1, vertexVBO.addr)
@@ -78,6 +78,24 @@ glBindVertexArray(vao)
 glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
 glVertexAttribPointer(0, 2, cGL_FLOAT, GL_FALSE, 0, nil)
 glEnableVertexAttribArray(0)
+
+# Data Buffer Object
+
+var dataBufferSeq = @[500.float32, 1, 2, 3, 4]
+
+var dataBufferId: GLuint
+glGenBuffers(1, dataBufferId.addr)
+glBindBuffer(GL_ARRAY_BUFFER, dataBufferId)
+glBufferData(GL_ARRAY_BUFFER, dataBufferSeq.len * 4, dataBufferSeq.addr, GL_STATIC_DRAW)
+
+glActiveTexture(GL_TEXTURE0)
+
+var dataBufferTextureId: GLuint
+glGenTextures(1, dataBufferTextureId.addr)
+glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
+glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, dataBufferId)
+
+# texelFetch
 
 # Compile shaders
 # Vertex
@@ -127,7 +145,7 @@ glAttachShader(shaderProgram, fragShader);
 
 # insert locations
 glBindAttribLocation(shaderProgram, 0, "vertexPos");
-glBindAttribLocation(shaderProgram, 0, "vertexClr");
+#glBindAttribLocation(shaderProgram, 0, "vertexClr");
 
 glLinkProgram(shaderProgram);
 
@@ -145,6 +163,12 @@ if isLinked == 0:
   dealloc(logStr)
 else:
   echo "Shader Program ready!"
+
+
+# var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
+# print dataBufferLoc
+# glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
+
 
 # If everything is linked, that means we're good to go!
 if isLinked == 1:
