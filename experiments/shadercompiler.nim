@@ -168,10 +168,22 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add "return "
     n[0][1].toCode(res)
 
+  of nnkBreakStmt:
+    res.addIndent level
+    res.add "break"
+
   of nnkPrefix:
     res.add procRename(n[0].strVal) & " ("
     n[1].toCode(res)
     res.add ")"
+
+  of nnkWhileStmt:
+    res.add "while("
+    n[0].toCode(res)
+    res.add ") {\n"
+    n[1].toCode(res, level + 1)
+    res.addIndent level
+    res.add "}"
 
   of nnkForStmt:
     res.addIndent level
@@ -207,11 +219,13 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     quit "Nested proc definitions are not allowed."
 
   else:
-    res.add ($n.kind)
-    res.add "{{"
-    for j in 0 .. n.len-1:
-      n[j].toCode(res)
-    res.add "}}"
+    echo show(n)
+    quit "^ can't compile"
+    # res.add ($n.kind)
+    # res.add "{{"
+    # for j in 0 .. n.len-1:
+    #   n[j].toCode(res)
+    # res.add "}}"
 
 proc toCodeStmts(n: NimNode, res: var string, level = 0) =
   if n.kind != nnkStmtList:
