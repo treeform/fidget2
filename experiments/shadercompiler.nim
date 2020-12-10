@@ -121,13 +121,24 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     n[0][1].toCodeStmts(res, level + 1)
     res.addIndent level
     res.add "}"
-    if n.len > 1:
+    var i = 1
+    while n.len > i:
       # TODO elif?
-      if n[1].kind == nnkElse:
+      if n[i].kind == nnkElse:
         res.add " else {\n"
-        n[1][0].toCodeStmts(res, level + 1)
+        n[i][0].toCodeStmts(res, level + 1)
         res.addIndent level
         res.add "}"
+      elif n[i].kind == nnkElifBranch:
+        res.add " else if ("
+        n[i][0].toCode(res)
+        res.add ") {\n"
+        n[i][1].toCodeStmts(res, level + 1)
+        res.addIndent level
+        res.add "}"
+      else:
+        quit("Not supported if branch")
+      inc i
 
   of nnkHiddenStdConv:
     for j in 0 .. n.len-1:
@@ -178,6 +189,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add ")"
 
   of nnkWhileStmt:
+    res.addIndent level
     res.add "while("
     n[0].toCode(res)
     res.add ") {\n"
@@ -381,7 +393,7 @@ proc gatherFunction(
 
     gatherFunction(n, functions, globals)
 
-macro toShader*(s: typed, version = "410", precision = "mediump float"): string =
+macro toShader*(s: typed, version = "410", precision = "highp float"): string =
   ## Converts proc to a glsl string.
   var code: string
 
@@ -421,6 +433,7 @@ macro toShader*(s: typed, version = "410", precision = "mediump float"): string 
 type
   Uniform*[T] = T
   SamplerBuffer* = object
+    data*: seq[float32]
 
   Color* = object
     r*: float32
@@ -465,4 +478,4 @@ proc `xy`*(a: Vec4): Vec2 =
   vec2(a.x, a.y)
 
 proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): float32 =
-  return 0.0
+  buffer.data[index]

@@ -1,12 +1,13 @@
 import vmath, shadercompiler
 
-var dataBuffer: Uniform[SamplerBuffer]
+var dataBuffer*: Uniform[SamplerBuffer]
 
 const
   cmdStartPath*: float32 = 1
   cmdEndPath*: float32 = 2
   cmdStyleFill*: float32 = 3
-  cmdExit*: float32 = 4
+  #cmdMatrix*: float32 = 4
+  cmdExit*: float32 = 0
   cmdM*: float32 = 10
   cmdL*: float32 = 11
   cmdC*: float32 = 12
@@ -19,7 +20,7 @@ var CONTOUR = 1.0
 var COL: Vec4
 var fill = 1.0
 var S = 1.0
-var contrast = 1.0
+var contrast = 8.0  # how blurry the svg looks, 1 = blurry and 100 hard pixel edge.
 var d = 1e38
 var x0, y0, x1, y1: float
 var uv: Vec2
@@ -82,7 +83,7 @@ proc startPath() =
 
 proc draw(d0: float, O: var Vec4) =
   # optimization by deferring sqrt here
-  let d = min(sqrt(d0) * contrast * 2.0, 1.0)
+  let d = min(sqrt(d0) * contrast, 1.0)
   var value = 0.0
   if fill > 0.0:
     value = 0.5 + 0.5 * S * d
@@ -96,15 +97,14 @@ proc endPath(O: var Vec4) =
 
 proc SVG(inUv: Vec2, O: var Vec4) =
   uv = inUv * 400.0 # scaling
-  contrast = 1.0
 
   var i = 0
   while true:
     let command = texelFetch(dataBuffer, i)
     if command == cmdExit: break
-    if command == cmdStartPath: startPath()
-    if command == cmdEndPath: endPath(O)
-    if command == cmdStyleFill:
+    elif command == cmdStartPath: startPath()
+    elif command == cmdEndPath: endPath(O)
+    elif command == cmdStyleFill:
       style(
         FILL,
         texelFetch(dataBuffer, i + 1),
@@ -113,19 +113,19 @@ proc SVG(inUv: Vec2, O: var Vec4) =
         texelFetch(dataBuffer, i + 4)
       )
       i += 4
-    if command == cmdM:
+    elif command == cmdM:
       M(
         texelFetch(dataBuffer, i + 1),
         texelFetch(dataBuffer, i + 2)
       )
       i += 2
-    if command == cmdL:
+    elif command == cmdL:
       L(
         texelFetch(dataBuffer, i + 1),
         texelFetch(dataBuffer, i + 2)
       )
       i += 2
-    if command == cmdC:
+    elif command == cmdC:
       C(
         texelFetch(dataBuffer, i + 1),
         texelFetch(dataBuffer, i + 2),
@@ -135,20 +135,26 @@ proc SVG(inUv: Vec2, O: var Vec4) =
         texelFetch(dataBuffer, i + 6)
       )
       i += 6
-    if command == cmdz: z()
+    elif command == cmdz: z()
     i += 1
 
-proc mainImage(O: var Vec4, U0: Vec2) =
-  O = vec4(1)
+proc mainImage(U0: Vec2): Vec4 =
+  var O = vec4(1)
   let R = vec2(1000, 1000) # resolution
   var U = U0
   U.y = R.y - U.y
   U = U / R.x
   SVG(U, O)
+  return O
 
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
 
-  mainImage(fragColor, gl_FragCoord.xy)
+  fragColor = mainImage(gl_FragCoord.xy)
+
+  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.2)) / 4.0
+  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.4)) / 4.0
+  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.6)) / 4.0
+  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.8)) / 4.0
 
   #fragColor = vec4(0, 0, 0, 0)
 

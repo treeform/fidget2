@@ -1,12 +1,12 @@
 #version 300 es
-precision mediump float;
+precision highp float;
 
 vec2 uv;
 float x1;
 float S = 1.0;
 uniform samplerBuffer dataBuffer;
 float FILL = 1.0;
-float contrast = 1.0;
+float contrast = 8.0;
 float y0;
 float fill = 1.0;
 float y1;
@@ -41,8 +41,7 @@ void C(
   float y
 ) ;
 
-void mainImage(
-  inout vec4 O,
+vec4 mainImage(
   vec2 U0
 ) ;
 
@@ -92,7 +91,7 @@ void draw(
   float d0,
   inout vec4 O
 ) {
-  float d = min(((sqrt(d0)) * (contrast)) * (2.0), 1.0);
+  float d = min((sqrt(d0)) * (contrast), 1.0);
   float value = 0.0;
   if ((0.0) < (fill)) {
         value = (0.5) + (((0.5) * (S)) * (d));
@@ -119,36 +118,28 @@ void SVG(
   inout vec4 O
 ) {
   uv = (inUv) * (400.0);
-  contrast = 1.0;
   int i = 0;
-while(true) {
+  while(true) {
     float command = texelFetch(dataBuffer, i);
-    if ((command) == (4.0)) {
+    if ((command) == (0.0)) {
             break;
-    };
-    if ((command) == (1.0)) {
+    } else if ((command) == (1.0)) {
       startPath();
-    };
-    if ((command) == (2.0)) {
+    } else if ((command) == (2.0)) {
       endPath(O);
-    };
-    if ((command) == (3.0)) {
+    } else if ((command) == (3.0)) {
       style(FILL, texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
 (i) += (4);
-    };
-    if ((command) == (10.0)) {
+    } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
 (i) += (2);
-    };
-    if ((command) == (11.0)) {
+    } else if ((command) == (11.0)) {
       L(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
 (i) += (2);
-    };
-    if ((command) == (12.0)) {
+    } else if ((command) == (12.0)) {
       C(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)), texelFetch(dataBuffer, (i) + (6)));
 (i) += (6);
-    };
-    if ((command) == (20.0)) {
+    } else if ((command) == (20.0)) {
       z();
     };
 (i) += (1);
@@ -168,16 +159,16 @@ void C(
   y0 = y;
 }
 
-void mainImage(
-  inout vec4 O,
+vec4 mainImage(
   vec2 U0
 ) {
-  O = vec4(1);
+  vec4 O = vec4(1);
   vec2 R = vec2(1000, 1000);
   vec2 U = U0;
   U.y = (R.y) - (U.y);
   U = (U) / (R.x);
   SVG(U, O);
+  return O;
 }
 
 void z(
@@ -267,5 +258,5 @@ in vec4 gl_FragCoord;
 out vec4 fragColor;
 
 void main() {
-  mainImage(fragColor, gl_FragCoord.xy);
+    fragColor = mainImage(gl_FragCoord.xy);
 }

@@ -1,4 +1,5 @@
-import math, opengl, staticglfw, times, vmath, shadercompiler, svg4, print
+import math, opengl, staticglfw, times, vmath, shadercompiler, svg4, print, math
+import pixie
 
 # init libraries
 if init() == 0:
@@ -8,6 +9,7 @@ if init() == 0:
 # windowHint(SAMPLES, 4)
 
 # Open a window
+windowHint(VISIBLE, false.cint)
 var window = createWindow(
   1000, 1000,
   "run_shaders",
@@ -18,6 +20,25 @@ window.makeContextCurrent()
 # Load opengl
 loadExtensions()
 
+
+for i in [
+    ("lowp float", GL_LOW_FLOAT),
+    ("mediump float", GL_MEDIUM_FLOAT),
+    ("highp float", GL_HIGH_FLOAT),
+    ("lowp int", GL_LOW_INT),
+    ("mediump int", GL_MEDIUM_INT),
+    ("highp int", GL_HIGH_INT)
+  ]:
+  var
+    precisionRange: array[2, Glint]
+    precision: Glint
+  glGetShaderPrecisionFormat(
+    GL_FRAGMENT_SHADER,
+    i[1],
+    precisionRange[0].addr,
+    precision.addr
+  );
+  print i[0], precisionRange, precision
 
 proc basic2dVert(vertexPox: Vec2, gl_Position: var Vec4) =
   gl_Position.xy = vertexPox
@@ -93,69 +114,86 @@ var dataBufferSeq = @[
   # cmdz,
   # cmdEndPath,
 
+  # crazy_rect
   cmdStartPath,
-  # left exterior arc
-  cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
-  cmdM, 82.2115, 102.414,
-  cmdC, 82.2115,102.414, 104.7155,69.211, 149.6485,65.777,
-  cmdL, 149.6485,53.73,
-  cmdC, 99.8795,57.727, 56.7818,99.879,  56.7818,99.879,
-  cmdC, 56.7818,99.879, 81.1915,170.445, 149.6485,176.906,
-  cmdL, 149.6485,164.102,
-  cmdC, 99.4105,157.781, 82.2115,102.414, 82.2115,102.414,
+  #cmdMatrix 1.0, 0.0, 0.0, 1.0, 50.0, 50.0,
+  cmdStyleFill, 1.0, 0.3599999845027924, 0.0, 1.0,
+  cmdM, 0, 100,
+  cmdC, 0, 44.7715, 44.7715, 0, 100, 0,
+  cmdL, 280, 0,
+  cmdC, 291.046, 0, 300, 8.95431, 300, 20,
+  cmdL, 300, 150,
+  cmdC, 300, 232.843, 232.843, 300, 150, 300,
+  cmdL, 50, 300,
+  cmdC, 22.3858, 300, 0, 277.614, 0, 250,
+  cmdL, 0, 100,
   cmdz,
   cmdEndPath,
 
-  cmdStartPath,
-  # left interior arc
-  cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
-  cmdM, 149.6485,138.637,
-  cmdL, 149.6485,150.363,
-  cmdC, 111.6805,143.594, 101.1415,104.125, 101.1415,104.125,
-  cmdC, 101.1415,104.125, 119.3715,83.93,   149.6485,80.656,
-  cmdL, 149.6485,93.523,
-  cmdC, 149.6255,93.523, 149.6095,93.516,  149.5905,93.516,
-  cmdC, 133.6995,91.609, 121.2855,106.453,  121.2855,106.453,
-  cmdC, 121.2855,106.453, 128.2425,131.445, 149.6485,138.637,
-  cmdEndPath,
 
-  cmdStartPath,
-  # right main plate
-  cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
-  cmdM, 149.6485,31.512,
-  cmdL, 149.6485,53.73,
-  cmdC, 151.1095,53.617,  152.5705,53.523,  154.0395,53.473,
-  cmdC, 210.6215,51.566,  247.4885,99.879,  247.4885,99.879,
-  cmdC, 247.4885,99.879,  205.1455,151.367, 161.0315,151.367,
-  cmdC, 156.9885,151.367, 153.2035,150.992, 149.6485,150.363,
-  cmdL, 149.6485,164.102,
-  cmdC, 152.6885,164.488, 155.8405,164.715, 159.1295,164.715,
-  cmdC, 200.1805,164.715, 229.8675,143.75,  258.6135,118.937,
-  cmdC, 263.3795,122.754, 282.8915,132.039, 286.9025,136.105,
-  cmdC, 259.5705,158.988, 195.8715,177.434, 159.7585,177.434,
-  cmdC, 156.2775,177.434, 152.9345,177.223, 149.6485,176.906,
-  cmdL, 149.6485,196.211,
-  cmdL, 305.6805,196.211,
-  cmdL, 305.6805,31.512,
-  cmdL, 149.6485,31.512,
-  cmdz,
-  cmdEndPath,
+  # cmdStartPath,
+  # # left exterior arc
+  # cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
+  # cmdM, 82.2115, 102.414,
+  # cmdC, 82.2115,102.414, 104.7155,69.211, 149.6485,65.777,
+  # cmdL, 149.6485,53.73,
+  # cmdC, 99.8795,57.727, 56.7818,99.879,  56.7818,99.879,
+  # cmdC, 56.7818,99.879, 81.1915,170.445, 149.6485,176.906,
+  # cmdL, 149.6485,164.102,
+  # cmdC, 99.4105,157.781, 82.2115,102.414, 82.2115,102.414,
+  # cmdz,
+  # cmdEndPath,
 
-  cmdStartPath,
-  # right interior arc
-  cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
-  cmdM, 149.6485,80.656,
-  cmdL, 149.6485,65.777,
-  cmdC, 151.0945,65.676, 152.5515,65.598, 154.0395,65.551,
-  cmdC, 194.7275,64.273, 221.4225,100.516, 221.4225,100.516,
-  cmdC, 221.4225,100.516, 192.5905,140.559, 161.6765,140.559,
-  cmdC, 157.2275,140.559, 153.2385,139.844, 149.6485,138.637,
-  cmdL, 149.6485,93.523,
-  cmdC, 165.4885,95.437, 168.6765,102.434, 178.1995,118.309,
-  cmdL, 199.3795,100.449,
-  cmdC, 199.3795,100.449, 183.9185,80.172, 157.8555,80.172,
-  cmdC, 155.0205,80.172, 152.3095,80.371, 149.6485,80.656,
-  cmdEndPath,
+  # cmdStartPath,
+  # # left interior arc
+  # cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
+  # cmdM, 149.6485,138.637,
+  # cmdL, 149.6485,150.363,
+  # cmdC, 111.6805,143.594, 101.1415,104.125, 101.1415,104.125,
+  # cmdC, 101.1415,104.125, 119.3715,83.93,   149.6485,80.656,
+  # cmdL, 149.6485,93.523,
+  # cmdC, 149.6255,93.523, 149.6095,93.516,  149.5905,93.516,
+  # cmdC, 133.6995,91.609, 121.2855,106.453,  121.2855,106.453,
+  # cmdC, 121.2855,106.453, 128.2425,131.445, 149.6485,138.637,
+  # cmdEndPath,
+
+  # cmdStartPath,
+  # # right main plate
+  # cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
+  # cmdM, 149.6485,31.512,
+  # cmdL, 149.6485,53.73,
+  # cmdC, 151.1095,53.617,  152.5705,53.523,  154.0395,53.473,
+  # cmdC, 210.6215,51.566,  247.4885,99.879,  247.4885,99.879,
+  # cmdC, 247.4885,99.879,  205.1455,151.367, 161.0315,151.367,
+  # cmdC, 156.9885,151.367, 153.2035,150.992, 149.6485,150.363,
+  # cmdL, 149.6485,164.102,
+  # cmdC, 152.6885,164.488, 155.8405,164.715, 159.1295,164.715,
+  # cmdC, 200.1805,164.715, 229.8675,143.75,  258.6135,118.937,
+  # cmdC, 263.3795,122.754, 282.8915,132.039, 286.9025,136.105,
+  # cmdC, 259.5705,158.988, 195.8715,177.434, 159.7585,177.434,
+  # cmdC, 156.2775,177.434, 152.9345,177.223, 149.6485,176.906,
+  # cmdL, 149.6485,196.211,
+  # cmdL, 305.6805,196.211,
+  # cmdL, 305.6805,31.512,
+  # cmdL, 149.6485,31.512,
+  # cmdz,
+  # cmdEndPath,
+
+  # cmdStartPath,
+  # # right interior arc
+  # cmdStyleFill, 0.45, 0.71, 0.10, 1.0,
+  # cmdM, 149.6485,80.656,
+  # cmdL, 149.6485,65.777,
+  # cmdC, 151.0945,65.676, 152.5515,65.598, 154.0395,65.551,
+  # cmdC, 194.7275,64.273, 221.4225,100.516, 221.4225,100.516,
+  # cmdC, 221.4225,100.516, 192.5905,140.559, 161.6765,140.559,
+  # cmdC, 157.2275,140.559, 153.2385,139.844, 149.6485,138.637,
+  # cmdL, 149.6485,93.523,
+  # cmdC, 165.4885,95.437, 168.6765,102.434, 178.1995,118.309,
+  # cmdL, 199.3795,100.449,
+  # cmdC, 199.3795,100.449, 183.9185,80.172, 157.8555,80.172,
+  # cmdC, 155.0205,80.172, 152.3095,80.371, 149.6485,80.656,
+  # cmdEndPath,
 
   cmdExit
 ]
@@ -265,6 +303,8 @@ if isLinked == 1:
   # glEnable(GL_MULTISAMPLE)
 
   # Record the time
+  var screen = newImage(1000, 1000)
+
   var
     startTs = epochTime()
     frameCount = 0
@@ -275,7 +315,6 @@ if isLinked == 1:
     # Exit on `ESC` press
     if getKey(window, KEY_ESCAPE) == 1:
       setWindowShouldClose(window, 1)
-
     # Clear and setup drawing
     glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
     glUseProgram(shaderProgram)
@@ -288,13 +327,27 @@ if isLinked == 1:
     glBindVertexArray(0);
     glUseProgram(0);
 
+    inc frameCount
+    if frameCount != 0 and frameCount mod 144 == 0:
+      echo 1 / ((epochTime() - startTs) / frameCount.float64), "fps"
+
+    glReadPixels(
+      0, 0,
+      screen.width.Glint, screen.height.Glint,
+      GL_RGBA, GL_UNSIGNED_BYTE,
+      screen.data[0].addr
+    )
+
+    echo "time:", epochTime() - startTs
+
+    screen.writeFile("gpu_test.png")
+    quit()
+
+
+
     # Poll and swap
     pollEvents()
     swapBuffers(window)
-
-    inc frameCount
-    if frameCount mod 144 == 0:
-      echo 1 / ((epochTime() - startTs) / frameCount.float64), "fps"
 
 # Cleanup non-GC'd stuff
 deallocCStringArray(vertShaderArray)
