@@ -144,7 +144,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     for j in 0 .. n.len-1:
       n[j].toCode(res)
 
-  of nnkEmpty, nnkNilLit, nnkDiscardStmt:
+  of nnkEmpty, nnkNilLit, nnkDiscardStmt, nnkPragma:
     # Skip all nil, empty and discard statements.
     discard
 
@@ -168,16 +168,18 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkIdentDefs:
     for j in countup(0, n.len - 1, 3):
-      res.add typeRename(n[j + 2].getTypeInst().strVal)
+      res.add typeRename(n[j].getTypeInst().strVal)
       res.add " "
       n[j].toCode(res)
-      res.add " = "
-      n[j + 2].toCode(res)
+      if n[j + 2].kind != nnkEmpty:
+        res.add " = "
+        n[j + 2].toCode(res)
 
   of nnkReturnStmt:
     res.addIndent level
     res.add "return "
-    n[0][1].toCode(res)
+    if n[0].kind != nnkEmpty:
+      n[0][1].toCode(res)
 
   of nnkBreakStmt:
     res.addIndent level

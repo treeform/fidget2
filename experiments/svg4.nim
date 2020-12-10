@@ -81,6 +81,29 @@ proc style(f, r, g, b, a: float) =
 proc startPath() =
   d = 1e38
 
+proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
+  var res: Vec4
+  res.w = (source.w + backdrop.w * (1.0 - source.w))
+  if res.w == 0.0:
+    return res
+
+  let
+    t0 = source.w * (1.0 - backdrop.w)
+    t1 = source.w * backdrop.w
+    t2 = (1.0 - source.w) * backdrop.w
+
+  res.x = t0 * source.x + t1 * mixed.x + t2 * backdrop.x
+  res.y = t0 * source.y + t1 * mixed.y + t2 * backdrop.y
+  res.z = t0 * source.z + t1 * mixed.z + t2 * backdrop.z
+
+  res.x /= res.w
+  res.y /= res.w
+  res.z /= res.w
+  return res
+
+proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
+  return alphaFix(backdrop, source, source)
+
 proc draw(d0: float, O: var Vec4) =
   # optimization by deferring sqrt here
   let d = min(sqrt(d0) * contrast, 1.0)
@@ -89,7 +112,13 @@ proc draw(d0: float, O: var Vec4) =
     value = 0.5 + 0.5 * S * d
   else:
     value = d
-  O = mix(COL, O, value) # paint
+  # O = mix(COL, O, value) # paint
+  var c = COL
+  var o = O
+  o.w *= value
+  c.w *= (1.0 - value)
+  #c.w *= value
+  O = blendNormalFloats(c, o)
 
 proc endPath(O: var Vec4) =
   draw(d, O)
