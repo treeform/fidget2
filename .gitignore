@@ -18,5 +18,7 @@ tests/frames/index.html
 tests/files/index.html
 tests/frames/*.png
 tests/files/*.png
+tests/frames/gpu/*.png
+tests/files/gpu/*.png
 tests/frames/diffs/*.png
 tests/files/diffs/*.png

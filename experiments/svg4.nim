@@ -15,12 +15,12 @@ const
 
 
 var FILL = 1.0
-var CONTOUR = 1.0
+var CONTOUR = 2.0
 
 var COL: Vec4
 var fill = 1.0
 var S = 1.0
-var contrast = 8.0  # how blurry the svg looks, 1 = blurry and 100 hard pixel edge.
+var contrast = 12.0  # how blurry the svg looks, 1 = blurry and 100 hard pixel edge.
 var d = 1e38
 var x0, y0, x1, y1: float
 var uv: Vec2
@@ -140,9 +140,9 @@ proc SVG(inUv: Vec2, O: var Vec4) =
 
 proc mainImage(U0: Vec2): Vec4 =
   var O = vec4(1)
-  let R = vec2(1000, 1000) # resolution
+  let R = vec2(400, 400) # resolution
   var U = U0
-  U.y = R.y - U.y
+  # U.y = R.y - U.y
   U = U / R.x
   SVG(U, O)
   return O
