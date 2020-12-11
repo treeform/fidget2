@@ -48,6 +48,11 @@ vec4 mainImage(
 void z(
 ) ;
 
+vec4 blendNormalFloats(
+  vec4 backdrop,
+  vec4 source
+) ;
+
 void startPath(
 ) ;
 
@@ -76,6 +81,12 @@ void endPath(
   inout vec4 O
 ) ;
 
+vec4 alphaFix(
+  vec4 backdrop,
+  vec4 source,
+  vec4 mixed
+) ;
+
 float line(
   vec2 p,
   vec2 a,
@@ -98,7 +109,11 @@ void draw(
   } else {
         value = d;
   };
-  O = mix(COL, O, value);
+  vec4 c = COL;
+  vec4 o = O;
+(o.w) *= (value);
+(c.w) *= ((1.0) - (value));
+  O = blendNormalFloats(c, o);
 }
 
 void style(
@@ -175,6 +190,13 @@ void z(
     d = min(d, line(uv, vec2(x0, y0), vec2(x1, y1)));
 }
 
+vec4 blendNormalFloats(
+  vec4 backdrop,
+  vec4 source
+) {
+    return alphaFix(backdrop, source, source);
+}
+
 void startPath(
 ) {
     d = 1e+038;
@@ -227,6 +249,28 @@ void endPath(
 ) {
   draw(d, O);
 ;
+}
+
+vec4 alphaFix(
+  vec4 backdrop,
+  vec4 source,
+  vec4 mixed
+) {
+  vec4 res;
+  res.w = (source.w) + ((backdrop.w) * ((1.0) - (source.w)));
+  if ((res.w) == (0.0)) {
+        return res;
+  };
+  float t0 = (source.w) * ((1.0) - (backdrop.w));
+  float t1 = (source.w) * (backdrop.w);
+  float t2 = ((1.0) - (source.w)) * (backdrop.w);
+  res.x = (((t0) * (source.x)) + ((t1) * (mixed.x))) + ((t2) * (backdrop.x));
+  res.y = (((t0) * (source.y)) + ((t1) * (mixed.y))) + ((t2) * (backdrop.y));
+  res.z = (((t0) * (source.z)) + ((t1) * (mixed.z))) + ((t2) * (backdrop.z));
+(res.x) /= (res.w);
+(res.y) /= (res.w);
+(res.z) /= (res.w);
+  return res;
 }
 
 float line(

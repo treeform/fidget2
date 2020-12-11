@@ -1,4 +1,4 @@
-import tables, chroma, vmath, pixie, jsony, json,
+import tables, chroma, vmath, pixie, jsony, json, bumpy,
     httpclient, strutils, os, typography, strformat
 
 type
