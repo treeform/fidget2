@@ -100,7 +100,7 @@ type
 
   Geometry* = ref object
     path*: string
-    windingRule*: string
+    windingRule*: WindingRule
 
   BooleanOperation* = enum
     boSubtract
@@ -394,6 +394,13 @@ proc enumHook(s: string, v: var VAlignMode) =
     of "TOP": Top
     of "BOTTOM": Bottom
     else: raise newException(ValueError, "Invalid text align mode:" & s)
+
+proc enumHook(s: string, v: var WindingRule) =
+  v = case s:
+    of "EVENODD": wrEvenOdd
+    of "NONZERO": wrNonZero
+    else: raise newException(ValueError, "Invalid text align mode:" & s)
+
 
 proc use*(url: string) =
   if not dirExists("figma"):

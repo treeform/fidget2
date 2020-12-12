@@ -556,17 +556,19 @@ proc drawNodeInternal*(node: Node) =
         geometry.fillPath(
           geom.path,
           white,
-          mat
+          mat,
+          geom.windingRule
         )
         fillMask.draw(geometry)
 
     if node.strokes.len > 0:
       strokeMask = newImage(w, h)
-      for geometry in node.strokeGeometry:
+      for geom in node.strokeGeometry:
         strokeMask.fillPath(
-          geometry.path,
+          geom.path,
           white,
-          mat
+          mat,
+          geom.windingRule
         )
 
   of nkText:
