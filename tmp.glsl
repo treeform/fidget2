@@ -1,5 +1,6 @@
 #version 300 es
 precision highp float;
+// from svgMain
 
 vec2 uv;
 float x1;
@@ -295,8 +296,6 @@ void L(
   x0 = x;
   y0 = y;
 }
-// name: svgMain
-
 in vec4 gl_FragCoord;
 out vec4 fragColor;
 
