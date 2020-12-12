@@ -3,13 +3,14 @@ import math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math
 import pixie
 
 var
-  viewPortWidth: int
-  viewPortHeight: int
+  viewPortWidth*: int
+  viewPortHeight*: int
   windowReady = false
 
   # Data Buffer Object
 
-  dataBufferSeq: seq[float32]
+  dataBufferSeq*: seq[float32]
+  mat*, prevMat*: Mat3
 
 proc setupGpuRender(width, height: int) =
   viewPortWidth = width
@@ -192,7 +193,7 @@ proc readGpuPixels(): pixie.Image =
   )
   return screen
 
-var mat, prevMat: Mat3
+
 
 proc transform(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
@@ -208,7 +209,7 @@ proc transform(node: Node): Mat3 =
   result[2, 1] = node.relativeTransform[1][2]
   result[2, 2] = 1
 
-proc drawNode(node: Node, level: int) =
+proc drawNode*(node: Node, level: int) =
 
   if not node.visible or node.opacity == 0:
     return

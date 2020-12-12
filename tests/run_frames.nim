@@ -1,6 +1,7 @@
-import chroma, os, fidget2, pixie, strutils, strformat, cligen, times
+import chroma, os, fidget2, pixie, strutils, strformat, cligen, times,
+    imagediff, fidget2/gpurender, fidget2/zpurender
 
-proc main(r = "", e = "", l = 10000) =
+proc main(w = "gpu", r = "", e = "", l = 10000) =
 
   var renderTime = 0.0
 
@@ -18,40 +19,36 @@ proc main(r = "", e = "", l = 10000) =
     if e != "" and frame.name != e: continue
 
     echo " *** ", frame.name, " *** "
-    # discard drawCompleteFrame(frame)
-    # frame.markDirty()
 
     let startTime = epochTime()
-    let image = drawCompleteFrame(frame)
+
+    var image: Image
+    if w == "gpu":
+      image = drawCompleteGpuFrame(frame)
+    elif w == "cpu":
+      image = drawCompleteFrame(frame)
+    elif w == "zpu":
+      image = drawCompleteZpuFrame(frame)
+
     let frameTime = epochTime() - startTime
     renderTime += frameTime
     image.writeFile("tests/frames/" & frame.name & ".png")
 
-    var diffScore = 0
+    var
+      diffScore: int
+      diffImage: Image
 
     if fileExists(&"tests/frames/masters/{frame.name}.png"):
       var master = readImage(&"tests/frames/masters/{frame.name}.png")
-      for x in 0 ..< master.width:
-        for y in 0 ..< master.height:
-          let
-            m = master.getRgbaUnsafe(x, y)
-            u = image.getRgbaUnsafe(x, y)
-          var
-            c: ColorRGBA
-          let diff = (m.r.int - u.r.int) + (m.g.int - u.g.int) + (m.b.int - u.b.int)
-          c.r = abs(m.a.int - u.a.int).clamp(0, 255).uint8
-          c.g = (diff).clamp(0, 255).uint8
-          c.b = (-diff).clamp(0, 255).uint8
-          c.a = 255
-          let diffPixel = abs(m.r.int - u.r.int) + abs(m.g.int - u.g.int) + abs(m.b.int - u.b.int) + abs(m.a.int - u.a.int)
-          diffScore += diffPixel
-          # if diffPixel == 0:
-          #   c.a = 0
-
-          image.setRgbaUnsafe(x, y, c)
-      image.writeFile("tests/frames/diffs/" & frame.name & ".png")
+      (diffScore, diffImage) = imageDiff(master, image)
+      diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
-    framesHtml.add(&"""<h4>{frame.name}</h4><p>{frameTime}s {diffScore} diffpx</p><img src="{frame.name}.png"><img src="masters/{frame.name}.png"><img src="diffs/{frame.name}.png"><br>""")
+
+    framesHtml.add(&"<h4>{frame.name}</h4>")
+    framesHTML.add(&"<p>{w} {frameTime}s {diffScore} diffpx</p>")
+    framesHTML.add(&"<img src='{frame.name}.png'>")
+    framesHTML.add(&"<img src='masters/{frame.name}.png'>")
+    framesHTML.add(&"<img src='diffs/{frame.name}.png'><br>")
 
   framesHtml.add(&"<p>Total time: {renderTime}s</p>")
   writeFile("tests/frames/index.html", framesHtml)
