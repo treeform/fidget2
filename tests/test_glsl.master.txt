@@ -1,0 +1,63 @@
+--------------------------------------------------
+#version 410
+precision highp float;
+// from redFrag
+
+out vec4 fragColor;
+
+void main() {
+    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+(r: 1.0, g: 0.0, b: 0.0, a: 1.0)
+--------------------------------------------------
+#version 410
+precision highp float;
+// from basicFrag
+
+in vec2 uv;
+in vec4 color;
+in vec3 normal;
+flat in int texelOffset;
+out vec4 fragColor;
+
+void main() {
+  vec3 a = vec3(0.5, 0.5, 0.5);
+  vec3 b = vec3(0.5, 0.5, 0.5);
+  vec3 c = vec3(1, 1, 1);
+  vec3 d = vec3(1, 0, 1);
+  vec3 e = vec3(1, 0, 0);
+  fragColor.rgb = (vec4.rgb) * (dot(normal, normalize(vec3(1.0, 1.0, 1.0))));
+  fragColor.a = 1.0;
+}
+
+(r: 0.5773502588272095, g: 0.0, b: 0.0, a: 1.0)
+--------------------------------------------------
+#version 410
+precision highp float;
+// from floatTest
+
+
+void main() {
+    float f = 1;
+;
+}
+
+--------------------------------------------------
+#version 410
+precision highp float;
+// from samplerBufferTest
+
+uniform samplerBuffer dataBuffer;
+out vec4 fragColor;
+
+void main() {
+    if ((texelFetch(dataBuffer, 0)) == (0)) {
+        fragColor = vec4(1, 0, 0, 1);
+  } else {
+        fragColor = vec4(0, 0, 0, 1);
+  };
+}
+
+(r: 1.0, g: 0.0, b: 0.0, a: 1.0)
+(r: 0.0, g: 0.0, b: 0.0, a: 1.0)

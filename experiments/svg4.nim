@@ -13,7 +13,6 @@ const
   cmdC*: float32 = 12
   cmdz*: float32 = 20
 
-
 var FILL = 1.0
 var CONTOUR = 2.0
 
