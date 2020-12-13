@@ -17,7 +17,7 @@ proc imageDiff*(master, image: Image): (int, Image) =
       c.g = (diff).clamp(0, 255).uint8
       c.b = (-diff).clamp(0, 255).uint8
       c.a = 255
-      let diffPixel = abs(m.r.int - u.r.int) +
+      diffScore += abs(m.r.int - u.r.int) +
         abs(m.g.int - u.g.int) +
         abs(m.b.int - u.b.int) +
         abs(m.a.int - u.a.int)

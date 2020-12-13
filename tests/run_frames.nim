@@ -18,7 +18,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
     if r != "" and not frame.name.startsWith(r): continue
     if e != "" and frame.name != e: continue
 
-    echo " *** ", frame.name, " *** "
+    echo frame.name, " --------------------------------- "
 
     let startTime = epochTime()
 
@@ -34,8 +34,9 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
     renderTime += frameTime
     image.writeFile("tests/frames/" & frame.name & ".png")
 
+
     var
-      diffScore: int
+      diffScore: int = -1
       diffImage: Image
 
     if fileExists(&"tests/frames/masters/{frame.name}.png"):
@@ -43,6 +44,8 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
       (diffScore, diffImage) = imageDiff(master, image)
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
+
+    echo "  ", w, " ", frameTime, "s ", diffScore
 
     framesHtml.add(&"<h4>{frame.name}</h4>")
     framesHTML.add(&"<p>{w} {frameTime}s {diffScore} diffpx</p>")
