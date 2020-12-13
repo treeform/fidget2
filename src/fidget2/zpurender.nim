@@ -12,6 +12,8 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
   dataBufferSeq.add(cmdExit)
 
+  textureAtlas.image = readImage("tests/test512.png")
+
   var image = newImage(width, height)
   dataBuffer.data = dataBufferSeq
 

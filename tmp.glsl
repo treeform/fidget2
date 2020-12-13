@@ -11,6 +11,7 @@ float contrast = 12.0;
 float y0;
 float fill = 1.0;
 float y1;
+uniform sampler2D textureAtlas;
 vec4 COL;
 float d = 1e+038;
 float x0;
@@ -300,5 +301,6 @@ in vec4 gl_FragCoord;
 out vec4 fragColor;
 
 void main() {
-    fragColor = mainImage(gl_FragCoord.xy);
+  fragColor = mainImage(gl_FragCoord.xy);
+  fragColor = ((fragColor) * (0.5)) + ((texture(textureAtlas, (gl_FragCoord.xy) / (100.0))) * (0.5));
 }

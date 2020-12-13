@@ -1,6 +1,7 @@
 import vmath, fidget2/glsl
 
 var dataBuffer*: Uniform[SamplerBuffer]
+var textureAtlas*: Uniform[Sampler2d]
 
 const
   cmdStartPath*: float32 = 1
@@ -191,3 +192,5 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   #   fragColor = vec4(0.0, 1.0, 1.0, 1.0)
   # else:
   #   fragColor = vec4(1.0, 1.0, 1.0, 1.0)
+
+  fragColor = fragColor * 0.5 + texture(textureAtlas, gl_FragCoord.xy / 100.0) * 0.5

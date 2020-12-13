@@ -1,6 +1,6 @@
 ## Shader macro, converts nim code into GLSL
 
-import macros, strutils, vmath, tables
+import macros, strutils, vmath, tables, pixie, chroma
 
 proc show(n: NimNode): string =
   result.add $n.kind
@@ -32,6 +32,7 @@ proc typeRename(t: string): string =
   of "float64": "float"
   of "Uniform": "uniform"
   of "SamplerBuffer": "samplerBuffer"
+  of "Sampler2d": "sampler2D"
   else: t
 
 const glslGlobals = [
@@ -43,7 +44,8 @@ const glslFunctions = [
   "vec2", "vec3", "vec4", "color",
   "Vec2", "Vec3", "Vec4", "Color",
   "clamp", "min", "max", "dot", "sqrt", "lerp", "mix",
-  "texelFetch", "normalize"
+  "texelFetch", "texture",
+  "normalize"
 ]
 
 proc procRename(t: string): string =
@@ -453,6 +455,9 @@ type
   SamplerBuffer* = object
     data*: seq[float32]
 
+  Sampler2d* = object
+    image*: Image
+
   Color* = object
     r*: float32
     g*: float32
@@ -472,6 +477,14 @@ proc `rgb=`*(c: var Color, v: Vec3) =
 
 proc vec4*(v: Vec3, w: float32): Vec4 =
   vec4(v.x, v.y, v.z, w)
+
+proc vec4*(c: chroma.ColorRGBA): Vec4 =
+  vec4(
+    c.r.float32/255,
+    c.g.float32/255,
+    c.b.float32/255,
+    c.a.float32/255
+  )
 
 # proc xyz*(v: Vec4): Vec3 =
 #   vec3(v.x, v.y, v.z)
@@ -497,6 +510,12 @@ proc `xy`*(a: Vec4): Vec2 =
 
 proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): float32 =
   buffer.data[index]
+
+proc texture*(buffer: Uniform[Sampler2D], pos: Vec2): Vec4 =
+  buffer.image.getRgbaSmooth(
+    ((pos.x mod 1.0) * buffer.image.width.float32),
+    ((pos.y mod 1.0) * buffer.image.height.float32)
+  ).vec4
 
 # proc r*(v: Vec4|Vec3|Vec2): float = v.x
 # proc g*(v: Vec4|Vec3|Vec2): float = v.y

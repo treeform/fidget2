@@ -12,6 +12,10 @@ var
   dataBufferSeq*: seq[float32]
   mat*, prevMat*: Mat3
 
+  # OpenGL stuff.
+  dataBufferTextureId: GLuint
+  textureAtlasId: GLuint
+
 proc setupGpuRender(width, height: int) =
   viewPortWidth = width
   viewPortHeight = height
@@ -60,7 +64,6 @@ var
 
 proc readGpuPixels(): pixie.Image =
 
-
   if not windowReady:
 
     # init libraries
@@ -102,11 +105,30 @@ proc readGpuPixels(): pixie.Image =
     glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
     glActiveTexture(GL_TEXTURE0)
-
-    var dataBufferTextureId: GLuint
     glGenTextures(1, dataBufferTextureId.addr)
     glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
     glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, dataBufferId)
+
+    glActiveTexture(GL_TEXTURE1)
+    glGenTextures(1, textureAtlasId.addr)
+    glBindTexture(GL_TEXTURE_2D, textureAtlasId)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+    var image = readImage("tests/test512.png")
+    glTexImage2D(
+      GL_TEXTURE_2D,
+      0,
+      GL_RGBA.GLint,
+      image.width.GLsizei,
+      image.height.GLsizei,
+      0,
+      GL_RGBA,
+      GL_UNSIGNED_BYTE,
+      image.data[0].addr
+    )
 
     # Compile shaders
     # Vertex
@@ -150,7 +172,6 @@ proc readGpuPixels(): pixie.Image =
 
     # insert locations
     glBindAttribLocation(shaderProgram, 0, "vertexPos");
-    #glBindAttribLocation(shaderProgram, 0, "vertexClr");
 
     glLinkProgram(shaderProgram);
 
@@ -170,6 +191,10 @@ proc readGpuPixels(): pixie.Image =
 
     var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
     glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
+
+    var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlas")
+    print textureAtlasLoc
+    glUniform1i(textureAtlasLoc, 1) # Set textureAtlas to 1th texture.
 
     windowReady = true
 
