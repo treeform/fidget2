@@ -1,10 +1,6 @@
-import chroma, os, fidget2, pixie, strutils, strformat, times
-import math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math
-import pixie
+import chroma, fidget2, pixie, math, vmath, glsl, gpushader, gpurender, pixie
 
-import gpurender
-
-proc drawCompleteZPUFrame*(node: Node): pixie.Image =
+proc drawCompleteZpuFrame*(node: Node): pixie.Image =
   let
     width = node.absoluteBoundingBox.w.int
     height = node.absoluteBoundingBox.h.int
@@ -14,9 +10,10 @@ proc drawCompleteZPUFrame*(node: Node): pixie.Image =
 
   drawNode(node, 0)
 
+  dataBufferSeq.add(cmdExit)
+
   var image = newImage(width, height)
   dataBuffer.data = dataBufferSeq
-  dataBuffer.data.add(0)
 
   for y in 0 ..< image.height:
     for x in 0 ..< image.width:

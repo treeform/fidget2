@@ -325,7 +325,6 @@ proc drawNode*(node: Node, level: int) =
 
         dataBufferSeq.add cmdEndPath
 
-
     else:
       echo($node.kind & " not supported")
 
@@ -334,7 +333,7 @@ proc drawNode*(node: Node, level: int) =
 
   mat = prevMat
 
-proc drawCompleteGPUFrame*(node: Node): pixie.Image =
+proc drawCompleteGpuFrame*(node: Node): pixie.Image =
   let
     width = node.absoluteBoundingBox.w.int
     height = node.absoluteBoundingBox.h.int
@@ -344,6 +343,8 @@ proc drawCompleteGPUFrame*(node: Node): pixie.Image =
   mat.identity()
 
   drawNode(node, 0)
+
+  dataBufferSeq.add(cmdExit)
 
 
   return readGpuPixels()
