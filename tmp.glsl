@@ -5,15 +5,16 @@ precision highp float;
 vec2 uv;
 float x1;
 float S = 1.0;
+float textureOn;
 uniform samplerBuffer dataBuffer;
 float FILL = 1.0;
 float contrast = 12.0;
 float y0;
 float fill = 1.0;
-float y1;
 uniform sampler2D textureAtlas;
-vec4 COL;
+float y1;
 float d = 1e+038;
+vec4 currentColor;
 float x0;
 
 void draw(
@@ -111,11 +112,16 @@ void draw(
   } else {
         value = d;
   };
-  vec4 c = COL;
-  vec4 o = O;
-(o.w) *= (value);
-(c.w) *= ((1.0) - (value));
-  O = blendNormalFloats(c, o);
+  vec4 drawColor;
+  if ((textureOn) == (1.0)) {
+        drawColor = texture(textureAtlas, (uv) / (100.0));
+  } else {
+        drawColor = currentColor;
+  };
+  vec4 outColor = O;
+(outColor.w) *= (value);
+(drawColor.w) *= ((1.0) - (value));
+  O = blendNormalFloats(drawColor, outColor);
 }
 
 void style(
@@ -127,7 +133,7 @@ void style(
 ) {
   fill = f;
   S = 1.0;
-  COL = vec4(r, g, b, a);
+  currentColor = vec4(r, g, b, a);
 }
 
 void SVG(
@@ -145,6 +151,7 @@ void SVG(
     } else if ((command) == (2.0)) {
       endPath(O);
     } else if ((command) == (3.0)) {
+      textureOn = 0.0;
       style(FILL, texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
 (i) += (4);
     } else if ((command) == (10.0)) {
@@ -156,6 +163,9 @@ void SVG(
     } else if ((command) == (12.0)) {
       C(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)), texelFetch(dataBuffer, (i) + (6)));
 (i) += (6);
+    } else if ((command) == (5.0)) {
+      textureOn = texelFetch(dataBuffer, (i) + (1));
+(i) += (1);
     } else if ((command) == (20.0)) {
       z();
     };
@@ -301,6 +311,5 @@ in vec4 gl_FragCoord;
 out vec4 fragColor;
 
 void main() {
-  fragColor = mainImage(gl_FragCoord.xy);
-  fragColor = ((fragColor) * (0.5)) + ((texture(textureAtlas, (gl_FragCoord.xy) / (100.0))) * (0.5));
+    fragColor = mainImage(gl_FragCoord.xy);
 }

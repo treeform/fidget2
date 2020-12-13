@@ -8,6 +8,7 @@ const
   cmdEndPath*: float32 = 2
   cmdStyleFill*: float32 = 3
   #cmdMatrix*: float32 = 4
+  cmdTexture*: float32 = 5
   cmdExit*: float32 = 0
   cmdM*: float32 = 10
   cmdL*: float32 = 11
@@ -17,13 +18,14 @@ const
 var FILL = 1.0
 var CONTOUR = 2.0
 
-var COL: Vec4
+var currentColor: Vec4
 var fill = 1.0
 var S = 1.0
 var contrast = 12.0  # how blurry the svg looks, 1 = blurry and 100 hard pixel edge.
 var d = 1e38
 var x0, y0, x1, y1: float
 var uv: Vec2
+var textureOn: float
 
 proc M(x, y: float) =
   x1 = x
@@ -76,7 +78,7 @@ proc z() =
 proc style(f, r, g, b, a: float) =
   fill = f
   S = 1.0
-  COL = vec4(r, g, b, a)
+  currentColor = vec4(r, g, b, a)
 
 proc startPath() =
   d = 1e38
@@ -112,13 +114,17 @@ proc draw(d0: float, O: var Vec4) =
     value = 0.5 + 0.5 * S * d
   else:
     value = d
-  # O = mix(COL, O, value) # paint
-  var c = COL
-  var o = O
-  o.w *= value
-  c.w *= (1.0 - value)
-  #c.w *= value
-  O = blendNormalFloats(c, o)
+  # O = mix(currentColor, O, value) # paint
+
+  var drawColor: Vec4
+  if textureOn == 1.0:
+    drawColor = texture(textureAtlas, uv/100.0)
+  else:
+    drawColor = currentColor
+  var outColor = O
+  outColor.w *= value
+  drawColor.w *= (1.0 - value)
+  O = blendNormalFloats(drawColor, outColor)
 
 proc endPath(O: var Vec4) =
   draw(d, O)
@@ -134,6 +140,7 @@ proc SVG(inUv: Vec2, O: var Vec4) =
     elif command == cmdStartPath: startPath()
     elif command == cmdEndPath: endPath(O)
     elif command == cmdStyleFill:
+      textureOn = 0.0
       style(
         FILL,
         texelFetch(dataBuffer, i + 1),
@@ -164,6 +171,9 @@ proc SVG(inUv: Vec2, O: var Vec4) =
         texelFetch(dataBuffer, i + 6)
       )
       i += 6
+    elif command == cmdTexture:
+      textureOn = texelFetch(dataBuffer, i + 1)
+      i += 1
     elif command == cmdz: z()
     i += 1
 
@@ -193,4 +203,4 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   # else:
   #   fragColor = vec4(1.0, 1.0, 1.0, 1.0)
 
-  fragColor = fragColor * 0.5 + texture(textureAtlas, gl_FragCoord.xy / 100.0) * 0.5
+  # fragColor = fragColor * 0.5 + texture(textureAtlas, gl_FragCoord.xy / 100.0) * 0.5

@@ -273,13 +273,19 @@ proc drawNode*(node: Node, level: int) =
     of nkVector, nkRectangle, nkStar, nkEllipse:
 
       for paint in node.fills:
-        dataBufferSeq.add @[
-          cmdStyleFill,
-          paint.color.r,
-          paint.color.g,
-          paint.color.b,
-          paint.color.a * paint.opacity * node.opacity
-        ]
+        if paint.kind == pkImage:
+          dataBufferSeq.add @[
+            cmdTexture,
+            1.0
+          ]
+        else:
+          dataBufferSeq.add @[
+            cmdStyleFill,
+            paint.color.r,
+            paint.color.g,
+            paint.color.b,
+            paint.color.a * paint.opacity * node.opacity
+          ]
 
       for geom in node.fillGeometry:
         dataBufferSeq.add cmdStartPath
