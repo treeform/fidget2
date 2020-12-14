@@ -4,12 +4,11 @@ var dataBuffer*: Uniform[SamplerBuffer]
 var textureAtlas*: Uniform[Sampler2d]
 
 const
+  cmdExit*: float32 = 0
   cmdStartPath*: float32 = 1
   cmdEndPath*: float32 = 2
   cmdStyleFill*: float32 = 3
-  #cmdMatrix*: float32 = 4
-  cmdTexture*: float32 = 5
-  cmdExit*: float32 = 0
+  cmdTexture*: float32 = 4
   cmdM*: float32 = 10
   cmdL*: float32 = 11
   cmdC*: float32 = 12
@@ -117,8 +116,7 @@ proc draw() =
 proc endPath() =
   draw()
 
-proc SVG(inUv: Vec2) =
-  uv = inUv * 400.0 # scaling
+proc runCommands() =
 
   var i = 0
   while true:
@@ -163,18 +161,13 @@ proc SVG(inUv: Vec2) =
     elif command == cmdz: z()
     i += 1
 
-proc mainImage(U0: Vec2) =
-  let R = vec2(400, 400) # resolution
-  var U = U0
-  U = U / R.x
-  SVG(U)
-
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
 
   crossCount = 0
   backdropColor = vec4(0, 0, 0, 0)
 
-  mainImage(gl_FragCoord.xy)
+  uv = gl_FragCoord.xy
+  runCommands()
   fragColor = backdropColor
 
   # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.2)) / 4.0
@@ -190,4 +183,4 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   # else:
   #   fragColor = vec4(1.0, 1.0, 1.0, 1.0)
 
-  # fragColor = fragColor * 0.5 + texture(textureAtlas, gl_FragCoord.xy / 100.0) * 0.5
+  #fragColor = fragColor * 0.5 + texture(textureAtlas, gl_FragCoord.xy / 100.0) * 0.5

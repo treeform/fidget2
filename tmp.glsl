@@ -23,10 +23,6 @@ void style(
   float a
 ) ;
 
-void SVG(
-  vec2 inUv
-) ;
-
 void C(
   float x1,
   float y1,
@@ -36,14 +32,13 @@ void C(
   float y
 ) ;
 
-void mainImage(
-  vec2 U0
-) ;
-
 void z(
 ) ;
 
 void startPath(
+) ;
+
+void runCommands(
 ) ;
 
 vec2 interpolate(
@@ -95,10 +90,31 @@ void style(
     sourceColor = vec4(r, g, b, a);
 }
 
-void SVG(
-  vec2 inUv
+void C(
+  float x1,
+  float y1,
+  float x2,
+  float y2,
+  float x,
+  float y
 ) {
-  uv = (inUv) * (400.0);
+  bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
+  x0 = x;
+  y0 = y;
+}
+
+void z(
+) {
+  line(vec2(x0, y0), vec2(x1, y1));
+}
+
+void startPath(
+) {
+    crossCount = 0;
+}
+
+void runCommands(
+) {
   int i = 0;
   while(true) {
     float command = texelFetch(dataBuffer, i);
@@ -129,38 +145,6 @@ void SVG(
     };
 (i) += (1);
   };
-}
-
-void C(
-  float x1,
-  float y1,
-  float x2,
-  float y2,
-  float x,
-  float y
-) {
-  bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
-  x0 = x;
-  y0 = y;
-}
-
-void mainImage(
-  vec2 U0
-) {
-  vec2 R = vec2(400, 400);
-  vec2 U = U0;
-  U = (U) / (R.x);
-  SVG(U);
-}
-
-void z(
-) {
-  line(vec2(x0, y0), vec2(x1, y1));
-}
-
-void startPath(
-) {
-    crossCount = 0;
 }
 
 vec2 interpolate(
@@ -246,6 +230,7 @@ out vec4 fragColor;
 void main() {
   crossCount = 0;
   backdropColor = vec4(0, 0, 0, 0);
-  mainImage(gl_FragCoord.xy);
+  uv = gl_FragCoord.xy;
+  runCommands();
   fragColor = backdropColor;
 }

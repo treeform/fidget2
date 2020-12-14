@@ -48,6 +48,10 @@ const glslFunctions = [
   "normalize"
 ]
 
+const ignoreFunctions = [
+  "echo", "print", "debugEcho"
+]
+
 proc procRename(t: string): string =
   ## Some GLSL proc names don't match nim names, rename here.
   case t
@@ -87,8 +91,10 @@ proc toCode(n: NimNode, res: var string, level = 0) =
   of nnkHiddenDeref, nnkHiddenAddr:
     n[0].toCode(res)
 
-  of nnkCall:
+  of nnkCall, nnkCommand:
     var procName = procRename(n[0].strVal)
+    if procName in ignoreFunctions:
+      return
     if procName in ["rgb=", "rgb", "xyz", "xy", "xy="]:
       if n[1].kind == nnkSym:
         n[1].toCode(res)
@@ -405,6 +411,8 @@ proc gatherFunction(
     if n.kind == nnkCall:
       # Looking for functions.
       let procName = n[0].strVal()
+      if procName in ignoreFunctions:
+        continue
       if procName notin glslFunctions and procName notin functions:
         ## If its not a builtin proc, we need to bring definition.
         let impl = n[0].getImpl()
