@@ -180,6 +180,7 @@ void bezier(
   for(int t = 1; t <= discretization; t++) {
     vec2 q = interpolate(A, B, C, D, (float(t)) / (float(discretization)));
     line(p, q);
+    p = q;
   };
 }
 
@@ -208,7 +209,7 @@ void line(
   if ((a.y) == (b.y)) {
         return ;
   };
-  if (((min(a.y, b.y)) < (screen.y)) && ((screen.y) < (max(a.y, b.y)))) {
+  if (((min(a.y, b.y)) <= (screen.y)) && ((screen.y) < (max(a.y, b.y)))) {
     float xIntersect;
     if (! ((b.x) == (a.x))) {
       float m = ((b.y) - (a.y)) / ((b.x) - (a.x));

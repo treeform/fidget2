@@ -66,6 +66,7 @@ proc bezier(A, B, C, D: Vec2) =
     let
       q = interpolate(A, B, C, D, float(t)/float(discretization))
     line(p, q)
+    p = q
 
 proc style(r, g, b, a: float) =
   ## Set the source color.
