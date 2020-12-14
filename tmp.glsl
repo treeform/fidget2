@@ -2,11 +2,11 @@
 precision highp float;
 // from svgMain
 
-vec2 uv;
 vec4 sourceColor;
 float x1;
 float textureOn;
 uniform samplerBuffer dataBuffer;
+vec2 screen;
 float y0;
 float y1;
 int crossCount = 0;
@@ -76,7 +76,8 @@ void L(
 
 void draw(
 ) {
-    if (! (((crossCount) % (2)) == (0))) {
+"Use crossCount to apply color to backdrop.";
+  if (! (((crossCount) % (2)) == (0))) {
         backdropColor = sourceColor;
   };
 }
@@ -87,7 +88,8 @@ void style(
   float b,
   float a
 ) {
-    sourceColor = vec4(r, g, b, a);
+"Set the source color.";
+  sourceColor = vec4(r, g, b, a);
 }
 
 void C(
@@ -98,6 +100,7 @@ void C(
   float x,
   float y
 ) {
+"SVG cubic Curve command.";
   bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
   x0 = x;
   y0 = y;
@@ -105,16 +108,19 @@ void C(
 
 void z(
 ) {
+"SVG style end of shape command.";
   line(vec2(x0, y0), vec2(x1, y1));
 }
 
 void startPath(
 ) {
-    crossCount = 0;
+"Clear the status of things and start a new path.";
+  crossCount = 0;
 }
 
 void runCommands(
 ) {
+"Runs a little command interpreter.";
   int i = 0;
   while(true) {
     float command = texelFetch(dataBuffer, i);
@@ -137,7 +143,7 @@ void runCommands(
     } else if ((command) == (12.0)) {
       C(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)), texelFetch(dataBuffer, (i) + (6)));
 (i) += (6);
-    } else if ((command) == (5.0)) {
+    } else if ((command) == (4.0)) {
       textureOn = texelFetch(dataBuffer, (i) + (1));
 (i) += (1);
     } else if ((command) == (20.0)) {
@@ -154,6 +160,7 @@ vec2 interpolate(
   vec2 G4,
   float t
 ) {
+"Solve the cubic bezier interpolation with 4 points.";
   vec2 A = ((G4) - (G1)) + ((3.0) * ((G2) - (G3)));
   vec2 B = (3.0) * (((G1) - ((2.0) * (G2))) + (G3));
   vec2 C = (3.0) * ((G2) - (G1));
@@ -167,6 +174,7 @@ void bezier(
   vec2 C,
   vec2 D
 ) {
+"Turn a cubic curve into N lines.";
   vec2 p = A;
   int discretization = 10;
   for(int t = 1; t <= discretization; t++) {
@@ -179,6 +187,7 @@ void M(
   float x,
   float y
 ) {
+"SVG style Move command.";
   x1 = x;
   x0 = x;
   y1 = y;
@@ -187,6 +196,7 @@ void M(
 
 void endPath(
 ) {
+"SVG style end path command.";
   draw();
 }
 
@@ -194,19 +204,20 @@ void line(
   vec2 a,
   vec2 b
 ) {
+"Turn a line into inc/dec/ignore of the crossCount.";
   if ((a.y) == (b.y)) {
         return ;
   };
-  if (((min(a.y, b.y)) <= (uv.y)) && ((uv.y) < (max(a.y, b.y)))) {
+  if (((min(a.y, b.y)) < (screen.y)) && ((screen.y) < (max(a.y, b.y)))) {
     float xIntersect;
     if (! ((b.x) == (a.x))) {
       float m = ((b.y) - (a.y)) / ((b.x) - (a.x));
       float bb = (a.y) - ((m) * (a.x));
-      xIntersect = ((uv.y) - (bb)) / (m);
+      xIntersect = ((screen.y) - (bb)) / (m);
     } else {
             xIntersect = a.x;
     };
-    if ((xIntersect) <= (uv.x)) {
+    if ((xIntersect) <= (screen.x)) {
             if ((0.0) < ((a.y) - (b.y))) {
         (crossCount) += (1);
       } else {
@@ -220,6 +231,7 @@ void L(
   float x,
   float y
 ) {
+"SVG style Line command.";
   line(vec2(x0, y0), vec2(x, y));
   x0 = x;
   y0 = y;
@@ -228,9 +240,10 @@ in vec4 gl_FragCoord;
 out vec4 fragColor;
 
 void main() {
+"Main entry point to this huge shader.";
   crossCount = 0;
   backdropColor = vec4(0, 0, 0, 0);
-  uv = gl_FragCoord.xy;
+  screen = gl_FragCoord.xy;
   runCommands();
   fragColor = backdropColor;
 }
