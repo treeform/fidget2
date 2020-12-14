@@ -55,7 +55,6 @@ vec2 interpolate(
 ) ;
 
 void bezier(
-  vec2 uv,
   vec2 A,
   vec2 B,
   vec2 C,
@@ -71,7 +70,6 @@ void endPath(
 ) ;
 
 void line(
-  vec2 p,
   vec2 a,
   vec2 b
 ) ;
@@ -141,7 +139,7 @@ void C(
   float x,
   float y
 ) {
-  bezier(uv, vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
+  bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
   x0 = x;
   y0 = y;
 }
@@ -157,7 +155,7 @@ void mainImage(
 
 void z(
 ) {
-  line(uv, vec2(x0, y0), vec2(x1, y1));
+  line(vec2(x0, y0), vec2(x1, y1));
 }
 
 void startPath(
@@ -180,7 +178,6 @@ vec2 interpolate(
 }
 
 void bezier(
-  vec2 uv,
   vec2 A,
   vec2 B,
   vec2 C,
@@ -190,7 +187,7 @@ void bezier(
   int discretization = 10;
   for(int t = 1; t <= discretization; t++) {
     vec2 q = interpolate(A, B, C, D, (float(t)) / (float(discretization)));
-    line(uv, p, q);
+    line(p, q);
   };
 }
 
@@ -210,33 +207,26 @@ void endPath(
 }
 
 void line(
-  vec2 p,
   vec2 a,
   vec2 b
 ) {
   if ((a.y) == (b.y)) {
         return ;
   };
-  if (((min(a.y, b.y)) <= (p.y)) && ((p.y) < (max(a.y, b.y)))) {
-        if ((b.x) == (a.x)) {
-      float xIntersect = a.x;
-      if ((xIntersect) <= (p.x)) {
-                if ((0.0) < ((a.y) - (b.y))) {
-          (crossCount) += (1);
-        } else {
-          (crossCount) -= (1);
-        };
-      };
-    } else {
+  if (((min(a.y, b.y)) <= (uv.y)) && ((uv.y) < (max(a.y, b.y)))) {
+    float xIntersect;
+    if (! ((b.x) == (a.x))) {
       float m = ((b.y) - (a.y)) / ((b.x) - (a.x));
       float bb = (a.y) - ((m) * (a.x));
-      float xIntersect = ((p.y) - (bb)) / (m);
-      if ((xIntersect) <= (p.x)) {
-                if ((0.0) < ((a.y) - (b.y))) {
-          (crossCount) += (1);
-        } else {
-          (crossCount) -= (1);
-        };
+      xIntersect = ((uv.y) - (bb)) / (m);
+    } else {
+            xIntersect = a.x;
+    };
+    if ((xIntersect) <= (uv.x)) {
+            if ((0.0) < ((a.y) - (b.y))) {
+        (crossCount) += (1);
+      } else {
+        (crossCount) -= (1);
       };
     };
   };
@@ -246,7 +236,7 @@ void L(
   float x,
   float y
 ) {
-  line(uv, vec2(x0, y0), vec2(x, y));
+  line(vec2(x0, y0), vec2(x, y));
   x0 = x;
   y0 = y;
 }

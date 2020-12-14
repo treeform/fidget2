@@ -117,7 +117,7 @@ proc readGpuPixels(): pixie.Image =
 
     var image = readImage("tests/test512.png")
     textureAtlas.put("test512", image)
-    textureAtlas.image.writeFile("atlas.png")
+    # textureAtlas.image.writeFile("atlas.png")
 
     glTexImage2D(
       GL_TEXTURE_2D,

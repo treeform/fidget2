@@ -31,92 +31,29 @@ proc M(x, y: float) =
   y1 = y
   y0 = y
 
-proc line(p, a, b: Vec2) =
-  # let
-  #   pa = p - a
-  #   ba = b - a
-  #   # distance to segment
-  #   d = pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)
-  # if (a.y > p.y) != (b.y > p.y) and (pa.x < ba.x * pa.y / ba.y):
-  #   S = -S # track interior vs exterior
-  # return dot(d, d) # optimization by deferring sqrt
-
+proc line(a, b: Vec2) =
   if a.y == b.y:
     # horizontal lines should not have effect
     return
-
   # Y check to see if we can be affected by the line:
-  if p.y >= min(a.y, b.y) and p.y < max(a.y, b.y):
-    #echo "has effect!"
-
-    #print p, a, b
-
-    if b.x == a.x:
-      # vertical line:
-      let xIntersect = a.x
-      if xIntersect <= p.x:
-        # the x is to the left, count it
-        if a.y - b.y > 0.0:
-          #echo "going up"
-          crossCount += 1
-        else:
-          #echo "goind down"
-          crossCount -= 1
-
-    else:
-      #print p, a, b
-
-      # y = m x + bb
+  if uv.y >= min(a.y, b.y) and uv.y < max(a.y, b.y):
+    var xIntersect: float32
+    if b.x != a.x:
       let
         m = (b.y - a.y) / (b.x - a.x)
         bb = a.y - m * a.x
-
-
-      #print b.y - a.y, b.x - a.x
-      #print m, bb
-
-      let xIntersect = (p.y - bb) / m
-
-      #print xIntersect
-      if xIntersect <= p.x:
-        # the x is to the left, count it
-        if a.y - b.y > 0.0:
-          #echo "going up"
-          crossCount += 1
-        else:
-          #echo "goind down"
-          crossCount -= 1
-
-
-
-  # else:
-  #   if a.y != b.y:
-  #     print p, a, b
-  #     echo "has no effect"
-  #     quit()
-
-    # else:
-
-    #   # y = m x + bb
-    #   let
-    #     m = (b.y - a.y) / (b.x - a.x)
-    #     bb = a.y - m * a.x
-
-    #   print m, bb
-
-    #   # a.y is low and b.y is high
-    #   # x = (y - bb) / m
-    #   let x = (p.y - bb) / m
-    #   if x < p.x:
-    #     # the x is to the left, count it
-    #     if m > 0.0:
-    #       crossCount += 1.0
-    #     else:
-    #       crossCount -= 1.0
-
+      xIntersect = (uv.y - bb) / m
+    else:
+      xIntersect = a.x
+    if xIntersect <= uv.x:
+      # the x is to the left, count it
+      if a.y - b.y > 0.0:
+        crossCount += 1
+      else:
+        crossCount -= 1
 
 proc L(x, y: float) =
-  line(uv, vec2(x0, y0), vec2(x, y))
+  line(vec2(x0, y0), vec2(x, y))
   x0 = x
   y0 = y
 
@@ -128,22 +65,21 @@ proc interpolate(G1, G2, G3, G4: Vec2, t: float): Vec2 =
     D = G1
   return t * (t * (t * A + B) + C) + D
 
-proc bezier(uv, A, B, C, D: Vec2) =
+proc bezier(A, B, C, D: Vec2) =
   var p = A
   let discretization = 10
   for t in 1 .. discretization:
     let
       q = interpolate(A, B, C, D, float(t)/float(discretization))
-    line(uv, p, q)
+    line(p, q)
 
 proc C(x1, y1, x2, y2, x, y: float) =
-  bezier(uv, vec2(x0,y0), vec2(x1,y1), vec2(x2,y2), vec2(x,y))
+  bezier(vec2(x0,y0), vec2(x1,y1), vec2(x2,y2), vec2(x,y))
   x0 = x
   y0 = y
 
 proc z() =
-  line(uv, vec2(x0, y0), vec2(x1,y1))
-  #d = min(d, ))
+  line(vec2(x0, y0), vec2(x1,y1))
 
 proc style(r, g, b, a: float) =
   sourceColor = vec4(r, g, b, a)
@@ -175,25 +111,6 @@ proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
   return alphaFix(backdrop, source, source)
 
 proc draw() =
-  # optimization by deferring sqrt here
-  # let d = min(sqrt(d0) * contrast, 1.0)
-  # var value = 0.0
-  # if fill > 0.0:
-  #   value = 0.5 + 0.5 * S * d
-  # else:
-  #   value = d
-
-  # var drawColor: Vec4
-  # if textureOn == 1.0:
-  #   drawColor = texture(textureAtlas, uv/100.0)
-  # else:
-  #   drawColor = sourceColor
-  # var outColor = backdropColor
-  # outColor.w *= value
-  # drawColor.w *= (1.0 - value)
-  # backdropColor = blendNormalFloats(drawColor, outColor)
-
-  #echo "draw ", crossCount
   if crossCount mod 2 != 0: # Even-Odd or Non-zero rule
     backdropColor = sourceColor
 
@@ -258,7 +175,6 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   backdropColor = vec4(0, 0, 0, 0)
 
   mainImage(gl_FragCoord.xy)
-  #echo "backdropColor ", backdropColor
   fragColor = backdropColor
 
   # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.2)) / 4.0
