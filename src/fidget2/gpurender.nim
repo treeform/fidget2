@@ -1,6 +1,6 @@
-import chroma, os, fidget2, pixie, strutils, strformat, times
-import math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math
-import pixie
+import atlas, chroma, os, fidget2, pixie, strutils, strformat, times,
+  math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math,
+  pixie
 
 var
   viewPortWidth*: int
@@ -14,14 +14,14 @@ var
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
+  textureAtlas: CpuAtlas
   textureAtlasId: GLuint
 
 proc setupGpuRender(width, height: int) =
   viewPortWidth = width
   viewPortHeight = height
-
   dataBufferSeq.setLen(0)
-
+  textureAtlas = newCpuAtlas(1024, 1)
 
 proc basic2dVert(vertexPox: Vec2, gl_Position: var Vec4) =
   gl_Position.xy = vertexPox
@@ -58,9 +58,7 @@ var
   isCompiled: GLint
   isLinked: GLint
 
-
   dataBufferId: GLuint
-
 
 proc readGpuPixels(): pixie.Image =
 
@@ -118,16 +116,19 @@ proc readGpuPixels(): pixie.Image =
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
     var image = readImage("tests/test512.png")
+    textureAtlas.put("test512", image)
+    textureAtlas.image.writeFile("atlas.png")
+
     glTexImage2D(
       GL_TEXTURE_2D,
       0,
       GL_RGBA.GLint,
-      image.width.GLsizei,
-      image.height.GLsizei,
+      textureAtlas.image.width.GLsizei,
+      textureAtlas.image.height.GLsizei,
       0,
       GL_RGBA,
       GL_UNSIGNED_BYTE,
-      image.data[0].addr
+      textureAtlas.image.data[0].addr
     )
 
     # Compile shaders
