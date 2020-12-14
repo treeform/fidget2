@@ -3,27 +3,20 @@ precision highp float;
 // from svgMain
 
 vec2 uv;
+vec4 sourceColor;
 float x1;
-float S = 1.0;
 float textureOn;
 uniform samplerBuffer dataBuffer;
-float FILL = 1.0;
-float contrast = 12.0;
 float y0;
-float fill = 1.0;
-uniform sampler2D textureAtlas;
 float y1;
-float d = 1e+038;
-vec4 currentColor;
+int crossCount = 0;
 float x0;
+vec4 backdropColor;
 
 void draw(
-  float d0,
-  inout vec4 O
 ) ;
 
 void style(
-  float f,
   float r,
   float g,
   float b,
@@ -31,8 +24,7 @@ void style(
 ) ;
 
 void SVG(
-  vec2 inUv,
-  inout vec4 O
+  vec2 inUv
 ) ;
 
 void C(
@@ -44,16 +36,11 @@ void C(
   float y
 ) ;
 
-vec4 mainImage(
+void mainImage(
   vec2 U0
 ) ;
 
 void z(
-) ;
-
-vec4 blendNormalFloats(
-  vec4 backdrop,
-  vec4 source
 ) ;
 
 void startPath(
@@ -67,7 +54,7 @@ vec2 interpolate(
   float t
 ) ;
 
-float bezier(
+void bezier(
   vec2 uv,
   vec2 A,
   vec2 B,
@@ -81,16 +68,9 @@ void M(
 ) ;
 
 void endPath(
-  inout vec4 O
 ) ;
 
-vec4 alphaFix(
-  vec4 backdrop,
-  vec4 source,
-  vec4 mixed
-) ;
-
-float line(
+void line(
   vec2 p,
   vec2 a,
   vec2 b
@@ -102,43 +82,23 @@ void L(
 ) ;
 
 void draw(
-  float d0,
-  inout vec4 O
 ) {
-  float d = min((sqrt(d0)) * (contrast), 1.0);
-  float value = 0.0;
-  if ((0.0) < (fill)) {
-        value = (0.5) + (((0.5) * (S)) * (d));
-  } else {
-        value = d;
+    if (! (((crossCount) % (2)) == (0))) {
+        backdropColor = sourceColor;
   };
-  vec4 drawColor;
-  if ((textureOn) == (1.0)) {
-        drawColor = texture(textureAtlas, (uv) / (100.0));
-  } else {
-        drawColor = currentColor;
-  };
-  vec4 outColor = O;
-(outColor.w) *= (value);
-(drawColor.w) *= ((1.0) - (value));
-  O = blendNormalFloats(drawColor, outColor);
 }
 
 void style(
-  float f,
   float r,
   float g,
   float b,
   float a
 ) {
-  fill = f;
-  S = 1.0;
-  currentColor = vec4(r, g, b, a);
+    sourceColor = vec4(r, g, b, a);
 }
 
 void SVG(
-  vec2 inUv,
-  inout vec4 O
+  vec2 inUv
 ) {
   uv = (inUv) * (400.0);
   int i = 0;
@@ -149,10 +109,10 @@ void SVG(
     } else if ((command) == (1.0)) {
       startPath();
     } else if ((command) == (2.0)) {
-      endPath(O);
+      endPath();
     } else if ((command) == (3.0)) {
       textureOn = 0.0;
-      style(FILL, texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
+      style(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
 (i) += (4);
     } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
@@ -181,37 +141,28 @@ void C(
   float x,
   float y
 ) {
-  d = min(d, bezier(uv, vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y)));
+  bezier(uv, vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
   x0 = x;
   y0 = y;
 }
 
-vec4 mainImage(
+void mainImage(
   vec2 U0
 ) {
-  vec4 O = vec4(1);
   vec2 R = vec2(400, 400);
   vec2 U = U0;
   U = (U) / (R.x);
-  SVG(U, O);
-  return O;
+  SVG(U);
 }
 
 void z(
 ) {
-    d = min(d, line(uv, vec2(x0, y0), vec2(x1, y1)));
-}
-
-vec4 blendNormalFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-    return alphaFix(backdrop, source, source);
+  line(uv, vec2(x0, y0), vec2(x1, y1));
 }
 
 void startPath(
 ) {
-    d = 1e+038;
+    crossCount = 0;
 }
 
 vec2 interpolate(
@@ -228,7 +179,7 @@ vec2 interpolate(
   return ((t) * (((t) * (((t) * (A)) + (B))) + (C))) + (D);
 }
 
-float bezier(
+void bezier(
   vec2 uv,
   vec2 A,
   vec2 B,
@@ -239,11 +190,8 @@ float bezier(
   int discretization = 10;
   for(int t = 1; t <= discretization; t++) {
     vec2 q = interpolate(A, B, C, D, (float(t)) / (float(discretization)));
-    float l = line(uv, p, q);
-    d = min(d, l);
-    p = q;
+    line(uv, p, q);
   };
-  return d;
 }
 
 void M(
@@ -257,53 +205,48 @@ void M(
 }
 
 void endPath(
-  inout vec4 O
 ) {
-  draw(d, O);
-;
+  draw();
 }
 
-vec4 alphaFix(
-  vec4 backdrop,
-  vec4 source,
-  vec4 mixed
-) {
-  vec4 res;
-  res.w = (source.w) + ((backdrop.w) * ((1.0) - (source.w)));
-  if ((res.w) == (0.0)) {
-        return res;
-  };
-  float t0 = (source.w) * ((1.0) - (backdrop.w));
-  float t1 = (source.w) * (backdrop.w);
-  float t2 = ((1.0) - (source.w)) * (backdrop.w);
-  res.x = (((t0) * (source.x)) + ((t1) * (mixed.x))) + ((t2) * (backdrop.x));
-  res.y = (((t0) * (source.y)) + ((t1) * (mixed.y))) + ((t2) * (backdrop.y));
-  res.z = (((t0) * (source.z)) + ((t1) * (mixed.z))) + ((t2) * (backdrop.z));
-(res.x) /= (res.w);
-(res.y) /= (res.w);
-(res.z) /= (res.w);
-  return res;
-}
-
-float line(
+void line(
   vec2 p,
   vec2 a,
   vec2 b
 ) {
-  vec2 pa = (p) - (a);
-  vec2 ba = (b) - (a);
-  vec2 d = (pa) - ((ba) * (clamp((dot(pa, ba)) / (dot(ba, ba)), 0.0, 1.0)));
-  if ((! (((p.y) < (a.y)) == ((p.y) < (b.y)))) && ((pa.x) < (((ba.x) * (pa.y)) / (ba.y)))) {
-        S = - (S);
+  if ((a.y) == (b.y)) {
+        return ;
   };
-  return dot(d, d);
+  if (((min(a.y, b.y)) <= (p.y)) && ((p.y) < (max(a.y, b.y)))) {
+        if ((b.x) == (a.x)) {
+      float xIntersect = a.x;
+      if ((xIntersect) <= (p.x)) {
+                if ((0.0) < ((a.y) - (b.y))) {
+          (crossCount) += (1);
+        } else {
+          (crossCount) -= (1);
+        };
+      };
+    } else {
+      float m = ((b.y) - (a.y)) / ((b.x) - (a.x));
+      float bb = (a.y) - ((m) * (a.x));
+      float xIntersect = ((p.y) - (bb)) / (m);
+      if ((xIntersect) <= (p.x)) {
+                if ((0.0) < ((a.y) - (b.y))) {
+          (crossCount) += (1);
+        } else {
+          (crossCount) -= (1);
+        };
+      };
+    };
+  };
 }
 
 void L(
   float x,
   float y
 ) {
-  d = min(d, line(uv, vec2(x0, y0), vec2(x, y)));
+  line(uv, vec2(x0, y0), vec2(x, y));
   x0 = x;
   y0 = y;
 }
@@ -311,5 +254,8 @@ in vec4 gl_FragCoord;
 out vec4 fragColor;
 
 void main() {
-    fragColor = mainImage(gl_FragCoord.xy);
+  crossCount = 0;
+  backdropColor = vec4(0, 0, 0, 0);
+  mainImage(gl_FragCoord.xy);
+  fragColor = backdropColor;
 }

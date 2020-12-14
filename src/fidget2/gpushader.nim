@@ -15,14 +15,12 @@ const
   cmdC*: float32 = 12
   cmdz*: float32 = 20
 
-var FILL = 1.0
-var CONTOUR = 2.0
+var sourceColor: Vec4
+var backdropColor: Vec4
+# Stores the counting the number of path segments to
+# figure out if pixel is in side or outside.
+var crossCount: int = 0
 
-var currentColor: Vec4
-var fill = 1.0
-var S = 1.0
-var contrast = 12.0  # how blurry the svg looks, 1 = blurry and 100 hard pixel edge.
-var d = 1e38
 var x0, y0, x1, y1: float
 var uv: Vec2
 var textureOn: float
@@ -33,18 +31,92 @@ proc M(x, y: float) =
   y1 = y
   y0 = y
 
-proc line(p, a, b: Vec2): float =
-  let
-    pa = p - a
-    ba = b - a
-    # distance to segment
-    d = pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)
-  if (a.y > p.y) != (b.y > p.y) and (pa.x < ba.x * pa.y / ba.y):
-    S = -S # track interior vs exterior
-  return dot(d, d) # optimization by deferring sqrt
+proc line(p, a, b: Vec2) =
+  # let
+  #   pa = p - a
+  #   ba = b - a
+  #   # distance to segment
+  #   d = pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0)
+  # if (a.y > p.y) != (b.y > p.y) and (pa.x < ba.x * pa.y / ba.y):
+  #   S = -S # track interior vs exterior
+  # return dot(d, d) # optimization by deferring sqrt
+
+  if a.y == b.y:
+    # horizontal lines should not have effect
+    return
+
+  # Y check to see if we can be affected by the line:
+  if p.y >= min(a.y, b.y) and p.y < max(a.y, b.y):
+    #echo "has effect!"
+
+    #print p, a, b
+
+    if b.x == a.x:
+      # vertical line:
+      let xIntersect = a.x
+      if xIntersect <= p.x:
+        # the x is to the left, count it
+        if a.y - b.y > 0.0:
+          #echo "going up"
+          crossCount += 1
+        else:
+          #echo "goind down"
+          crossCount -= 1
+
+    else:
+      #print p, a, b
+
+      # y = m x + bb
+      let
+        m = (b.y - a.y) / (b.x - a.x)
+        bb = a.y - m * a.x
+
+
+      #print b.y - a.y, b.x - a.x
+      #print m, bb
+
+      let xIntersect = (p.y - bb) / m
+
+      #print xIntersect
+      if xIntersect <= p.x:
+        # the x is to the left, count it
+        if a.y - b.y > 0.0:
+          #echo "going up"
+          crossCount += 1
+        else:
+          #echo "goind down"
+          crossCount -= 1
+
+
+
+  # else:
+  #   if a.y != b.y:
+  #     print p, a, b
+  #     echo "has no effect"
+  #     quit()
+
+    # else:
+
+    #   # y = m x + bb
+    #   let
+    #     m = (b.y - a.y) / (b.x - a.x)
+    #     bb = a.y - m * a.x
+
+    #   print m, bb
+
+    #   # a.y is low and b.y is high
+    #   # x = (y - bb) / m
+    #   let x = (p.y - bb) / m
+    #   if x < p.x:
+    #     # the x is to the left, count it
+    #     if m > 0.0:
+    #       crossCount += 1.0
+    #     else:
+    #       crossCount -= 1.0
+
 
 proc L(x, y: float) =
-  d = min(d, line(uv, vec2(x0, y0), vec2(x, y)))
+  line(uv, vec2(x0, y0), vec2(x, y))
   x0 = x
   y0 = y
 
@@ -56,32 +128,28 @@ proc interpolate(G1, G2, G3, G4: Vec2, t: float): Vec2 =
     D = G1
   return t * (t * (t * A + B) + C) + D
 
-proc bezier(uv, A, B, C, D: Vec2): float =
+proc bezier(uv, A, B, C, D: Vec2) =
   var p = A
   let discretization = 10
   for t in 1 .. discretization:
     let
       q = interpolate(A, B, C, D, float(t)/float(discretization))
-      l = line(uv, p, q)
-    d = min(d, l)
-    p = q
-  return d
+    line(uv, p, q)
 
 proc C(x1, y1, x2, y2, x, y: float) =
-  d = min(d, bezier(uv, vec2(x0,y0), vec2(x1,y1), vec2(x2,y2), vec2(x,y)))
+  bezier(uv, vec2(x0,y0), vec2(x1,y1), vec2(x2,y2), vec2(x,y))
   x0 = x
   y0 = y
 
 proc z() =
-  d = min(d, line(uv, vec2(x0, y0), vec2(x1,y1)))
+  line(uv, vec2(x0, y0), vec2(x1,y1))
+  #d = min(d, ))
 
-proc style(f, r, g, b, a: float) =
-  fill = f
-  S = 1.0
-  currentColor = vec4(r, g, b, a)
+proc style(r, g, b, a: float) =
+  sourceColor = vec4(r, g, b, a)
 
 proc startPath() =
-  d = 1e38
+  crossCount = 0
 
 proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
   var res: Vec4
@@ -106,31 +174,33 @@ proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
   return alphaFix(backdrop, source, source)
 
-proc draw(d0: float, O: var Vec4) =
+proc draw() =
   # optimization by deferring sqrt here
-  let d = min(sqrt(d0) * contrast, 1.0)
-  var value = 0.0
-  if fill > 0.0:
-    value = 0.5 + 0.5 * S * d
-  else:
-    value = d
-  # O = mix(currentColor, O, value) # paint
+  # let d = min(sqrt(d0) * contrast, 1.0)
+  # var value = 0.0
+  # if fill > 0.0:
+  #   value = 0.5 + 0.5 * S * d
+  # else:
+  #   value = d
 
-  var drawColor: Vec4
-  if textureOn == 1.0:
-    drawColor = texture(textureAtlas, uv/100.0)
-  else:
-    drawColor = currentColor
-  var outColor = O
-  outColor.w *= value
-  drawColor.w *= (1.0 - value)
-  O = blendNormalFloats(drawColor, outColor)
+  # var drawColor: Vec4
+  # if textureOn == 1.0:
+  #   drawColor = texture(textureAtlas, uv/100.0)
+  # else:
+  #   drawColor = sourceColor
+  # var outColor = backdropColor
+  # outColor.w *= value
+  # drawColor.w *= (1.0 - value)
+  # backdropColor = blendNormalFloats(drawColor, outColor)
 
-proc endPath(O: var Vec4) =
-  draw(d, O)
-  discard
+  #echo "draw ", crossCount
+  if crossCount mod 2 != 0: # Even-Odd or Non-zero rule
+    backdropColor = sourceColor
 
-proc SVG(inUv: Vec2, O: var Vec4) =
+proc endPath() =
+  draw()
+
+proc SVG(inUv: Vec2) =
   uv = inUv * 400.0 # scaling
 
   var i = 0
@@ -138,11 +208,10 @@ proc SVG(inUv: Vec2, O: var Vec4) =
     let command = texelFetch(dataBuffer, i)
     if command == cmdExit: break
     elif command == cmdStartPath: startPath()
-    elif command == cmdEndPath: endPath(O)
+    elif command == cmdEndPath: endPath()
     elif command == cmdStyleFill:
       textureOn = 0.0
       style(
-        FILL,
         texelFetch(dataBuffer, i + 1),
         texelFetch(dataBuffer, i + 2),
         texelFetch(dataBuffer, i + 3),
@@ -177,18 +246,20 @@ proc SVG(inUv: Vec2, O: var Vec4) =
     elif command == cmdz: z()
     i += 1
 
-proc mainImage(U0: Vec2): Vec4 =
-  var O = vec4(1)
+proc mainImage(U0: Vec2) =
   let R = vec2(400, 400) # resolution
   var U = U0
-  # U.y = R.y - U.y
   U = U / R.x
-  SVG(U, O)
-  return O
+  SVG(U)
 
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
 
-  fragColor = mainImage(gl_FragCoord.xy)
+  crossCount = 0
+  backdropColor = vec4(0, 0, 0, 0)
+
+  mainImage(gl_FragCoord.xy)
+  #echo "backdropColor ", backdropColor
+  fragColor = backdropColor
 
   # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.2)) / 4.0
   # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.4)) / 4.0

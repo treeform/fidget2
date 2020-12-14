@@ -55,6 +55,7 @@ proc procRename(t: string): string =
   of "not": "!"
   of "and": "&&"
   of "or": "||"
+  of "mod": "%"
   else: t
 
 proc addIndent(res: var string, level: int) =
