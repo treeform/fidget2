@@ -10,8 +10,8 @@ var
   # Data Buffer Object
 
   dataBufferSeq*: seq[float32]
-  mat*, prevMat*: Mat3
-  opacity*, prevOpacity*: float32
+  mat*: Mat3
+  opacity*: float32
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
@@ -375,8 +375,8 @@ proc drawNode*(node: Node, level: int) =
   if not node.visible or node.opacity == 0:
     return
 
-  prevMat = mat
-  prevOpacity = opacity
+  var prevMat = mat
+  var prevOpacity = opacity
 
   if level == 0:
     mat.identity()
