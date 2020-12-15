@@ -295,7 +295,6 @@ proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
     l2h = l2 + vec2(0, -nw*s)
 
   dataBufferSeq.add @[
-    cmdStartPath,
     cmdM, t1.x, t1.y,
     cmdL, t2.x, t2.y,
     cmdC, t2h.x, t2h.y, r1h.x, r1h.y, r1.x, r1.y,
@@ -306,7 +305,6 @@ proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
     cmdL, l2.x, l2.y,
     cmdC, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
     cmdz,
-    cmdEndPath
   ]
 
 proc drawRect(pos, size: Vec2) =
@@ -316,14 +314,12 @@ proc drawRect(pos, size: Vec2) =
     w = size.x
     h = size.y
   dataBufferSeq.add @[
-    cmdStartPath,
     cmdM, x, y,
     cmdL, x, y,
     cmdL, x + w, y,
     cmdL, x + w, y + h,
     cmdL, x, y + h,
     cmdz,
-    cmdEndPath
   ]
 
 proc drawGeom(node: Node, geom: Geometry) =
@@ -332,18 +328,18 @@ proc drawGeom(node: Node, geom: Geometry) =
     case command.kind
     of Move:
       dataBufferSeq.add cmdM
-      var pos = mat * vec2(command.numbers[0], command.numbers[1])
+      var pos =vec2(command.numbers[0], command.numbers[1])
       dataBufferSeq.add pos.x
       dataBufferSeq.add pos.y
     of Line:
       dataBufferSeq.add cmdL
-      var pos = mat * vec2(command.numbers[0], command.numbers[1])
+      var pos = vec2(command.numbers[0], command.numbers[1])
       dataBufferSeq.add pos.x
       dataBufferSeq.add pos.y
     of Cubic:
       dataBufferSeq.add cmdC
       for i in 0 ..< 3:
-        var pos = mat * vec2(
+        var pos = vec2(
           command.numbers[i*2+0],
           command.numbers[i*2+1]
         )
@@ -357,6 +353,9 @@ proc drawGeom(node: Node, geom: Geometry) =
   dataBufferSeq.add cmdEndPath
 
 proc drawPaint(node: Node, paint: Paint) =
+  if not paint.visible:
+    return
+
   if paint.kind == pkImage:
     dataBufferSeq.add @[
       cmdTexture,
@@ -399,16 +398,66 @@ proc drawNode*(node: Node, level: int) =
       discard
 
     of nkRectangle, nkFrame, nkInstance:
-      if node.cornerRadius > 0:
-        let r = node.cornerRadius
-        drawRect(vec2(0, 0), node.size, r, r, r, r)
-      elif node.rectangleCornerRadii.len == 4:
-        let r = node.rectangleCornerRadii
-        drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
-      else:
-        drawRect(vec2(0, 0), node.size)
-      for paint in node.fills:
-        drawPaint(node, paint)
+      if node.fills.len > 0:
+        dataBufferSeq.add cmdStartPath
+        if node.cornerRadius > 0:
+          let r = node.cornerRadius
+          drawRect(vec2(0, 0), node.size, r, r, r, r)
+        elif node.rectangleCornerRadii.len == 4:
+          let r = node.rectangleCornerRadii
+          drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
+        else:
+          drawRect(vec2(0, 0), node.size)
+        dataBufferSeq.add cmdEndPath
+        for paint in node.fills:
+          drawPaint(node, paint)
+
+      if node.strokes.len > 0:
+        var
+          inner = 0.0
+          outer = 0.0
+        case node.strokeAlign
+        of saInside:
+          inner = node.strokeWeight
+        of saOutside:
+          outer = node.strokeWeight
+        of saCenter:
+          inner = node.strokeWeight / 2
+          outer = node.strokeWeight / 2
+
+        dataBufferSeq.add cmdStartPath
+        if node.cornerRadius > 0:
+          let r = node.cornerRadius
+          drawRect(
+            vec2(-outer, -outer),
+            node.size + vec2(outer*2, outer*2),
+            r + outer, r + outer, r + outer, r + outer
+          )
+          drawRect(
+            vec2(+inner, +inner),
+            node.size - vec2(inner*2, inner*2),
+            r - inner, r - inner, r - inner, r - inner
+          )
+        elif node.rectangleCornerRadii.len == 4:
+          let r = node.rectangleCornerRadii
+          drawRect(
+            vec2(-outer, -outer),
+            node.size + vec2(outer*2, outer*2),
+            r[0] + outer, r[1] + outer, r[2] + outer, r[3] + outer
+          )
+          drawRect(
+            vec2(+inner, +inner),
+            node.size - vec2(inner*2, inner*2),
+            r[0] - inner, r[1] - inner, r[2] - inner, r[3] - inner
+          )
+        else:
+          drawRect(vec2(-outer, -outer), node.size + vec2(outer*2, outer*2))
+          drawRect(vec2(+inner, +inner), node.size - vec2(inner*2, inner*2))
+        dataBufferSeq.add cmdEndPath
+
+        for paint in node.strokes:
+          drawPaint(node, paint)
+
 
     of nkVector, nkStar, nkEllipse:
 
