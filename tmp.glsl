@@ -9,6 +9,7 @@ vec2 screen;
 float y0;
 float y1;
 float fillMask;
+mat3 mat;
 int crossCount = 0;
 float x0;
 vec4 backdropColor;
@@ -35,9 +36,22 @@ void C(
 void z(
 ) ;
 
+void Q(
+  float x1,
+  float y1,
+  float x,
+  float y
+) ;
+
 vec4 blendNormalFloats(
   vec4 backdrop,
   vec4 source
+) ;
+
+void quadratic(
+  vec2 p0,
+  vec2 p1,
+  vec2 p2
 ) ;
 
 void startPath(
@@ -76,8 +90,8 @@ vec4 alphaFix(
 ) ;
 
 void line(
-  vec2 a,
-  vec2 b
+  vec2 a0,
+  vec2 b0
 ) ;
 
 void L(
@@ -125,11 +139,49 @@ void z(
   line(vec2(x0, y0), vec2(x1, y1));
 }
 
+void Q(
+  float x1,
+  float y1,
+  float x,
+  float y
+) {
+"SVG Quadratic curve command.";
+  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
+  x0 = x;
+  y0 = y;
+}
+
 vec4 blendNormalFloats(
   vec4 backdrop,
   vec4 source
 ) {
     return alphaFix(backdrop, source, source);
+}
+
+void quadratic(
+  vec2 p0,
+  vec2 p1,
+  vec2 p2
+) {
+"Turn a cubic curve into N lines.";
+  float devx = ((p0.x) - ((2.0) * (p1.x))) + (p2.x);
+  float devy = ((p0.y) - ((2.0) * (p1.y))) + (p2.y);
+  float devsq = ((devx) * (devx)) + ((devy) * (devy));
+  if ((devsq) < (0.333)) {
+    line(p0, p2);
+    return ;
+  };
+  float tol = 3.0;
+  float n = (1.0) + (floor(sqrt(sqrt((tol) * (devsq)))));
+  vec2 p = p0;
+  float nrecip = (1.0) / (n);
+  float t = 0.0;
+  for(int i = 0; i < int(n); i++) {
+(t) += (nrecip);
+    vec2 pn = mix(mix(p0, p1, t), mix(p1, p2, t), t);
+    line(p, pn);
+    p = pn;
+  };
 }
 
 void startPath(
@@ -162,6 +214,17 @@ void runCommands(
     } else if ((command) == (5.0)) {
       textureOn = texelFetch(dataBuffer, (i) + (1));
 (i) += (1);
+    } else if ((command) == (6.0)) {
+      mat[0][0] = texelFetch(dataBuffer, (i) + (1));
+      mat[0][1] = texelFetch(dataBuffer, (i) + (2));
+      mat[0][2] = 0.0;
+      mat[1][0] = texelFetch(dataBuffer, (i) + (3));
+      mat[1][1] = texelFetch(dataBuffer, (i) + (4));
+      mat[1][2] = 0.0;
+      mat[2][0] = texelFetch(dataBuffer, (i) + (5));
+      mat[2][1] = texelFetch(dataBuffer, (i) + (6));
+      mat[2][2] = 1.0;
+(i) += (6);
     } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
 (i) += (2);
@@ -171,6 +234,9 @@ void runCommands(
     } else if ((command) == (12.0)) {
       C(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)), texelFetch(dataBuffer, (i) + (6)));
 (i) += (6);
+    } else if ((command) == (13.0)) {
+      Q(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
+(i) += (4);
     } else if ((command) == (20.0)) {
       z();
     };
@@ -249,10 +315,12 @@ vec4 alphaFix(
 }
 
 void line(
-  vec2 a,
-  vec2 b
+  vec2 a0,
+  vec2 b0
 ) {
 "Turn a line into inc/dec/ignore of the crossCount.";
+  vec2 a = ((mat) * (vec3(a0, 1))).xy;
+  vec2 b = ((mat) * (vec3(b0, 1))).xy;
   if ((a.y) == (b.y)) {
         return ;
   };

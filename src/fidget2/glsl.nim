@@ -43,9 +43,11 @@ const glslFunctions = [
   "rgb=", "rgb", "xyz", "xy", "xy=",
   "vec2", "vec3", "vec4", "color",
   "Vec2", "Vec3", "Vec4", "Color",
-  "clamp", "min", "max", "dot", "sqrt", "lerp", "mix",
+  "clamp", "min", "max", "dot", "sqrt", "mix",
   "texelFetch", "texture",
-  "normalize"
+  "normalize",
+  "floor", "ceil",
+  "[]", "[]="
 ]
 
 const ignoreFunctions = [
@@ -95,7 +97,16 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     var procName = procRename(n[0].strVal)
     if procName in ignoreFunctions:
       return
-    if procName in ["rgb=", "rgb", "xyz", "xy", "xy="]:
+    if procName in "[]=":
+      echo show(n)
+      n[1].toCode(res)
+      for i in 2 ..< n.len - 1:
+        res.add "["
+        n[i].toCode(res)
+        res.add "]"
+      res.add " = "
+      n[n.len - 1].toCode(res)
+    elif procName in ["rgb=", "rgb", "xyz", "xy", "xy="]:
       if n[1].kind == nnkSym:
         n[1].toCode(res)
       else:
@@ -260,8 +271,14 @@ proc toCode(n: NimNode, res: var string, level = 0) =
   of nnkProcDef:
     quit "Nested proc definitions are not allowed."
 
-  of nnkBracket:
-    res.add "[?]"
+  # of nnkBracket:
+  #   res.add "[?]"
+
+  of nnkBracketExpr:
+    n[0].toCode(res)
+    res.add "["
+    n[1].toCode(res)
+    res.add "]"
 
   else:
     echo show(n)
@@ -498,6 +515,9 @@ proc vec4*(c: chroma.ColorRGBA): Vec4 =
 # proc xyz*(v: Vec4): Vec3 =
 #   vec3(v.x, v.y, v.z)
 
+proc mix*(a, b: Vec2, v: float32): Vec2 =
+  lerp(a, b, v)
+
 proc mix*(a, b: Vec3, v: float32): Vec3 =
   lerp(a, b, v)
 
@@ -525,6 +545,10 @@ proc texture*(buffer: Uniform[Sampler2D], pos: Vec2): Vec4 =
     ((pos.x mod 1.0) * buffer.image.width.float32),
     ((pos.y mod 1.0) * buffer.image.height.float32)
   ).vec4
+
+# proc setf*(mat: var Mat3, i, j: int, v: float32) =
+#   mat[i, j] = v
+#   mat[i][j] = v
 
 # proc r*(v: Vec4|Vec3|Vec2): float = v.x
 # proc g*(v: Vec4|Vec3|Vec2): float = v.y

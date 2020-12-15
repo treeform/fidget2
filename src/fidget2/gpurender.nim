@@ -234,6 +234,55 @@ proc transform(node: Node): Mat3 =
   result[2, 1] = node.relativeTransform[1][2]
   result[2, 2] = 1
 
+proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
+  # ctx.beginPath();
+  # ctx.moveTo(x + nw, y);
+  # cmdL x + width - ne, y);
+  # cmdQ x + width, y, x + width, y + ne);
+  # cmdL x + width, y + height - se);
+  # cmdQ x + width, y + height, x + width - se, y + height);
+  # cmdL x + sw, y + height);
+  # cmdQ x, y + height, x, y + height - sw);
+  # cmdL x, y + nw);
+  # cmdQ x, y, x + nw, y);
+  # ctx.closePath();
+  let
+    x = pos.x
+    y = pos.y
+    width = size.x
+    height = size.y
+  dataBufferSeq.add @[
+    cmdStartPath,
+    cmdM, x + nw, y,
+    cmdL, x + width - ne, y,
+    cmdQ, x + width, y, x + width, y + ne,
+    cmdL, x + width, y + height - se,
+    cmdQ, x + width, y + height, x + width - se, y + height,
+    cmdL, x + sw, y + height,
+    cmdQ, x, y + height, x, y + height - sw,
+    cmdL, x, y + nw,
+    cmdQ, x, y, x + nw, y,
+    cmdz,
+    cmdEndPath
+  ]
+
+proc drawRect(pos, size: Vec2) =
+  let
+    x = pos.x
+    y = pos.y
+    w = size.x
+    h = size.y
+  dataBufferSeq.add @[
+    cmdStartPath,
+    cmdM, x, y,
+    cmdL, x, y,
+    cmdL, x + w, y,
+    cmdL, x + w, y + h,
+    cmdL, x, y + h,
+    cmdz,
+    cmdEndPath
+  ]
+
 proc drawGeom(node: Node, geom: Geometry) =
   dataBufferSeq.add cmdStartPath
   for command in parsePath(geom.path).commands:
@@ -294,29 +343,31 @@ proc drawNode*(node: Node, level: int) =
     mat = mat * node.transform()
     opacity = opacity * node.opacity
 
+  dataBufferSeq.add cmdSetMat
+  dataBufferSeq.add mat[0, 0]
+  dataBufferSeq.add mat[0, 1]
+  dataBufferSeq.add mat[1, 0]
+  dataBufferSeq.add mat[1, 1]
+  dataBufferSeq.add mat[2, 0]
+  dataBufferSeq.add mat[2, 1]
+
   case node.kind
     of nkGroup:
       discard
 
-    of nkFrame, nkInstance:
-      let
-        topLeft = mat * vec2(0, 0)
-        bottomLeft = mat * node.size
-
-      dataBufferSeq.add @[
-        cmdStartPath,
-        cmdM, topLeft.x, topLeft.y,
-        cmdL, bottomLeft.x, topLeft.y,
-        cmdL, bottomLeft.x, bottomLeft.y,
-        cmdL, topLeft.x, bottomLeft.y,
-        cmdL, topLeft.x, topLeft.y,
-        cmdz,
-        cmdEndPath,
-      ]
+    of nkRectangle, nkFrame, nkInstance:
+      if node.cornerRadius > 0:
+        let r = node.cornerRadius
+        drawRect(vec2(0, 0), node.size, r, r, r, r)
+      elif node.rectangleCornerRadii.len == 4:
+        let r = node.rectangleCornerRadii
+        drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
+      else:
+        drawRect(vec2(0, 0), node.size)
       for paint in node.fills:
         drawPaint(node, paint)
 
-    of nkVector, nkRectangle, nkStar, nkEllipse:
+    of nkVector, nkStar, nkEllipse:
 
       for geom in node.fillGeometry:
         drawGeom(node, geom)
