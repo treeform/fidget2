@@ -9,7 +9,9 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
   assert figmaFile.document != nil, "Empty document?"
   var framesHtml = """
   <style>
-  img { border: 2px solid gray; }
+  * { font-family: sans-serif;}
+  img { border: 1px solid #888; margin: 5px}
+  body { background: url(../checkers.png) repeat; color: white }
   </style>
   """
   var count = 0
@@ -36,7 +38,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
 
     var
-      diffScore: int = -1
+      diffScore: float32 = -1
       diffImage: Image
 
     if fileExists(&"tests/frames/masters/{frame.name}.png"):
@@ -45,10 +47,10 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
 
-    echo "  ", w, " ", frameTime, "s ", diffScore
+    echo &"  {w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx"
 
     framesHtml.add(&"<h4>{frame.name}</h4>")
-    framesHTML.add(&"<p>{w} {frameTime}s {diffScore} diffpx</p>")
+    framesHTML.add(&"<p>{w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx</p>")
     framesHTML.add(&"<img src='{frame.name}.png'>")
     framesHTML.add(&"<img src='masters/{frame.name}.png'>")
     framesHTML.add(&"<img src='diffs/{frame.name}.png'><br>")

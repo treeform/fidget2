@@ -11,6 +11,7 @@ var
 
   dataBufferSeq*: seq[float32]
   mat*, prevMat*: Mat3
+  opacity*, prevOpacity*: float32
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
@@ -219,8 +220,6 @@ proc readGpuPixels(): pixie.Image =
   )
   return screen
 
-
-
 proc transform(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
   result[0, 0] = node.relativeTransform[0][0]
@@ -235,127 +234,99 @@ proc transform(node: Node): Mat3 =
   result[2, 1] = node.relativeTransform[1][2]
   result[2, 2] = 1
 
+proc drawGeom(node: Node, geom: Geometry) =
+  dataBufferSeq.add cmdStartPath
+  for command in parsePath(geom.path).commands:
+    case command.kind
+    of Move:
+      dataBufferSeq.add cmdM
+      var pos = mat * vec2(command.numbers[0], command.numbers[1])
+      dataBufferSeq.add pos.x
+      dataBufferSeq.add pos.y
+    of Line:
+      dataBufferSeq.add cmdL
+      var pos = mat * vec2(command.numbers[0], command.numbers[1])
+      dataBufferSeq.add pos.x
+      dataBufferSeq.add pos.y
+    of Cubic:
+      dataBufferSeq.add cmdC
+      for i in 0 ..< 3:
+        var pos = mat * vec2(
+          command.numbers[i*2+0],
+          command.numbers[i*2+1]
+        )
+        dataBufferSeq.add pos.x
+        dataBufferSeq.add pos.y
+    of End:
+      dataBufferSeq.add cmdz
+    else:
+      quit($command.kind & " not supported command kind.")
+
+  dataBufferSeq.add cmdEndPath
+
+proc drawPaint(node: Node, paint: Paint) =
+  if paint.kind == pkImage:
+    dataBufferSeq.add @[
+      cmdTexture,
+      1.0
+    ]
+  else:
+    dataBufferSeq.add @[
+      cmdSolidFill,
+      paint.color.r,
+      paint.color.g,
+      paint.color.b,
+      paint.color.a * paint.opacity * opacity
+    ]
+
 proc drawNode*(node: Node, level: int) =
 
   if not node.visible or node.opacity == 0:
     return
 
   prevMat = mat
-  if level != 0:
+  prevOpacity = opacity
+
+  if level == 0:
+    mat.identity()
+    opacity = 1.0
+  else:
     mat = mat * node.transform()
+    opacity = opacity * node.opacity
 
   case node.kind
     of nkGroup:
       discard
 
     of nkFrame, nkInstance:
-      var topColor: chroma.Color
-      for paint in node.fills:
-        if paint.visible:
-          topColor = paint.color
-          topColor.a *= paint.opacity * node.opacity
-
       let
         topLeft = mat * vec2(0, 0)
         bottomLeft = mat * node.size
 
       dataBufferSeq.add @[
         cmdStartPath,
-        cmdStyleFill, topColor.r, topColor.g, topColor.b, topColor.a,
         cmdM, topLeft.x, topLeft.y,
         cmdL, bottomLeft.x, topLeft.y,
         cmdL, bottomLeft.x, bottomLeft.y,
         cmdL, topLeft.x, bottomLeft.y,
         cmdL, topLeft.x, topLeft.y,
         cmdz,
-        cmdEndPath
+        cmdEndPath,
       ]
+      for paint in node.fills:
+        drawPaint(node, paint)
 
     of nkVector, nkRectangle, nkStar, nkEllipse:
 
-      for paint in node.fills:
-        if paint.kind == pkImage:
-          dataBufferSeq.add @[
-            cmdTexture,
-            1.0
-          ]
-        else:
-          dataBufferSeq.add @[
-            cmdStyleFill,
-            paint.color.r,
-            paint.color.g,
-            paint.color.b,
-            paint.color.a * paint.opacity * node.opacity
-          ]
-
       for geom in node.fillGeometry:
-        dataBufferSeq.add cmdStartPath
-        for command in parsePath(geom.path).commands:
-          case command.kind
-          of Move:
-            dataBufferSeq.add cmdM
-            var pos = mat * vec2(command.numbers[0], command.numbers[1])
-            dataBufferSeq.add pos.x
-            dataBufferSeq.add pos.y
-          of Line:
-            dataBufferSeq.add cmdL
-            var pos = mat * vec2(command.numbers[0], command.numbers[1])
-            dataBufferSeq.add pos.x
-            dataBufferSeq.add pos.y
-          of Cubic:
-            dataBufferSeq.add cmdC
-            for i in 0 ..< 3:
-              var pos = mat * vec2(
-                command.numbers[i*2+0],
-                command.numbers[i*2+1]
-              )
-              dataBufferSeq.add pos.x
-              dataBufferSeq.add pos.y
-          of End:
-            dataBufferSeq.add cmdz
-          else:
-            quit($command.kind & " not supported command kind.")
-
-        dataBufferSeq.add cmdEndPath
-
-      for paint in node.strokes:
-        dataBufferSeq.add @[
-          cmdStyleFill,
-          paint.color.r,
-          paint.color.g,
-          paint.color.b,
-          paint.color.a * paint.opacity * node.opacity
-        ]
+        drawGeom(node, geom)
+      for paint in node.fills:
+        drawPaint(node, paint)
 
       for geom in node.strokeGeometry:
-        dataBufferSeq.add cmdStartPath
-        for command in parsePath(geom.path).commands:
-          case command.kind
-          of Move:
-            dataBufferSeq.add cmdM
-            var pos = mat * vec2(command.numbers[0], command.numbers[1])
-            dataBufferSeq.add pos.x
-            dataBufferSeq.add pos.y
-          of Line:
-            dataBufferSeq.add cmdL
-            var pos = mat * vec2(command.numbers[0], command.numbers[1])
-            dataBufferSeq.add pos.x
-            dataBufferSeq.add pos.y
-          of Cubic:
-            dataBufferSeq.add cmdC
-            for i in 0 ..< 3:
-              var pos = mat * vec2(
-                command.numbers[i*2+0],
-                command.numbers[i*2+1]
-              )
-              dataBufferSeq.add pos.x
-              dataBufferSeq.add pos.y
-          of End:
-            dataBufferSeq.add cmdz
-          else:
-            quit($command.kind & " not supported command kind.")
-
-        dataBufferSeq.add cmdEndPath
+        drawGeom(node, geom)
+      for paint in node.strokes:
+        drawPaint(node, paint)
 
     else:
       echo($node.kind & " not supported")
@@ -364,6 +335,7 @@ proc drawNode*(node: Node, level: int) =
     drawNode(childNode, level + 1)
 
   mat = prevMat
+  opacity = prevOpacity
 
 proc drawCompleteGpuFrame*(node: Node): pixie.Image =
   let
@@ -371,8 +343,6 @@ proc drawCompleteGpuFrame*(node: Node): pixie.Image =
     height = node.absoluteBoundingBox.h.int
 
   setupGpuRender(width, height)
-
-  mat.identity()
 
   drawNode(node, 0)
 

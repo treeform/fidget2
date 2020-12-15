@@ -1,8 +1,10 @@
 import pixie, chroma
 
-proc imageDiff*(master, image: Image): (int, Image) =
-  var diffImage = newImage(master.width, master.height)
-  var diffScore = 0
+proc imageDiff*(master, image: Image): (float32, Image) =
+  var
+    diffImage = newImage(master.width, master.height)
+    diffScore = 0
+    diffTotal = 0
   for x in 0 ..< master.width:
     for y in 0 ..< master.height:
       let
@@ -21,5 +23,6 @@ proc imageDiff*(master, image: Image): (int, Image) =
         abs(m.g.int - u.g.int) +
         abs(m.b.int - u.b.int) +
         abs(m.a.int - u.a.int)
+      diffTotal += 255 * 4
       diffImage.setRgbaUnsafe(x, y, c)
-  return (diffScore, diffImage)
+  return (100 * diffScore.float32 / diffTotal.float32, diffImage)

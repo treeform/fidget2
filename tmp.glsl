@@ -2,13 +2,13 @@
 precision highp float;
 // from svgMain
 
-vec4 sourceColor;
 float x1;
 float textureOn;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
 float y0;
 float y1;
+float fillMask;
 int crossCount = 0;
 float x0;
 vec4 backdropColor;
@@ -16,7 +16,7 @@ vec4 backdropColor;
 void draw(
 ) ;
 
-void style(
+void solidFill(
   float r,
   float g,
   float b,
@@ -33,6 +33,11 @@ void C(
 ) ;
 
 void z(
+) ;
+
+vec4 blendNormalFloats(
+  vec4 backdrop,
+  vec4 source
 ) ;
 
 void startPath(
@@ -64,6 +69,12 @@ void M(
 void endPath(
 ) ;
 
+vec4 alphaFix(
+  vec4 backdrop,
+  vec4 source,
+  vec4 mixed
+) ;
+
 void line(
   vec2 a,
   vec2 b
@@ -78,18 +89,20 @@ void draw(
 ) {
 "Use crossCount to apply color to backdrop.";
   if (! (((crossCount) % (2)) == (0))) {
-        backdropColor = sourceColor;
+        fillMask = 1.0;
   };
 }
 
-void style(
+void solidFill(
   float r,
   float g,
   float b,
   float a
 ) {
 "Set the source color.";
-  sourceColor = vec4(r, g, b, a);
+  if ((fillMask) == (1.0)) {
+        backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a));
+  };
 }
 
 void C(
@@ -112,10 +125,18 @@ void z(
   line(vec2(x0, y0), vec2(x1, y1));
 }
 
+vec4 blendNormalFloats(
+  vec4 backdrop,
+  vec4 source
+) {
+    return alphaFix(backdrop, source, source);
+}
+
 void startPath(
 ) {
 "Clear the status of things and start a new path.";
   crossCount = 0;
+  fillMask = 0.0;
 }
 
 void runCommands(
@@ -132,8 +153,15 @@ void runCommands(
       endPath();
     } else if ((command) == (3.0)) {
       textureOn = 0.0;
-      style(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
+      solidFill(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
 (i) += (4);
+    } else if ((command) == (4.0)) {
+      float opacity = texelFetch(dataBuffer, (i) + (1));
+      backdropColor = (backdropColor) * (opacity);
+(i) += (1);
+    } else if ((command) == (5.0)) {
+      textureOn = texelFetch(dataBuffer, (i) + (1));
+(i) += (1);
     } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
 (i) += (2);
@@ -143,9 +171,6 @@ void runCommands(
     } else if ((command) == (12.0)) {
       C(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)), texelFetch(dataBuffer, (i) + (6)));
 (i) += (6);
-    } else if ((command) == (4.0)) {
-      textureOn = texelFetch(dataBuffer, (i) + (1));
-(i) += (1);
     } else if ((command) == (20.0)) {
       z();
     };
@@ -199,6 +224,28 @@ void endPath(
 ) {
 "SVG style end path command.";
   draw();
+}
+
+vec4 alphaFix(
+  vec4 backdrop,
+  vec4 source,
+  vec4 mixed
+) {
+  vec4 res;
+  res.w = (source.w) + ((backdrop.w) * ((1.0) - (source.w)));
+  if ((res.w) == (0.0)) {
+        return res;
+  };
+  float t0 = (source.w) * ((1.0) - (backdrop.w));
+  float t1 = (source.w) * (backdrop.w);
+  float t2 = ((1.0) - (source.w)) * (backdrop.w);
+  res.x = (((t0) * (source.x)) + ((t1) * (mixed.x))) + ((t2) * (backdrop.x));
+  res.y = (((t0) * (source.y)) + ((t1) * (mixed.y))) + ((t2) * (backdrop.y));
+  res.z = (((t0) * (source.z)) + ((t1) * (mixed.z))) + ((t2) * (backdrop.z));
+(res.x) /= (res.w);
+(res.y) /= (res.w);
+(res.z) /= (res.w);
+  return res;
 }
 
 void line(

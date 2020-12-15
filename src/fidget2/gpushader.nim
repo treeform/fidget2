@@ -8,8 +8,9 @@ const
   cmdExit*: float32 = 0
   cmdStartPath*: float32 = 1
   cmdEndPath*: float32 = 2
-  cmdStyleFill*: float32 = 3
-  cmdTexture*: float32 = 4
+  cmdSolidFill*: float32 = 3
+  cmdApplyOpacity*: float32 = 4
+  cmdTexture*: float32 = 5
   cmdM*: float32 = 10
   cmdL*: float32 = 11
   cmdC*: float32 = 12
@@ -20,8 +21,8 @@ var
   x0, y0, x1, y1: float # Control points of lines and curves.
   screen: Vec2          # Location of were we are on screen.
   textureOn: float      # Is texture enabled.
-  sourceColor: Vec4     # Current source color.
-  backdropColor: Vec4   # Current backdropColor
+  backdropColor: Vec4   # Current backdrop color
+  fillMask: float       # How much of the fill is visible.
 
 proc line(a, b: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
@@ -68,14 +69,6 @@ proc bezier(A, B, C, D: Vec2) =
     line(p, q)
     p = q
 
-proc style(r, g, b, a: float) =
-  ## Set the source color.
-  sourceColor = vec4(r, g, b, a)
-
-proc startPath() =
-  ## Clear the status of things and start a new path.
-  crossCount = 0
-
 proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
   var res: Vec4
   res.w = (source.w + backdrop.w * (1.0 - source.w))
@@ -99,10 +92,21 @@ proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
   return alphaFix(backdrop, source, source)
 
+proc solidFill(r, g, b, a: float) =
+  ## Set the source color.
+  if fillMask == 1.0:
+    # backdropColor = vec4(r, g, b, a)
+    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a))
+
+proc startPath() =
+  ## Clear the status of things and start a new path.
+  crossCount = 0
+  fillMask = 0.0
+
 proc draw() =
   ## Use crossCount to apply color to backdrop.
   if crossCount mod 2 != 0: # Even-Odd or Non-zero rule
-    backdropColor = sourceColor
+    fillMask = 1.0
 
 proc endPath() =
   ## SVG style end path command.
@@ -139,15 +143,22 @@ proc runCommands() =
     if command == cmdExit: break
     elif command == cmdStartPath: startPath()
     elif command == cmdEndPath: endPath()
-    elif command == cmdStyleFill:
+    elif command == cmdSolidFill:
       textureOn = 0.0
-      style(
+      solidFill(
         texelFetch(dataBuffer, i + 1),
         texelFetch(dataBuffer, i + 2),
         texelFetch(dataBuffer, i + 3),
         texelFetch(dataBuffer, i + 4)
       )
       i += 4
+    elif command == cmdApplyOpacity:
+      let opacity = texelFetch(dataBuffer, i + 1)
+      backdropColor = backdropColor * opacity
+      i += 1
+    elif command == cmdTexture:
+      textureOn = texelFetch(dataBuffer, i + 1)
+      i += 1
     elif command == cmdM:
       M(
         texelFetch(dataBuffer, i + 1),
@@ -170,9 +181,6 @@ proc runCommands() =
         texelFetch(dataBuffer, i + 6)
       )
       i += 6
-    elif command == cmdTexture:
-      textureOn = texelFetch(dataBuffer, i + 1)
-      i += 1
     elif command == cmdz: z()
     i += 1
 
