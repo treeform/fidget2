@@ -234,6 +234,8 @@ proc transform(node: Node): Mat3 =
   result[2, 1] = node.relativeTransform[1][2]
   result[2, 2] = 1
 
+const splinyCirlce = 4.0 * (-1.0 + sqrt(2.0)) / 3.0
+
 proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
   # ctx.beginPath();
   # ctx.moveTo(x + nw, y);
@@ -246,22 +248,63 @@ proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
   # cmdL x, y + nw);
   # cmdQ x, y, x + nw, y);
   # ctx.closePath();
+
+  # let
+  #   x = pos.x
+  #   y = pos.y
+  #   width = size.x
+  #   height = size.y
+  # dataBufferSeq.add @[
+  #   cmdStartPath,
+  #   cmdM, x + nw, y,
+  #   cmdL, x + width - ne, y,
+  #   cmdQ, x + width, y, x + width, y + ne,
+  #   cmdL, x + width, y + height - se,
+  #   cmdQ, x + width, y + height, x + width - se, y + height,
+  #   cmdL, x + sw, y + height,
+  #   cmdQ, x, y + height, x, y + height - sw,
+  #   cmdL, x, y + nw,
+  #   cmdQ, x, y, x + nw, y,
+  #   cmdz,
+  #   cmdEndPath
+  # ]
+
   let
     x = pos.x
     y = pos.y
-    width = size.x
-    height = size.y
+    w = size.x
+    h = size.y
+    s = splinyCirlce
+
+    t1 = vec2(x + nw, y)
+    t2 = vec2(x + w - ne, y)
+    r1 = vec2(x + w, y + ne)
+    r2 = vec2(x + w, y + h - se)
+    b1 = vec2(x + w - se, y + h)
+    b2 = vec2(x + sw, y + h)
+    l1 = vec2(x, y + h - sw)
+    l2 = vec2(x, y + nw)
+
+    t1h = t1 + vec2(-nw*s, 0)
+    t2h = t2 + vec2(+ne*s, 0)
+    r1h = r1 + vec2(0, -ne*s)
+    r2h = r2 + vec2(0, +se*s)
+    b1h = b1 + vec2(+se*s, 0)
+    b2h = b2 + vec2(-sw*s, 0)
+    l1h = l1 + vec2(0, +sw*s)
+    l2h = l2 + vec2(0, -nw*s)
+
   dataBufferSeq.add @[
     cmdStartPath,
-    cmdM, x + nw, y,
-    cmdL, x + width - ne, y,
-    cmdQ, x + width, y, x + width, y + ne,
-    cmdL, x + width, y + height - se,
-    cmdQ, x + width, y + height, x + width - se, y + height,
-    cmdL, x + sw, y + height,
-    cmdQ, x, y + height, x, y + height - sw,
-    cmdL, x, y + nw,
-    cmdQ, x, y, x + nw, y,
+    cmdM, t1.x, t1.y,
+    cmdL, t2.x, t2.y,
+    cmdC, t2h.x, t2h.y, r1h.x, r1h.y, r1.x, r1.y,
+    cmdL, r2.x, r2.y,
+    cmdC, r2h.x, r2h.y, b1h.x, b1h.y, b1.x, b1.y,
+    cmdL, b2.x, b2.y,
+    cmdC, b2h.x, b2h.y, l1h.x, l1h.y, l1.x, l1.y,
+    cmdL, l2.x, l2.y,
+    cmdC, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
     cmdz,
     cmdEndPath
   ]
