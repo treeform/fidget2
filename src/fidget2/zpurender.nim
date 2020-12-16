@@ -1,20 +1,15 @@
 import chroma, fidget2, pixie, math, vmath, glsl, gpushader, gpurender, pixie
 
 proc drawCompleteZpuFrame*(node: Node): pixie.Image =
-  let
-    width = node.absoluteBoundingBox.w.int
-    height = node.absoluteBoundingBox.h.int
-
-  dataBufferSeq.setLen(0)
-  mat.identity()
+  setupRender(node)
 
   drawNode(node, 0)
 
   dataBufferSeq.add(cmdExit)
 
-  textureAtlas.image = readImage("tests/test512.png")
+  textureAtlasSampler.image = textureAtlas.image #readImage("tests/test512.png")
 
-  var image = newImage(width, height)
+  var image = newImage(viewPortWidth, viewPortHeight)
   dataBuffer.data = dataBufferSeq
 
   for y in 0 ..< image.height:

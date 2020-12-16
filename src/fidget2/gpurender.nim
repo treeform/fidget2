@@ -1,6 +1,6 @@
 import atlas, chroma, os, fidget2, pixie, strutils, strformat, times,
   math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math,
-  pixie
+  pixie, tables, typography
 
 var
   viewPortWidth*: int
@@ -15,14 +15,19 @@ var
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
-  textureAtlas: CpuAtlas
+  textureAtlas*: CpuAtlas
   textureAtlasId: GLuint
 
-proc setupGpuRender(width, height: int) =
-  viewPortWidth = width
-  viewPortHeight = height
+  typefaceCache: Table[string, Typeface]
+
+proc setupRender*(frameNode: Node) =
+  viewPortWidth = frameNode.absoluteBoundingBox.w.int
+  viewPortHeight = frameNode.absoluteBoundingBox.h.int
   dataBufferSeq.setLen(0)
-  textureAtlas = newCpuAtlas(1024, 1)
+
+  if textureAtlas == nil:
+    textureAtlas = newCpuAtlas(1024, 1)
+    echo "create atlas"
 
 proc basic2dVert(vertexPox: Vec2, gl_Position: var Vec4) =
   gl_Position.xy = vertexPox
@@ -60,6 +65,20 @@ var
   isLinked: GLint
 
   dataBufferId: GLuint
+
+proc updateGpuAtlas() =
+  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
+  glTexImage2D(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA.GLint,
+    textureAtlas.image.width.GLsizei,
+    textureAtlas.image.height.GLsizei,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    textureAtlas.image.data[0].addr
+  )
 
 proc readGpuPixels(): pixie.Image =
 
@@ -116,9 +135,10 @@ proc readGpuPixels(): pixie.Image =
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-    var image = readImage("tests/test512.png")
-    textureAtlas.put("test512", image)
+    #var image = readImage("tests/test512.png")
+    #textureAtlas.put("test512", image)
     # textureAtlas.image.writeFile("atlas.png")
+
 
     glTexImage2D(
       GL_TEXTURE_2D,
@@ -194,12 +214,16 @@ proc readGpuPixels(): pixie.Image =
     var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
     glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
 
-    var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlas")
+    var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
     print textureAtlasLoc
     glUniform1i(textureAtlasLoc, 1) # Set textureAtlas to 1th texture.
 
     windowReady = true
 
+  # send texture to the CPU
+  updateGpuAtlas()
+
+  # send commands to the CPU
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
   glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
@@ -326,17 +350,17 @@ proc drawGeom(node: Node, geom: Geometry) =
   dataBufferSeq.add cmdStartPath
   for command in parsePath(geom.path).commands:
     case command.kind
-    of Move:
+    of pixie.Move:
       dataBufferSeq.add cmdM
       var pos =vec2(command.numbers[0], command.numbers[1])
       dataBufferSeq.add pos.x
       dataBufferSeq.add pos.y
-    of Line:
+    of pixie.Line:
       dataBufferSeq.add cmdL
       var pos = vec2(command.numbers[0], command.numbers[1])
       dataBufferSeq.add pos.x
       dataBufferSeq.add pos.y
-    of Cubic:
+    of pixie.Cubic:
       dataBufferSeq.add cmdC
       for i in 0 ..< 3:
         var pos = vec2(
@@ -345,7 +369,7 @@ proc drawGeom(node: Node, geom: Geometry) =
         )
         dataBufferSeq.add pos.x
         dataBufferSeq.add pos.y
-    of End:
+    of pixie.End:
       dataBufferSeq.add cmdz
     else:
       quit($command.kind & " not supported command kind.")
@@ -356,18 +380,48 @@ proc drawPaint(node: Node, paint: Paint) =
   if not paint.visible:
     return
 
-  if paint.kind == pkImage:
-    dataBufferSeq.add @[
-      cmdTexture,
-      1.0
-    ]
-  else:
+  case paint.kind
+  of pkImage:
+
+    var image: pixie.Image
+    if paint.imageRef notin textureAtlas.entries:
+      downloadImageRef(paint.imageRef)
+      try:
+        image = readImage("figma/images/" & paint.imageRef & ".png")
+      except PixieError:
+        echo "Issue loading image: ", node.name
+      textureAtlas.put(paint.imageRef, image)
+      #updateGpuAtlas()
+      #textureAtlas.image.writeFile("atlas.png")
+
+    let rect = textureAtlas.entries[paint.imageRef]
+
+    let s = 1 / textureAtlas.image.width.float32
+    let tMat = scale(vec2(s)) * mat.inverse() * translate(rect.xy)
+    dataBufferSeq.add cmdTextureFill
+    dataBufferSeq.add tMat[0, 0]
+    dataBufferSeq.add tMat[0, 1]
+    dataBufferSeq.add tMat[1, 0]
+    dataBufferSeq.add tMat[1, 1]
+    dataBufferSeq.add tMat[2, 0]
+    dataBufferSeq.add tMat[2, 1]
+
+  of pkSolid:
     dataBufferSeq.add @[
       cmdSolidFill,
       paint.color.r,
       paint.color.g,
       paint.color.b,
       paint.color.a * paint.opacity * opacity
+    ]
+  else:
+    # debug pink
+    dataBufferSeq.add @[
+      cmdSolidFill,
+      1,
+      0.5,
+      0.5,
+      1
     ]
 
 proc drawNode*(node: Node, level: int) =
@@ -471,6 +525,77 @@ proc drawNode*(node: Node, level: int) =
       for paint in node.strokes:
         drawPaint(node, paint)
 
+    of nkText:
+
+      var font: Font
+      if node.style.fontPostScriptName notin typefaceCache:
+        if node.style.fontPostScriptName == "":
+          node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
+
+        downloadFont(node.style.fontPostScriptName)
+        font = readFontTtf("figma/fonts/" & node.style.fontPostScriptName & ".ttf")
+        typefaceCache[node.style.fontPostScriptName] = font.typeface
+      else:
+        font = Font()
+        font.typeface = typefaceCache[node.style.fontPostScriptName]
+      font.size = node.style.fontSize
+      font.lineHeight = node.style.lineHeightPx
+
+      var wrap = false
+      if node.style.textAutoResize == tarHeight:
+        wrap = true
+
+      var kern = true
+      if node.style.opentypeFlags != nil:
+        if node.style.opentypeFlags.KERN == 0:
+          kern = false
+
+      let layout = font.typeset(
+        text = node.characters,
+        pos = vec2(0, 0),
+        size = node.size,
+        hAlign = node.style.textAlignHorizontal,
+        vAlign = node.style.textAlignVertical,
+        clip = false,
+        wrap = wrap,
+        kern = kern,
+        textCase = node.style.textCase,
+      )
+      #fillMask = newImage(w, h)
+      #fillMask.drawText(layout)
+      dataBufferSeq.add cmdStartPath
+
+      var fontHeight = font.typeface.ascent - font.typeface.descent
+      var scale = font.size / (fontHeight)
+
+      for gpos in layout:
+        var font = gpos.font
+        if gpos.character in font.typeface.glyphs:
+          var glyph = font.typeface.glyphs[gpos.character]
+          glyph.makeReady(font)
+
+          proc trans(v: Vec2): Vec2 =
+            result = v * scale
+            result.y = -result.y
+
+          for shape in glyph.shapes:
+            for segment in shape:
+
+              dataBufferSeq.add cmdM
+              var pos = segment.at.trans + gpos.rect.xy
+              dataBufferSeq.add pos.x
+              dataBufferSeq.add pos.y
+
+              dataBufferSeq.add cmdL
+              pos = segment.to.trans + gpos.rect.xy
+              dataBufferSeq.add pos.x
+              dataBufferSeq.add pos.y
+
+      dataBufferSeq.add cmdEndPath
+
+      for paint in node.fills:
+        drawPaint(node, paint)
+
     else:
       echo($node.kind & " not supported")
 
@@ -481,15 +606,10 @@ proc drawNode*(node: Node, level: int) =
   opacity = prevOpacity
 
 proc drawCompleteGpuFrame*(node: Node): pixie.Image =
-  let
-    width = node.absoluteBoundingBox.w.int
-    height = node.absoluteBoundingBox.h.int
-
-  setupGpuRender(width, height)
+  setupRender(node)
 
   drawNode(node, 0)
 
   dataBufferSeq.add(cmdExit)
-
 
   return readGpuPixels()

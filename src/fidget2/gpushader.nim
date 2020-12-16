@@ -1,7 +1,7 @@
 import vmath, fidget2/glsl
 
 var dataBuffer*: Uniform[SamplerBuffer]
-var textureAtlas*: Uniform[Sampler2d]
+var textureAtlasSampler*: Uniform[Sampler2d]
 
 const
   ## Command "enums"
@@ -10,7 +10,7 @@ const
   cmdEndPath*: float32 = 2
   cmdSolidFill*: float32 = 3
   cmdApplyOpacity*: float32 = 4
-  cmdTexture*: float32 = 5
+  cmdTextureFill*: float32 = 5
   cmdSetMat*: float32 = 6
   cmdM*: float32 = 10
   cmdL*: float32 = 11
@@ -22,10 +22,10 @@ var
   crossCount: int = 0   # Number of line crosses (used to fill).
   x0, y0, x1, y1: float # Control points of lines and curves.
   screen: Vec2          # Location of were we are on screen.
-  textureOn: float      # Is texture enabled.
-  backdropColor: Vec4   # Current backdrop color
+  backdropColor: Vec4   # Current backdrop color.
   fillMask: float       # How much of the fill is visible.
-  mat: Mat3             # Current transform matrix
+  mat: Mat3             # Current transform matrix.
+  tMat: Mat3            # Texture matrix.
 
 proc line(a0, b0: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
@@ -125,6 +125,18 @@ proc solidFill(r, g, b, a: float) =
     # backdropColor = vec4(r, g, b, a)
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a))
 
+proc textureFill(tMat: Mat3) =
+  ## Set the source color.
+  if fillMask == 1.0:
+    # backdropColor = vec4(r, g, b, a)
+    # echo tMat
+    # echo screen
+    # echo tMat * vec3(screen, 1)
+    let textureColor = texture(textureAtlasSampler, (tMat * vec3(screen, 1)).xy)
+    backdropColor = blendNormalFloats(backdropColor, textureColor)
+    #quit()
+
+
 proc startPath() =
   ## Clear the status of things and start a new path.
   crossCount = 0
@@ -177,7 +189,6 @@ proc runCommands() =
     elif command == cmdStartPath: startPath()
     elif command == cmdEndPath: endPath()
     elif command == cmdSolidFill:
-      textureOn = 0.0
       solidFill(
         texelFetch(dataBuffer, i + 1),
         texelFetch(dataBuffer, i + 2),
@@ -189,9 +200,19 @@ proc runCommands() =
       let opacity = texelFetch(dataBuffer, i + 1)
       backdropColor = backdropColor * opacity
       i += 1
-    elif command == cmdTexture:
-      textureOn = texelFetch(dataBuffer, i + 1)
-      i += 1
+    elif command == cmdTextureFill:
+      #textureOn = texelFetch(dataBuffer, i + 1)
+      tMat[0, 0] = texelFetch(dataBuffer, i + 1)
+      tMat[0, 1] = texelFetch(dataBuffer, i + 2)
+      tMat[0, 2] = 0.0
+      tMat[1, 0] = texelFetch(dataBuffer, i + 3)
+      tMat[1, 1] = texelFetch(dataBuffer, i + 4)
+      tMat[1, 2] = 0.0
+      tMat[2, 0] = texelFetch(dataBuffer, i + 5)
+      tMat[2, 1] = texelFetch(dataBuffer, i + 6)
+      tMat[2, 2] = 1.0
+      textureFill(tMat)
+      i += 6
     elif command == cmdSetMat:
       mat[0, 0] = texelFetch(dataBuffer, i + 1)
       mat[0, 1] = texelFetch(dataBuffer, i + 2)

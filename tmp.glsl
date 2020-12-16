@@ -3,11 +3,12 @@ precision highp float;
 // from svgMain
 
 float x1;
-float textureOn;
+uniform sampler2D textureAtlasSampler;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
 float y0;
 float y1;
+mat3 tMat;
 float fillMask;
 mat3 mat;
 int crossCount = 0;
@@ -58,6 +59,10 @@ void startPath(
 ) ;
 
 void runCommands(
+) ;
+
+void textureFill(
+  mat3 tMat
 ) ;
 
 vec2 interpolate(
@@ -204,7 +209,6 @@ void runCommands(
     } else if ((command) == (2.0)) {
       endPath();
     } else if ((command) == (3.0)) {
-      textureOn = 0.0;
       solidFill(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
 (i) += (4);
     } else if ((command) == (4.0)) {
@@ -212,8 +216,17 @@ void runCommands(
       backdropColor = (backdropColor) * (opacity);
 (i) += (1);
     } else if ((command) == (5.0)) {
-      textureOn = texelFetch(dataBuffer, (i) + (1));
-(i) += (1);
+      tMat[0][0] = texelFetch(dataBuffer, (i) + (1));
+      tMat[0][1] = texelFetch(dataBuffer, (i) + (2));
+      tMat[0][2] = 0.0;
+      tMat[1][0] = texelFetch(dataBuffer, (i) + (3));
+      tMat[1][1] = texelFetch(dataBuffer, (i) + (4));
+      tMat[1][2] = 0.0;
+      tMat[2][0] = texelFetch(dataBuffer, (i) + (5));
+      tMat[2][1] = texelFetch(dataBuffer, (i) + (6));
+      tMat[2][2] = 1.0;
+      textureFill(tMat);
+(i) += (6);
     } else if ((command) == (6.0)) {
       mat[0][0] = texelFetch(dataBuffer, (i) + (1));
       mat[0][1] = texelFetch(dataBuffer, (i) + (2));
@@ -241,6 +254,16 @@ void runCommands(
       z();
     };
 (i) += (1);
+  };
+}
+
+void textureFill(
+  mat3 tMat
+) {
+"Set the source color.";
+  if ((fillMask) == (1.0)) {
+    vec4 textureColor = texture(textureAtlasSampler, ((tMat) * (vec3(screen, 1))).xy);
+    backdropColor = blendNormalFloats(backdropColor, textureColor);
   };
 }
 

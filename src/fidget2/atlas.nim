@@ -2,7 +2,7 @@ import tables, bumpy, pixie, print
 
 type
   CpuAtlas* = ref object
-    entires*: Table[string, Rect]
+    entries*: Table[string, Rect]
     image*: Image
     heights*: seq[uint16]
     margin*: int
@@ -61,5 +61,6 @@ proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
   return rect
 
 proc put*(atlas: CpuAtlas, name: string, image: Image) =
-  let r = atlas.findEmptyRect(image.height, image.width)
-  atlas.image.draw(image, r.xy, blendMode = bmOverwrite)
+  let rect = atlas.findEmptyRect(image.height, image.width)
+  atlas.entries[name] = rect
+  atlas.image.draw(image, rect.xy, blendMode = bmOverwrite)

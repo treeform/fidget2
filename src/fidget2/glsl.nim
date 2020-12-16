@@ -41,8 +41,8 @@ const glslGlobals = [
 
 const glslFunctions = [
   "rgb=", "rgb", "xyz", "xy", "xy=",
-  "vec2", "vec3", "vec4", "color",
-  "Vec2", "Vec3", "Vec4", "Color",
+  "vec2", "vec3", "vec4", "mat3", "mat4", "color",
+  "Vec2", "Vec3", "Vec4", "Mat3", "Mat4", "Color",
   "clamp", "min", "max", "dot", "sqrt", "mix",
   "texelFetch", "texture",
   "normalize",
@@ -98,7 +98,6 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     if procName in ignoreFunctions:
       return
     if procName in "[]=":
-      echo show(n)
       n[1].toCode(res)
       for i in 2 ..< n.len - 1:
         res.add "["
