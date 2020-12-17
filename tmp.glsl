@@ -62,7 +62,10 @@ void runCommands(
 ) ;
 
 void textureFill(
-  mat3 tMat
+  mat3 tMat,
+  float tile,
+  vec2 pos,
+  vec2 size
 ) ;
 
 vec2 interpolate(
@@ -182,7 +185,7 @@ void quadratic(
   float nrecip = (1.0) / (n);
   float t = 0.0;
   for(int i = 0; i < int(n); i++) {
-(t) += (nrecip);
+(t) += (nrecip);;
     vec2 pn = mix(mix(p0, p1, t), mix(p1, p2, t), t);
     line(p, pn);
     p = pn;
@@ -210,11 +213,11 @@ void runCommands(
       endPath();
     } else if ((command) == (3.0)) {
       solidFill(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
-(i) += (4);
+(i) += (4);;
     } else if ((command) == (4.0)) {
       float opacity = texelFetch(dataBuffer, (i) + (1));
       backdropColor = (backdropColor) * (opacity);
-(i) += (1);
+(i) += (1);;
     } else if ((command) == (5.0)) {
       tMat[0][0] = texelFetch(dataBuffer, (i) + (1));
       tMat[0][1] = texelFetch(dataBuffer, (i) + (2));
@@ -225,8 +228,15 @@ void runCommands(
       tMat[2][0] = texelFetch(dataBuffer, (i) + (5));
       tMat[2][1] = texelFetch(dataBuffer, (i) + (6));
       tMat[2][2] = 1.0;
-      textureFill(tMat);
-(i) += (6);
+      float tile = texelFetch(dataBuffer, (i) + (7));
+      vec2 pos;
+      pos.x = texelFetch(dataBuffer, (i) + (8));
+      pos.y = texelFetch(dataBuffer, (i) + (9));
+      vec2 size;
+      size.x = texelFetch(dataBuffer, (i) + (10));
+      size.y = texelFetch(dataBuffer, (i) + (11));
+      textureFill(tMat, tile, pos, size);
+(i) += (11);;
     } else if ((command) == (6.0)) {
       mat[0][0] = texelFetch(dataBuffer, (i) + (1));
       mat[0][1] = texelFetch(dataBuffer, (i) + (2));
@@ -237,33 +247,52 @@ void runCommands(
       mat[2][0] = texelFetch(dataBuffer, (i) + (5));
       mat[2][1] = texelFetch(dataBuffer, (i) + (6));
       mat[2][2] = 1.0;
-(i) += (6);
+(i) += (6);;
     } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
-(i) += (2);
+(i) += (2);;
     } else if ((command) == (11.0)) {
       L(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
-(i) += (2);
+(i) += (2);;
     } else if ((command) == (12.0)) {
       C(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)), texelFetch(dataBuffer, (i) + (6)));
-(i) += (6);
+(i) += (6);;
     } else if ((command) == (13.0)) {
       Q(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
-(i) += (4);
+(i) += (4);;
     } else if ((command) == (20.0)) {
       z();
     };
-(i) += (1);
+(i) += (1);;
   };
 }
 
 void textureFill(
-  mat3 tMat
+  mat3 tMat,
+  float tile,
+  vec2 pos,
+  vec2 size
 ) {
 "Set the source color.";
   if ((fillMask) == (1.0)) {
-    vec4 textureColor = texture(textureAtlasSampler, ((tMat) * (vec3(screen, 1))).xy);
-    backdropColor = blendNormalFloats(backdropColor, textureColor);
+    vec2 uv = ((tMat) * (vec3(screen, 1))).xy;
+    if ((tile) == (0.0)) {
+            if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
+        vec4 textureColor = texture(textureAtlasSampler, uv);
+        backdropColor = blendNormalFloats(backdropColor, textureColor);
+      };
+    } else {
+      while((uv.x) < (pos.x)) {
+(uv.x) += (size.x);      };
+      while(((pos.x) + (size.x)) < (uv.x)) {
+(uv.x) -= (size.x);      };
+      while((uv.y) < (pos.y)) {
+(uv.y) += (size.y);      };
+      while(((pos.y) + (size.y)) < (uv.y)) {
+(uv.y) -= (size.y);      };
+      vec4 textureColor = texture(textureAtlasSampler, uv);
+      backdropColor = blendNormalFloats(backdropColor, textureColor);
+    };
   };
 }
 
@@ -331,9 +360,9 @@ vec4 alphaFix(
   res.x = (((t0) * (source.x)) + ((t1) * (mixed.x))) + ((t2) * (backdrop.x));
   res.y = (((t0) * (source.y)) + ((t1) * (mixed.y))) + ((t2) * (backdrop.y));
   res.z = (((t0) * (source.z)) + ((t1) * (mixed.z))) + ((t2) * (backdrop.z));
-(res.x) /= (res.w);
-(res.y) /= (res.w);
-(res.z) /= (res.w);
+(res.x) /= (res.w);;
+(res.y) /= (res.w);;
+(res.z) /= (res.w);;
   return res;
 }
 
@@ -358,9 +387,9 @@ void line(
     };
     if ((xIntersect) <= (screen.x)) {
             if ((0.0) < ((a.y) - (b.y))) {
-        (crossCount) += (1);
+        (crossCount) += (1);;
       } else {
-        (crossCount) -= (1);
+        (crossCount) -= (1);;
       };
     };
   };

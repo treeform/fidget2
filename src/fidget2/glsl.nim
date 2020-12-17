@@ -89,6 +89,8 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add " ("
     n[2].toCode(res)
     res.add ")"
+    if n[0].repr in ["+=", "-=", "*=", "/="]:
+      res.add(";")
 
   of nnkHiddenDeref, nnkHiddenAddr:
     n[0].toCode(res)

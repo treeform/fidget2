@@ -400,6 +400,7 @@ proc drawPaint(node: Node, paint: Paint) =
         (mat * sMat).inverse()
 
     of smTile:
+      tileImage = 1.0
       tMat = scale(vec2(s)) * translate(rect.xy) *
         (mat * scale(vec2(paint.scalingFactor))).inverse()
 
@@ -410,9 +411,11 @@ proc drawPaint(node: Node, paint: Paint) =
     dataBufferSeq.add tMat[1, 1]
     dataBufferSeq.add tMat[2, 0]
     dataBufferSeq.add tMat[2, 1]
-    #dataBufferSeq.add tileImage
-    #dataBufferSeq.add rect.w
-    #dataBufferSeq.add rect.h
+    dataBufferSeq.add tileImage
+    dataBufferSeq.add rect.x * s
+    dataBufferSeq.add rect.y * s
+    dataBufferSeq.add rect.w * s
+    dataBufferSeq.add rect.h * s
 
   of pkSolid:
     dataBufferSeq.add @[

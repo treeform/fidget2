@@ -125,17 +125,22 @@ proc solidFill(r, g, b, a: float) =
     # backdropColor = vec4(r, g, b, a)
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a))
 
-proc textureFill(tMat: Mat3) =
+proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
   if fillMask == 1.0:
-    # backdropColor = vec4(r, g, b, a)
-    # echo tMat
-    # echo screen
-    # echo tMat * vec3(screen, 1)
-    let textureColor = texture(textureAtlasSampler, (tMat * vec3(screen, 1)).xy)
-    backdropColor = blendNormalFloats(backdropColor, textureColor)
-    #quit()
-
+    var uv = (tMat * vec3(screen, 1)).xy
+    if tile == 0.0:
+      if uv.x > pos.x and uv.x < pos.x + size.x and
+        uv.y > pos.y and uv.y < pos.y + size.y:
+        let textureColor = texture(textureAtlasSampler, uv)
+        backdropColor = blendNormalFloats(backdropColor, textureColor)
+    else:
+      while uv.x < pos.x: uv.x += size.x
+      while uv.x > pos.x + size.x: uv.x -= size.x
+      while uv.y < pos.y: uv.y += size.y
+      while uv.y > pos.y + size.y: uv.y -= size.y
+      let textureColor = texture(textureAtlasSampler, uv)
+      backdropColor = blendNormalFloats(backdropColor, textureColor)
 
 proc startPath() =
   ## Clear the status of things and start a new path.
@@ -211,8 +216,15 @@ proc runCommands() =
       tMat[2, 0] = texelFetch(dataBuffer, i + 5)
       tMat[2, 1] = texelFetch(dataBuffer, i + 6)
       tMat[2, 2] = 1.0
-      textureFill(tMat)
-      i += 6
+      let tile = texelFetch(dataBuffer, i + 7)
+      var pos: Vec2
+      pos.x = texelFetch(dataBuffer, i + 8)
+      pos.y = texelFetch(dataBuffer, i + 9)
+      var size: Vec2
+      size.x = texelFetch(dataBuffer, i + 10)
+      size.y = texelFetch(dataBuffer, i + 11)
+      textureFill(tMat, tile, pos, size)
+      i += 11
     elif command == cmdSetMat:
       mat[0, 0] = texelFetch(dataBuffer, i + 1)
       mat[0, 1] = texelFetch(dataBuffer, i + 2)
