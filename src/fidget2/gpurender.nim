@@ -26,8 +26,7 @@ proc setupRender*(frameNode: Node) =
   dataBufferSeq.setLen(0)
 
   if textureAtlas == nil:
-    textureAtlas = newCpuAtlas(1024, 1)
-    echo "create atlas"
+    textureAtlas = newCpuAtlas(1024*2, 1)
 
 proc basic2dVert(vertexPox: Vec2, gl_Position: var Vec4) =
   gl_Position.xy = vertexPox
@@ -135,11 +134,6 @@ proc readGpuPixels(): pixie.Image =
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-    #var image = readImage("tests/test512.png")
-    #textureAtlas.put("test512", image)
-    # textureAtlas.image.writeFile("atlas.png")
-
-
     glTexImage2D(
       GL_TEXTURE_2D,
       0,
@@ -215,7 +209,6 @@ proc readGpuPixels(): pixie.Image =
     glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
 
     var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
-    print textureAtlasLoc
     glUniform1i(textureAtlasLoc, 1) # Set textureAtlas to 1th texture.
 
     windowReady = true
@@ -261,38 +254,6 @@ proc transform(node: Node): Mat3 =
 const splinyCirlce = 4.0 * (-1.0 + sqrt(2.0)) / 3.0
 
 proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
-  # ctx.beginPath();
-  # ctx.moveTo(x + nw, y);
-  # cmdL x + width - ne, y);
-  # cmdQ x + width, y, x + width, y + ne);
-  # cmdL x + width, y + height - se);
-  # cmdQ x + width, y + height, x + width - se, y + height);
-  # cmdL x + sw, y + height);
-  # cmdQ x, y + height, x, y + height - sw);
-  # cmdL x, y + nw);
-  # cmdQ x, y, x + nw, y);
-  # ctx.closePath();
-
-  # let
-  #   x = pos.x
-  #   y = pos.y
-  #   width = size.x
-  #   height = size.y
-  # dataBufferSeq.add @[
-  #   cmdStartPath,
-  #   cmdM, x + nw, y,
-  #   cmdL, x + width - ne, y,
-  #   cmdQ, x + width, y, x + width, y + ne,
-  #   cmdL, x + width, y + height - se,
-  #   cmdQ, x + width, y + height, x + width - se, y + height,
-  #   cmdL, x + sw, y + height,
-  #   cmdQ, x, y + height, x, y + height - sw,
-  #   cmdL, x, y + nw,
-  #   cmdQ, x, y, x + nw, y,
-  #   cmdz,
-  #   cmdEndPath
-  # ]
-
   let
     x = pos.x
     y = pos.y
@@ -383,8 +344,8 @@ proc drawPaint(node: Node, paint: Paint) =
   case paint.kind
   of pkImage:
 
-    var image: pixie.Image
     if paint.imageRef notin textureAtlas.entries:
+      var image: pixie.Image
       downloadImageRef(paint.imageRef)
       try:
         image = readImage("figma/images/" & paint.imageRef & ".png")
@@ -392,12 +353,56 @@ proc drawPaint(node: Node, paint: Paint) =
         echo "Issue loading image: ", node.name
       textureAtlas.put(paint.imageRef, image)
       #updateGpuAtlas()
-      #textureAtlas.image.writeFile("atlas.png")
 
     let rect = textureAtlas.entries[paint.imageRef]
-
     let s = 1 / textureAtlas.image.width.float32
-    let tMat = scale(vec2(s)) * mat.inverse() * translate(rect.xy)
+
+    var tileImage = 0.0
+    var tMat: Mat3
+
+    case paint.scaleMode
+
+    of smFill, smFit:
+      let
+        ratioW = rect.w / node.size.x
+        ratioH = rect.h / node.size.y
+      var scalePx: float32
+      if paint.scaleMode == smFill:
+        scalePx = min(ratioW, ratioH)
+      if paint.scaleMode == smFit:
+        scalePx = max(ratioW, ratioH)
+      let topRight = node.size / 2.0 - rect.wh / 2.0 / scalePx
+      tMat = scale(vec2(s)) * translate(rect.xy) *
+        (mat * translate(topRight) * scale(vec2(1/scalePx))).inverse()
+
+    of smStretch: # Figma ui calls this "crop".
+      var sMat: Mat3
+      sMat[0, 0] = paint.imageTransform[0][0]
+      sMat[0, 1] = paint.imageTransform[0][1]
+
+      sMat[1, 0] = paint.imageTransform[1][0]
+      sMat[1, 1] = paint.imageTransform[1][1]
+
+      sMat[2, 0] = paint.imageTransform[0][2]
+      sMat[2, 1] = paint.imageTransform[1][2]
+      sMat[2, 2] = 1
+
+      sMat = sMat.inverse()
+      sMat[2, 0] = sMat[2, 0] * node.absoluteBoundingBox.w
+      sMat[2, 1] = sMat[2, 1] * node.absoluteBoundingBox.h
+      let
+        ratioW = rect.w / node.absoluteBoundingBox.w
+        ratioH = rect.h / node.absoluteBoundingBox.h
+        scale = min(ratioW, ratioH)
+      sMat = sMat * scale(vec2(1/scale))
+
+      tMat = scale(vec2(s)) * translate(rect.xy) *
+        (mat * sMat).inverse()
+
+    of smTile:
+      tMat = scale(vec2(s)) * translate(rect.xy) *
+        (mat * scale(vec2(paint.scalingFactor))).inverse()
+
     dataBufferSeq.add cmdTextureFill
     dataBufferSeq.add tMat[0, 0]
     dataBufferSeq.add tMat[0, 1]
@@ -405,6 +410,9 @@ proc drawPaint(node: Node, paint: Paint) =
     dataBufferSeq.add tMat[1, 1]
     dataBufferSeq.add tMat[2, 0]
     dataBufferSeq.add tMat[2, 1]
+    #dataBufferSeq.add tileImage
+    #dataBufferSeq.add rect.w
+    #dataBufferSeq.add rect.h
 
   of pkSolid:
     dataBufferSeq.add @[

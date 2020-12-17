@@ -61,6 +61,6 @@ proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
   return rect
 
 proc put*(atlas: CpuAtlas, name: string, image: Image) =
-  let rect = atlas.findEmptyRect(image.height, image.width)
+  let rect = atlas.findEmptyRect(image.width, image.height)
   atlas.entries[name] = rect
   atlas.image.draw(image, rect.xy, blendMode = bmOverwrite)
