@@ -51,7 +51,7 @@ proc line(a0, b0: Vec2) =
       xIntersect = a.x
     if xIntersect <= screen.x:
       # Is the xIntersect is to the left, count cross.
-      if a.y - b.y > 0.0:
+      if a.y - b.y > 0:
         # Count up if line is going up.
         crossCount += 1
       else:
@@ -61,9 +61,9 @@ proc line(a0, b0: Vec2) =
 proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
   let
-    A = G4 - G1 + 3.0 * (G2 - G3)
-    B = 3.0 * (G1 - 2.0 * G2 + G3)
-    C = 3.0 * (G2 - G1)
+    A = G4 - G1 + 3 * (G2 - G3)
+    B = 3 * (G1 - 2 * G2 + G3)
+    C = 3 * (G2 - G1)
     D = G1
   return t * (t * (t * A + B) + C) + D
 
@@ -121,15 +121,15 @@ proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
-  if fillMask == 1.0:
+  if fillMask == 1:
     # backdropColor = vec4(r, g, b, a)
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a))
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
-  if fillMask == 1.0:
+  if fillMask == 1:
     var uv = (tMat * vec3(screen, 1)).xy
-    if tile == 0.0:
+    if tile == 0:
       if uv.x > pos.x and uv.x < pos.x + size.x and
         uv.y > pos.y and uv.y < pos.y + size.y:
         let textureColor = texture(textureAtlasSampler, uv)
@@ -142,12 +142,12 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
 proc startPath() =
   ## Clear the status of things and start a new path.
   crossCount = 0
-  fillMask = 0.0
+  fillMask = 0
 
 proc draw() =
   ## Use crossCount to apply color to backdrop.
   if crossCount mod 2 != 0: # Even-Odd or Non-zero rule
-    fillMask = 1.0
+    fillMask = 1
 
 proc endPath() =
   ## SVG style end path command.
@@ -203,16 +203,15 @@ proc runCommands() =
       backdropColor = backdropColor * opacity
       i += 1
     elif command == cmdTextureFill:
-      #textureOn = texelFetch(dataBuffer, i + 1)
       tMat[0, 0] = texelFetch(dataBuffer, i + 1)
       tMat[0, 1] = texelFetch(dataBuffer, i + 2)
-      tMat[0, 2] = 0.0
+      tMat[0, 2] = 0
       tMat[1, 0] = texelFetch(dataBuffer, i + 3)
       tMat[1, 1] = texelFetch(dataBuffer, i + 4)
-      tMat[1, 2] = 0.0
+      tMat[1, 2] = 0
       tMat[2, 0] = texelFetch(dataBuffer, i + 5)
       tMat[2, 1] = texelFetch(dataBuffer, i + 6)
-      tMat[2, 2] = 1.0
+      tMat[2, 2] = 1
       let tile = texelFetch(dataBuffer, i + 7)
       var pos: Vec2
       pos.x = texelFetch(dataBuffer, i + 8)
@@ -225,13 +224,13 @@ proc runCommands() =
     elif command == cmdSetMat:
       mat[0, 0] = texelFetch(dataBuffer, i + 1)
       mat[0, 1] = texelFetch(dataBuffer, i + 2)
-      mat[0, 2] = 0.0
+      mat[0, 2] = 0
       mat[1, 0] = texelFetch(dataBuffer, i + 3)
       mat[1, 1] = texelFetch(dataBuffer, i + 4)
-      mat[1, 2] = 0.0
+      mat[1, 2] = 0
       mat[2, 0] = texelFetch(dataBuffer, i + 5)
       mat[2, 1] = texelFetch(dataBuffer, i + 6)
-      mat[2, 2] = 1.0
+      mat[2, 2] = 1
       i += 6
     elif command == cmdM:
       M(

@@ -111,7 +111,7 @@ void draw(
 ) {
 "Use crossCount to apply color to backdrop.";
   if (! (((crossCount) % (2)) == (0))) {
-        fillMask = 1.0;
+        fillMask = float(1);
   };
 }
 
@@ -122,7 +122,7 @@ void solidFill(
   float a
 ) {
 "Set the source color.";
-  if ((fillMask) == (1.0)) {
+  if ((fillMask) == (float(1))) {
         backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a));
   };
 }
@@ -172,8 +172,8 @@ void quadratic(
   vec2 p2
 ) {
 "Turn a cubic curve into N lines.";
-  float devx = ((p0.x) - ((2.0) * (p1.x))) + (p2.x);
-  float devy = ((p0.y) - ((2.0) * (p1.y))) + (p2.y);
+  float devx = ((float(p0.x)) - ((2.0) * (float(p1.x)))) + (float(p2.x));
+  float devy = ((float(p0.y)) - ((2.0) * (float(p1.y)))) + (float(p2.y));
   float devsq = ((devx) * (devx)) + ((devy) * (devy));
   if ((devsq) < (0.333)) {
     line(p0, p2);
@@ -186,7 +186,7 @@ void quadratic(
   float t = 0.0;
   for(int i = 0; i < int(n); i++) {
 (t) += (nrecip);;
-    vec2 pn = mix(mix(p0, p1, t), mix(p1, p2, t), t);
+    vec2 pn = mix(mix(p0, p1, float(t)), mix(p1, p2, float(t)), float(t));
     line(p, pn);
     p = pn;
   };
@@ -196,7 +196,7 @@ void startPath(
 ) {
 "Clear the status of things and start a new path.";
   crossCount = 0;
-  fillMask = 0.0;
+  fillMask = float(0);
 }
 
 void runCommands(
@@ -221,13 +221,13 @@ void runCommands(
     } else if ((command) == (5.0)) {
       tMat[0][0] = texelFetch(dataBuffer, (i) + (1));
       tMat[0][1] = texelFetch(dataBuffer, (i) + (2));
-      tMat[0][2] = 0.0;
+      tMat[0][2] = float(0);
       tMat[1][0] = texelFetch(dataBuffer, (i) + (3));
       tMat[1][1] = texelFetch(dataBuffer, (i) + (4));
-      tMat[1][2] = 0.0;
+      tMat[1][2] = float(0);
       tMat[2][0] = texelFetch(dataBuffer, (i) + (5));
       tMat[2][1] = texelFetch(dataBuffer, (i) + (6));
-      tMat[2][2] = 1.0;
+      tMat[2][2] = float(1);
       float tile = texelFetch(dataBuffer, (i) + (7));
       vec2 pos;
       pos.x = texelFetch(dataBuffer, (i) + (8));
@@ -240,13 +240,13 @@ void runCommands(
     } else if ((command) == (6.0)) {
       mat[0][0] = texelFetch(dataBuffer, (i) + (1));
       mat[0][1] = texelFetch(dataBuffer, (i) + (2));
-      mat[0][2] = 0.0;
+      mat[0][2] = float(0);
       mat[1][0] = texelFetch(dataBuffer, (i) + (3));
       mat[1][1] = texelFetch(dataBuffer, (i) + (4));
-      mat[1][2] = 0.0;
+      mat[1][2] = float(0);
       mat[2][0] = texelFetch(dataBuffer, (i) + (5));
       mat[2][1] = texelFetch(dataBuffer, (i) + (6));
-      mat[2][2] = 1.0;
+      mat[2][2] = float(1);
 (i) += (6);;
     } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
@@ -274,9 +274,9 @@ void textureFill(
   vec2 size
 ) {
 "Set the source color.";
-  if ((fillMask) == (1.0)) {
-    vec2 uv = ((tMat) * (vec3(screen, 1))).xy;
-    if ((tile) == (0.0)) {
+  if ((fillMask) == (float(1))) {
+    vec2 uv = ((tMat) * (vec3(screen, float(1)))).xy;
+    if ((tile) == (float(0))) {
             if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
         vec4 textureColor = texture(textureAtlasSampler, uv);
         backdropColor = blendNormalFloats(backdropColor, textureColor);
@@ -297,9 +297,9 @@ vec2 interpolate(
   float t
 ) {
 "Solve the cubic bezier interpolation with 4 points.";
-  vec2 A = ((G4) - (G1)) + ((3.0) * ((G2) - (G3)));
-  vec2 B = (3.0) * (((G1) - ((2.0) * (G2))) + (G3));
-  vec2 C = (3.0) * ((G2) - (G1));
+  vec2 A = ((G4) - (G1)) + ((float(3)) * ((G2) - (G3)));
+  vec2 B = (float(3)) * (((G1) - ((float(2)) * (G2))) + (G3));
+  vec2 C = (float(3)) * ((G2) - (G1));
   vec2 D = G1;
   return ((t) * (((t) * (((t) * (A)) + (B))) + (C))) + (D);
 }
@@ -343,16 +343,16 @@ vec4 alphaFix(
   vec4 mixed
 ) {
   vec4 res;
-  res.w = (source.w) + ((backdrop.w) * ((1.0) - (source.w)));
-  if ((res.w) == (0.0)) {
+  res.w = float((float(source.w)) + ((float(backdrop.w)) * ((1.0) - (float(source.w)))));
+  if ((float(res.w)) == (0.0)) {
         return res;
   };
-  float t0 = (source.w) * ((1.0) - (backdrop.w));
+  float t0 = (float(source.w)) * ((1.0) - (float(backdrop.w)));
   float t1 = (source.w) * (backdrop.w);
-  float t2 = ((1.0) - (source.w)) * (backdrop.w);
-  res.x = (((t0) * (source.x)) + ((t1) * (mixed.x))) + ((t2) * (backdrop.x));
-  res.y = (((t0) * (source.y)) + ((t1) * (mixed.y))) + ((t2) * (backdrop.y));
-  res.z = (((t0) * (source.z)) + ((t1) * (mixed.z))) + ((t2) * (backdrop.z));
+  float t2 = ((1.0) - (float(source.w))) * (float(backdrop.w));
+  res.x = float((((t0) * (float(source.x))) + (float((t1) * (mixed.x)))) + ((t2) * (float(backdrop.x))));
+  res.y = float((((t0) * (float(source.y))) + (float((t1) * (mixed.y)))) + ((t2) * (float(backdrop.y))));
+  res.z = float((((t0) * (float(source.z))) + (float((t1) * (mixed.z)))) + ((t2) * (float(backdrop.z))));
 (res.x) /= (res.w);;
 (res.y) /= (res.w);;
 (res.z) /= (res.w);;
@@ -364,8 +364,8 @@ void line(
   vec2 b0
 ) {
 "Turn a line into inc/dec/ignore of the crossCount.";
-  vec2 a = ((mat) * (vec3(a0, 1))).xy;
-  vec2 b = ((mat) * (vec3(b0, 1))).xy;
+  vec2 a = ((mat) * (vec3(a0, float(1)))).xy;
+  vec2 b = ((mat) * (vec3(b0, float(1)))).xy;
   if ((a.y) == (b.y)) {
         return ;
   };
@@ -379,7 +379,7 @@ void line(
             xIntersect = a.x;
     };
     if ((xIntersect) <= (screen.x)) {
-            if ((0.0) < ((a.y) - (b.y))) {
+            if ((float(0)) < ((a.y) - (b.y))) {
         (crossCount) += (1);;
       } else {
         (crossCount) -= (1);;
@@ -403,7 +403,7 @@ out vec4 fragColor;
 void main() {
 "Main entry point to this huge shader.";
   crossCount = 0;
-  backdropColor = vec4(0, 0, 0, 0);
+  backdropColor = vec4(float(0), float(0), float(0), float(0));
   screen = gl_FragCoord.xy;
   runCommands();
   fragColor = backdropColor;

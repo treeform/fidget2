@@ -2,10 +2,8 @@
 
 import macros, strutils, vmath, tables, pixie, chroma
 
-# Solve the case of int literals needed to be floats:
-# var f: float32 = 1
-# needs 1 to be a "1.0" float32 not an "1" int.
-var wantLitType {.compileTime.}: string = ""
+# For the ability to look at parent nodes.
+var nodeStack {.compileTime.}: seq[NimNode]
 
 proc show(n: NimNode): string =
   result.add $n.kind
@@ -78,12 +76,13 @@ proc toCodeStmts(n: NimNode, res: var string, level = 0)
 proc toCode(n: NimNode, res: var string, level = 0) =
   ## Inner code block.
 
+  nodeStack.add(n)
+
   case n.kind
 
   of nnkAsgn:
     res.addIndent level
     n[0].toCode(res)
-    wantLitType = n[0].getType.repr
     res.add " = "
     n[1].toCode(res)
 
@@ -191,8 +190,12 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       inc i
 
   of nnkHiddenStdConv:
-    for j in 0 .. n.len-1:
+    let typeStr = typeRename(n.getType.repr)
+    for j in 1 .. n.len-1:
+      res.add typeStr
+      res.add "("
       n[j].toCode(res)
+      res.add ")"
 
   of nnkEmpty, nnkNilLit, nnkDiscardStmt, nnkPragma:
     # Skip all nil, empty and discard statements.
@@ -200,14 +203,10 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkIntLit .. nnkInt64Lit:
     var iv = $n.intVal
-    if wantLitType == "float":
-      iv.add(".0")
     res.add iv
 
   of nnkFloatLit .. nnkFloat64Lit:
     var fv = $n.floatVal
-    # if "." notin fv and "e" notin fv:
-    #   fv.add(".0")
     res.add fv
 
   of nnkStrLit .. nnkTripleStrLit, nnkCommentStmt:
@@ -224,9 +223,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkIdentDefs:
     for j in countup(0, n.len - 1, 3):
-      let typeStr = typeRename(n[j].getTypeInst().strVal)
-      res.add typeStr
-      wantLitType = typeStr
+      res.add typeRename(n[j].getTypeInst().strVal)
       res.add " "
       n[j].toCode(res)
       if n[j + 2].kind != nnkEmpty:
@@ -308,6 +305,8 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     # for j in 0 .. n.len-1:
     #   n[j].toCode(res)
     # res.add "}}"
+
+  discard nodeStack.pop()
 
 proc toCodeStmts(n: NimNode, res: var string, level = 0) =
   if n.kind != nnkStmtList:
