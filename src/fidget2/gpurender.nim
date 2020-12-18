@@ -579,8 +579,6 @@ proc drawNode*(node: Node, level: int) =
         kern = kern,
         textCase = node.style.textCase,
       )
-      #fillMask = newImage(w, h)
-      #fillMask.drawText(layout)
       dataBufferSeq.add cmdStartPath
       dataBufferSeq.add 1
 
@@ -597,18 +595,21 @@ proc drawNode*(node: Node, level: int) =
             result = v * scale
             result.y = -result.y
 
+          var prevPos: Vec2
           for shape in glyph.shapes:
             for segment in shape:
 
-              dataBufferSeq.add cmdM
-              var pos = segment.at.trans + gpos.rect.xy
-              dataBufferSeq.add pos.x
-              dataBufferSeq.add pos.y
+              let posM = segment.at.trans + gpos.rect.xy
+              if posM != prevPos:
+                dataBufferSeq.add cmdM
+                dataBufferSeq.add posM.x
+                dataBufferSeq.add posM.y
 
               dataBufferSeq.add cmdL
-              pos = segment.to.trans + gpos.rect.xy
-              dataBufferSeq.add pos.x
-              dataBufferSeq.add pos.y
+              let posL = segment.to.trans + gpos.rect.xy
+              dataBufferSeq.add posL.x
+              dataBufferSeq.add posL.y
+              prevPos = posL
 
       dataBufferSeq.add cmdEndPath
 
