@@ -282,14 +282,7 @@ void textureFill(
         backdropColor = blendNormalFloats(backdropColor, textureColor);
       };
     } else {
-      while((uv.x) < (pos.x)) {
-(uv.x) += (size.x);      };
-      while(((pos.x) + (size.x)) < (uv.x)) {
-(uv.x) -= (size.x);      };
-      while((uv.y) < (pos.y)) {
-(uv.y) += (size.y);      };
-      while(((pos.y) + (size.y)) < (uv.y)) {
-(uv.y) -= (size.y);      };
+      uv = (mod((uv) - (pos), size)) + (pos);
       vec4 textureColor = texture(textureAtlasSampler, uv);
       backdropColor = blendNormalFloats(backdropColor, textureColor);
     };

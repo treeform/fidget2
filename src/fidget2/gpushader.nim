@@ -19,13 +19,13 @@ const
   cmdz*: float32 = 20
 
 var
-  crossCount: int = 0   # Number of line crosses (used to fill).
-  x0, y0, x1, y1: float # Control points of lines and curves.
-  screen: Vec2          # Location of were we are on screen.
-  backdropColor: Vec4   # Current backdrop color.
-  fillMask: float       # How much of the fill is visible.
-  mat: Mat3             # Current transform matrix.
-  tMat: Mat3            # Texture matrix.
+  crossCount: int = 0     # Number of line crosses (used to fill).
+  x0, y0, x1, y1: float32 # Control points of lines and curves.
+  screen: Vec2            # Location of were we are on screen.
+  backdropColor: Vec4     # Current backdrop color.
+  fillMask: float32       # How much of the fill is visible.
+  mat: Mat3               # Current transform matrix.
+  tMat: Mat3              # Texture matrix.
 
 proc line(a0, b0: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
@@ -58,7 +58,7 @@ proc line(a0, b0: Vec2) =
         # Count down if line is going down.
         crossCount -= 1
 
-proc interpolate(G1, G2, G3, G4: Vec2, t: float): Vec2 =
+proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
   let
     A = G4 - G1 + 3.0 * (G2 - G3)
@@ -73,7 +73,7 @@ proc bezier(A, B, C, D: Vec2) =
   let discretization = 10
   for t in 1 .. discretization:
     let
-      q = interpolate(A, B, C, D, float(t)/float(discretization))
+      q = interpolate(A, B, C, D, float32(t)/float32(discretization))
     line(p, q)
     p = q
 
@@ -119,7 +119,7 @@ proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
   return alphaFix(backdrop, source, source)
 
-proc solidFill(r, g, b, a: float) =
+proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
   if fillMask == 1.0:
     # backdropColor = vec4(r, g, b, a)
@@ -135,10 +135,7 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
         let textureColor = texture(textureAtlasSampler, uv)
         backdropColor = blendNormalFloats(backdropColor, textureColor)
     else:
-      while uv.x < pos.x: uv.x += size.x
-      while uv.x > pos.x + size.x: uv.x -= size.x
-      while uv.y < pos.y: uv.y += size.y
-      while uv.y > pos.y + size.y: uv.y -= size.y
+      uv = (uv - pos) mod size + pos
       let textureColor = texture(textureAtlasSampler, uv)
       backdropColor = blendNormalFloats(backdropColor, textureColor)
 
@@ -156,26 +153,26 @@ proc endPath() =
   ## SVG style end path command.
   draw()
 
-proc M(x, y: float) =
+proc M(x, y: float32) =
   ## SVG style Move command.
   x1 = x
   x0 = x
   y1 = y
   y0 = y
 
-proc L(x, y: float) =
+proc L(x, y: float32) =
   ## SVG style Line command.
   line(vec2(x0, y0), vec2(x, y))
   x0 = x
   y0 = y
 
-proc C(x1, y1, x2, y2, x, y: float) =
+proc C(x1, y1, x2, y2, x, y: float32) =
   ## SVG cubic Curve command.
   bezier(vec2(x0,y0), vec2(x1,y1), vec2(x2,y2), vec2(x,y))
   x0 = x
   y0 = y
 
-proc Q(x1, y1, x, y: float) =
+proc Q(x1, y1, x, y: float32) =
   ## SVG Quadratic curve command.
   quadratic(vec2(x0,y0), vec2(x1,y1), vec2(x,y))
   x0 = x

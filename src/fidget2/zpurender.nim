@@ -18,7 +18,7 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
       #   continue
 
       var color: Vec4
-      svgMain(vec4(x.float32, y.float32, 0, 1), color)
+      svgMain(vec4(x.float32 + 0.5, y.float32 + 0.5, 0, 1), color)
       image.setRgbaUnsafe(x, y, rgba(
         (color.x * 255).uint8,
         (color.y * 255).uint8,

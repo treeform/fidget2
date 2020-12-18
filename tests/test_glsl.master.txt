@@ -39,7 +39,7 @@ precision highp float;
 
 
 void main() {
-    float f = 1;
+    float f = 1.0;
 ;
 }
 
@@ -52,7 +52,7 @@ uniform samplerBuffer dataBuffer;
 out vec4 fragColor;
 
 void main() {
-    if ((texelFetch(dataBuffer, 0)) == (0)) {
+    if ((texelFetch(dataBuffer, 0.0)) == (0.0)) {
         fragColor = vec4(1, 0, 0, 1);
   } else {
         fragColor = vec4(0, 0, 0, 1);

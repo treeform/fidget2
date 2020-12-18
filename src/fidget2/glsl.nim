@@ -2,6 +2,11 @@
 
 import macros, strutils, vmath, tables, pixie, chroma
 
+# Solve the case of int literals needed to be floats:
+# var f: float32 = 1
+# needs 1 to be a "1.0" float32 not an "1" int.
+var wantLitType {.compileTime.}: string = ""
+
 proc show(n: NimNode): string =
   result.add $n.kind
   case n.kind
@@ -78,10 +83,22 @@ proc toCode(n: NimNode, res: var string, level = 0) =
   of nnkAsgn:
     res.addIndent level
     n[0].toCode(res)
+    wantLitType = n[0].getType.repr
     res.add " = "
     n[1].toCode(res)
 
   of nnkInfix:
+    if n[0].repr in ["mod"] and n[1].getType().repr != "int":
+      # In nim float mod and integer made are same thing.
+      # In GLSL mod(float, float) is a function while % is for integers.
+      res.add n[0].repr
+      res.add "("
+      n[1].toCode(res)
+      res.add ", "
+      n[2].toCode(res)
+      res.add ")"
+      return
+
     res.add "("
     n[1].toCode(res)
     res.add ") "
@@ -183,9 +200,8 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkIntLit .. nnkInt64Lit:
     var iv = $n.intVal
-    # res.add n.getTypeInst().strVal
-    # if "." notin fv and "e" notin fv:
-    #   fv.add(".0")
+    if wantLitType == "float":
+      iv.add(".0")
     res.add iv
 
   of nnkFloatLit .. nnkFloat64Lit:
@@ -208,7 +224,9 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkIdentDefs:
     for j in countup(0, n.len - 1, 3):
-      res.add typeRename(n[j].getTypeInst().strVal)
+      let typeStr = typeRename(n[j].getTypeInst().strVal)
+      res.add typeStr
+      wantLitType = typeStr
       res.add " "
       n[j].toCode(res)
       if n[j + 2].kind != nnkEmpty:
@@ -527,6 +545,21 @@ proc mix*(a, b: Vec4, v: float32): Vec4 =
   result.y = lerp(a.y, b.y, v)
   result.z = lerp(a.z, b.z, v)
   result.w = lerp(a.w, b.w, v)
+
+proc `mod`*(a, b: Vec2): Vec2 =
+  result.x = a.x mod b.x
+  result.y = a.y mod b.y
+
+proc `mod`*(a, b: Vec3): Vec3 =
+  result.x = a.x mod b.x
+  result.y = a.y mod b.y
+  result.z = a.y mod b.z
+
+proc `mod`*(a, b: Vec4): Vec4 =
+  result.x = a.x mod b.x
+  result.y = a.y mod b.y
+  result.z = a.y mod b.z
+  result.w = a.w mod b.w
 
 proc `*`*(m: Mat4, v: Vec4): Vec4 =
   vec4(m * v.xyz, 1.0)
