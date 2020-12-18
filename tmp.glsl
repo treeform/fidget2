@@ -3,6 +3,7 @@ precision highp float;
 // from svgMain
 
 float x1;
+int windingRule = 0;
 uniform sampler2D textureAtlasSampler;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
@@ -56,6 +57,7 @@ void quadratic(
 ) ;
 
 void startPath(
+  float rule
 ) ;
 
 void runCommands(
@@ -110,8 +112,14 @@ void L(
 void draw(
 ) {
 "Use crossCount to apply color to backdrop.";
-  if (! (((crossCount) % (2)) == (0))) {
-        fillMask = float(1);
+  if ((windingRule) == (0)) {
+        if (! (((crossCount) % (2)) == (0))) {
+            fillMask = float(1);
+    };
+  } else {
+        if (! ((crossCount) == (0))) {
+            fillMask = float(1);
+    };
   };
 }
 
@@ -193,10 +201,12 @@ void quadratic(
 }
 
 void startPath(
+  float rule
 ) {
 "Clear the status of things and start a new path.";
   crossCount = 0;
   fillMask = float(0);
+  windingRule = int(rule);
 }
 
 void runCommands(
@@ -208,7 +218,8 @@ void runCommands(
     if ((command) == (0.0)) {
             break;
     } else if ((command) == (1.0)) {
-      startPath();
+      startPath(texelFetch(dataBuffer, (i) + (1)));
+(i) += (1);;
     } else if ((command) == (2.0)) {
       endPath();
     } else if ((command) == (3.0)) {

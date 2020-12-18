@@ -172,7 +172,6 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add "}"
     var i = 1
     while n.len > i:
-      # TODO elif?
       if n[i].kind == nnkElse:
         res.add " else {\n"
         n[i][0].toCodeStmts(res, level + 1)

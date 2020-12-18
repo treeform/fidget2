@@ -309,6 +309,11 @@ proc drawRect(pos, size: Vec2) =
 
 proc drawGeom(node: Node, geom: Geometry) =
   dataBufferSeq.add cmdStartPath
+  case geom.windingRule
+  of wrEvenOdd:
+    dataBufferSeq.add 0
+  of wrNonZero:
+    dataBufferSeq.add 1
   for command in parsePath(geom.path).commands:
     case command.kind
     of pixie.Move:
@@ -465,6 +470,7 @@ proc drawNode*(node: Node, level: int) =
     of nkRectangle, nkFrame, nkInstance:
       if node.fills.len > 0:
         dataBufferSeq.add cmdStartPath
+        dataBufferSeq.add 0
         if node.cornerRadius > 0:
           let r = node.cornerRadius
           drawRect(vec2(0, 0), node.size, r, r, r, r)
@@ -491,6 +497,7 @@ proc drawNode*(node: Node, level: int) =
           outer = node.strokeWeight / 2
 
         dataBufferSeq.add cmdStartPath
+        dataBufferSeq.add 0
         if node.cornerRadius > 0:
           let r = node.cornerRadius
           drawRect(
@@ -575,6 +582,7 @@ proc drawNode*(node: Node, level: int) =
       #fillMask = newImage(w, h)
       #fillMask.drawText(layout)
       dataBufferSeq.add cmdStartPath
+      dataBufferSeq.add 1
 
       var fontHeight = font.typeface.ascent - font.typeface.descent
       var scale = font.size / (fontHeight)

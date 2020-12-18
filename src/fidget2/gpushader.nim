@@ -20,6 +20,7 @@ const
 
 var
   crossCount: int = 0     # Number of line crosses (used to fill).
+  windingRule: int = 0
   x0, y0, x1, y1: float32 # Control points of lines and curves.
   screen: Vec2            # Location of were we are on screen.
   backdropColor: Vec4     # Current backdrop color.
@@ -139,15 +140,22 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
       let textureColor = texture(textureAtlasSampler, uv)
       backdropColor = blendNormalFloats(backdropColor, textureColor)
 
-proc startPath() =
+proc startPath(rule: float32) =
   ## Clear the status of things and start a new path.
   crossCount = 0
   fillMask = 0
+  windingRule = rule.int
 
 proc draw() =
   ## Use crossCount to apply color to backdrop.
-  if crossCount mod 2 != 0: # Even-Odd or Non-zero rule
-    fillMask = 1
+  if windingRule == 0:
+    # Even-Odd
+    if crossCount mod 2 != 0:
+      fillMask = 1
+  else:
+    # Non-zero
+    if crossCount != 0:
+      fillMask = 1
 
 proc endPath() =
   ## SVG style end path command.
@@ -188,7 +196,9 @@ proc runCommands() =
   while true:
     let command = texelFetch(dataBuffer, i)
     if command == cmdExit: break
-    elif command == cmdStartPath: startPath()
+    elif command == cmdStartPath:
+      startPath(texelFetch(dataBuffer, i + 1))
+      i += 1
     elif command == cmdEndPath: endPath()
     elif command == cmdSolidFill:
       solidFill(
