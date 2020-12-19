@@ -46,7 +46,7 @@ const glslFunctions = [
   "rgb=", "rgb", "xyz", "xy", "xy=",
   "vec2", "vec3", "vec4", "mat3", "mat4", "color",
   "Vec2", "Vec3", "Vec4", "Mat3", "Mat4", "Color",
-  "clamp", "min", "max", "dot", "sqrt", "mix",
+  "clamp", "min", "max", "dot", "sqrt", "mix", "length",
   "texelFetch", "texture",
   "normalize",
   "floor", "ceil",

@@ -13,7 +13,8 @@ const
   cmdApplyOpacity*: float32 = 5
   cmdTextureFill*: float32 = 6
   cmdGradientLinear*: float32 = 7
-  cmdGradientStop*: float32 = 8
+  cmdGradientRadial*: float32 = 8
+  cmdGradientStop*: float32 = 9
   cmdM*: float32 = 10
   cmdL*: float32 = 11
   cmdC*: float32 = 12
@@ -153,10 +154,18 @@ proc toLineSpace(at, to, point: Vec2): float32 =
 
 proc gradientLinear(at0, to0: Vec2) =
   if fillMask == 1:
-    var
+    let
       at = (mat * vec3(at0, 1)).xy
       to = (mat * vec3(to0, 1)).xy
     gradientK = toLineSpace(at, to, screen).clamp(0, 1)
+
+proc gradientRadial(at0, to0: Vec2) =
+  if fillMask == 1:
+    let
+      at = (mat * vec3(at0, 1)).xy
+      to = (mat * vec3(to0, 1)).xy
+      distance = (at - to).length()
+    gradientK = ((at - screen).length() / distance).clamp(0, 1)
 
 proc gradientStop(k, r, g, b, a: float32) =
   if fillMask == 1:
@@ -270,6 +279,14 @@ proc runCommands() =
       to.x = texelFetch(dataBuffer, i + 3)
       to.y = texelFetch(dataBuffer, i + 4)
       gradientLinear(at, to)
+      i += 4
+    elif command == cmdGradientRadial:
+      var at, to: Vec2
+      at.x = texelFetch(dataBuffer, i + 1)
+      at.y = texelFetch(dataBuffer, i + 2)
+      to.x = texelFetch(dataBuffer, i + 3)
+      to.y = texelFetch(dataBuffer, i + 4)
+      gradientRadial(at, to)
       i += 4
     elif command == cmdGradientStop:
       gradientStop(

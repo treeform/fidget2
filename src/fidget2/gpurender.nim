@@ -342,6 +342,34 @@ proc drawGeom(node: Node, geom: Geometry) =
 
   dataBufferSeq.add cmdEndPath
 
+proc drawGradientStops(paint: Paint) =
+  # Gradient stops
+  dataBufferSeq.add @[
+    cmdGradientStop,
+    -1E6,
+    paint.gradientStops[0].color.r,
+    paint.gradientStops[0].color.g,
+    paint.gradientStops[0].color.b,
+    paint.gradientStops[0].color.a
+  ]
+  for stop in paint.gradientStops:
+    dataBufferSeq.add @[
+      cmdGradientStop,
+      stop.position,
+      stop.color.r,
+      stop.color.g,
+      stop.color.b,
+      stop.color.a
+    ]
+  dataBufferSeq.add @[
+    cmdGradientStop,
+    1E6,
+    paint.gradientStops[^1].color.r,
+    paint.gradientStops[^1].color.g,
+    paint.gradientStops[^1].color.b,
+    paint.gradientStops[^1].color.a
+  ]
+
 proc drawPaint(node: Node, paint: Paint) =
   if not paint.visible:
     return
@@ -446,32 +474,20 @@ proc drawPaint(node: Node, paint: Paint) =
       at.x, at.y,
       to.x, to.y
     ]
-    # Gradient stops
+    drawGradientStops(paint)
+
+  of pkGradientRadial:
+    let
+      at = paint.gradientHandlePositions[0].toImageSpace()
+      to = paint.gradientHandlePositions[1].toImageSpace()
+    # Setup the gradient location
     dataBufferSeq.add @[
-      cmdGradientStop,
-      -1E6,
-      paint.gradientStops[0].color.r,
-      paint.gradientStops[0].color.g,
-      paint.gradientStops[0].color.b,
-      paint.gradientStops[0].color.a
+      cmdGradientRadial,
+      at.x, at.y,
+      to.x, to.y
     ]
-    for stop in paint.gradientStops:
-      dataBufferSeq.add @[
-        cmdGradientStop,
-        stop.position,
-        stop.color.r,
-        stop.color.g,
-        stop.color.b,
-        stop.color.a
-      ]
-    dataBufferSeq.add @[
-      cmdGradientStop,
-      1E6,
-      paint.gradientStops[^1].color.r,
-      paint.gradientStops[^1].color.g,
-      paint.gradientStops[^1].color.b,
-      paint.gradientStops[^1].color.a
-    ]
+    drawGradientStops(paint)
+
   else:
     # debug pink
     dataBufferSeq.add @[

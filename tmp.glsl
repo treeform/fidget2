@@ -19,6 +19,11 @@ int crossCount = 0;
 float x0;
 vec4 backdropColor;
 
+void gradientRadial(
+  vec2 at0,
+  vec2 to0
+) ;
+
 void draw(
 ) ;
 
@@ -134,6 +139,18 @@ void L(
   float x,
   float y
 ) ;
+
+void gradientRadial(
+  vec2 at0,
+  vec2 to0
+) {
+    if ((fillMask) == (float(1))) {
+    vec2 at = ((mat) * (vec3(at0, float(1)))).xy;
+    vec2 to = ((mat) * (vec3(to0, float(1)))).xy;
+    float distance = length((at) - (to));
+    gradientK = clamp((length((at) - (screen))) / (distance), float(0), float(1));
+  };
+}
 
 void draw(
 ) {
@@ -324,6 +341,15 @@ void runCommands(
       gradientLinear(at, to);
 (i) += (4);;
     } else if ((command) == (8.0)) {
+      vec2 at;
+      vec2 to;
+      at.x = texelFetch(dataBuffer, (i) + (1));
+      at.y = texelFetch(dataBuffer, (i) + (2));
+      to.x = texelFetch(dataBuffer, (i) + (3));
+      to.y = texelFetch(dataBuffer, (i) + (4));
+      gradientRadial(at, to);
+(i) += (4);;
+    } else if ((command) == (9.0)) {
       gradientStop(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)));
 (i) += (5);;
     } else if ((command) == (3.0)) {
