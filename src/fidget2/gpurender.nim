@@ -346,6 +346,12 @@ proc drawPaint(node: Node, paint: Paint) =
   if not paint.visible:
     return
 
+  proc toImageSpace(handle: Vec2): Vec2 =
+    vec2(
+      handle.x * node.absoluteBoundingBox.w,
+      handle.y * node.absoluteBoundingBox.h,
+    )
+
   case paint.kind
   of pkImage:
 
@@ -429,6 +435,42 @@ proc drawPaint(node: Node, paint: Paint) =
       paint.color.g,
       paint.color.b,
       paint.color.a * paint.opacity * opacity
+    ]
+  of pkGradientLinear:
+    let
+      at = paint.gradientHandlePositions[0].toImageSpace()
+      to = paint.gradientHandlePositions[1].toImageSpace()
+    # Setup the gradient location
+    dataBufferSeq.add @[
+      cmdGradientLinear,
+      at.x, at.y,
+      to.x, to.y
+    ]
+    # Gradient stops
+    dataBufferSeq.add @[
+      cmdGradientStop,
+      -1E6,
+      paint.gradientStops[0].color.r,
+      paint.gradientStops[0].color.g,
+      paint.gradientStops[0].color.b,
+      paint.gradientStops[0].color.a
+    ]
+    for stop in paint.gradientStops:
+      dataBufferSeq.add @[
+        cmdGradientStop,
+        stop.position,
+        stop.color.r,
+        stop.color.g,
+        stop.color.b,
+        stop.color.a
+      ]
+    dataBufferSeq.add @[
+      cmdGradientStop,
+      1E6,
+      paint.gradientStops[^1].color.r,
+      paint.gradientStops[^1].color.g,
+      paint.gradientStops[^1].color.b,
+      paint.gradientStops[^1].color.a
     ]
   else:
     # debug pink

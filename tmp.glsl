@@ -9,9 +9,12 @@ uniform samplerBuffer dataBuffer;
 vec2 screen;
 float y0;
 float y1;
+vec4 prevGradientColor;
 mat3 tMat;
+float gradientK;
 float fillMask;
 mat3 mat;
+float prevGradientK;
 int crossCount = 0;
 float x0;
 vec4 backdropColor;
@@ -33,6 +36,25 @@ void C(
   float y2,
   float x,
   float y
+) ;
+
+void gradientLinear(
+  vec2 at0,
+  vec2 to0
+) ;
+
+float toLineSpace(
+  vec2 at,
+  vec2 to,
+  vec2 point
+) ;
+
+void gradientStop(
+  float k,
+  float r,
+  float g,
+  float b,
+  float a
 ) ;
 
 void z(
@@ -149,6 +171,46 @@ void C(
   y0 = y;
 }
 
+void gradientLinear(
+  vec2 at0,
+  vec2 to0
+) {
+    if ((fillMask) == (float(1))) {
+    vec2 at = ((mat) * (vec3(at0, float(1)))).xy;
+    vec2 to = ((mat) * (vec3(to0, float(1)))).xy;
+    gradientK = clamp(toLineSpace(at, to, screen), float(0), float(1));
+  };
+}
+
+float toLineSpace(
+  vec2 at,
+  vec2 to,
+  vec2 point
+) {
+  vec2 d = (to) - (at);
+  float det = ((d.x) * (d.x)) + ((d.y) * (d.y));
+  return (((d.y) * ((point.y) - (at.y))) + ((d.x) * ((point.x) - (at.x)))) / (det);
+}
+
+void gradientStop(
+  float k,
+  float r,
+  float g,
+  float b,
+  float a
+) {
+    if ((fillMask) == (float(1))) {
+    vec4 gradientColor = vec4(r, g, b, a);
+    if (((prevGradientK) < (gradientK)) && ((gradientK) <= (k))) {
+      float betweenColors = ((gradientK) - (prevGradientK)) / ((k) - (prevGradientK));
+      vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
+      backdropColor = blendNormalFloats(backdropColor, colorG);
+    };
+    prevGradientK = k;
+    prevGradientColor = gradientColor;
+  };
+}
+
 void z(
 ) {
 "SVG style end of shape command.";
@@ -222,14 +284,14 @@ void runCommands(
 (i) += (1);;
     } else if ((command) == (2.0)) {
       endPath();
-    } else if ((command) == (3.0)) {
+    } else if ((command) == (4.0)) {
       solidFill(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
 (i) += (4);;
-    } else if ((command) == (4.0)) {
+    } else if ((command) == (5.0)) {
       float opacity = texelFetch(dataBuffer, (i) + (1));
       backdropColor = (backdropColor) * (opacity);
 (i) += (1);;
-    } else if ((command) == (5.0)) {
+    } else if ((command) == (6.0)) {
       tMat[0][0] = texelFetch(dataBuffer, (i) + (1));
       tMat[0][1] = texelFetch(dataBuffer, (i) + (2));
       tMat[0][2] = float(0);
@@ -248,7 +310,19 @@ void runCommands(
       size.y = texelFetch(dataBuffer, (i) + (11));
       textureFill(tMat, tile, pos, size);
 (i) += (11);;
-    } else if ((command) == (6.0)) {
+    } else if ((command) == (7.0)) {
+      vec2 at;
+      vec2 to;
+      at.x = texelFetch(dataBuffer, (i) + (1));
+      at.y = texelFetch(dataBuffer, (i) + (2));
+      to.x = texelFetch(dataBuffer, (i) + (3));
+      to.y = texelFetch(dataBuffer, (i) + (4));
+      gradientLinear(at, to);
+(i) += (4);;
+    } else if ((command) == (8.0)) {
+      gradientStop(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)));
+(i) += (5);;
+    } else if ((command) == (3.0)) {
       mat[0][0] = texelFetch(dataBuffer, (i) + (1));
       mat[0][1] = texelFetch(dataBuffer, (i) + (2));
       mat[0][2] = float(0);

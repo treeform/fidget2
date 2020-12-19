@@ -14,8 +14,8 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
   for y in 0 ..< image.height:
     for x in 0 ..< image.width:
-      # if x != 197 or y != 79:
-      #   continue
+      # if x != 200 or y != 200:
+      #  continue
 
       var color: Vec4
       svgMain(vec4(x.float32 + 0.5, y.float32 + 0.5, 0, 1), color)

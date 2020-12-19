@@ -8,10 +8,12 @@ const
   cmdExit*: float32 = 0
   cmdStartPath*: float32 = 1
   cmdEndPath*: float32 = 2
-  cmdSolidFill*: float32 = 3
-  cmdApplyOpacity*: float32 = 4
-  cmdTextureFill*: float32 = 5
-  cmdSetMat*: float32 = 6
+  cmdSetMat*: float32 = 3
+  cmdSolidFill*: float32 = 4
+  cmdApplyOpacity*: float32 = 5
+  cmdTextureFill*: float32 = 6
+  cmdGradientLinear*: float32 = 7
+  cmdGradientStop*: float32 = 8
   cmdM*: float32 = 10
   cmdL*: float32 = 11
   cmdC*: float32 = 12
@@ -27,6 +29,9 @@ var
   fillMask: float32       # How much of the fill is visible.
   mat: Mat3               # Current transform matrix.
   tMat: Mat3              # Texture matrix.
+  gradientK: float32      # Gradient constant 0 to 1.
+  prevGradientK: float32
+  prevGradientColor: Vec4
 
 proc line(a0, b0: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
@@ -140,6 +145,33 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
       let textureColor = texture(textureAtlasSampler, uv)
       backdropColor = blendNormalFloats(backdropColor, textureColor)
 
+proc toLineSpace(at, to, point: Vec2): float32 =
+  let
+    d = to - at
+    det = d.x*d.x + d.y*d.y
+  return (d.y*(point.y-at.y)+d.x*(point.x-at.x))/det
+
+proc gradientLinear(at0, to0: Vec2) =
+  if fillMask == 1:
+    var
+      at = (mat * vec3(at0, 1)).xy
+      to = (mat * vec3(to0, 1)).xy
+    gradientK = toLineSpace(at, to, screen).clamp(0, 1)
+
+proc gradientStop(k, r, g, b, a: float32) =
+  if fillMask == 1:
+    let gradientColor = vec4(r, g, b, a)
+    if gradientK > prevGradientK and gradientK <= k:
+      let betweenColors = (gradientK - prevGradientK) / (k - prevGradientK)
+      let colorG = mix(
+        prevGradientColor,
+        gradientColor,
+        betweenColors
+      )
+      backdropColor = blendNormalFloats(backdropColor, colorG)
+    prevGradientK = k
+    prevGradientColor = gradientColor
+
 proc startPath(rule: float32) =
   ## Clear the status of things and start a new path.
   crossCount = 0
@@ -231,6 +263,23 @@ proc runCommands() =
       size.y = texelFetch(dataBuffer, i + 11)
       textureFill(tMat, tile, pos, size)
       i += 11
+    elif command == cmdGradientLinear:
+      var at, to: Vec2
+      at.x = texelFetch(dataBuffer, i + 1)
+      at.y = texelFetch(dataBuffer, i + 2)
+      to.x = texelFetch(dataBuffer, i + 3)
+      to.y = texelFetch(dataBuffer, i + 4)
+      gradientLinear(at, to)
+      i += 4
+    elif command == cmdGradientStop:
+      gradientStop(
+        texelFetch(dataBuffer, i + 1),
+        texelFetch(dataBuffer, i + 2),
+        texelFetch(dataBuffer, i + 3),
+        texelFetch(dataBuffer, i + 4),
+        texelFetch(dataBuffer, i + 5)
+      )
+      i += 5
     elif command == cmdSetMat:
       mat[0, 0] = texelFetch(dataBuffer, i + 1)
       mat[0, 1] = texelFetch(dataBuffer, i + 2)
