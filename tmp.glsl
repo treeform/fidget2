@@ -126,6 +126,10 @@ void line(
   vec2 b0
 ) ;
 
+vec4 runPixel(
+  vec2 xy
+) ;
+
 void L(
   float x,
   float y
@@ -473,6 +477,16 @@ void line(
   };
 }
 
+vec4 runPixel(
+  vec2 xy
+) {
+  screen = xy;
+  crossCount = 0;
+  backdropColor = vec4(float(0), float(0), float(0), float(0));
+  runCommands();
+  return backdropColor;
+}
+
 void L(
   float x,
   float y
@@ -487,9 +501,5 @@ out vec4 fragColor;
 
 void main() {
 "Main entry point to this huge shader.";
-  crossCount = 0;
-  backdropColor = vec4(float(0), float(0), float(0), float(0));
-  screen = gl_FragCoord.xy;
-  runCommands();
-  fragColor = backdropColor;
+  fragColor = runPixel(gl_FragCoord.xy);
 }

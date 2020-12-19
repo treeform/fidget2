@@ -324,27 +324,29 @@ proc runCommands() =
     elif command == cmdz: z()
     i += 1
 
+proc runPixel(xy: Vec2): Vec4 =
+  screen = xy
+  crossCount = 0
+  backdropColor = vec4(0, 0, 0, 0)
+  runCommands()
+  return backdropColor
+
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   ## Main entry point to this huge shader.
 
-  crossCount = 0
-  backdropColor = vec4(0, 0, 0, 0)
+  fragColor = runPixel(gl_FragCoord.xy)
 
-  screen = gl_FragCoord.xy
-  runCommands()
-  fragColor = backdropColor
+  # # SCAN LINES
+  # let steps = 4
+  # let step = 1.0 / (steps + 1).float32
+  # for y in 0 ..< steps:
+  #   let offset = vec2(0, step/2 + y.float32 * step)
+  #   fragColor += runPixel(gl_FragCoord.xy + offset) / steps.float32
 
-  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.2)) / 4.0
-  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.4)) / 4.0
-  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.6)) / 4.0
-  # fragColor += mainImage(gl_FragCoord.xy + vec2(0, 0.8)) / 4.0
-
-  #fragColor = vec4(0, 0, 0, 0)
-
-  # let first = texelFetch(dataBuffer, 0)
-  # if gl_FragCoord.x > first:
-  #   fragColor = vec4(0.0, 1.0, 1.0, 1.0)
-  # else:
-  #   fragColor = vec4(1.0, 1.0, 1.0, 1.0)
-
-  #fragColor = fragColor * 0.5 + texture(textureAtlas, gl_FragCoord.xy / 100.0) * 0.5
+  # # NxN SCAN GRID
+  # let steps = 8
+  # let step = 1.0 / (steps + 1).float32
+  # for x in 0 ..< steps:
+  #   for y in 0 ..< steps:
+  #     let offset = vec2(y.float32 * step, x.float32 * step) - vec2(0.4, 0.4)
+  #     fragColor += runPixel(gl_FragCoord.xy + offset) / (steps * steps).float32
