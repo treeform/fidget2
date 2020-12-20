@@ -34,6 +34,12 @@ var
   prevGradientK: float32
   prevGradientColor: Vec4
 
+  pixelCrossA: float32
+  pixelCrossB: float32
+  pixelCrossCount: int = 0
+
+import print
+
 proc line(a0, b0: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
 
@@ -56,7 +62,7 @@ proc line(a0, b0: Vec2) =
     else:
       # Line is vertical, xIntersect is at x.
       xIntersect = a.x
-    if xIntersect <= screen.x:
+    if xIntersect < screen.x:
       # Is the xIntersect is to the left, count cross.
       if a.y - b.y > 0:
         # Count up if line is going up.
@@ -64,6 +70,19 @@ proc line(a0, b0: Vec2) =
       else:
         # Count down if line is going down.
         crossCount -= 1
+
+    #print xIntersect, screen.x
+
+    # does the cross happen in current pixel
+    if xIntersect >= screen.x and xIntersect < screen.x + 1:
+      if pixelCrossCount == 0:
+        pixelCrossA = xIntersect - screen.x
+      if pixelCrossCount == 1:
+        pixelCrossB = xIntersect - screen.x
+      pixelCrossCount += 1
+      #print pixelCrossA, pixelCrossB, pixelCrossCount
+      #partialFillMin = min(partialFillMin, 1 - (xIntersect - (screen.x - 1)))
+      #partialFillMax = max(partialFillMin, 1 - (xIntersect - (screen.x - 1)))
 
 proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
@@ -128,14 +147,17 @@ proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
-  if fillMask == 1:
+  if fillMask > 0:
     # backdropColor = vec4(r, g, b, a)
-    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a))
+    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a) * fillMask)
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
-  if fillMask == 1:
-    var uv = (tMat * vec3(screen, 1)).xy
+  if fillMask > 0:
+    # WE need to undo the AA when sampling images
+    # * That is why we need to floor.
+    # * That is why we need to add vec2(0.5, 0.5).
+    var uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5), 1)).xy
     if tile == 0:
       if uv.x > pos.x and uv.x < pos.x + size.x and
         uv.y > pos.y and uv.y < pos.y + size.y:
@@ -144,7 +166,7 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
     else:
       uv = (uv - pos) mod size + pos
       let textureColor = texture(textureAtlasSampler, uv)
-      backdropColor = blendNormalFloats(backdropColor, textureColor)
+      backdropColor = blendNormalFloats(backdropColor, textureColor * fillMask)
 
 proc toLineSpace(at, to, point: Vec2): float32 =
   let
@@ -153,14 +175,14 @@ proc toLineSpace(at, to, point: Vec2): float32 =
   return (d.y*(point.y-at.y)+d.x*(point.x-at.x))/det
 
 proc gradientLinear(at0, to0: Vec2) =
-  if fillMask == 1:
+  if fillMask > 0:
     let
       at = (mat * vec3(at0, 1)).xy
       to = (mat * vec3(to0, 1)).xy
     gradientK = toLineSpace(at, to, screen).clamp(0, 1)
 
 proc gradientRadial(at0, to0: Vec2) =
-  if fillMask == 1:
+  if fillMask > 0:
     let
       at = (mat * vec3(at0, 1)).xy
       to = (mat * vec3(to0, 1)).xy
@@ -168,7 +190,7 @@ proc gradientRadial(at0, to0: Vec2) =
     gradientK = ((at - screen).length() / distance).clamp(0, 1)
 
 proc gradientStop(k, r, g, b, a: float32) =
-  if fillMask == 1:
+  if fillMask > 0:
     let gradientColor = vec4(r, g, b, a)
     if gradientK > prevGradientK and gradientK <= k:
       let betweenColors = (gradientK - prevGradientK) / (k - prevGradientK)
@@ -177,7 +199,7 @@ proc gradientStop(k, r, g, b, a: float32) =
         gradientColor,
         betweenColors
       )
-      backdropColor = blendNormalFloats(backdropColor, colorG)
+      backdropColor = blendNormalFloats(backdropColor, colorG * fillMask)
     prevGradientK = k
     prevGradientColor = gradientColor
 
@@ -186,17 +208,31 @@ proc startPath(rule: float32) =
   crossCount = 0
   fillMask = 0
   windingRule = rule.int
+  pixelCrossCount = 0
 
 proc draw() =
   ## Use crossCount to apply color to backdrop.
+  var fillAmount: float32 = 0
+  if pixelCrossCount == 1:
+    fillAmount = 1 - pixelCrossA
+  elif pixelCrossCount >= 2:
+    let
+      minCross = min(pixelCrossA, pixelCrossB)
+      maxCross = max(pixelCrossA, pixelCrossB)
+    fillAmount = maxCross - minCross
+
   if windingRule == 0:
     # Even-Odd
     if crossCount mod 2 != 0:
-      fillMask = 1
+      fillMask = 1 - fillAmount
+    else:
+      fillMask = fillAmount
   else:
     # Non-zero
     if crossCount != 0:
-      fillMask = 1
+      fillMask = 1 - fillAmount
+    else:
+      fillMask = fillAmount
 
 proc endPath() =
   ## SVG style end path command.
@@ -343,7 +379,6 @@ proc runCommands() =
 
 proc runPixel(xy: Vec2): Vec4 =
   screen = xy
-  crossCount = 0
   backdropColor = vec4(0, 0, 0, 0)
   runCommands()
   return backdropColor
@@ -351,14 +386,16 @@ proc runPixel(xy: Vec2): Vec4 =
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   ## Main entry point to this huge shader.
 
-  fragColor = runPixel(gl_FragCoord.xy)
+  let bias = 1E-4
+  # let offset = vec2(bias - 0.5, bias - 0.5)
+  # fragColor = runPixel(gl_FragCoord.xy + offset)
 
-  # # SCAN LINES
-  # let steps = 4
-  # let step = 1.0 / (steps + 1).float32
-  # for y in 0 ..< steps:
-  #   let offset = vec2(0, step/2 + y.float32 * step)
-  #   fragColor += runPixel(gl_FragCoord.xy + offset) / steps.float32
+  # SCAN LINES
+  let steps = 4
+  let step = 1.0 / (steps + 1).float32
+  for y in 0 ..< steps:
+    let offset = vec2(bias - 0.5, step/2 + y.float32 * step + bias - 0.5)
+    fragColor += runPixel(gl_FragCoord.xy + offset) / steps.float32
 
   # # NxN SCAN GRID
   # let steps = 8

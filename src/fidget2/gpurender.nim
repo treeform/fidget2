@@ -719,14 +719,14 @@ proc drawNode*(node: Node, level: int) =
           for shape in glyph.shapes:
             for segment in shape:
 
-              let posM = segment.at.trans + gpos.rect.xy
+              let posM = segment.at.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
               if posM != prevPos:
                 dataBufferSeq.add cmdM
                 dataBufferSeq.add posM.x
                 dataBufferSeq.add posM.y
 
               dataBufferSeq.add cmdL
-              let posL = segment.to.trans + gpos.rect.xy
+              let posL = segment.to.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
               dataBufferSeq.add posL.x
               dataBufferSeq.add posL.y
               prevPos = posL

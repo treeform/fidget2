@@ -49,7 +49,7 @@ const glslFunctions = [
   "clamp", "min", "max", "dot", "sqrt", "mix", "length",
   "texelFetch", "texture",
   "normalize",
-  "floor", "ceil",
+  "floor", "ceil", "round",
   "[]", "[]="
 ]
 
@@ -577,6 +577,14 @@ proc texture*(buffer: Uniform[Sampler2D], pos: Vec2): Vec4 =
     ((pos.x mod 1.0) * buffer.image.width.float32),
     ((pos.y mod 1.0) * buffer.image.height.float32)
   ).vec4
+
+proc floor*(a: Vec2): Vec2 =
+  result.x = a.x.floor
+  result.y = a.y.floor
+
+proc round*(a: Vec2): Vec2 =
+  result.x = a.x.round
+  result.y = a.y.round
 
 # proc setf*(mat: var Mat3, i, j: int, v: float32) =
 #   mat[i, j] = v

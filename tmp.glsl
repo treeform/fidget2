@@ -11,8 +11,11 @@ float y0;
 float y1;
 vec4 prevGradientColor;
 mat3 tMat;
-float gradientK;
+int pixelCrossCount = 0;
+float pixelCrossB;
 float fillMask;
+float gradientK;
+float pixelCrossA;
 mat3 mat;
 float prevGradientK;
 int crossCount = 0;
@@ -144,7 +147,7 @@ void gradientRadial(
   vec2 at0,
   vec2 to0
 ) {
-    if ((fillMask) == (float(1))) {
+    if ((float(0)) < (fillMask)) {
     vec2 at = ((mat) * (vec3(at0, float(1)))).xy;
     vec2 to = ((mat) * (vec3(to0, float(1)))).xy;
     float distance = length((at) - (to));
@@ -155,13 +158,25 @@ void gradientRadial(
 void draw(
 ) {
 "Use crossCount to apply color to backdrop.";
+  float fillAmount = float(0);
+  if ((pixelCrossCount) == (1)) {
+        fillAmount = (float(1)) - (pixelCrossA);
+  } else if ((2) <= (pixelCrossCount)) {
+    float minCross = min(pixelCrossA, pixelCrossB);
+    float maxCross = max(pixelCrossA, pixelCrossB);
+    fillAmount = (maxCross) - (minCross);
+  };
   if ((windingRule) == (0)) {
         if (! (((crossCount) % (2)) == (0))) {
-            fillMask = float(1);
+            fillMask = (float(1)) - (fillAmount);
+    } else {
+            fillMask = fillAmount;
     };
   } else {
         if (! ((crossCount) == (0))) {
-            fillMask = float(1);
+            fillMask = (float(1)) - (fillAmount);
+    } else {
+            fillMask = fillAmount;
     };
   };
 }
@@ -173,8 +188,8 @@ void solidFill(
   float a
 ) {
 "Set the source color.";
-  if ((fillMask) == (float(1))) {
-        backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a));
+  if ((float(0)) < (fillMask)) {
+        backdropColor = blendNormalFloats(backdropColor, (vec4(r, g, b, a)) * (fillMask));
   };
 }
 
@@ -196,7 +211,7 @@ void gradientLinear(
   vec2 at0,
   vec2 to0
 ) {
-    if ((fillMask) == (float(1))) {
+    if ((float(0)) < (fillMask)) {
     vec2 at = ((mat) * (vec3(at0, float(1)))).xy;
     vec2 to = ((mat) * (vec3(to0, float(1)))).xy;
     gradientK = clamp(toLineSpace(at, to, screen), float(0), float(1));
@@ -220,12 +235,12 @@ void gradientStop(
   float b,
   float a
 ) {
-    if ((fillMask) == (float(1))) {
+    if ((float(0)) < (fillMask)) {
     vec4 gradientColor = vec4(r, g, b, a);
     if (((prevGradientK) < (gradientK)) && ((gradientK) <= (k))) {
       float betweenColors = ((gradientK) - (prevGradientK)) / ((k) - (prevGradientK));
       vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
-      backdropColor = blendNormalFloats(backdropColor, colorG);
+      backdropColor = blendNormalFloats(backdropColor, (colorG) * (fillMask));
     };
     prevGradientK = k;
     prevGradientColor = gradientColor;
@@ -290,6 +305,7 @@ void startPath(
   crossCount = 0;
   fillMask = float(0);
   windingRule = int(rule);
+  pixelCrossCount = 0;
 }
 
 void runCommands(
@@ -389,8 +405,8 @@ void textureFill(
   vec2 size
 ) {
 "Set the source color.";
-  if ((fillMask) == (float(1))) {
-    vec2 uv = ((tMat) * (vec3(screen, float(1)))).xy;
+  if ((float(0)) < (fillMask)) {
+    vec2 uv = ((tMat) * (vec3((floor(screen)) + (vec2(float(0.5), float(0.5))), float(1)))).xy;
     if ((tile) == (float(0))) {
             if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
         vec4 textureColor = texture(textureAtlasSampler, uv);
@@ -399,7 +415,7 @@ void textureFill(
     } else {
       uv = (mod((uv) - (pos), size)) + (pos);
       vec4 textureColor = texture(textureAtlasSampler, uv);
-      backdropColor = blendNormalFloats(backdropColor, textureColor);
+      backdropColor = blendNormalFloats(backdropColor, (textureColor) * (fillMask));
     };
   };
 }
@@ -493,12 +509,21 @@ void line(
     } else {
             xIntersect = a.x;
     };
-    if ((xIntersect) <= (screen.x)) {
+    if ((xIntersect) < (screen.x)) {
             if ((float(0)) < ((a.y) - (b.y))) {
         (crossCount) += (1);;
       } else {
         (crossCount) -= (1);;
       };
+    };
+    if (((screen.x) <= (xIntersect)) && ((xIntersect) < ((screen.x) + (float(1))))) {
+      if ((pixelCrossCount) == (0)) {
+                pixelCrossA = (xIntersect) - (screen.x);
+      };
+      if ((pixelCrossCount) == (1)) {
+                pixelCrossB = (xIntersect) - (screen.x);
+      };
+(pixelCrossCount) += (1);;
     };
   };
 }
@@ -507,7 +532,6 @@ vec4 runPixel(
   vec2 xy
 ) {
   screen = xy;
-  crossCount = 0;
   backdropColor = vec4(float(0), float(0), float(0), float(0));
   runCommands();
   return backdropColor;
@@ -527,5 +551,11 @@ out vec4 fragColor;
 
 void main() {
 "Main entry point to this huge shader.";
-  fragColor = runPixel(gl_FragCoord.xy);
+  float bias = 0.0001;
+  int steps = 4;
+  float step = (1.0) / (float(float((steps) + (1))));
+  for(int y = 0; y < steps; y++) {
+    vec2 offset = vec2(float((bias) - (0.5)), float(((((step) / (float(2))) + ((float(float(y))) * (step))) + (bias)) - (0.5)));
+(fragColor) += ((runPixel((gl_FragCoord.xy) + (offset))) / (float(steps)));;
+  };
 }
