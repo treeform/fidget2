@@ -707,10 +707,8 @@ proc drawNode*(node: Node, level: int) =
 
       for gpos in layout:
         var font = gpos.font
-        var fontHeight = font.typeface.ascent - font.typeface.descent
-        var scale = font.size / (fontHeight)
         proc trans(v: Vec2): Vec2 =
-          result = v * scale
+          result = v * font.scale
           result.y = -result.y
 
         if gpos.character in font.typeface.glyphs:
