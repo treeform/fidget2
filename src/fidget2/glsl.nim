@@ -587,6 +587,36 @@ proc round*(a: Vec2): Vec2 =
   result.x = a.x.round
   result.y = a.y.round
 
+proc min*(a, b: Vec2): Vec2 =
+  result.x = min(a.x, b.x)
+  result.y = min(a.y, b.y)
+
+proc min*(a, b: Vec3): Vec3 =
+  result.x = min(a.x, b.x)
+  result.y = min(a.y, b.y)
+  result.z = min(a.z, b.z)
+
+proc min*(a, b: Vec4): Vec4 =
+  result.x = min(a.x, b.x)
+  result.y = min(a.y, b.y)
+  result.z = min(a.z, b.z)
+  result.w = min(a.w, b.w)
+
+proc max*(a, b: Vec2): Vec2 =
+  result.x = max(a.x, b.x)
+  result.y = max(a.y, b.y)
+
+proc max*(a, b: Vec3): Vec3 =
+  result.x = max(a.x, b.x)
+  result.y = max(a.y, b.y)
+  result.z = max(a.z, b.z)
+
+proc max*(a, b: Vec4): Vec4 =
+  result.x = max(a.x, b.x)
+  result.y = max(a.y, b.y)
+  result.z = max(a.z, b.z)
+  result.w = max(a.w, b.w)
+
 # proc setf*(mat: var Mat3, i, j: int, v: float32) =
 #   mat[i, j] = v
 #   mat[i][j] = v

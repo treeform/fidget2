@@ -557,6 +557,57 @@ proc drawPaint(node: Node, paint: Paint) =
       1
     ]
 
+proc computePixelBox*(node: Node) =
+
+  ## Computes pixel bounds.
+  ## Takes into account width, height and shadow extent, and children.
+  node.pixelBox.xy = vec2(0, 0)
+  node.pixelBox.wh = node.size
+
+  var s = 1.0
+
+  # Takes stroke into account:
+  if node.strokes.len > 0:
+    s = max(s, node.strokeWeight)
+
+  # Take drop shadow into account:
+  for effect in node.effects:
+    if effect.kind in {ekDropShadow, ekInnerShadow, ekLayerBlur}:
+      # Note: INNER_SHADOW needs just as much area around as drop shadow
+      # because it needs to blur in.
+      s = max(
+        s,
+        effect.radius +
+        effect.spread +
+        abs(effect.offset.x) +
+        abs(effect.offset.y)
+      )
+
+  node.pixelBox.xy = node.pixelBox.xy - vec2(s, s)
+  node.pixelBox.wh = node.pixelBox.wh + vec2(s, s) * 2
+
+  # # Take children into account:
+  # for child in node.children:
+  #   child.computePixelBox()
+
+  #   if not node.clipsContent:
+  #     # TODO: clips content should still respect shadows.
+  #     node.pixelBox = node.pixelBox or child.pixelBox
+
+  # if node.pixelBox.x.fractional > 0:
+  #   node.pixelBox.w += node.pixelBox.x.fractional
+  #   node.pixelBox.x = node.pixelBox.x.floor
+
+  # if node.pixelBox.y.fractional > 0:
+  #   node.pixelBox.h += node.pixelBox.y.fractional
+  #   node.pixelBox.y = node.pixelBox.y.floor
+
+  # if node.pixelBox.w.fractional > 0:
+  #   node.pixelBox.w = node.pixelBox.w.ceil
+
+  # if node.pixelBox.h.fractional > 0:
+  #   node.pixelBox.h = node.pixelBox.h.ceil
+
 proc drawNode*(node: Node, level: int) =
 
   if not node.visible or node.opacity == 0:
@@ -568,6 +619,7 @@ proc drawNode*(node: Node, level: int) =
   if level == 0:
     mat.identity()
     opacity = 1.0
+    framePos = -node.absoluteBoundingBox.xy
   else:
     mat = mat * node.transform()
     opacity = opacity * node.opacity
@@ -579,6 +631,15 @@ proc drawNode*(node: Node, level: int) =
   dataBufferSeq.add mat[1, 1]
   dataBufferSeq.add mat[2, 0]
   dataBufferSeq.add mat[2, 1]
+
+  node.computePixelBox()
+  dataBufferSeq.add cmdBoundCheck
+  dataBufferSeq.add node.pixelBox.x
+  dataBufferSeq.add node.pixelBox.y
+  dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
+  dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
+  let jmpOffset = dataBufferSeq.len
+  dataBufferSeq.add 0
 
   case node.kind
     of nkGroup:
@@ -714,16 +775,26 @@ proc drawNode*(node: Node, level: int) =
           glyph.makeReady(font)
 
           dataBufferSeq.add cmdBoundCheck
+
+          # let boundsOffset = dataBufferSeq.len
+          # dataBufferSeq.add 0
+          # dataBufferSeq.add 0
+          # dataBufferSeq.add 0
+          # dataBufferSeq.add 0
+
           dataBufferSeq.add gpos.rect.x
           dataBufferSeq.add gpos.rect.y - gpos.rect.h
-          dataBufferSeq.add gpos.rect.x + gpos.rect.w
-          dataBufferSeq.add gpos.rect.y + gpos.rect.h
+          dataBufferSeq.add gpos.rect.x + gpos.rect.w * 1.5
+          dataBufferSeq.add gpos.rect.y + gpos.rect.h * 0.5
           let jmpOffset = dataBufferSeq.len
           dataBufferSeq.add 0
 
           dataBufferSeq.add cmdStartPath
           dataBufferSeq.add 1
-          var prevPos: Vec2
+          var
+            prevPos: Vec2
+            # minB: Vec2
+            # maxB: Vec2
           for shape in glyph.shapes:
             for segment in shape:
 
@@ -732,22 +803,32 @@ proc drawNode*(node: Node, level: int) =
                 dataBufferSeq.add cmdM
                 dataBufferSeq.add posM.x
                 dataBufferSeq.add posM.y
+                # minB = min(minB, posM)
+                # maxB = max(maxB, posM)
 
               dataBufferSeq.add cmdL
               let posL = segment.to.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
               dataBufferSeq.add posL.x
               dataBufferSeq.add posL.y
               prevPos = posL
+              # minB = min(minB, posL)
+              # maxB = max(maxB, posL)
 
           dataBufferSeq.add cmdEndPath
 
           for paint in node.fills:
             drawPaint(node, paint)
 
+          # dataBufferSeq[boundsOffset + 0] = minB.x
+          # dataBufferSeq[boundsOffset + 1] = minB.y
+          # dataBufferSeq[boundsOffset + 2] = maxB.x
+          # dataBufferSeq[boundsOffset + 3] = maxB.y
           dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
     else:
       echo($node.kind & " not supported")
+
+  dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
   for childNode in node.children:
     drawNode(childNode, level + 1)
