@@ -35,10 +35,20 @@ var
   prevGradientColor: Vec4
 
   pixelCrossA: float32
+  pixelCrossADir: int
   pixelCrossB: float32
+  pixelCrossBDir: int
   pixelCrossCount: int = 0
 
 import print
+
+proc lineDir(a, b: Vec2): int =
+  if a.y - b.y > 0:
+    # Count up if line is going up.
+    return 1
+  else:
+    # Count down if line is going down.
+    return -1
 
 proc line(a0, b0: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
@@ -64,12 +74,13 @@ proc line(a0, b0: Vec2) =
       xIntersect = a.x
     if xIntersect < screen.x:
       # Is the xIntersect is to the left, count cross.
-      if a.y - b.y > 0:
-        # Count up if line is going up.
-        crossCount += 1
-      else:
-        # Count down if line is going down.
-        crossCount -= 1
+      crossCount += lineDir(a, b)
+      # if a.y - b.y > 0:
+      #   # Count up if line is going up.
+      #   crossCount += 1
+      # else:
+      #   # Count down if line is going down.
+      #   crossCount -= 1
 
     #print xIntersect, screen.x
 
@@ -77,8 +88,10 @@ proc line(a0, b0: Vec2) =
     if xIntersect >= screen.x and xIntersect < screen.x + 1:
       if pixelCrossCount == 0:
         pixelCrossA = xIntersect - screen.x
+        pixelCrossADir = lineDir(a, b)
       if pixelCrossCount == 1:
         pixelCrossB = xIntersect - screen.x
+        pixelCrossBDir = lineDir(a, b)
       pixelCrossCount += 1
       #print pixelCrossA, pixelCrossB, pixelCrossCount
       #partialFillMin = min(partialFillMin, 1 - (xIntersect - (screen.x - 1)))
@@ -216,10 +229,15 @@ proc draw() =
   if pixelCrossCount == 1:
     fillAmount = 1 - pixelCrossA
   elif pixelCrossCount >= 2:
-    let
-      minCross = min(pixelCrossA, pixelCrossB)
-      maxCross = max(pixelCrossA, pixelCrossB)
-    fillAmount = maxCross - minCross
+    if pixelCrossA > pixelCrossB:
+      let tmp = pixelCrossA
+      pixelCrossA = pixelCrossB
+      pixelCrossB = tmp
+      let tmp2 = pixelCrossBDir
+      pixelCrossADir = pixelCrossBDir
+      pixelCrossBDir = tmp2
+
+    fillAmount = pixelCrossB - pixelCrossA
 
   if windingRule == 0:
     # Even-Odd
@@ -229,6 +247,31 @@ proc draw() =
       fillMask = fillAmount
   else:
     # Non-zero
+    # if pixelCrossCount == 0:
+    #   if crossCount != 0:
+    #     fillMask = 1
+    #   else:
+    #     fillMask = 0
+    # elif pixelCrossCount == 1:
+    #   if crossCount + pixelCrossADir == 0:
+    #     if pixelCrossADir == 1:
+    #       fillMask = 1 - pixelCrossA
+    #     else:
+    #       fillMask = pixelCrossA
+    #   else:
+    #     if crossCount == 0:
+    #       if pixelCrossADir == 1:
+    #         fillMask = 1 - pixelCrossA
+    #       else:
+    #         fillMask = pixelCrossA
+    #     else:
+    #       fillMask = 0
+    # elif pixelCrossCount >= 2:
+    #   if crossCount != 0:
+    #     fillMask = 1
+    #   else:
+    #     fillMask = 0
+
     if crossCount != 0:
       fillMask = 1 - fillAmount
     else:

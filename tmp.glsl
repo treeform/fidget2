@@ -19,8 +19,10 @@ float pixelCrossA;
 mat3 mat;
 float prevGradientK;
 int crossCount = 0;
+int pixelCrossADir;
 float x0;
 vec4 backdropColor;
+int pixelCrossBDir;
 
 void gradientRadial(
   vec2 at0,
@@ -108,6 +110,11 @@ vec2 interpolate(
   float t
 ) ;
 
+int lineDir(
+  vec2 a,
+  vec2 b
+) ;
+
 void bezier(
   vec2 A,
   vec2 B,
@@ -162,9 +169,15 @@ void draw(
   if ((pixelCrossCount) == (1)) {
         fillAmount = (float(1)) - (pixelCrossA);
   } else if ((2) <= (pixelCrossCount)) {
-    float minCross = min(pixelCrossA, pixelCrossB);
-    float maxCross = max(pixelCrossA, pixelCrossB);
-    fillAmount = (maxCross) - (minCross);
+    if ((pixelCrossB) < (pixelCrossA)) {
+      float tmp = pixelCrossA;
+      pixelCrossA = pixelCrossB;
+      pixelCrossB = tmp;
+      int tmp2 = pixelCrossBDir;
+      pixelCrossADir = pixelCrossBDir;
+      pixelCrossBDir = tmp2;
+    };
+    fillAmount = (pixelCrossB) - (pixelCrossA);
   };
   if ((windingRule) == (0)) {
         if (! (((crossCount) % (2)) == (0))) {
@@ -435,6 +448,17 @@ vec2 interpolate(
   return ((t) * (((t) * (((t) * (A)) + (B))) + (C))) + (D);
 }
 
+int lineDir(
+  vec2 a,
+  vec2 b
+) {
+    if ((float(0)) < ((a.y) - (b.y))) {
+        return 1;
+  } else {
+        return -1;
+  };
+}
+
 void bezier(
   vec2 A,
   vec2 B,
@@ -510,18 +534,16 @@ void line(
             xIntersect = a.x;
     };
     if ((xIntersect) < (screen.x)) {
-            if ((float(0)) < ((a.y) - (b.y))) {
-        (crossCount) += (1);;
-      } else {
-        (crossCount) -= (1);;
-      };
+      (crossCount) += (lineDir(a, b));;
     };
     if (((screen.x) <= (xIntersect)) && ((xIntersect) < ((screen.x) + (float(1))))) {
       if ((pixelCrossCount) == (0)) {
-                pixelCrossA = (xIntersect) - (screen.x);
+        pixelCrossA = (xIntersect) - (screen.x);
+        pixelCrossADir = lineDir(a, b);
       };
       if ((pixelCrossCount) == (1)) {
-                pixelCrossB = (xIntersect) - (screen.x);
+        pixelCrossB = (xIntersect) - (screen.x);
+        pixelCrossBDir = lineDir(a, b);
       };
 (pixelCrossCount) += (1);;
     };
