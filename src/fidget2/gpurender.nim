@@ -251,7 +251,66 @@ proc transform(node: Node): Mat3 =
   result[2, 1] = node.relativeTransform[1][2]
   result[2, 2] = 1
 
-const splinyCirlce = 4.0 * (-1.0 + sqrt(2.0)) / 3.0
+proc strokeInnerOuter(node: Node): (float32, float32) =
+  ## Based on node return inner and outer stroke distance.
+  var
+    inner: float32 = 0
+    outer: float32 = 0
+  case node.strokeAlign
+  of saInside:
+    inner = node.strokeWeight
+  of saOutside:
+    outer = node.strokeWeight
+  of saCenter:
+    inner = node.strokeWeight / 2
+    outer = node.strokeWeight / 2
+  return (inner, outer)
+
+const splinyCirlce = 4.0 * (-1.0 + sqrt(2.0)) / 3
+
+proc drawEllipse(pos, size: Vec2) =
+  let
+    x = 0.0
+    y = 0.0
+    r = 1.0
+    s = splinyCirlce
+    matC = translate(pos) * scale(size)
+  var
+    t1 = vec2(x, y - r)
+    r1 = vec2(x + r, y)
+    b1 = vec2(x, y + r)
+    l1 = vec2(x - r, y)
+    t1h = t1 + vec2(-r*s, 0)
+    t2h = t1 + vec2(+r*s, 0)
+    r1h = r1 + vec2(0, -r*s)
+    r2h = r1 + vec2(0, +r*s)
+    b1h = b1 + vec2(+r*s, 0)
+    b2h = b1 + vec2(-r*s, 0)
+    l1h = l1 + vec2(0, +r*s)
+    l2h = l1 + vec2(0, -r*s)
+
+  t1 = matC * t1
+  r1 = matC * r1
+  b1 = matC * b1
+  l1 = matC * l1
+  t1h = matC * t1h
+  t2h = matC * t2h
+  r1h = matC * r1h
+  r2h = matC * r2h
+  b1h = matC * b1h
+  b2h = matC * b2h
+  l1h = matC * l1h
+  l2h = matC * l2h
+
+  dataBufferSeq.add @[
+    cmdM, t1.x, t1.y,
+    cmdC, t2h.x, t2h.y, r1h.x, r1h.y, r1.x, r1.y,
+    cmdC, r2h.x, r2h.y, b1h.x, b1h.y, b1.x, b1.y,
+    cmdC, b2h.x, b2h.y, l1h.x, l1h.y, l1.x, l1.y,
+    cmdC, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
+    cmdz,
+  ]
+
 
 proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
   let
@@ -542,17 +601,7 @@ proc drawNode*(node: Node, level: int) =
           drawPaint(node, paint)
 
       if node.strokes.len > 0:
-        var
-          inner = 0.0
-          outer = 0.0
-        case node.strokeAlign
-        of saInside:
-          inner = node.strokeWeight
-        of saOutside:
-          outer = node.strokeWeight
-        of saCenter:
-          inner = node.strokeWeight / 2
-          outer = node.strokeWeight / 2
+        let (inner, outer) = node.strokeInnerOuter()
 
         dataBufferSeq.add cmdStartPath
         dataBufferSeq.add 0
@@ -588,9 +637,25 @@ proc drawNode*(node: Node, level: int) =
         for paint in node.strokes:
           drawPaint(node, paint)
 
+    of nkEllipse:
+      dataBufferSeq.add cmdStartPath
+      dataBufferSeq.add 0
+      drawEllipse(node.size/2, node.size/2)
+      dataBufferSeq.add cmdEndPath
+      for paint in node.fills:
+        drawPaint(node, paint)
 
-    of nkVector, nkStar, nkEllipse:
+      if node.strokes.len > 0:
+        let (inner, outer) = node.strokeInnerOuter()
+        dataBufferSeq.add cmdStartPath
+        dataBufferSeq.add 0
+        drawEllipse(node.size/2, node.size/2 + vec2(outer))
+        drawEllipse(node.size/2, node.size/2 - vec2(inner))
+        dataBufferSeq.add cmdEndPath
+        for paint in node.strokes:
+          drawPaint(node, paint)
 
+    of nkVector, nkStar:
       for geom in node.fillGeometry:
         drawGeom(node, geom)
       for paint in node.fills:
