@@ -35,11 +35,13 @@ var
   prevGradientK: float32
   prevGradientColor: Vec4
 
-  pixelCrossA: float32
-  pixelCrossADir: int
-  pixelCrossB: float32
-  pixelCrossBDir: int
-  pixelCrossCount: int = 0
+  needsAA: int = 0
+
+  # pixelCrossA: float32
+  # pixelCrossADir: int
+  # pixelCrossB: float32
+  # pixelCrossBDir: int
+  # pixelCrossCount: int = 0
 
 import print
 
@@ -85,15 +87,24 @@ proc line(a0, b0: Vec2) =
 
     #print xIntersect, screen.x
 
-    # does the cross happen in current pixel
     if xIntersect >= screen.x and xIntersect < screen.x + 1:
-      if pixelCrossCount == 0:
-        pixelCrossA = xIntersect - screen.x
-        pixelCrossADir = lineDir(a, b)
-      if pixelCrossCount == 1:
-        pixelCrossB = xIntersect - screen.x
-        pixelCrossBDir = lineDir(a, b)
-      pixelCrossCount += 1
+      needsAA = 1
+
+    if a.y >= screen.y and a.y < screen.y + 1:
+      needsAA = 2
+
+    if b.y >= screen.y and b.y < screen.y + 1:
+      needsAA = 2
+
+    # does the cross happen in current pixel
+    # if xIntersect >= screen.x and xIntersect < screen.x + 1:
+    #   if pixelCrossCount == 0:
+    #     pixelCrossA = xIntersect - screen.x
+    #     pixelCrossADir = lineDir(a, b)
+    #   if pixelCrossCount == 1:
+    #     pixelCrossB = xIntersect - screen.x
+    #     pixelCrossBDir = lineDir(a, b)
+    #   pixelCrossCount += 1
       #print pixelCrossA, pixelCrossB, pixelCrossCount
       #partialFillMin = min(partialFillMin, 1 - (xIntersect - (screen.x - 1)))
       #partialFillMax = max(partialFillMin, 1 - (xIntersect - (screen.x - 1)))
@@ -222,30 +233,30 @@ proc startPath(rule: float32) =
   crossCount = 0
   fillMask = 0
   windingRule = rule.int
-  pixelCrossCount = 0
+  #pixelCrossCount = 0
 
 proc draw() =
   ## Use crossCount to apply color to backdrop.
-  var fillAmount: float32 = 0
-  if pixelCrossCount == 1:
-    fillAmount = 1 - pixelCrossA
-  elif pixelCrossCount >= 2:
-    if pixelCrossA > pixelCrossB:
-      let tmp = pixelCrossA
-      pixelCrossA = pixelCrossB
-      pixelCrossB = tmp
-      let tmp2 = pixelCrossBDir
-      pixelCrossADir = pixelCrossBDir
-      pixelCrossBDir = tmp2
+  # var fillAmount: float32 = 0
+  # if pixelCrossCount == 1:
+  #   fillAmount = 1 - pixelCrossA
+  # elif pixelCrossCount >= 2:
+  #   if pixelCrossA > pixelCrossB:
+  #     let tmp = pixelCrossA
+  #     pixelCrossA = pixelCrossB
+  #     pixelCrossB = tmp
+  #     let tmp2 = pixelCrossBDir
+  #     pixelCrossADir = pixelCrossBDir
+  #     pixelCrossBDir = tmp2
 
-    fillAmount = pixelCrossB - pixelCrossA
+  #   fillAmount = pixelCrossB - pixelCrossA
 
   if windingRule == 0:
     # Even-Odd
     if crossCount mod 2 != 0:
-      fillMask = 1 - fillAmount
+      fillMask = 1 #- fillAmount
     else:
-      fillMask = fillAmount
+      fillMask = 0 #fillAmount
   else:
     # Non-zero
     # if pixelCrossCount == 0:
@@ -274,9 +285,9 @@ proc draw() =
     #     fillMask = 0
 
     if crossCount != 0:
-      fillMask = 1 - fillAmount
+      fillMask = 1
     else:
-      fillMask = fillAmount
+      fillMask = 0
 
 proc endPath() =
   ## SVG style end path command.
@@ -451,18 +462,33 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   ## Main entry point to this huge shader.
 
   let bias = 1E-4
-  # let offset = vec2(bias - 0.5, bias - 0.5)
-  # fragColor = runPixel(gl_FragCoord.xy + offset)
+  needsAA = 0
+  let offset = vec2(bias - 0.5, bias - 0.5)
+  fragColor = runPixel(gl_FragCoord.xy + offset)
+
+  if needsAA != 0:
+    # NxN SCAN GRID
+
+
+    let steps = 4
+    let step = 1.0 / (steps + 1).float32
+    fragColor = vec4(0)
+    for x in 0 ..< steps:
+      for y in 0 ..< steps:
+        let offset2 = vec2(step/2 + y.float32 * step, step/2 + x.float32 * step) + offset
+        fragColor += runPixel(gl_FragCoord.xy + offset2) / (steps * steps).float32
+
+    #fragColor = vec4(1, 0, 0, 1)
 
   # SCAN LINES
-  let steps = 4
-  let step = 1.0 / (steps + 1).float32
-  for y in 0 ..< steps:
-    let offset = vec2(bias - 0.5, step/2 + y.float32 * step + bias - 0.5)
-    fragColor += runPixel(gl_FragCoord.xy + offset) / steps.float32
+  # let steps = 4
+  # let step = 1.0 / (steps + 1).float32
+  # for y in 0 ..< steps:
+  #   let offset = vec2(bias - 0.5, step/2 + y.float32 * step + bias - 0.5)
+  #   fragColor += runPixel(gl_FragCoord.xy + offset) / steps.float32
 
   # # NxN SCAN GRID
-  # let steps = 8
+  # let steps = 4
   # let step = 1.0 / (steps + 1).float32
   # for x in 0 ..< steps:
   #   for y in 0 ..< steps:

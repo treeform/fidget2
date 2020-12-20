@@ -2,6 +2,7 @@
 precision highp float;
 // from svgMain
 
+int needsAA = 0;
 float x1;
 int windingRule = 0;
 uniform sampler2D textureAtlasSampler;
@@ -11,18 +12,13 @@ float y0;
 float y1;
 vec4 prevGradientColor;
 mat3 tMat;
-int pixelCrossCount = 0;
-float pixelCrossB;
-float fillMask;
 float gradientK;
-float pixelCrossA;
+float fillMask;
 mat3 mat;
 float prevGradientK;
 int crossCount = 0;
-int pixelCrossADir;
 float x0;
 vec4 backdropColor;
-int pixelCrossBDir;
 
 void gradientRadial(
   vec2 at0,
@@ -165,31 +161,17 @@ void gradientRadial(
 void draw(
 ) {
 "Use crossCount to apply color to backdrop.";
-  float fillAmount = float(0);
-  if ((pixelCrossCount) == (1)) {
-        fillAmount = (float(1)) - (pixelCrossA);
-  } else if ((2) <= (pixelCrossCount)) {
-    if ((pixelCrossB) < (pixelCrossA)) {
-      float tmp = pixelCrossA;
-      pixelCrossA = pixelCrossB;
-      pixelCrossB = tmp;
-      int tmp2 = pixelCrossBDir;
-      pixelCrossADir = pixelCrossBDir;
-      pixelCrossBDir = tmp2;
-    };
-    fillAmount = (pixelCrossB) - (pixelCrossA);
-  };
   if ((windingRule) == (0)) {
         if (! (((crossCount) % (2)) == (0))) {
-            fillMask = (float(1)) - (fillAmount);
+            fillMask = float(1);
     } else {
-            fillMask = fillAmount;
+            fillMask = float(0);
     };
   } else {
         if (! ((crossCount) == (0))) {
-            fillMask = (float(1)) - (fillAmount);
+            fillMask = float(1);
     } else {
-            fillMask = fillAmount;
+            fillMask = float(0);
     };
   };
 }
@@ -318,7 +300,6 @@ void startPath(
   crossCount = 0;
   fillMask = float(0);
   windingRule = int(rule);
-  pixelCrossCount = 0;
 }
 
 void runCommands(
@@ -550,15 +531,13 @@ void line(
       (crossCount) += (lineDir(a, b));;
     };
     if (((screen.x) <= (xIntersect)) && ((xIntersect) < ((screen.x) + (float(1))))) {
-      if ((pixelCrossCount) == (0)) {
-        pixelCrossA = (xIntersect) - (screen.x);
-        pixelCrossADir = lineDir(a, b);
-      };
-      if ((pixelCrossCount) == (1)) {
-        pixelCrossB = (xIntersect) - (screen.x);
-        pixelCrossBDir = lineDir(a, b);
-      };
-(pixelCrossCount) += (1);;
+            needsAA = 1;
+    };
+    if (((screen.y) <= (a.y)) && ((a.y) < ((screen.y) + (float(1))))) {
+            needsAA = 2;
+    };
+    if (((screen.y) <= (b.y)) && ((b.y) < ((screen.y) + (float(1))))) {
+            needsAA = 2;
     };
   };
 }
@@ -587,10 +566,17 @@ out vec4 fragColor;
 void main() {
 "Main entry point to this huge shader.";
   float bias = 0.0001;
-  int steps = 4;
-  float step = (1.0) / (float(float((steps) + (1))));
-  for(int y = 0; y < steps; y++) {
-    vec2 offset = vec2(float((bias) - (0.5)), float(((((step) / (float(2))) + ((float(float(y))) * (step))) + (bias)) - (0.5)));
-(fragColor) += ((runPixel((gl_FragCoord.xy) + (offset))) / (float(steps)));;
+  needsAA = 0;
+  vec2 offset = vec2(float((bias) - (0.5)), float((bias) - (0.5)));
+  fragColor = runPixel((gl_FragCoord.xy) + (offset));
+  if (! ((needsAA) == (0))) {
+    int steps = 4;
+    float step = (1.0) / (float(float((steps) + (1))));
+    fragColor = vec4(float(0));
+    for(int x = 0; x < steps; x++) {
+      for(int y = 0; y < steps; y++) {
+        vec2 offset2 = (vec2(float(((step) / (float(2))) + ((float(float(y))) * (step))), float(((step) / (float(2))) + ((float(float(x))) * (step))))) + (offset);
+(fragColor) += ((runPixel((gl_FragCoord.xy) + (offset2))) / (float((steps) * (steps))));;
+      }    };
   };
 }
