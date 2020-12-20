@@ -318,7 +318,7 @@ proc drawGeom(node: Node, geom: Geometry) =
     case command.kind
     of pixie.Move:
       dataBufferSeq.add cmdM
-      var pos =vec2(command.numbers[0], command.numbers[1])
+      var pos = vec2(command.numbers[0], command.numbers[1])
       dataBufferSeq.add pos.x
       dataBufferSeq.add pos.y
     of pixie.Line:
@@ -640,18 +640,17 @@ proc drawNode*(node: Node, level: int) =
       dataBufferSeq.add cmdStartPath
       dataBufferSeq.add 1
 
-      var fontHeight = font.typeface.ascent - font.typeface.descent
-      var scale = font.size / (fontHeight)
-
       for gpos in layout:
         var font = gpos.font
+        var fontHeight = font.typeface.ascent - font.typeface.descent
+        var scale = font.size / (fontHeight)
+        proc trans(v: Vec2): Vec2 =
+          result = v * scale
+          result.y = -result.y
+
         if gpos.character in font.typeface.glyphs:
           var glyph = font.typeface.glyphs[gpos.character]
           glyph.makeReady(font)
-
-          proc trans(v: Vec2): Vec2 =
-            result = v * scale
-            result.y = -result.y
 
           var prevPos: Vec2
           for shape in glyph.shapes:
