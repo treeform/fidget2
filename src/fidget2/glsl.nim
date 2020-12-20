@@ -50,7 +50,8 @@ const glslFunctions = [
   "texelFetch", "texture",
   "normalize",
   "floor", "ceil", "round",
-  "[]", "[]="
+  "[]", "[]=",
+  "inverse"
 ]
 
 const ignoreFunctions = [

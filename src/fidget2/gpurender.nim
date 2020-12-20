@@ -702,8 +702,6 @@ proc drawNode*(node: Node, level: int) =
         kern = kern,
         textCase = node.style.textCase,
       )
-      dataBufferSeq.add cmdStartPath
-      dataBufferSeq.add 1
 
       for gpos in layout:
         var font = gpos.font
@@ -715,6 +713,16 @@ proc drawNode*(node: Node, level: int) =
           var glyph = font.typeface.glyphs[gpos.character]
           glyph.makeReady(font)
 
+          dataBufferSeq.add cmdBoundCheck
+          dataBufferSeq.add gpos.rect.x
+          dataBufferSeq.add gpos.rect.y - gpos.rect.h
+          dataBufferSeq.add gpos.rect.x + gpos.rect.w
+          dataBufferSeq.add gpos.rect.y + gpos.rect.h
+          let jmpOffset = dataBufferSeq.len
+          dataBufferSeq.add 0
+
+          dataBufferSeq.add cmdStartPath
+          dataBufferSeq.add 1
           var prevPos: Vec2
           for shape in glyph.shapes:
             for segment in shape:
@@ -731,10 +739,12 @@ proc drawNode*(node: Node, level: int) =
               dataBufferSeq.add posL.y
               prevPos = posL
 
-      dataBufferSeq.add cmdEndPath
+          dataBufferSeq.add cmdEndPath
 
-      for paint in node.fills:
-        drawPaint(node, paint)
+          for paint in node.fills:
+            drawPaint(node, paint)
+
+          dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
     else:
       echo($node.kind & " not supported")

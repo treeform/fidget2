@@ -19,7 +19,8 @@ const
   cmdL*: float32 = 11
   cmdC*: float32 = 12
   cmdQ*: float32 = 13
-  cmdz*: float32 = 20
+  cmdz*: float32 = 14
+  cmdBoundCheck*: float32 = 15
 
 var
   crossCount: int = 0     # Number of line crosses (used to fill).
@@ -418,6 +419,26 @@ proc runCommands() =
       )
       i += 4
     elif command == cmdz: z()
+    elif command == cmdBoundCheck:
+      # Jump over code if screen not in bounds
+      var
+        minP: Vec2
+        maxP: Vec2
+      minP.x = texelFetch(dataBuffer, i + 1)
+      minP.y = texelFetch(dataBuffer, i + 2)
+      maxP.x = texelFetch(dataBuffer, i + 3)
+      maxP.y = texelFetch(dataBuffer, i + 4)
+      #minP = (mat * vec3(minP, 1)).xy
+      #maxP = (mat * vec3(maxP, 1)).xy
+      let label = texelFetch(dataBuffer, i + 5).int
+      i += 5
+
+      let screenInv = (mat.inverse() * vec3(screen, 1)).xy
+      if screenInv.x < minP.x or screenInv.x > maxP.x or
+        screenInv.y < minP.y or screenInv.y > maxP.y:
+          i = label - 1
+          #discard
+
     i += 1
 
 proc runPixel(xy: Vec2): Vec4 =

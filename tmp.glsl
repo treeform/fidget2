@@ -404,8 +404,21 @@ void runCommands(
     } else if ((command) == (13.0)) {
       Q(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
 (i) += (4);;
-    } else if ((command) == (20.0)) {
+    } else if ((command) == (14.0)) {
       z();
+    } else if ((command) == (15.0)) {
+      vec2 minP;
+      vec2 maxP;
+      minP.x = texelFetch(dataBuffer, (i) + (1));
+      minP.y = texelFetch(dataBuffer, (i) + (2));
+      maxP.x = texelFetch(dataBuffer, (i) + (3));
+      maxP.y = texelFetch(dataBuffer, (i) + (4));
+      int label = int(texelFetch(dataBuffer, (i) + (5)));
+(i) += (5);;
+      vec2 screenInv = ((inverse(mat)) * (vec3(screen, float(1)))).xy;
+      if (((((screenInv.x) < (minP.x)) || ((maxP.x) < (screenInv.x))) || ((screenInv.y) < (minP.y))) || ((maxP.y) < (screenInv.y))) {
+                i = (label) - (1);
+      };
     };
 (i) += (1);;
   };
