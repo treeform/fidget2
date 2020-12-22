@@ -89,6 +89,7 @@ proc readGpuPixels(): pixie.Image =
 
     # Open a window
     windowHint(VISIBLE, false.cint)
+    windowHint(SAMPLES, 0)
     var window = createWindow(
       viewPortWidth.cint, viewPortHeight.cint,
       "run_shaders",
@@ -104,6 +105,8 @@ proc readGpuPixels(): pixie.Image =
     # echo fragShaderSrc
 
     writeFile("tmp.glsl", fragShaderSrc)
+
+    glDisable(GL_MULTISAMPLE)
 
     # Bind the vertices
     glGenBuffers(1, vertexVBO.addr)
@@ -154,15 +157,18 @@ proc readGpuPixels(): pixie.Image =
     glGetShaderiv(vertShader, GL_COMPILE_STATUS, isCompiled.addr)
 
     # Check vertex compilation status
-    if isCompiled == 0:
-      echo "Vertex Shader wasn't compiled.  Reason:"
+    block:
       var logSize: GLint
       glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, logSize.addr)
-      var
-        logStr = cast[ptr GLchar](alloc(logSize))
-        logLen: GLsizei
-      glGetShaderInfoLog(vertShader, logSize.GLsizei, logLen.addr, logStr)
-      quit($logStr)
+      print logSize
+      if logSize > 0:
+        var
+          logStr = cast[ptr GLchar](alloc(logSize))
+          logLen: GLsizei
+        glGetShaderInfoLog(vertShader, logSize.GLsizei, logLen.addr, logStr)
+        echo $logStr
+    if isCompiled == 0:
+      quit "Vertex Shader wasn't compiled."
 
     # Fragment
     fragShader = glCreateShader(GL_FRAGMENT_SHADER)
@@ -171,15 +177,18 @@ proc readGpuPixels(): pixie.Image =
     glGetShaderiv(fragShader, GL_COMPILE_STATUS, isCompiled.addr)
 
     # Check Fragment compilation status
-    if isCompiled == 0:
-      echo "Fragment Shader wasn't compiled.  Reason:"
+    block:
       var logSize: GLint
       glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, logSize.addr)
-      var
-        logStr = cast[ptr GLchar](alloc(logSize))
-        logLen: GLsizei
-      glGetShaderInfoLog(fragShader, logSize.GLsizei, logLen.addr, logStr)
-      quit($logStr)
+      print logSize
+      if logSize > 0:
+        var
+          logStr = cast[ptr GLchar](alloc(logSize))
+          logLen: GLsizei
+        glGetShaderInfoLog(fragShader, logSize.GLsizei, logLen.addr, logStr)
+        echo($logStr)
+    if isCompiled == 0:
+      quit("Fragment Shader wasn't compiled.")
 
     # Attach to a GL program
     shaderProgram = glCreateProgram()
@@ -193,15 +202,19 @@ proc readGpuPixels(): pixie.Image =
 
     # Check for shader linking errors
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, isLinked.addr)
-    if isLinked == 0:
-      echo "Wasn't able to link shaders.  Reason:"
+
+    block:
       var logSize: GLint
       glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, logSize.addr)
-      var
-        logStr = cast[ptr GLchar](alloc(logSize))
-        logLen: GLsizei
-      glGetProgramInfoLog(shaderProgram, logSize.GLsizei, logLen.addr, logStr)
-      quit($logStr)
+      print logSize
+      if logSize > 0:
+        var
+          logStr = cast[ptr GLchar](alloc(logSize))
+          logLen: GLsizei
+        glGetProgramInfoLog(shaderProgram, logSize.GLsizei, logLen.addr, logStr)
+        echo($logStr)
+    if isLinked == 0:
+      quit("Wasn't able to link shaders.")
 
     glUseProgram(shaderProgram)
 
@@ -373,6 +386,9 @@ proc drawGeom(node: Node, geom: Geometry) =
     dataBufferSeq.add 0
   of wrNonZero:
     dataBufferSeq.add 1
+
+  geom.path = "M 0 0 L 0 400 L 200 200 L 400 400"
+  echo geom.path
   for command in parsePath(geom.path).commands:
     case command.kind
     of pixie.Move:

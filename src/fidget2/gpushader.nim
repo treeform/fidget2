@@ -35,13 +35,25 @@ var
   prevGradientK: float32
   prevGradientColor: Vec4
 
+  numTrapezoids: int = 0
+  cover1: float32
+  cover2: float32
+  cover3: float32
+
 proc lineDir(a, b: Vec2): float32 =
+  #return 1
   if a.y - b.y > 0:
     # Count up if line is going up.
     return 1
   else:
     # Count down if line is going down.
     return -1
+
+proc markAction(action: float32) =
+  #print numTrapezoids, action
+  if numTrapezoids == 0: cover1 = action/255.0
+  if numTrapezoids == 1: cover2 = action/255.0
+  if numTrapezoids == 2: cover3 = action/255.0
 
 proc pixelCover(a0, b0: Vec2): float32 =
   ## Returns the amount of area a given segment sweeps to the right
@@ -51,7 +63,9 @@ proc pixelCover(a0, b0: Vec2): float32 =
     b = b0
     aI: Vec2
     bI: Vec2
-    area: float32
+    area: float32 = 0.0
+
+  markAction(area*255)
 
   # Sort A on top.
   if a.y > b.y:
@@ -60,13 +74,19 @@ proc pixelCover(a0, b0: Vec2): float32 =
     b = tmp
 
   if (b.y < 0 or a.y > 1) or # Above or bellow, no effect.
-    (a.x > 1 and b.x > 1) or # To the right, no effect.
+    (a.x >= 1 and b.x >= 1) or # To the right, no effect.
     (a.y == b.y): # Horizontal line, no effect.
+
+    #markAction(10)
+
     return 0
 
   elif (a.x < 0 and b.x < 0) or # Both to the left.
     (a.x == b.x): # Vertical line
     # Area of the rectangle:
+
+    #markAction(20)
+
     return (1 - clamp(a.x, 0, 1)) * (min(b.y, 1) - max(a.y, 0))
 
   else:
@@ -78,6 +98,7 @@ proc pixelCover(a0, b0: Vec2): float32 =
     if a.x >= 0 and a.x <= 1 and a.y >= 0 and a.y <= 1:
       # A is in pixel bounds.
       aI = a
+      #markAction(30)
     else:
       aI = vec2((0 - bb) / mm, 0)
       if aI.x < 0:
@@ -85,26 +106,43 @@ proc pixelCover(a0, b0: Vec2): float32 =
         # Area of the extra rectangle.
         area += (min(bb, 1) - max(a.y, 0)).clamp(0, 1)
         aI = vec2(0, y.clamp(0, 1))
+
+        #markAction(40)
       elif aI.x > 1:
         let y = mm * 1 + bb
         aI = vec2(1, y.clamp(0, 1))
+        #markAction(50)
+      else:
+        #markAction(60)
+        discard
 
     if b.x >= 0 and b.x <= 1 and b.y >= 0 and b.y <= 1:
       # B is in pixel bounds.
       bI = b
+      #markAction(70)
     else:
       bI = vec2((1 - bb) / mm, 1)
+      #markAction(80)
       if bI.x < 0:
         let y = mm * 0 + bb
         # Area of the extra rectangle.
         area += (min(b.y, 1) - max(bb, 0)).clamp(0, 1)
+        #print area, b.y, bb, min(b.y, 1), -max(bb, 0)
         bI = vec2(0, y.clamp(0, 1))
+
       elif bI.x > 1:
         let y = mm * 1 + bb
         bI = vec2(1, y.clamp(0, 1))
+        #markAction(100)
+      else:
+        #markAction(110)
+        discard
 
   #doAssert aI.y <= bI.y
+
+
   area += ((1 - aI.x) + (1 - bI.x)) / 2 * (bI.y - aI.y)
+
   return area
 
 proc line(a0, b0: Vec2) =
@@ -113,17 +151,26 @@ proc line(a0, b0: Vec2) =
     a1 = (mat * vec3(a0, 1)).xy - screen
     b1 = (mat * vec3(b0, 1)).xy - screen
 
+  var sign = lineDir(a1, b1)
+
   var area = pixelCover(a1, b1)
 
   area = area
 
-  #print a0, b0
-  #print lineDir(a1, b1)
-  #print area
+  # print a0, b0
+  # print lineDir(a1, b1)
+  # print area
 
   #print windingRule
 
-  fillMask += area * lineDir(a1, b1)
+  fillMask += area * sign
+
+  #markAction(area*255)
+
+
+  numTrapezoids += 1
+  # if area > 0:
+  #   numTrapezoids = 0.5 + 0.5 * lineDir(a1, b1)
 
 proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
@@ -440,13 +487,34 @@ proc runPixel(xy: Vec2): Vec4 =
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   ## Main entry point to this huge shader.
 
+  numTrapezoids = 0
+  cover1 = 0
+  cover2 = 0
+  cover3 = 0
+
+
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
 
+  # fragColor.x = cover1
+  # fragColor.y = cover2
+  # fragColor.z = cover3
+  # fragColor.w = 1
+
+  # print fragColor * 255
+
+  # fragColor.x = fragColor.x.clamp(0, 1)
+  # fragColor.y = fragColor.y.clamp(0, 1)
+  # fragColor.z = fragColor.z.clamp(0, 1)
+  # fragColor.w = fragColor.w.clamp(0, 1)
+
+
   #print fragColor
 
   #fragColor.x = gl_FragCoord.x - floor(gl_FragCoord.x)
+
+  #fragColor.x = numTrapezoids
 
   #fragColor.w = 1
   #dataBuffer

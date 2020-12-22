@@ -23,9 +23,9 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     echo frame.name, " --------------------------------- "
 
-    if firstTime and w == "gpu":
-      discard drawCompleteGpuFrame(frame)
-      firstTime = false
+    # if firstTime and w == "gpu":
+    #   discard drawCompleteGpuFrame(frame)
+    #   firstTime = false
 
     let startTime = epochTime()
 
@@ -36,6 +36,8 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
       image = drawCompleteFrame(frame)
     elif w == "zpu":
       image = drawCompleteZpuFrame(frame)
+    elif w == "vs":
+      image = drawCompleteGpuFrame(frame)
 
     let frameTime = epochTime() - startTime
     renderTime += frameTime
@@ -47,7 +49,12 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
       diffImage: Image
 
     if fileExists(&"tests/frames/masters/{frame.name}.png"):
-      var master = readImage(&"tests/frames/masters/{frame.name}.png")
+      var master: Image
+      if w == "vs":
+        master = drawCompleteZpuFrame(frame)
+        master.writeFile("tests/frames/zpu/" & frame.name & ".png")
+      else:
+        master = readImage(&"tests/frames/masters/{frame.name}.png")
       (diffScore, diffImage) = imageDiff(master, image)
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
@@ -57,7 +64,10 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
     framesHtml.add(&"<h4>{frame.name}</h4>")
     framesHTML.add(&"<p>{w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx</p>")
     framesHTML.add(&"<img src='{frame.name}.png'>")
-    framesHTML.add(&"<img src='masters/{frame.name}.png'>")
+    if w == "vs":
+      framesHTML.add(&"<img src='zpu/{frame.name}.png'>")
+    else:
+      framesHTML.add(&"<img src='masters/{frame.name}.png'>")
     framesHTML.add(&"<img src='diffs/{frame.name}.png'><br>")
 
   framesHtml.add(&"<p>Total time: {renderTime}s</p>")

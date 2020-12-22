@@ -14,13 +14,10 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
   for y in 0 ..< image.height:
     for x in 0 ..< image.width:
-      #if x != 191 or y != 100:
-      #  continue
-
-      var n = 0.47450980392
-
+      # if x != 199 or y != 300:
+      #   continue
       var color: Vec4
-      svgMain(vec4(x.float32 + n, y.float32 + n, 0, 1), color)
+      svgMain(vec4(x.float32 + 0.5, y.float32 + 0.5, 0, 1), color)
       image.setRgbaUnsafe(x, y, rgba(
         (color.x * 255).uint8,
         (color.y * 255).uint8,

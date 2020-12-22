@@ -1,21 +1,25 @@
-#version 400
+#version 300 es
 precision highp float;
 // from svgMain
 
 float x1;
 int windingRule = 0;
 uniform sampler2D textureAtlasSampler;
+float cover2;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
 float y0;
 float y1;
 vec4 prevGradientColor;
+float cover3;
 mat3 tMat;
 float gradientK;
 float fillMask;
+float cover1;
 mat3 mat;
-float prevGradientK;
+int numTrapezoids = 0;
 int crossCount = 0;
+float prevGradientK;
 float x0;
 vec4 backdropColor;
 
@@ -32,6 +36,10 @@ void solidFill(
   float g,
   float b,
   float a
+) ;
+
+void markAction(
+  float action
 ) ;
 
 void C(
@@ -177,6 +185,20 @@ void solidFill(
 "Set the source color.";
   if ((float(0)) < (fillMask)) {
         backdropColor = blendNormalFloats(backdropColor, (vec4(r, g, b, a)) * (fillMask));
+  };
+}
+
+void markAction(
+  float action
+) {
+  if ((numTrapezoids) == (0)) {
+        cover1 = float((float(action)) / (255.0));
+  };
+  if ((numTrapezoids) == (1)) {
+        cover2 = float((float(action)) / (255.0));
+  };
+  if ((numTrapezoids) == (2)) {
+        cover3 = float((float(action)) / (255.0));
   };
 }
 
@@ -481,45 +503,48 @@ float pixelCover(
   vec2 b = b0;
   vec2 aI;
   vec2 bI;
-  float area;
-  float e = 0.0;
-  float ee = -0.5;
+  float area = float(0.0);
+  markAction((area) * (float(255)));
   if ((b.y) < (a.y)) {
     vec2 tmp = a;
     a = b;
     b = tmp;
   };
-  if (((((float(b.y)) < ((float(0)) + (e))) || (((float(1)) - (e)) < (float(a.y)))) || ((((float(1)) - (e)) < (float(a.x))) && (((float(1)) - (e)) < (float(b.x))))) || ((a.y) == (b.y))) {
+  if (((((b.y) < (float(0))) || ((float(1)) < (a.y))) || (((float(1)) <= (a.x)) && ((float(1)) <= (b.x)))) || ((a.y) == (b.y))) {
         return float(0);
-  } else if ((((float(a.x)) < ((float(0)) + (e))) && ((float(b.x)) < ((float(0)) + (e)))) || ((a.x) == (b.x))) {
+  } else if ((((a.x) < (float(0))) && ((b.x) < (float(0)))) || ((a.x) == (b.x))) {
         return ((float(1)) - (clamp(a.x, float(0), float(1)))) * ((min(b.y, float(1))) - (max(a.y, float(0))));
   } else {
     float mm = ((b.y) - (a.y)) / ((b.x) - (a.x));
     float bb = (a.y) - ((mm) * (a.x));
-    if ((((((float(0)) + (e)) <= (float(a.x))) && ((float(a.x)) <= ((float(1)) - (e)))) && (((float(0)) + (e)) <= (float(a.y)))) && ((float(a.y)) <= ((float(1)) - (e)))) {
+    if (((((float(0)) <= (a.x)) && ((a.x) <= (float(1)))) && ((float(0)) <= (a.y))) && ((a.y) <= (float(1)))) {
             aI = a;
     } else {
       aI = vec2(((float(0)) - (bb)) / (mm), float(0));
-      if ((float(aI.x)) < ((float(0)) + (e))) {
+      if ((aI.x) < (float(0))) {
         float y = ((mm) * (float(0))) + (bb);
-(area) += (float(clamp((min(float(bb), (float(1)) - (ee))) - (max(float(a.y), (float(0)) + (ee))), float(0), float(1))));;
-        aI = vec2(float((float(0)) + (ee)), clamp(y, float(0), float(1)));
-      } else if (((float(1)) - (e)) < (float(aI.x))) {
+(area) += (clamp((min(bb, float(1))) - (max(a.y, float(0))), float(0), float(1)));;
+        aI = vec2(float(0), clamp(y, float(0), float(1)));
+      } else if ((float(1)) < (aI.x)) {
         float y = ((mm) * (float(1))) + (bb);
-        aI = vec2(float((float(1)) - (ee)), clamp(y, float(0), float(1)));
+        aI = vec2(float(1), clamp(y, float(0), float(1)));
+      } else {
+        ;
       };
     };
-    if ((((((float(0)) + (e)) <= (float(b.x))) && ((float(b.x)) <= ((float(1)) - (e)))) && (((float(0)) + (e)) <= (float(b.y)))) && ((float(b.y)) <= ((float(1)) - (e)))) {
+    if (((((float(0)) <= (b.x)) && ((b.x) <= (float(1)))) && ((float(0)) <= (b.y))) && ((b.y) <= (float(1)))) {
             bI = b;
     } else {
       bI = vec2(((float(1)) - (bb)) / (mm), float(1));
-      if ((float(bI.x)) < ((float(0)) + (e))) {
+      if ((bI.x) < (float(0))) {
         float y = ((mm) * (float(0))) + (bb);
-(area) += (float(clamp((min(float(b.y), (float(1)) - (ee))) - (max(float(bb), (float(0)) + (ee))), float(0), float(1))));;
-        bI = vec2(float((float(0)) + (ee)), clamp(y, float(0), float(1)));
-      } else if (((float(1)) - (e)) < (float(bI.x))) {
+(area) += (clamp((min(b.y, float(1))) - (max(bb, float(0))), float(0), float(1)));;
+        bI = vec2(float(0), clamp(y, float(0), float(1)));
+      } else if ((float(1)) < (bI.x)) {
         float y = ((mm) * (float(1))) + (bb);
-        bI = vec2(float((float(1)) - (ee)), clamp(y, float(0), float(1)));
+        bI = vec2(float(1), clamp(y, float(0), float(1)));
+      } else {
+        ;
       };
     };
   };
@@ -562,9 +587,11 @@ void line(
 "Turn a line into inc/dec/ignore of the crossCount.";
   vec2 a1 = (((mat) * (vec3(a0, float(1)))).xy) - (screen);
   vec2 b1 = (((mat) * (vec3(b0, float(1)))).xy) - (screen);
+  float sign = lineDir(a1, b1);
   float area = pixelCover(a1, b1);
   area = area;
-(fillMask) += ((area) * (lineDir(a1, b1)));;
+(fillMask) += ((area) * (sign));;
+(numTrapezoids) += (1);;
 }
 
 vec4 runPixel(
@@ -590,6 +617,10 @@ out vec4 fragColor;
 
 void main() {
 "Main entry point to this huge shader.";
+  numTrapezoids = 0;
+  cover1 = float(0);
+  cover2 = float(0);
+  cover3 = float(0);
   float bias = 0.0001;
   vec2 offset = vec2(float((bias) - (0.5)), float((bias) - (0.5)));
   fragColor = runPixel((gl_FragCoord.xy) + (offset));
