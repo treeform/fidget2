@@ -23,9 +23,9 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     echo frame.name, " --------------------------------- "
 
-    # if firstTime and w == "gpu":
-    #   discard drawCompleteGpuFrame(frame)
-    #   firstTime = false
+    if firstTime and w == "gpu":
+      discard drawCompleteGpuFrame(frame)
+      firstTime = false
 
     let startTime = epochTime()
 

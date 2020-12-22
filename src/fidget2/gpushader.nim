@@ -24,11 +24,11 @@ const
 
 var
   crossCount: int = 0     # Number of line crosses (used to fill).
-  windingRule: int = 0
+  windingRule: int = 0    # 0 for EvenOdd and 1 for NonZero
   x0, y0, x1, y1: float32 # Control points of lines and curves.
   screen: Vec2            # Location of were we are on screen.
   backdropColor: Vec4     # Current backdrop color.
-  fillMask: float32       # How much of the fill is visible.
+  fillMask: float32 = 0.0 # How much of the fill is visible.
   mat: Mat3               # Current transform matrix.
   tMat: Mat3              # Texture matrix.
   gradientK: float32      # Gradient constant 0 to 1.
@@ -492,6 +492,16 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   cover2 = 0
   cover3 = 0
 
+  x0 = 0
+  y0 = 0
+  x1 = 0
+  y1 = 0
+
+  mat = mat3(0,0,0, 0,0,0, 0,0,0)
+
+  gradientK = 0
+  prevGradientK = 0
+  prevGradientColor = vec4(0,0,0,0)
 
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
