@@ -3,51 +3,32 @@ import pixie, chroma, vmath, bumpy, print, random
 var aaCount = 0
 
 proc pixelCover(a0, b0: Vec2): float32 =
-
-  print "--- line --- ", aaCount
-
+  ## Returns the amount of area a given segment sweeps to the right
+  ## in a [0,0 to 1,1] box.
   var
     a = a0
     b = b0
-    aI = a
-    bI = b
+    aI: Vec2
+    bI: Vec2
     area: float32
-    extraA: (float32, float32)
-    extraB: (float32, float32)
 
   # Sort A on top.
   if a.y > b.y:
-    let tmp = aI
+    let tmp = a
     a = b
     b = tmp
 
-  if b.y < 0 or a.y > 1:
-    # Above or bellow, no effect.
-    aI = vec2(1, 0)
-    bI = vec2(1, 1)
+  if (b.y < 0 or a.y > 1) or # Above or bellow, no effect.
+    (a.x > 1 and b.x > 1) or # To the right, no effect.
+    (a.y == b.y): # Horizontal line, no effect.
+    return 0
 
-  elif a.x > 1 and b.x > 1:
-    # To the right, no effect.
-    aI = vec2(1, 0)
-    bI = vec2(1, 1)
-
-  elif a.y == b.y:
-    # Horizontal line, no effect.
-    aI = vec2(1, 0)
-    bI = vec2(1, 1)
-
-  elif a.x < 0 and b.x < 0:
-    # Both to the left.
-    aI = vec2(0, max(a.y, 0))
-    bI = vec2(0, min(b.y, 1))
-
-  elif a.x == b.x:
-    # Vertical line
-    aI = vec2(clamp(a.x, 0, 1), max(a.y, 0))
-    bI = vec2(clamp(b.x, 0, 1), min(b.y, 1))
+  elif (a.x < 0 and b.x < 0) or # Both to the left.
+    (a.x == b.x): # Vertical line
+    # Area of the rectangle:
+    return (1 - clamp(a.x, 0, 1)) * (min(b.y, 1) - max(a.y, 0))
 
   else:
-
     # y = mm*x + bb
     let
       mm: float32 = (b.y - a.y) / (b.x - a.x)
@@ -60,12 +41,8 @@ proc pixelCover(a0, b0: Vec2): float32 =
       aI = vec2((0 - bb) / mm, 0)
       if aI.x < 0:
         let y = mm * 0 + bb
-        extraA[0] = max(a.y, 0)
-        extraA[1] = min(bb, 1)
-        if extraA[0] > extraA[1]:
-          extraA[0] = 0
-          extraA[1] = 0
-        area += (extraA[1] - extraA[0]).clamp(0, 1)
+        # Area of the extra rectangle.
+        area += (min(bb, 1) - max(a.y, 0)).clamp(0, 1)
         aI = vec2(0, y.clamp(0, 1))
       elif aI.x > 1:
         let y = mm * 1 + bb
@@ -78,12 +55,8 @@ proc pixelCover(a0, b0: Vec2): float32 =
       bI = vec2((1 - bb) / mm, 1)
       if bI.x < 0:
         let y = mm * 0 + bb
-        extraB[0] = max(bb, 0)
-        extraB[1] = min(b.y, 1)
-        if extraB[0] > extraB[1]:
-          extraB[0] = 0
-          extraB[1] = 0
-        area += (extraB[1] - extraB[0]).clamp(0, 1)
+        # Area of the extra rectangle.
+        area += (min(b.y, 1) - max(bb, 0)).clamp(0, 1)
         bI = vec2(0, y.clamp(0, 1))
       elif bI.x > 1:
         let y = mm * 1 + bb
@@ -124,6 +97,7 @@ proc testCase(a0, b0: Vec2): float32 =
   b -= vec2(50, 50)
   b /= 100
 
+  print "--- line --- ", aaCount
   let area = pixelCover(a, b)
 
   p = newPath()
