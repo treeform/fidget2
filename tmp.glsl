@@ -5,19 +5,15 @@ precision highp float;
 float x1;
 int windingRule = 0;
 uniform sampler2D textureAtlasSampler;
-float cover2;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
 float y0;
 float y1;
 vec4 prevGradientColor;
-float cover3;
 mat3 tMat;
 float gradientK;
 float fillMask = 0.0;
-float cover1;
 mat3 mat;
-int numTrapezoids = 0;
 float prevGradientK;
 int crossCount = 0;
 float x0;
@@ -36,10 +32,6 @@ void solidFill(
   float g,
   float b,
   float a
-) ;
-
-void markAction(
-  float action
 ) ;
 
 void C(
@@ -185,20 +177,6 @@ void solidFill(
 "Set the source color.";
   if ((float(0)) < (fillMask)) {
         backdropColor = blendNormalFloats(backdropColor, (vec4(r, g, b, a)) * (fillMask));
-  };
-}
-
-void markAction(
-  float action
-) {
-  if ((numTrapezoids) == (0)) {
-        cover1 = float((float(action)) / (255.0));
-  };
-  if ((numTrapezoids) == (1)) {
-        cover2 = float((float(action)) / (255.0));
-  };
-  if ((numTrapezoids) == (2)) {
-        cover3 = float((float(action)) / (255.0));
   };
 }
 
@@ -504,7 +482,6 @@ float pixelCover(
   vec2 aI;
   vec2 bI;
   float area = float(0.0);
-  markAction((area) * (float(255)));
   if ((b.y) < (a.y)) {
     vec2 tmp = a;
     a = b;
@@ -528,8 +505,6 @@ float pixelCover(
       } else if ((float(1)) < (aI.x)) {
         float y = ((mm) * (float(1))) + (bb);
         aI = vec2(float(1), clamp(y, float(0), float(1)));
-      } else {
-        ;
       };
     };
     if (((((float(0)) <= (b.x)) && ((b.x) <= (float(1)))) && ((float(0)) <= (b.y))) && ((b.y) <= (float(1)))) {
@@ -543,8 +518,6 @@ float pixelCover(
       } else if ((float(1)) < (bI.x)) {
         float y = ((mm) * (float(1))) + (bb);
         bI = vec2(float(1), clamp(y, float(0), float(1)));
-      } else {
-        ;
       };
     };
   };
@@ -587,11 +560,8 @@ void line(
 "Turn a line into inc/dec/ignore of the crossCount.";
   vec2 a1 = (((mat) * (vec3(a0, float(1)))).xy) - (screen);
   vec2 b1 = (((mat) * (vec3(b0, float(1)))).xy) - (screen);
-  float sign = lineDir(a1, b1);
   float area = pixelCover(a1, b1);
-  area = area;
-(fillMask) += ((area) * (sign));;
-(numTrapezoids) += (1);;
+(fillMask) += ((area) * (lineDir(a1, b1)));;
 }
 
 vec4 runPixel(
@@ -617,10 +587,6 @@ out vec4 fragColor;
 
 void main() {
 "Main entry point to this huge shader.";
-  numTrapezoids = 0;
-  cover1 = float(0);
-  cover2 = float(0);
-  cover3 = float(0);
   x0 = float(0);
   y0 = float(0);
   x1 = float(0);

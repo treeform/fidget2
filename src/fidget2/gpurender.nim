@@ -160,7 +160,6 @@ proc readGpuPixels(): pixie.Image =
     block:
       var logSize: GLint
       glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, logSize.addr)
-      print logSize
       if logSize > 0:
         var
           logStr = cast[ptr GLchar](alloc(logSize))
@@ -180,7 +179,6 @@ proc readGpuPixels(): pixie.Image =
     block:
       var logSize: GLint
       glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, logSize.addr)
-      print logSize
       if logSize > 0:
         var
           logStr = cast[ptr GLchar](alloc(logSize))
@@ -206,7 +204,6 @@ proc readGpuPixels(): pixie.Image =
     block:
       var logSize: GLint
       glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, logSize.addr)
-      print logSize
       if logSize > 0:
         var
           logStr = cast[ptr GLchar](alloc(logSize))
