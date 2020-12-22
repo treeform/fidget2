@@ -213,6 +213,8 @@ proc readGpuPixels(): pixie.Image =
     if isLinked == 0:
       quit("Wasn't able to link shaders.")
 
+    echo "Shader compiled"
+
     glUseProgram(shaderProgram)
 
     var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
@@ -384,8 +386,6 @@ proc drawGeom(node: Node, geom: Geometry) =
   of wrNonZero:
     dataBufferSeq.add 1
 
-  geom.path = "M 0 0 L 0 400 L 200 200 L 400 400"
-  echo geom.path
   for command in parsePath(geom.path).commands:
     case command.kind
     of pixie.Move:

@@ -15,7 +15,7 @@ float gradientK;
 float fillMask = 0.0;
 mat3 mat;
 float prevGradientK;
-int crossCount = 0;
+mat4 crossCountMat;
 float x0;
 vec4 backdropColor;
 
@@ -32,6 +32,11 @@ void solidFill(
   float g,
   float b,
   float a
+) ;
+
+float zmod(
+  float a,
+  float b
 ) ;
 
 void C(
@@ -85,6 +90,11 @@ void quadratic(
 
 void startPath(
   float rule
+) ;
+
+float pixelCross(
+  vec2 a0,
+  vec2 b0
 ) ;
 
 void runCommands(
@@ -164,8 +174,19 @@ void gradientRadial(
 
 void draw(
 ) {
-"Use crossCount to apply color to backdrop.";
-  fillMask = clamp(abs(fillMask), float(0), float(1));
+"Apply the winding rule.";
+  if ((windingRule) == (0)) {
+    fillMask = float(0);
+    int n = 4;
+    for(int x = 0; x < n; x++) {
+      for(int y = 0; y < n; y++) {
+        if (! ((float(zmod(crossCountMat[x][y], float(2.0)))) == (0.0))) {
+          (fillMask) += (float(1));;
+        }      }    };
+    fillMask = (fillMask) / (float((n) * (n)));
+  } else {
+        fillMask = clamp(abs(fillMask), float(0), float(1));
+  };
 }
 
 void solidFill(
@@ -176,8 +197,15 @@ void solidFill(
 ) {
 "Set the source color.";
   if ((float(0)) < (fillMask)) {
-        backdropColor = blendNormalFloats(backdropColor, (vec4(r, g, b, a)) * (fillMask));
+        backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, (a) * (fillMask)));
   };
+}
+
+float zmod(
+  float a,
+  float b
+) {
+    return (a) - ((b) * (floor((a) / (b))));
 }
 
 void C(
@@ -227,7 +255,8 @@ void gradientStop(
     if (((prevGradientK) < (gradientK)) && ((gradientK) <= (k))) {
       float betweenColors = ((gradientK) - (prevGradientK)) / ((k) - (prevGradientK));
       vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
-      backdropColor = blendNormalFloats(backdropColor, (colorG) * (fillMask));
+(colorG.w) *= (fillMask);;
+      backdropColor = blendNormalFloats(backdropColor, colorG);
     };
     prevGradientK = k;
     prevGradientColor = gradientColor;
@@ -289,9 +318,35 @@ void startPath(
   float rule
 ) {
 "Clear the status of things and start a new path.";
-  crossCount = 0;
+  crossCountMat = mat4(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
   fillMask = float(0);
   windingRule = int(rule);
+}
+
+float pixelCross(
+  vec2 a0,
+  vec2 b0
+) {
+"Turn a line into inc/dec/ignore of the crossCount.";
+  vec2 a = a0;
+  vec2 b = b0;
+  if ((a.y) == (b.y)) {
+        return float(0.0);
+  };
+  if (((min(a.y, b.y)) <= (float(0))) && ((float(0)) < (max(a.y, b.y)))) {
+    float xIntersect = 0.0;
+    if (! ((b.x) == (a.x))) {
+      float m = ((b.y) - (a.y)) / ((b.x) - (a.x));
+      float bb = (a.y) - ((m) * (a.x));
+      xIntersect = ((float(0)) - (bb)) / (m);
+    } else {
+            xIntersect = a.x;
+    };
+    if ((xIntersect) < (float(0))) {
+            return lineDir(a, b);
+    };
+  };
+  return float(0.0);
 }
 
 void runCommands(
@@ -315,27 +370,27 @@ void runCommands(
       backdropColor = (backdropColor) * (opacity);
 (i) += (1);;
     } else if ((command) == (6.0)) {
-      tMat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;
-      tMat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;
-      tMat[0][2] = float(0);
-      tMat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;
-      tMat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;
-      tMat[1][2] = float(0);
-      tMat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;
-      tMat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;
-      tMat[2][2] = float(1);
+      tMat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;;
+      tMat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;;
+      tMat[0][2] = float(0);;
+      tMat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;;
+      tMat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;;
+      tMat[1][2] = float(0);;
+      tMat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;;
+      tMat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;;
+      tMat[2][2] = float(1);;
       float tile = texelFetch(dataBuffer, (i) + (7)).x;
-      vec2 pos;
+      vec2 pos = vec2(0.0);
       pos.x = texelFetch(dataBuffer, (i) + (8)).x;
       pos.y = texelFetch(dataBuffer, (i) + (9)).x;
-      vec2 size;
+      vec2 size = vec2(0.0);
       size.x = texelFetch(dataBuffer, (i) + (10)).x;
       size.y = texelFetch(dataBuffer, (i) + (11)).x;
       textureFill(tMat, tile, pos, size);
 (i) += (11);;
     } else if ((command) == (7.0)) {
-      vec2 at;
-      vec2 to;
+      vec2 at = vec2(0.0);
+      vec2 to = vec2(0.0);
       at.x = texelFetch(dataBuffer, (i) + (1)).x;
       at.y = texelFetch(dataBuffer, (i) + (2)).x;
       to.x = texelFetch(dataBuffer, (i) + (3)).x;
@@ -343,8 +398,8 @@ void runCommands(
       gradientLinear(at, to);
 (i) += (4);;
     } else if ((command) == (8.0)) {
-      vec2 at;
-      vec2 to;
+      vec2 at = vec2(0.0);
+      vec2 to = vec2(0.0);
       at.x = texelFetch(dataBuffer, (i) + (1)).x;
       at.y = texelFetch(dataBuffer, (i) + (2)).x;
       to.x = texelFetch(dataBuffer, (i) + (3)).x;
@@ -355,15 +410,15 @@ void runCommands(
       gradientStop(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x, texelFetch(dataBuffer, (i) + (5)).x);
 (i) += (5);;
     } else if ((command) == (3.0)) {
-      mat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;
-      mat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;
-      mat[0][2] = float(0);
-      mat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;
-      mat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;
-      mat[1][2] = float(0);
-      mat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;
-      mat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;
-      mat[2][2] = float(1);
+      mat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;;
+      mat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;;
+      mat[0][2] = float(0);;
+      mat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;;
+      mat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;;
+      mat[1][2] = float(0);;
+      mat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;;
+      mat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;;
+      mat[2][2] = float(1);;
 (i) += (6);;
     } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x);
@@ -380,8 +435,8 @@ void runCommands(
     } else if ((command) == (14.0)) {
       z();
     } else if ((command) == (15.0)) {
-      vec2 minP;
-      vec2 maxP;
+      vec2 minP = vec2(0.0);
+      vec2 maxP = vec2(0.0);
       minP.x = texelFetch(dataBuffer, (i) + (1)).x;
       minP.y = texelFetch(dataBuffer, (i) + (2)).x;
       maxP.x = texelFetch(dataBuffer, (i) + (3)).x;
@@ -409,12 +464,14 @@ void textureFill(
     if ((tile) == (float(0))) {
             if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
         vec4 textureColor = texture(textureAtlasSampler, uv);
+(textureColor.w) *= (fillMask);;
         backdropColor = blendNormalFloats(backdropColor, textureColor);
       };
     } else {
       uv = (mod((uv) - (pos), size)) + (pos);
       vec4 textureColor = texture(textureAtlasSampler, uv);
-      backdropColor = blendNormalFloats(backdropColor, (textureColor) * (fillMask));
+(textureColor.w) *= (fillMask);;
+      backdropColor = blendNormalFloats(backdropColor, textureColor);
     };
   };
 }
@@ -479,8 +536,8 @@ float pixelCover(
 "Returns the amount of area a given segment sweeps to the right\nin a [0,0 to 1,1] box.";
   vec2 a = a0;
   vec2 b = b0;
-  vec2 aI;
-  vec2 bI;
+  vec2 aI = vec2(0.0);
+  vec2 bI = vec2(0.0);
   float area = float(0.0);
   if ((b.y) < (a.y)) {
     vec2 tmp = a;
@@ -536,7 +593,7 @@ vec4 alphaFix(
   vec4 source,
   vec4 mixed
 ) {
-  vec4 res;
+  vec4 res = vec4(0.0);
   res.w = float((float(source.w)) + ((float(backdrop.w)) * ((1.0) - (float(source.w)))));
   if ((float(res.w)) == (0.0)) {
         return res;
@@ -560,8 +617,29 @@ void line(
 "Turn a line into inc/dec/ignore of the crossCount.";
   vec2 a1 = (((mat) * (vec3(a0, float(1)))).xy) - (screen);
   vec2 b1 = (((mat) * (vec3(b0, float(1)))).xy) - (screen);
-  float area = pixelCover(a1, b1);
+  if ((windingRule) == (0)) {
+(a1) += (vec2(float(-1), float(-1)));;
+(b1) += (vec2(float(-1), float(-1)));;
+    crossCountMat[0][0] = (crossCountMat[0][0]) + (pixelCross((a1) + ((vec2(float(0), float(0))) / (float(4))), (b1) + ((vec2(float(0), float(0))) / (float(4)))));;
+    crossCountMat[0][1] = (crossCountMat[0][1]) + (pixelCross((a1) + ((vec2(float(0), float(1))) / (float(4))), (b1) + ((vec2(float(0), float(1))) / (float(4)))));;
+    crossCountMat[0][2] = (crossCountMat[0][2]) + (pixelCross((a1) + ((vec2(float(0), float(2))) / (float(4))), (b1) + ((vec2(float(0), float(2))) / (float(4)))));;
+    crossCountMat[0][3] = (crossCountMat[0][3]) + (pixelCross((a1) + ((vec2(float(0), float(3))) / (float(4))), (b1) + ((vec2(float(0), float(3))) / (float(4)))));;
+    crossCountMat[1][0] = (crossCountMat[1][0]) + (pixelCross((a1) + ((vec2(float(1), float(0))) / (float(4))), (b1) + ((vec2(float(1), float(0))) / (float(4)))));;
+    crossCountMat[1][1] = (crossCountMat[1][1]) + (pixelCross((a1) + ((vec2(float(1), float(1))) / (float(4))), (b1) + ((vec2(float(1), float(1))) / (float(4)))));;
+    crossCountMat[1][2] = (crossCountMat[1][2]) + (pixelCross((a1) + ((vec2(float(1), float(2))) / (float(4))), (b1) + ((vec2(float(1), float(2))) / (float(4)))));;
+    crossCountMat[1][3] = (crossCountMat[1][3]) + (pixelCross((a1) + ((vec2(float(1), float(3))) / (float(4))), (b1) + ((vec2(float(1), float(3))) / (float(4)))));;
+    crossCountMat[2][0] = (crossCountMat[2][0]) + (pixelCross((a1) + ((vec2(float(2), float(0))) / (float(4))), (b1) + ((vec2(float(2), float(0))) / (float(4)))));;
+    crossCountMat[2][1] = (crossCountMat[2][1]) + (pixelCross((a1) + ((vec2(float(2), float(1))) / (float(4))), (b1) + ((vec2(float(2), float(1))) / (float(4)))));;
+    crossCountMat[2][2] = (crossCountMat[2][2]) + (pixelCross((a1) + ((vec2(float(2), float(2))) / (float(4))), (b1) + ((vec2(float(2), float(2))) / (float(4)))));;
+    crossCountMat[2][3] = (crossCountMat[2][3]) + (pixelCross((a1) + ((vec2(float(2), float(3))) / (float(4))), (b1) + ((vec2(float(2), float(3))) / (float(4)))));;
+    crossCountMat[3][0] = (crossCountMat[3][0]) + (pixelCross((a1) + ((vec2(float(3), float(0))) / (float(4))), (b1) + ((vec2(float(3), float(0))) / (float(4)))));;
+    crossCountMat[3][1] = (crossCountMat[3][1]) + (pixelCross((a1) + ((vec2(float(3), float(1))) / (float(4))), (b1) + ((vec2(float(3), float(1))) / (float(4)))));;
+    crossCountMat[3][2] = (crossCountMat[3][2]) + (pixelCross((a1) + ((vec2(float(3), float(2))) / (float(4))), (b1) + ((vec2(float(3), float(2))) / (float(4)))));;
+    crossCountMat[3][3] = (crossCountMat[3][3]) + (pixelCross((a1) + ((vec2(float(3), float(3))) / (float(4))), (b1) + ((vec2(float(3), float(3))) / (float(4)))));;
+  } else {
+    float area = pixelCover(a1, b1);
 (fillMask) += ((area) * (lineDir(a1, b1)));;
+  };
 }
 
 vec4 runPixel(
@@ -591,6 +669,7 @@ void main() {
   y0 = float(0);
   x1 = float(0);
   y1 = float(0);
+  crossCountMat = mat4(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
   mat = mat3(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
   gradientK = float(0);
   prevGradientK = float(0);

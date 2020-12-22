@@ -38,6 +38,17 @@ proc typeRename(t: string): string =
   of "Sampler2d": "sampler2D"
   else: t
 
+proc typeDefault(t: string): string =
+  case t
+  of "mat4": "mat4(0.0)"
+  of "mat3": "mat4(0.0)"
+  of "vec4": "vec4(0.0)"
+  of "vec3": "vec4(0.0)"
+  of "vec2": "vec2(0.0)"
+  of "float": "0.0"
+  of "int": "0"
+  else: quit("no typeDefault " & t)
+
 const glslGlobals = [
   "gl_Position", "gl_FragCoord",
 ]
@@ -116,7 +127,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     var procName = procRename(n[0].strVal)
     if procName in ignoreFunctions:
       return
-    if procName in "[]=":
+    if procName == "[]=":
       n[1].toCode(res)
       for i in 2 ..< n.len - 1:
         res.add "["
@@ -124,6 +135,15 @@ proc toCode(n: NimNode, res: var string, level = 0) =
         res.add "]"
       res.add " = "
       n[n.len - 1].toCode(res)
+      res.add ";"
+
+    elif procName == "[]":
+      n[1].toCode(res)
+      for i in 2 ..< n.len:
+        res.add "["
+        n[i].toCode(res)
+        res.add "]"
+
     elif procName in ["rgb=", "rgb", "xyz", "xy", "xy="]:
       if n[1].kind == nnkSym:
         n[1].toCode(res)
@@ -223,12 +243,16 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkIdentDefs:
     for j in countup(0, n.len - 1, 3):
-      res.add typeRename(n[j].getTypeInst().strVal)
+      let typeStr = typeRename(n[j].getTypeInst().strVal)
+      res.add typeStr
       res.add " "
       n[j].toCode(res)
       if n[j + 2].kind != nnkEmpty:
         res.add " = "
         n[j + 2].toCode(res)
+      else:
+        res.add " = "
+        res.add typeDefault(typeStr)
 
   of nnkReturnStmt:
     res.addIndent level
@@ -287,10 +311,8 @@ proc toCode(n: NimNode, res: var string, level = 0) =
   of nnkProcDef:
     quit "Nested proc definitions are not allowed."
 
-  # of nnkBracket:
-  #   res.add "[?]"
-
   of nnkBracketExpr:
+    echo show(n)
     n[0].toCode(res)
     res.add "["
     n[1].toCode(res)
@@ -559,6 +581,25 @@ proc `mod`*(a, b: Vec4): Vec4 =
   result.y = a.y mod b.y
   result.z = a.y mod b.z
   result.w = a.w mod b.w
+
+proc `zmod`*(a, b: float32): float32 =
+  return a - b * floor(a/b)
+
+proc `zmod`*(a, b: Vec2): Vec2 =
+  result.x = zmod(a.x, b.x)
+  result.y = zmod(a.y, b.y)
+
+proc `zmod`*(a, b: Vec3): Vec3 =
+  result.x = zmod(a.x, b.x)
+  result.y = zmod(a.y, b.y)
+  result.z = zmod(a.y, b.z)
+
+proc `zmod`*(a, b: Vec4): Vec4 =
+  result.x = zmod(a.x, b.x)
+  result.y = zmod(a.y, b.y)
+  result.z = zmod(a.y, b.z)
+  result.w = zmod(a.w, b.w)
+
 
 proc `*`*(m: Mat4, v: Vec4): Vec4 =
   vec4(m * v.xyz, 1.0)

@@ -23,7 +23,7 @@ const
   cmdBoundCheck*: float32 = 15
 
 var
-  crossCount: int = 0     # Number of line crosses (used to fill).
+  crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
   windingRule: int = 0    # 0 for EvenOdd and 1 for NonZero
   x0, y0, x1, y1: float32 # Control points of lines and curves.
   screen: Vec2            # Location of were we are on screen.
@@ -106,13 +106,61 @@ proc pixelCover(a0, b0: Vec2): float32 =
   area += ((1 - aI.x) + (1 - bI.x)) / 2 * (bI.y - aI.y)
   return area
 
+proc pixelCross(a0, b0: Vec2): float32 =
+  ## Turn a line into inc/dec/ignore of the crossCount.
+  let
+    a = a0
+    b = b0
+  if a.y == b.y:
+    # horizontal lines should not have effect
+    return 0.0
+  # Y check to see if we can be affected by the line:
+  if 0 >= min(a.y, b.y) and 0 < max(a.y, b.y):
+    var xIntersect: float32
+    if b.x != a.x:
+      # Find the xIntersect of the line.
+      let
+        m = (b.y - a.y) / (b.x - a.x)
+        bb = a.y - m * a.x
+      xIntersect = (0 - bb) / m
+    else:
+      # Line is vertical, xIntersect is at x.
+      xIntersect = a.x
+    if xIntersect < 0:
+      # Is the xIntersect is to the left, count cross.
+      return lineDir(a, b)
+  return 0.0
+
 proc line(a0, b0: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
   var
     a1 = (mat * vec3(a0, 1)).xy - screen
     b1 = (mat * vec3(b0, 1)).xy - screen
-  var area = pixelCover(a1, b1)
-  fillMask += area * lineDir(a1, b1)
+  if windingRule == 0:
+    # Event-odd
+    a1 += vec2(-1, -1)
+    b1 += vec2(-1, -1)
+    # DO I KNOW WHAT I AM DOING? NO...
+    crossCountMat[0, 0] = crossCountMat[0, 0] + pixelCross(a1 + vec2(0,0)/4, b1 + vec2(0,0)/4)
+    crossCountMat[0, 1] = crossCountMat[0, 1] + pixelCross(a1 + vec2(0,1)/4, b1 + vec2(0,1)/4)
+    crossCountMat[0, 2] = crossCountMat[0, 2] + pixelCross(a1 + vec2(0,2)/4, b1 + vec2(0,2)/4)
+    crossCountMat[0, 3] = crossCountMat[0, 3] + pixelCross(a1 + vec2(0,3)/4, b1 + vec2(0,3)/4)
+    crossCountMat[1, 0] = crossCountMat[1, 0] + pixelCross(a1 + vec2(1,0)/4, b1 + vec2(1,0)/4)
+    crossCountMat[1, 1] = crossCountMat[1, 1] + pixelCross(a1 + vec2(1,1)/4, b1 + vec2(1,1)/4)
+    crossCountMat[1, 2] = crossCountMat[1, 2] + pixelCross(a1 + vec2(1,2)/4, b1 + vec2(1,2)/4)
+    crossCountMat[1, 3] = crossCountMat[1, 3] + pixelCross(a1 + vec2(1,3)/4, b1 + vec2(1,3)/4)
+    crossCountMat[2, 0] = crossCountMat[2, 0] + pixelCross(a1 + vec2(2,0)/4, b1 + vec2(2,0)/4)
+    crossCountMat[2, 1] = crossCountMat[2, 1] + pixelCross(a1 + vec2(2,1)/4, b1 + vec2(2,1)/4)
+    crossCountMat[2, 2] = crossCountMat[2, 2] + pixelCross(a1 + vec2(2,2)/4, b1 + vec2(2,2)/4)
+    crossCountMat[2, 3] = crossCountMat[2, 3] + pixelCross(a1 + vec2(2,3)/4, b1 + vec2(2,3)/4)
+    crossCountMat[3, 0] = crossCountMat[3, 0] + pixelCross(a1 + vec2(3,0)/4, b1 + vec2(3,0)/4)
+    crossCountMat[3, 1] = crossCountMat[3, 1] + pixelCross(a1 + vec2(3,1)/4, b1 + vec2(3,1)/4)
+    crossCountMat[3, 2] = crossCountMat[3, 2] + pixelCross(a1 + vec2(3,2)/4, b1 + vec2(3,2)/4)
+    crossCountMat[3, 3] = crossCountMat[3, 3] + pixelCross(a1 + vec2(3,3)/4, b1 + vec2(3,3)/4)
+  else:
+    # Non-Zero
+    let area = pixelCover(a1, b1)
+    fillMask += area * lineDir(a1, b1)
 
 proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
@@ -178,7 +226,7 @@ proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
   if fillMask > 0:
-    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a) * fillMask)
+    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask))
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
@@ -190,12 +238,14 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
     if tile == 0:
       if uv.x > pos.x and uv.x < pos.x + size.x and
         uv.y > pos.y and uv.y < pos.y + size.y:
-        let textureColor = texture(textureAtlasSampler, uv)
+        var textureColor = texture(textureAtlasSampler, uv)
+        textureColor.w *= fillMask
         backdropColor = blendNormalFloats(backdropColor, textureColor)
     else:
-      uv = (uv - pos) mod size + pos
-      let textureColor = texture(textureAtlasSampler, uv)
-      backdropColor = blendNormalFloats(backdropColor, textureColor * fillMask)
+      uv = ((uv - pos) mod size) + pos
+      var textureColor = texture(textureAtlasSampler, uv)
+      textureColor.w *= fillMask
+      backdropColor = blendNormalFloats(backdropColor, textureColor)
 
 proc toLineSpace(at, to, point: Vec2): float32 =
   let
@@ -223,36 +273,36 @@ proc gradientStop(k, r, g, b, a: float32) =
     let gradientColor = vec4(r, g, b, a)
     if gradientK > prevGradientK and gradientK <= k:
       let betweenColors = (gradientK - prevGradientK) / (k - prevGradientK)
-      let colorG = mix(
+      var colorG = mix(
         prevGradientColor,
         gradientColor,
         betweenColors
       )
-      backdropColor = blendNormalFloats(backdropColor, colorG * fillMask)
+      colorG.w *= fillMask
+      backdropColor = blendNormalFloats(backdropColor, colorG)
     prevGradientK = k
     prevGradientColor = gradientColor
 
 proc startPath(rule: float32) =
   ## Clear the status of things and start a new path.
-  crossCount = 0
+  crossCountMat = mat4(0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0)
   fillMask = 0
   windingRule = rule.int
 
 proc draw() =
-  ## Use crossCount to apply color to backdrop.
-  # if windingRule == 0:
-  #   # Even-Odd
-  #   if crossCount mod 2 != 0:
-  #     fillMask = 1
-  #   else:
-  #     fillMask = 0
-  # else:
-  #   if crossCount != 0:
-  #     fillMask = 1
-  #   else:
-  #     fillMask = 0
-
-  fillMask = abs(fillMask).clamp(0, 1)
+  ## Apply the winding rule.
+  if windingRule == 0:
+    # Even-Odd winding rule:
+    fillMask = 0
+    let n = 4
+    for x in 0 ..< n:
+      for y in 0 ..< n:
+        if zmod(crossCountMat[x, y], 2.0) != 0.0:
+          fillMask += 1
+    fillMask = fillMask / (n * n).float32
+  else:
+    # Non-Zero winding rule:
+    fillMask = abs(fillMask).clamp(0, 1)
 
 proc endPath() =
   ## SVG style end path command.
@@ -428,6 +478,8 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   x1 = 0
   y1 = 0
 
+  crossCountMat = mat4(0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0)
+
   mat = mat3(0,0,0, 0,0,0, 0,0,0)
 
   gradientK = 0
@@ -438,6 +490,12 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
 
+  # if pixelCrossDelta > 0:
+  #   fragColor = vec4(1,0,0,1)
+  # if pixelCrossDelta < 0:
+  #   fragColor = vec4(0,1,0,1)
+
+  #fragColor.x = debug.x
   #print fragColor
 
   #fragColor.x = gl_FragCoord.x - floor(gl_FragCoord.x)
