@@ -63,6 +63,7 @@ proc pixelCover(a0, b0: Vec2): float32 =
         bI = vec2(1, y.clamp(0, 1))
 
   doAssert aI.y <= bI.y
+  # (side1 + side2) / 2 * height
   area += ((1 - aI.x) + (1 - bI.x)) / 2 * (bI.y - aI.y)
 
   return area
@@ -151,7 +152,7 @@ doAssert testCase(vec2(200, 0), vec2(10, 200)) ~= 0.450
 
 var r = initRand(2020)
 
-for i in 0 .. 2300:
+for i in 0 .. 10000:
   discard testCase(
     vec2(r.rand(0.0 .. 200.0), r.rand(0.0 .. 200.0)),
     vec2(r.rand(0.0 .. 200.0), r.rand(0.0 .. 200.0)))

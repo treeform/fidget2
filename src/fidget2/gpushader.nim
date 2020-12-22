@@ -1,4 +1,4 @@
-import vmath, fidget2/glsl
+import vmath, fidget2/glsl, print
 
 var dataBuffer*: Uniform[SamplerBuffer]
 var textureAtlasSampler*: Uniform[Sampler2d]
@@ -35,17 +35,7 @@ var
   prevGradientK: float32
   prevGradientColor: Vec4
 
-  needsAA: int = 0
-
-  # pixelCrossA: float32
-  # pixelCrossADir: int
-  # pixelCrossB: float32
-  # pixelCrossBDir: int
-  # pixelCrossCount: int = 0
-
-import print
-
-proc lineDir(a, b: Vec2): int =
+proc lineDir(a, b: Vec2): float32 =
   if a.y - b.y > 0:
     # Count up if line is going up.
     return 1
@@ -53,61 +43,87 @@ proc lineDir(a, b: Vec2): int =
     # Count down if line is going down.
     return -1
 
+proc pixelCover(a0, b0: Vec2): float32 =
+  ## Returns the amount of area a given segment sweeps to the right
+  ## in a [0,0 to 1,1] box.
+  var
+    a = a0
+    b = b0
+    aI: Vec2
+    bI: Vec2
+    area: float32
+
+  # Sort A on top.
+  if a.y > b.y:
+    let tmp = a
+    a = b
+    b = tmp
+
+  if (b.y < 0 or a.y > 1) or # Above or bellow, no effect.
+    (a.x > 1 and b.x > 1) or # To the right, no effect.
+    (a.y == b.y): # Horizontal line, no effect.
+    return 0
+
+  elif (a.x < 0 and b.x < 0) or # Both to the left.
+    (a.x == b.x): # Vertical line
+    # Area of the rectangle:
+    return (1 - clamp(a.x, 0, 1)) * (min(b.y, 1) - max(a.y, 0))
+
+  else:
+    # y = mm*x + bb
+    let
+      mm: float32 = (b.y - a.y) / (b.x - a.x)
+      bb: float32 = a.y - mm * a.x
+
+    if a.x >= 0 and a.x <= 1 and a.y >= 0 and a.y <= 1:
+      # A is in pixel bounds.
+      aI = a
+    else:
+      aI = vec2((0 - bb) / mm, 0)
+      if aI.x < 0:
+        let y = mm * 0 + bb
+        # Area of the extra rectangle.
+        area += (min(bb, 1) - max(a.y, 0)).clamp(0, 1)
+        aI = vec2(0, y.clamp(0, 1))
+      elif aI.x > 1:
+        let y = mm * 1 + bb
+        aI = vec2(1, y.clamp(0, 1))
+
+    if b.x >= 0 and b.x <= 1 and b.y >= 0 and b.y <= 1:
+      # B is in pixel bounds.
+      bI = b
+    else:
+      bI = vec2((1 - bb) / mm, 1)
+      if bI.x < 0:
+        let y = mm * 0 + bb
+        # Area of the extra rectangle.
+        area += (min(b.y, 1) - max(bb, 0)).clamp(0, 1)
+        bI = vec2(0, y.clamp(0, 1))
+      elif bI.x > 1:
+        let y = mm * 1 + bb
+        bI = vec2(1, y.clamp(0, 1))
+
+  #doAssert aI.y <= bI.y
+  area += ((1 - aI.x) + (1 - bI.x)) / 2 * (bI.y - aI.y)
+  return area
+
 proc line(a0, b0: Vec2) =
   ## Turn a line into inc/dec/ignore of the crossCount.
+  var
+    a1 = (mat * vec3(a0, 1)).xy - screen
+    b1 = (mat * vec3(b0, 1)).xy - screen
 
-  let
-    a = (mat * vec3(a0, 1)).xy
-    b = (mat * vec3(b0, 1)).xy
+  var area = pixelCover(a1, b1)
 
-  if a.y == b.y:
-    # horizontal lines should not have effect
-    return
-  # Y check to see if we can be affected by the line:
-  if screen.y >= min(a.y, b.y) and screen.y < max(a.y, b.y):
-    var xIntersect: float32
-    if b.x != a.x:
-      # Find the xIntersect of the line.
-      let
-        m = (b.y - a.y) / (b.x - a.x)
-        bb = a.y - m * a.x
-      xIntersect = (screen.y - bb) / m
-    else:
-      # Line is vertical, xIntersect is at x.
-      xIntersect = a.x
-    if xIntersect < screen.x:
-      # Is the xIntersect is to the left, count cross.
-      crossCount += lineDir(a, b)
-      # if a.y - b.y > 0:
-      #   # Count up if line is going up.
-      #   crossCount += 1
-      # else:
-      #   # Count down if line is going down.
-      #   crossCount -= 1
+  area = area
 
-    #print xIntersect, screen.x
+  #print a0, b0
+  #print lineDir(a1, b1)
+  #print area
 
-    if xIntersect >= screen.x and xIntersect < screen.x + 1:
-      needsAA = 1
+  #print windingRule
 
-    if a.y >= screen.y and a.y < screen.y + 1:
-      needsAA = 2
-
-    if b.y >= screen.y and b.y < screen.y + 1:
-      needsAA = 2
-
-    # does the cross happen in current pixel
-    # if xIntersect >= screen.x and xIntersect < screen.x + 1:
-    #   if pixelCrossCount == 0:
-    #     pixelCrossA = xIntersect - screen.x
-    #     pixelCrossADir = lineDir(a, b)
-    #   if pixelCrossCount == 1:
-    #     pixelCrossB = xIntersect - screen.x
-    #     pixelCrossBDir = lineDir(a, b)
-    #   pixelCrossCount += 1
-      #print pixelCrossA, pixelCrossB, pixelCrossCount
-      #partialFillMin = min(partialFillMin, 1 - (xIntersect - (screen.x - 1)))
-      #partialFillMax = max(partialFillMin, 1 - (xIntersect - (screen.x - 1)))
+  fillMask += area * lineDir(a1, b1)
 
 proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
@@ -121,7 +137,8 @@ proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
 proc bezier(A, B, C, D: Vec2) =
   ## Turn a cubic curve into N lines.
   var p = A
-  let discretization = 10
+  let discretization = 20
+
   for t in 1 .. discretization:
     let
       q = interpolate(A, B, C, D, float32(t)/float32(discretization))
@@ -175,6 +192,7 @@ proc solidFill(r, g, b, a: float32) =
   if fillMask > 0:
     # backdropColor = vec4(r, g, b, a)
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a) * fillMask)
+    #print backdropColor
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
@@ -230,6 +248,7 @@ proc gradientStop(k, r, g, b, a: float32) =
 
 proc startPath(rule: float32) =
   ## Clear the status of things and start a new path.
+  #print "start path ...."
   crossCount = 0
   fillMask = 0
   windingRule = rule.int
@@ -237,57 +256,20 @@ proc startPath(rule: float32) =
 
 proc draw() =
   ## Use crossCount to apply color to backdrop.
-  # var fillAmount: float32 = 0
-  # if pixelCrossCount == 1:
-  #   fillAmount = 1 - pixelCrossA
-  # elif pixelCrossCount >= 2:
-  #   if pixelCrossA > pixelCrossB:
-  #     let tmp = pixelCrossA
-  #     pixelCrossA = pixelCrossB
-  #     pixelCrossB = tmp
-  #     let tmp2 = pixelCrossBDir
-  #     pixelCrossADir = pixelCrossBDir
-  #     pixelCrossBDir = tmp2
+  # if windingRule == 0:
+  #   # Even-Odd
+  #   if crossCount mod 2 != 0:
+  #     fillMask = 1
+  #   else:
+  #     fillMask = 0
+  # else:
+  #   if crossCount != 0:
+  #     fillMask = 1
+  #   else:
+  #     fillMask = 0
 
-  #   fillAmount = pixelCrossB - pixelCrossA
-
-  if windingRule == 0:
-    # Even-Odd
-    if crossCount mod 2 != 0:
-      fillMask = 1 #- fillAmount
-    else:
-      fillMask = 0 #fillAmount
-  else:
-    # Non-zero
-    # if pixelCrossCount == 0:
-    #   if crossCount != 0:
-    #     fillMask = 1
-    #   else:
-    #     fillMask = 0
-    # elif pixelCrossCount == 1:
-    #   if crossCount + pixelCrossADir == 0:
-    #     if pixelCrossADir == 1:
-    #       fillMask = 1 - pixelCrossA
-    #     else:
-    #       fillMask = pixelCrossA
-    #   else:
-    #     if crossCount == 0:
-    #       if pixelCrossADir == 1:
-    #         fillMask = 1 - pixelCrossA
-    #       else:
-    #         fillMask = pixelCrossA
-    #     else:
-    #       fillMask = 0
-    # elif pixelCrossCount >= 2:
-    #   if crossCount != 0:
-    #     fillMask = 1
-    #   else:
-    #     fillMask = 0
-
-    if crossCount != 0:
-      fillMask = 1
-    else:
-      fillMask = 0
+  fillMask = abs(fillMask).clamp(0, 1)
+  #print "draw... ", fillMask
 
 proc endPath() =
   ## SVG style end path command.
@@ -326,107 +308,107 @@ proc runCommands() =
   ## Runs a little command interpreter.
   var i = 0
   while true:
-    let command = texelFetch(dataBuffer, i)
+    let command = texelFetch(dataBuffer, i).x
     if command == cmdExit: break
     elif command == cmdStartPath:
-      startPath(texelFetch(dataBuffer, i + 1))
+      startPath(texelFetch(dataBuffer, i + 1).x)
       i += 1
     elif command == cmdEndPath: endPath()
     elif command == cmdSolidFill:
       solidFill(
-        texelFetch(dataBuffer, i + 1),
-        texelFetch(dataBuffer, i + 2),
-        texelFetch(dataBuffer, i + 3),
-        texelFetch(dataBuffer, i + 4)
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x,
+        texelFetch(dataBuffer, i + 3).x,
+        texelFetch(dataBuffer, i + 4).x
       )
       i += 4
     elif command == cmdApplyOpacity:
-      let opacity = texelFetch(dataBuffer, i + 1)
+      let opacity = texelFetch(dataBuffer, i + 1).x
       backdropColor = backdropColor * opacity
       i += 1
     elif command == cmdTextureFill:
-      tMat[0, 0] = texelFetch(dataBuffer, i + 1)
-      tMat[0, 1] = texelFetch(dataBuffer, i + 2)
+      tMat[0, 0] = texelFetch(dataBuffer, i + 1).x
+      tMat[0, 1] = texelFetch(dataBuffer, i + 2).x
       tMat[0, 2] = 0
-      tMat[1, 0] = texelFetch(dataBuffer, i + 3)
-      tMat[1, 1] = texelFetch(dataBuffer, i + 4)
+      tMat[1, 0] = texelFetch(dataBuffer, i + 3).x
+      tMat[1, 1] = texelFetch(dataBuffer, i + 4).x
       tMat[1, 2] = 0
-      tMat[2, 0] = texelFetch(dataBuffer, i + 5)
-      tMat[2, 1] = texelFetch(dataBuffer, i + 6)
+      tMat[2, 0] = texelFetch(dataBuffer, i + 5).x
+      tMat[2, 1] = texelFetch(dataBuffer, i + 6).x
       tMat[2, 2] = 1
-      let tile = texelFetch(dataBuffer, i + 7)
+      let tile = texelFetch(dataBuffer, i + 7).x
       var pos: Vec2
-      pos.x = texelFetch(dataBuffer, i + 8)
-      pos.y = texelFetch(dataBuffer, i + 9)
+      pos.x = texelFetch(dataBuffer, i + 8).x
+      pos.y = texelFetch(dataBuffer, i + 9).x
       var size: Vec2
-      size.x = texelFetch(dataBuffer, i + 10)
-      size.y = texelFetch(dataBuffer, i + 11)
+      size.x = texelFetch(dataBuffer, i + 10).x
+      size.y = texelFetch(dataBuffer, i + 11).x
       textureFill(tMat, tile, pos, size)
       i += 11
     elif command == cmdGradientLinear:
       var at, to: Vec2
-      at.x = texelFetch(dataBuffer, i + 1)
-      at.y = texelFetch(dataBuffer, i + 2)
-      to.x = texelFetch(dataBuffer, i + 3)
-      to.y = texelFetch(dataBuffer, i + 4)
+      at.x = texelFetch(dataBuffer, i + 1).x
+      at.y = texelFetch(dataBuffer, i + 2).x
+      to.x = texelFetch(dataBuffer, i + 3).x
+      to.y = texelFetch(dataBuffer, i + 4).x
       gradientLinear(at, to)
       i += 4
     elif command == cmdGradientRadial:
       var at, to: Vec2
-      at.x = texelFetch(dataBuffer, i + 1)
-      at.y = texelFetch(dataBuffer, i + 2)
-      to.x = texelFetch(dataBuffer, i + 3)
-      to.y = texelFetch(dataBuffer, i + 4)
+      at.x = texelFetch(dataBuffer, i + 1).x
+      at.y = texelFetch(dataBuffer, i + 2).x
+      to.x = texelFetch(dataBuffer, i + 3).x
+      to.y = texelFetch(dataBuffer, i + 4).x
       gradientRadial(at, to)
       i += 4
     elif command == cmdGradientStop:
       gradientStop(
-        texelFetch(dataBuffer, i + 1),
-        texelFetch(dataBuffer, i + 2),
-        texelFetch(dataBuffer, i + 3),
-        texelFetch(dataBuffer, i + 4),
-        texelFetch(dataBuffer, i + 5)
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x,
+        texelFetch(dataBuffer, i + 3).x,
+        texelFetch(dataBuffer, i + 4).x,
+        texelFetch(dataBuffer, i + 5).x
       )
       i += 5
     elif command == cmdSetMat:
-      mat[0, 0] = texelFetch(dataBuffer, i + 1)
-      mat[0, 1] = texelFetch(dataBuffer, i + 2)
+      mat[0, 0] = texelFetch(dataBuffer, i + 1).x
+      mat[0, 1] = texelFetch(dataBuffer, i + 2).x
       mat[0, 2] = 0
-      mat[1, 0] = texelFetch(dataBuffer, i + 3)
-      mat[1, 1] = texelFetch(dataBuffer, i + 4)
+      mat[1, 0] = texelFetch(dataBuffer, i + 3).x
+      mat[1, 1] = texelFetch(dataBuffer, i + 4).x
       mat[1, 2] = 0
-      mat[2, 0] = texelFetch(dataBuffer, i + 5)
-      mat[2, 1] = texelFetch(dataBuffer, i + 6)
+      mat[2, 0] = texelFetch(dataBuffer, i + 5).x
+      mat[2, 1] = texelFetch(dataBuffer, i + 6).x
       mat[2, 2] = 1
       i += 6
     elif command == cmdM:
       M(
-        texelFetch(dataBuffer, i + 1),
-        texelFetch(dataBuffer, i + 2)
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x
       )
       i += 2
     elif command == cmdL:
       L(
-        texelFetch(dataBuffer, i + 1),
-        texelFetch(dataBuffer, i + 2)
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x
       )
       i += 2
     elif command == cmdC:
       C(
-        texelFetch(dataBuffer, i + 1),
-        texelFetch(dataBuffer, i + 2),
-        texelFetch(dataBuffer, i + 3),
-        texelFetch(dataBuffer, i + 4),
-        texelFetch(dataBuffer, i + 5),
-        texelFetch(dataBuffer, i + 6)
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x,
+        texelFetch(dataBuffer, i + 3).x,
+        texelFetch(dataBuffer, i + 4).x,
+        texelFetch(dataBuffer, i + 5).x,
+        texelFetch(dataBuffer, i + 6).x
       )
       i += 6
     elif command == cmdQ:
       Q(
-        texelFetch(dataBuffer, i + 1),
-        texelFetch(dataBuffer, i + 2),
-        texelFetch(dataBuffer, i + 3),
-        texelFetch(dataBuffer, i + 4),
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x,
+        texelFetch(dataBuffer, i + 3).x,
+        texelFetch(dataBuffer, i + 4).x,
       )
       i += 4
     elif command == cmdz: z()
@@ -435,20 +417,17 @@ proc runCommands() =
       var
         minP: Vec2
         maxP: Vec2
-      minP.x = texelFetch(dataBuffer, i + 1)
-      minP.y = texelFetch(dataBuffer, i + 2)
-      maxP.x = texelFetch(dataBuffer, i + 3)
-      maxP.y = texelFetch(dataBuffer, i + 4)
-      #minP = (mat * vec3(minP, 1)).xy
-      #maxP = (mat * vec3(maxP, 1)).xy
-      let label = texelFetch(dataBuffer, i + 5).int
+      minP.x = texelFetch(dataBuffer, i + 1).x
+      minP.y = texelFetch(dataBuffer, i + 2).x
+      maxP.x = texelFetch(dataBuffer, i + 3).x
+      maxP.y = texelFetch(dataBuffer, i + 4).x
+      let label = texelFetch(dataBuffer, i + 5).x.int
       i += 5
 
       let screenInv = (mat.inverse() * vec3(screen, 1)).xy
       if screenInv.x < minP.x or screenInv.x > maxP.x or
         screenInv.y < minP.y or screenInv.y > maxP.y:
           i = label - 1
-          #discard
 
     i += 1
 
@@ -462,35 +441,12 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   ## Main entry point to this huge shader.
 
   let bias = 1E-4
-  needsAA = 0
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
 
-  if needsAA != 0:
-    # NxN SCAN GRID
+  #print fragColor
 
+  #fragColor.x = gl_FragCoord.x - floor(gl_FragCoord.x)
 
-    let steps = 4
-    let step = 1.0 / (steps + 1).float32
-    fragColor = vec4(0)
-    for x in 0 ..< steps:
-      for y in 0 ..< steps:
-        let offset2 = vec2(step/2 + y.float32 * step, step/2 + x.float32 * step) + offset
-        fragColor += runPixel(gl_FragCoord.xy + offset2) / (steps * steps).float32
-
-    #fragColor = vec4(1, 0, 0, 1)
-
-  # SCAN LINES
-  # let steps = 4
-  # let step = 1.0 / (steps + 1).float32
-  # for y in 0 ..< steps:
-  #   let offset = vec2(bias - 0.5, step/2 + y.float32 * step + bias - 0.5)
-  #   fragColor += runPixel(gl_FragCoord.xy + offset) / steps.float32
-
-  # # NxN SCAN GRID
-  # let steps = 4
-  # let step = 1.0 / (steps + 1).float32
-  # for x in 0 ..< steps:
-  #   for y in 0 ..< steps:
-  #     let offset = vec2(y.float32 * step, x.float32 * step) - vec2(0.4, 0.4)
-  #     fragColor += runPixel(gl_FragCoord.xy + offset) / (steps * steps).float32
+  #fragColor.w = 1
+  #dataBuffer

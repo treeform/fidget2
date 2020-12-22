@@ -570,8 +570,8 @@ proc `xy=`*(a: var Vec4, b: Vec2) =
 proc `xy`*(a: Vec4): Vec2 =
   vec2(a.x, a.y)
 
-proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): float32 =
-  buffer.data[index]
+proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): Vec4 =
+  vec4(buffer.data[index], 0, 0, 0)
 
 proc texture*(buffer: Uniform[Sampler2D], pos: Vec2): Vec4 =
   buffer.image.getRgbaSmooth(

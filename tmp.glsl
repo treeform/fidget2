@@ -1,8 +1,7 @@
-#version 300 es
+#version 400
 precision highp float;
 // from svgMain
 
-int needsAA = 0;
 float x1;
 int windingRule = 0;
 uniform sampler2D textureAtlasSampler;
@@ -106,7 +105,7 @@ vec2 interpolate(
   float t
 ) ;
 
-int lineDir(
+float lineDir(
   vec2 a,
   vec2 b
 ) ;
@@ -121,6 +120,11 @@ void bezier(
 void M(
   float x,
   float y
+) ;
+
+float pixelCover(
+  vec2 a0,
+  vec2 b0
 ) ;
 
 void endPath(
@@ -161,19 +165,7 @@ void gradientRadial(
 void draw(
 ) {
 "Use crossCount to apply color to backdrop.";
-  if ((windingRule) == (0)) {
-        if (! (((crossCount) % (2)) == (0))) {
-            fillMask = float(1);
-    } else {
-            fillMask = float(0);
-    };
-  } else {
-        if (! ((crossCount) == (0))) {
-            fillMask = float(1);
-    } else {
-            fillMask = float(0);
-    };
-  };
+  fillMask = clamp(abs(fillMask), float(0), float(1));
 }
 
 void solidFill(
@@ -307,94 +299,94 @@ void runCommands(
 "Runs a little command interpreter.";
   int i = 0;
   while(true) {
-    float command = texelFetch(dataBuffer, i);
+    float command = texelFetch(dataBuffer, i).x;
     if ((command) == (0.0)) {
             break;
     } else if ((command) == (1.0)) {
-      startPath(texelFetch(dataBuffer, (i) + (1)));
+      startPath(texelFetch(dataBuffer, (i) + (1)).x);
 (i) += (1);;
     } else if ((command) == (2.0)) {
       endPath();
     } else if ((command) == (4.0)) {
-      solidFill(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
+      solidFill(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x);
 (i) += (4);;
     } else if ((command) == (5.0)) {
-      float opacity = texelFetch(dataBuffer, (i) + (1));
+      float opacity = texelFetch(dataBuffer, (i) + (1)).x;
       backdropColor = (backdropColor) * (opacity);
 (i) += (1);;
     } else if ((command) == (6.0)) {
-      tMat[0][0] = texelFetch(dataBuffer, (i) + (1));
-      tMat[0][1] = texelFetch(dataBuffer, (i) + (2));
+      tMat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;
+      tMat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;
       tMat[0][2] = float(0);
-      tMat[1][0] = texelFetch(dataBuffer, (i) + (3));
-      tMat[1][1] = texelFetch(dataBuffer, (i) + (4));
+      tMat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;
+      tMat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;
       tMat[1][2] = float(0);
-      tMat[2][0] = texelFetch(dataBuffer, (i) + (5));
-      tMat[2][1] = texelFetch(dataBuffer, (i) + (6));
+      tMat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;
+      tMat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;
       tMat[2][2] = float(1);
-      float tile = texelFetch(dataBuffer, (i) + (7));
+      float tile = texelFetch(dataBuffer, (i) + (7)).x;
       vec2 pos;
-      pos.x = texelFetch(dataBuffer, (i) + (8));
-      pos.y = texelFetch(dataBuffer, (i) + (9));
+      pos.x = texelFetch(dataBuffer, (i) + (8)).x;
+      pos.y = texelFetch(dataBuffer, (i) + (9)).x;
       vec2 size;
-      size.x = texelFetch(dataBuffer, (i) + (10));
-      size.y = texelFetch(dataBuffer, (i) + (11));
+      size.x = texelFetch(dataBuffer, (i) + (10)).x;
+      size.y = texelFetch(dataBuffer, (i) + (11)).x;
       textureFill(tMat, tile, pos, size);
 (i) += (11);;
     } else if ((command) == (7.0)) {
       vec2 at;
       vec2 to;
-      at.x = texelFetch(dataBuffer, (i) + (1));
-      at.y = texelFetch(dataBuffer, (i) + (2));
-      to.x = texelFetch(dataBuffer, (i) + (3));
-      to.y = texelFetch(dataBuffer, (i) + (4));
+      at.x = texelFetch(dataBuffer, (i) + (1)).x;
+      at.y = texelFetch(dataBuffer, (i) + (2)).x;
+      to.x = texelFetch(dataBuffer, (i) + (3)).x;
+      to.y = texelFetch(dataBuffer, (i) + (4)).x;
       gradientLinear(at, to);
 (i) += (4);;
     } else if ((command) == (8.0)) {
       vec2 at;
       vec2 to;
-      at.x = texelFetch(dataBuffer, (i) + (1));
-      at.y = texelFetch(dataBuffer, (i) + (2));
-      to.x = texelFetch(dataBuffer, (i) + (3));
-      to.y = texelFetch(dataBuffer, (i) + (4));
+      at.x = texelFetch(dataBuffer, (i) + (1)).x;
+      at.y = texelFetch(dataBuffer, (i) + (2)).x;
+      to.x = texelFetch(dataBuffer, (i) + (3)).x;
+      to.y = texelFetch(dataBuffer, (i) + (4)).x;
       gradientRadial(at, to);
 (i) += (4);;
     } else if ((command) == (9.0)) {
-      gradientStop(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)));
+      gradientStop(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x, texelFetch(dataBuffer, (i) + (5)).x);
 (i) += (5);;
     } else if ((command) == (3.0)) {
-      mat[0][0] = texelFetch(dataBuffer, (i) + (1));
-      mat[0][1] = texelFetch(dataBuffer, (i) + (2));
+      mat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;
+      mat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;
       mat[0][2] = float(0);
-      mat[1][0] = texelFetch(dataBuffer, (i) + (3));
-      mat[1][1] = texelFetch(dataBuffer, (i) + (4));
+      mat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;
+      mat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;
       mat[1][2] = float(0);
-      mat[2][0] = texelFetch(dataBuffer, (i) + (5));
-      mat[2][1] = texelFetch(dataBuffer, (i) + (6));
+      mat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;
+      mat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;
       mat[2][2] = float(1);
 (i) += (6);;
     } else if ((command) == (10.0)) {
-      M(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
+      M(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x);
 (i) += (2);;
     } else if ((command) == (11.0)) {
-      L(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)));
+      L(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x);
 (i) += (2);;
     } else if ((command) == (12.0)) {
-      C(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)), texelFetch(dataBuffer, (i) + (5)), texelFetch(dataBuffer, (i) + (6)));
+      C(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x, texelFetch(dataBuffer, (i) + (5)).x, texelFetch(dataBuffer, (i) + (6)).x);
 (i) += (6);;
     } else if ((command) == (13.0)) {
-      Q(texelFetch(dataBuffer, (i) + (1)), texelFetch(dataBuffer, (i) + (2)), texelFetch(dataBuffer, (i) + (3)), texelFetch(dataBuffer, (i) + (4)));
+      Q(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x);
 (i) += (4);;
     } else if ((command) == (14.0)) {
       z();
     } else if ((command) == (15.0)) {
       vec2 minP;
       vec2 maxP;
-      minP.x = texelFetch(dataBuffer, (i) + (1));
-      minP.y = texelFetch(dataBuffer, (i) + (2));
-      maxP.x = texelFetch(dataBuffer, (i) + (3));
-      maxP.y = texelFetch(dataBuffer, (i) + (4));
-      int label = int(texelFetch(dataBuffer, (i) + (5)));
+      minP.x = texelFetch(dataBuffer, (i) + (1)).x;
+      minP.y = texelFetch(dataBuffer, (i) + (2)).x;
+      maxP.x = texelFetch(dataBuffer, (i) + (3)).x;
+      maxP.y = texelFetch(dataBuffer, (i) + (4)).x;
+      int label = int(texelFetch(dataBuffer, (i) + (5)).x);
 (i) += (5);;
       vec2 screenInv = ((inverse(mat)) * (vec3(screen, float(1)))).xy;
       if (((((screenInv.x) < (minP.x)) || ((maxP.x) < (screenInv.x))) || ((screenInv.y) < (minP.y))) || ((maxP.y) < (screenInv.y))) {
@@ -442,14 +434,14 @@ vec2 interpolate(
   return ((t) * (((t) * (((t) * (A)) + (B))) + (C))) + (D);
 }
 
-int lineDir(
+float lineDir(
   vec2 a,
   vec2 b
 ) {
     if ((float(0)) < ((a.y) - (b.y))) {
-        return 1;
+        return float(1);
   } else {
-        return -1;
+        return float(-1);
   };
 }
 
@@ -461,7 +453,7 @@ void bezier(
 ) {
 "Turn a cubic curve into N lines.";
   vec2 p = A;
-  int discretization = 10;
+  int discretization = 20;
   for(int t = 1; t <= discretization; t++) {
     vec2 q = interpolate(A, B, C, D, (float(t)) / (float(discretization)));
     line(p, q);
@@ -478,6 +470,61 @@ void M(
   x0 = x;
   y1 = y;
   y0 = y;
+}
+
+float pixelCover(
+  vec2 a0,
+  vec2 b0
+) {
+"Returns the amount of area a given segment sweeps to the right\nin a [0,0 to 1,1] box.";
+  vec2 a = a0;
+  vec2 b = b0;
+  vec2 aI;
+  vec2 bI;
+  float area;
+  float e = 0.0;
+  float ee = -0.5;
+  if ((b.y) < (a.y)) {
+    vec2 tmp = a;
+    a = b;
+    b = tmp;
+  };
+  if (((((float(b.y)) < ((float(0)) + (e))) || (((float(1)) - (e)) < (float(a.y)))) || ((((float(1)) - (e)) < (float(a.x))) && (((float(1)) - (e)) < (float(b.x))))) || ((a.y) == (b.y))) {
+        return float(0);
+  } else if ((((float(a.x)) < ((float(0)) + (e))) && ((float(b.x)) < ((float(0)) + (e)))) || ((a.x) == (b.x))) {
+        return ((float(1)) - (clamp(a.x, float(0), float(1)))) * ((min(b.y, float(1))) - (max(a.y, float(0))));
+  } else {
+    float mm = ((b.y) - (a.y)) / ((b.x) - (a.x));
+    float bb = (a.y) - ((mm) * (a.x));
+    if ((((((float(0)) + (e)) <= (float(a.x))) && ((float(a.x)) <= ((float(1)) - (e)))) && (((float(0)) + (e)) <= (float(a.y)))) && ((float(a.y)) <= ((float(1)) - (e)))) {
+            aI = a;
+    } else {
+      aI = vec2(((float(0)) - (bb)) / (mm), float(0));
+      if ((float(aI.x)) < ((float(0)) + (e))) {
+        float y = ((mm) * (float(0))) + (bb);
+(area) += (float(clamp((min(float(bb), (float(1)) - (ee))) - (max(float(a.y), (float(0)) + (ee))), float(0), float(1))));;
+        aI = vec2(float((float(0)) + (ee)), clamp(y, float(0), float(1)));
+      } else if (((float(1)) - (e)) < (float(aI.x))) {
+        float y = ((mm) * (float(1))) + (bb);
+        aI = vec2(float((float(1)) - (ee)), clamp(y, float(0), float(1)));
+      };
+    };
+    if ((((((float(0)) + (e)) <= (float(b.x))) && ((float(b.x)) <= ((float(1)) - (e)))) && (((float(0)) + (e)) <= (float(b.y)))) && ((float(b.y)) <= ((float(1)) - (e)))) {
+            bI = b;
+    } else {
+      bI = vec2(((float(1)) - (bb)) / (mm), float(1));
+      if ((float(bI.x)) < ((float(0)) + (e))) {
+        float y = ((mm) * (float(0))) + (bb);
+(area) += (float(clamp((min(float(b.y), (float(1)) - (ee))) - (max(float(bb), (float(0)) + (ee))), float(0), float(1))));;
+        bI = vec2(float((float(0)) + (ee)), clamp(y, float(0), float(1)));
+      } else if (((float(1)) - (e)) < (float(bI.x))) {
+        float y = ((mm) * (float(1))) + (bb);
+        bI = vec2(float((float(1)) - (ee)), clamp(y, float(0), float(1)));
+      };
+    };
+  };
+(area) += (((((float(1)) - (aI.x)) + ((float(1)) - (bI.x))) / (float(2))) * ((bI.y) - (aI.y)));;
+  return area;
 }
 
 void endPath(
@@ -513,33 +560,11 @@ void line(
   vec2 b0
 ) {
 "Turn a line into inc/dec/ignore of the crossCount.";
-  vec2 a = ((mat) * (vec3(a0, float(1)))).xy;
-  vec2 b = ((mat) * (vec3(b0, float(1)))).xy;
-  if ((a.y) == (b.y)) {
-        return ;
-  };
-  if (((min(a.y, b.y)) <= (screen.y)) && ((screen.y) < (max(a.y, b.y)))) {
-    float xIntersect;
-    if (! ((b.x) == (a.x))) {
-      float m = ((b.y) - (a.y)) / ((b.x) - (a.x));
-      float bb = (a.y) - ((m) * (a.x));
-      xIntersect = ((screen.y) - (bb)) / (m);
-    } else {
-            xIntersect = a.x;
-    };
-    if ((xIntersect) < (screen.x)) {
-      (crossCount) += (lineDir(a, b));;
-    };
-    if (((screen.x) <= (xIntersect)) && ((xIntersect) < ((screen.x) + (float(1))))) {
-            needsAA = 1;
-    };
-    if (((screen.y) <= (a.y)) && ((a.y) < ((screen.y) + (float(1))))) {
-            needsAA = 2;
-    };
-    if (((screen.y) <= (b.y)) && ((b.y) < ((screen.y) + (float(1))))) {
-            needsAA = 2;
-    };
-  };
+  vec2 a1 = (((mat) * (vec3(a0, float(1)))).xy) - (screen);
+  vec2 b1 = (((mat) * (vec3(b0, float(1)))).xy) - (screen);
+  float area = pixelCover(a1, b1);
+  area = area;
+(fillMask) += ((area) * (lineDir(a1, b1)));;
 }
 
 vec4 runPixel(
@@ -566,17 +591,6 @@ out vec4 fragColor;
 void main() {
 "Main entry point to this huge shader.";
   float bias = 0.0001;
-  needsAA = 0;
   vec2 offset = vec2(float((bias) - (0.5)), float((bias) - (0.5)));
   fragColor = runPixel((gl_FragCoord.xy) + (offset));
-  if (! ((needsAA) == (0))) {
-    int steps = 4;
-    float step = (1.0) / (float(float((steps) + (1))));
-    fragColor = vec4(float(0));
-    for(int x = 0; x < steps; x++) {
-      for(int y = 0; y < steps; y++) {
-        vec2 offset2 = (vec2(float(((step) / (float(2))) + ((float(float(y))) * (step))), float(((step) / (float(2))) + ((float(float(x))) * (step))))) + (offset);
-(fragColor) += ((runPixel((gl_FragCoord.xy) + (offset2))) / (float((steps) * (steps))));;
-      }    };
-  };
 }
