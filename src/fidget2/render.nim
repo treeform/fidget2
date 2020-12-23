@@ -366,7 +366,7 @@ proc computePixelBox*(node: Node) =
   if node.pixelBox.h.fractional > 0:
     node.pixelBox.h = node.pixelBox.h.ceil
 
-proc drawCompleteFrame*(node: Node): Image =
+proc drawCompleteCpuFrame*(node: Node): Image =
   ## Draws full frame that is ready to be displayed.
 
   checkDirty(node)

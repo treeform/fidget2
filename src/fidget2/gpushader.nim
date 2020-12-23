@@ -1,5 +1,9 @@
 import vmath, fidget2/glsl, print
 
+proc basic2dVert*(vertexPox: Vec2, gl_Position: var Vec4) =
+  ## Simplest possible shader to put vertex on screen.
+  gl_Position.xy = vertexPox
+
 var dataBuffer*: Uniform[SamplerBuffer]
 var textureAtlasSampler*: Uniform[Sampler2d]
 
@@ -7,6 +11,8 @@ const
   ## Command "enums"
   cmdExit*: float32 = 0
   cmdStartPath*: float32 = 1
+  kEvenOdd*: float32 = 0
+  kNonZero*: float32 = 1
   cmdEndPath*: float32 = 2
   cmdSetMat*: float32 = 3
   cmdSolidFill*: float32 = 4
@@ -115,31 +121,31 @@ proc pixelCross(a0, b0: Vec2): float32 =
     # horizontal lines should not have effect
     return 0.0
   # Y check to see if we can be affected by the line:
-  if 0 >= min(a.y, b.y) and 0 < max(a.y, b.y):
+  if 1 >= min(a.y, b.y) and 1 < max(a.y, b.y):
     var xIntersect: float32
     if b.x != a.x:
       # Find the xIntersect of the line.
       let
         m = (b.y - a.y) / (b.x - a.x)
         bb = a.y - m * a.x
-      xIntersect = (0 - bb) / m
+      xIntersect = (1 - bb) / m
     else:
       # Line is vertical, xIntersect is at x.
       xIntersect = a.x
-    if xIntersect < 0:
+    if xIntersect < 1:
       # Is the xIntersect is to the left, count cross.
       return lineDir(a, b)
   return 0.0
 
 proc line(a0, b0: Vec2) =
-  ## Turn a line into inc/dec/ignore of the crossCount.
+  ## Draw the lines based on windingRule.
   var
     a1 = (mat * vec3(a0, 1)).xy - screen
     b1 = (mat * vec3(b0, 1)).xy - screen
   if windingRule == 0:
     # Event-odd
-    a1 += vec2(-1, -1)
-    b1 += vec2(-1, -1)
+    a1 += vec2(0.125, 0.125) # Center scan lines in each quarter.
+    b1 += vec2(0.125, 0.125) # 1/4/2
     # DO I KNOW WHAT I AM DOING? NO...
     crossCountMat[0, 0] = crossCountMat[0, 0] + pixelCross(a1 + vec2(0,0)/4, b1 + vec2(0,0)/4)
     crossCountMat[0, 1] = crossCountMat[0, 1] + pixelCross(a1 + vec2(0,1)/4, b1 + vec2(0,1)/4)

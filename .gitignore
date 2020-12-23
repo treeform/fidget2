@@ -9,6 +9,7 @@ nimcache
 *.pdb
 *.ilk
 .*
+*.glsl
 
 # figma tmp files
 figma

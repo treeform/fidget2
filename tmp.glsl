@@ -333,16 +333,16 @@ float pixelCross(
   if ((a.y) == (b.y)) {
         return float(0.0);
   };
-  if (((min(a.y, b.y)) <= (float(0))) && ((float(0)) < (max(a.y, b.y)))) {
+  if (((min(a.y, b.y)) <= (float(1))) && ((float(1)) < (max(a.y, b.y)))) {
     float xIntersect = 0.0;
     if (! ((b.x) == (a.x))) {
       float m = ((b.y) - (a.y)) / ((b.x) - (a.x));
       float bb = (a.y) - ((m) * (a.x));
-      xIntersect = ((float(0)) - (bb)) / (m);
+      xIntersect = ((float(1)) - (bb)) / (m);
     } else {
             xIntersect = a.x;
     };
-    if ((xIntersect) < (float(0))) {
+    if ((xIntersect) < (float(1))) {
             return lineDir(a, b);
     };
   };
@@ -614,12 +614,12 @@ void line(
   vec2 a0,
   vec2 b0
 ) {
-"Turn a line into inc/dec/ignore of the crossCount.";
+"Draw the lines based on windingRule.";
   vec2 a1 = (((mat) * (vec3(a0, float(1)))).xy) - (screen);
   vec2 b1 = (((mat) * (vec3(b0, float(1)))).xy) - (screen);
   if ((windingRule) == (0)) {
-(a1) += (vec2(float(-1), float(-1)));;
-(b1) += (vec2(float(-1), float(-1)));;
+(a1) += (vec2(float(0.125), float(0.125)));;
+(b1) += (vec2(float(0.125), float(0.125)));;
     crossCountMat[0][0] = (crossCountMat[0][0]) + (pixelCross((a1) + ((vec2(float(0), float(0))) / (float(4))), (b1) + ((vec2(float(0), float(0))) / (float(4)))));;
     crossCountMat[0][1] = (crossCountMat[0][1]) + (pixelCross((a1) + ((vec2(float(0), float(1))) / (float(4))), (b1) + ((vec2(float(0), float(1))) / (float(4)))));;
     crossCountMat[0][2] = (crossCountMat[0][2]) + (pixelCross((a1) + ((vec2(float(0), float(2))) / (float(4))), (b1) + ((vec2(float(0), float(2))) / (float(4)))));;

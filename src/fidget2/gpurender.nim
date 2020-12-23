@@ -1,39 +1,28 @@
-import atlas, chroma, os, fidget2, pixie, strutils, strformat, times,
+import atlas, chroma, os, pixie, strutils, strformat, times,
   math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math,
-  pixie, tables, typography
+  pixie, tables, typography, schema, bumpy
 
 var
+  # Window stuff.
   viewPortWidth*: int
   viewPortHeight*: int
   windowReady = false
+  window*: Window
+  offscreen* = false
 
-  # Data Buffer Object
-
+  # Buffers.
   dataBufferSeq*: seq[float32]
   mat*: Mat3
   opacity*: float32
+  framePos*: Vec2
+  typefaceCache: Table[string, Typeface]
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
   textureAtlas*: CpuAtlas
   textureAtlasId: GLuint
 
-  typefaceCache: Table[string, Typeface]
-
-proc setupRender*(frameNode: Node) =
-  viewPortWidth = frameNode.absoluteBoundingBox.w.int
-  viewPortHeight = frameNode.absoluteBoundingBox.h.int
-  dataBufferSeq.setLen(0)
-
-  if textureAtlas == nil:
-    textureAtlas = newCpuAtlas(1024*2, 1)
-
-proc basic2dVert(vertexPox: Vec2, gl_Position: var Vec4) =
-  gl_Position.xy = vertexPox
-
-var
   # Vertex data
-
   vertices: array[8, GLfloat] = [
     -1.float32, -1,
     -1, +1,
@@ -65,6 +54,14 @@ var
 
   dataBufferId: GLuint
 
+proc setupRender*(frameNode: Node) =
+  viewPortWidth = frameNode.absoluteBoundingBox.w.int
+  viewPortHeight = frameNode.absoluteBoundingBox.h.int
+  dataBufferSeq.setLen(0)
+
+  if textureAtlas == nil:
+    textureAtlas = newCpuAtlas(1024*2, 1)
+
 proc updateGpuAtlas() =
   glBindTexture(GL_TEXTURE_2D, textureAtlasId)
   glTexImage2D(
@@ -79,151 +76,156 @@ proc updateGpuAtlas() =
     textureAtlas.image.data[0].addr
   )
 
-proc readGpuPixels(): pixie.Image =
+proc createWindow*(frameNode: Node, offscreen = false) =
 
-  if not windowReady:
+  setupRender(frameNode)
+  dataBufferSeq.add(cmdExit)
 
-    # init libraries
-    if init() == 0:
-      raise newException(Exception, "Failed to intialize GLFW")
+  # init libraries
+  if init() == 0:
+    raise newException(Exception, "Failed to intialize GLFW")
 
-    # Open a window
-    windowHint(VISIBLE, false.cint)
-    windowHint(SAMPLES, 0)
-    var window = createWindow(
-      viewPortWidth.cint, viewPortHeight.cint,
-      "run_shaders",
-      nil,
-      nil)
-    window.makeContextCurrent()
+  # Open a window
+  windowHint(VISIBLE, (not offscreen).cint)
+  windowHint(SAMPLES, 0)
+  window = createWindow(
+    viewPortWidth.cint, viewPortHeight.cint,
+    "run_shaders",
+    nil,
+    nil)
+  window.makeContextCurrent()
 
-    # Load opengl
-    loadExtensions()
+  # Load opengl
+  loadExtensions()
 
-    # The data for (and about) OpenGL
-    # echo vertShaderSrc
-    # echo fragShaderSrc
+  # The data for (and about) OpenGL
+  # echo vertShaderSrc
+  # echo fragShaderSrc
 
-    writeFile("tmp.glsl", fragShaderSrc)
+  writeFile("tmp.glsl", fragShaderSrc)
 
-    glDisable(GL_MULTISAMPLE)
+  glDisable(GL_MULTISAMPLE)
 
-    # Bind the vertices
-    glGenBuffers(1, vertexVBO.addr)
-    glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
-    glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
+  # Bind the vertices
+  glGenBuffers(1, vertexVBO.addr)
+  glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
+  glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
 
-    # The array object
-    glGenVertexArrays(1, vao.addr)
-    glBindVertexArray(vao)
-    glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
-    glVertexAttribPointer(0, 2, cGL_FLOAT, GL_FALSE, 0, nil)
-    glEnableVertexAttribArray(0)
+  # The array object
+  glGenVertexArrays(1, vao.addr)
+  glBindVertexArray(vao)
+  glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
+  glVertexAttribPointer(0, 2, cGL_FLOAT, GL_FALSE, 0, nil)
+  glEnableVertexAttribArray(0)
 
-    glGenBuffers(1, dataBufferId.addr)
-    glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
-    glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
+  glGenBuffers(1, dataBufferId.addr)
+  glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
+  glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
-    glActiveTexture(GL_TEXTURE0)
-    glGenTextures(1, dataBufferTextureId.addr)
-    glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
-    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, dataBufferId)
+  glActiveTexture(GL_TEXTURE0)
+  glGenTextures(1, dataBufferTextureId.addr)
+  glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
+  glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, dataBufferId)
 
-    glActiveTexture(GL_TEXTURE1)
-    glGenTextures(1, textureAtlasId.addr)
-    glBindTexture(GL_TEXTURE_2D, textureAtlasId)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+  glActiveTexture(GL_TEXTURE1)
+  glGenTextures(1, textureAtlasId.addr)
+  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-    glTexImage2D(
-      GL_TEXTURE_2D,
-      0,
-      GL_RGBA.GLint,
-      textureAtlas.image.width.GLsizei,
-      textureAtlas.image.height.GLsizei,
-      0,
-      GL_RGBA,
-      GL_UNSIGNED_BYTE,
-      textureAtlas.image.data[0].addr
-    )
+  glTexImage2D(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA.GLint,
+    textureAtlas.image.width.GLsizei,
+    textureAtlas.image.height.GLsizei,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    textureAtlas.image.data[0].addr
+  )
 
-    # Compile shaders
-    # Vertex
-    vertShader = glCreateShader(GL_VERTEX_SHADER)
-    glShaderSource(vertShader, 1, vertShaderArray, nil)
-    glCompileShader(vertShader)
-    glGetShaderiv(vertShader, GL_COMPILE_STATUS, isCompiled.addr)
+  # Compile shaders
+  # Vertex
+  vertShader = glCreateShader(GL_VERTEX_SHADER)
+  glShaderSource(vertShader, 1, vertShaderArray, nil)
+  glCompileShader(vertShader)
+  glGetShaderiv(vertShader, GL_COMPILE_STATUS, isCompiled.addr)
 
-    # Check vertex compilation status
-    block:
-      var logSize: GLint
-      glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, logSize.addr)
-      if logSize > 0:
-        var
-          logStr = cast[ptr GLchar](alloc(logSize))
-          logLen: GLsizei
-        glGetShaderInfoLog(vertShader, logSize.GLsizei, logLen.addr, logStr)
-        echo $logStr
-    if isCompiled == 0:
-      quit "Vertex Shader wasn't compiled."
+  # Check vertex compilation status
+  block:
+    var logSize: GLint
+    glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, logSize.addr)
+    if logSize > 0:
+      var
+        logStr = cast[ptr GLchar](alloc(logSize))
+        logLen: GLsizei
+      glGetShaderInfoLog(vertShader, logSize.GLsizei, logLen.addr, logStr)
+      echo $logStr
+  if isCompiled == 0:
+    quit "Vertex Shader wasn't compiled."
 
-    # Fragment
-    fragShader = glCreateShader(GL_FRAGMENT_SHADER)
-    glShaderSource(fragShader, 1, fragShaderArray, nil)
-    glCompileShader(fragShader)
-    glGetShaderiv(fragShader, GL_COMPILE_STATUS, isCompiled.addr)
+  # Fragment
+  fragShader = glCreateShader(GL_FRAGMENT_SHADER)
+  glShaderSource(fragShader, 1, fragShaderArray, nil)
+  glCompileShader(fragShader)
+  glGetShaderiv(fragShader, GL_COMPILE_STATUS, isCompiled.addr)
 
-    # Check Fragment compilation status
-    block:
-      var logSize: GLint
-      glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, logSize.addr)
-      if logSize > 0:
-        var
-          logStr = cast[ptr GLchar](alloc(logSize))
-          logLen: GLsizei
-        glGetShaderInfoLog(fragShader, logSize.GLsizei, logLen.addr, logStr)
-        echo($logStr)
-    if isCompiled == 0:
-      quit("Fragment Shader wasn't compiled.")
+  # Check Fragment compilation status
+  block:
+    var logSize: GLint
+    glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, logSize.addr)
+    if logSize > 0:
+      var
+        logStr = cast[ptr GLchar](alloc(logSize))
+        logLen: GLsizei
+      glGetShaderInfoLog(fragShader, logSize.GLsizei, logLen.addr, logStr)
+      echo($logStr)
+  if isCompiled == 0:
+    quit("Fragment Shader wasn't compiled.")
 
-    # Attach to a GL program
-    shaderProgram = glCreateProgram()
-    glAttachShader(shaderProgram, vertShader);
-    glAttachShader(shaderProgram, fragShader);
+  # Attach to a GL program
+  shaderProgram = glCreateProgram()
+  glAttachShader(shaderProgram, vertShader);
+  glAttachShader(shaderProgram, fragShader);
 
-    # insert locations
-    glBindAttribLocation(shaderProgram, 0, "vertexPos");
+  # insert locations
+  glBindAttribLocation(shaderProgram, 0, "vertexPos");
 
-    glLinkProgram(shaderProgram);
+  glLinkProgram(shaderProgram);
 
-    # Check for shader linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, isLinked.addr)
+  # Check for shader linking errors
+  glGetProgramiv(shaderProgram, GL_LINK_STATUS, isLinked.addr)
 
-    block:
-      var logSize: GLint
-      glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, logSize.addr)
-      if logSize > 0:
-        var
-          logStr = cast[ptr GLchar](alloc(logSize))
-          logLen: GLsizei
-        glGetProgramInfoLog(shaderProgram, logSize.GLsizei, logLen.addr, logStr)
-        echo($logStr)
-    if isLinked == 0:
-      quit("Wasn't able to link shaders.")
+  block:
+    var logSize: GLint
+    glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, logSize.addr)
+    if logSize > 0:
+      var
+        logStr = cast[ptr GLchar](alloc(logSize))
+        logLen: GLsizei
+      glGetProgramInfoLog(shaderProgram, logSize.GLsizei, logLen.addr, logStr)
+      echo($logStr)
+  if isLinked == 0:
+    quit("Wasn't able to link shaders.")
 
-    echo "Shader compiled"
+  echo "Shader compiled"
 
-    glUseProgram(shaderProgram)
+  glUseProgram(shaderProgram)
 
-    var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
-    glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
+  var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
+  glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
 
-    var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
-    glUniform1i(textureAtlasLoc, 1) # Set textureAtlas to 1th texture.
+  var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
+  glUniform1i(textureAtlasLoc, 1) # Set textureAtlas to 1th texture.
 
-    windowReady = true
+proc drawBuffers() =
+
+  # if not windowReady:
+  #   createWindow()
+  #   windowReady = true
 
   # send texture to the CPU
   updateGpuAtlas()
@@ -240,6 +242,7 @@ proc readGpuPixels(): pixie.Image =
   glBindVertexArray(vao)
   glDrawElements(GL_TRIANGLE_FAN, indices.len.GLsizei, GL_UNSIGNED_BYTE, indices.addr)
 
+proc readGpuPixels(): pixie.Image =
   var screen = newImage(viewPortWidth, viewPortHeight)
   glReadPixels(
     0, 0,
@@ -849,11 +852,16 @@ proc drawNode*(node: Node, level: int) =
   mat = prevMat
   opacity = prevOpacity
 
-proc drawCompleteGpuFrame*(node: Node): pixie.Image =
+proc drawGpuFrame*(node: Node) =
   setupRender(node)
 
   drawNode(node, 0)
-
   dataBufferSeq.add(cmdExit)
+  drawBuffers()
 
-  return readGpuPixels()
+  #window.swapBuffers()
+
+proc drawCompleteGpuFrame*(node: Node): pixie.Image =
+
+  drawGpuFrame(node)
+  result = readGpuPixels()

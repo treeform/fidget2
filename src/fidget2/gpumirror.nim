@@ -1,4 +1,4 @@
-import staticglfw, opengl, math, schema, render, pixie, vmath, bumpy
+import staticglfw, opengl, math, schema, gpurender, pixie, vmath, bumpy
 export bumpy
 
 var
@@ -8,6 +8,8 @@ var
   mousePos*: Vec2
   mouseButton*: bool
   callBacks: seq[proc()]
+
+  frameNode*: Node
 
 proc showPopup*(name: string) =
   discard
@@ -80,33 +82,33 @@ proc display() =
     cb()
 
   let mainNode = figmaFile.document.children[0].findByName(mainFrame)
-  let image = drawCompleteFrame(mainNode)
+  drawGpuFrame(mainNode)
 
   # image.save("frame.png")
   # if true: quit()
 
-  # update texture with new pixels from surface
-  var dataPtr = addr image.data[0]
-  glTexSubImage2D(
-    GL_TEXTURE_2D,
-    0,
-    0,
-    0,
-    GLsizei image.width,
-    GLsizei image.height,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    dataPtr
-  )
+  # # update texture with new pixels from surface
+  # var dataPtr = addr image.data[0]
+  # glTexSubImage2D(
+  #   GL_TEXTURE_2D,
+  #   0,
+  #   0,
+  #   0,
+  #   GLsizei image.width,
+  #   GLsizei image.height,
+  #   GL_RGBA,
+  #   GL_UNSIGNED_BYTE,
+  #   dataPtr
+  # )
 
-  # draw a quad over the whole screen
-  glClear(GL_COLOR_BUFFER_BIT)
-  glBegin(GL_QUADS);
-  glTexCoord2d(0.0, 0.0); glVertex2d(-1.0, +1.0)
-  glTexCoord2d(1.0, 0.0); glVertex2d(+1.0, +1.0)
-  glTexCoord2d(1.0, 1.0); glVertex2d(+1.0, -1.0)
-  glTexCoord2d(0.0, 1.0); glVertex2d(-1.0, -1.0)
-  glEnd();
+  # # draw a quad over the whole screen
+  # glClear(GL_COLOR_BUFFER_BIT)
+  # glBegin(GL_QUADS);
+  # glTexCoord2d(0.0, 0.0); glVertex2d(-1.0, +1.0)
+  # glTexCoord2d(1.0, 0.0); glVertex2d(+1.0, +1.0)
+  # glTexCoord2d(1.0, 1.0); glVertex2d(+1.0, -1.0)
+  # glTexCoord2d(0.0, 1.0); glVertex2d(-1.0, -1.0)
+  # glEnd();
 
   swapBuffers(window)
 
@@ -117,35 +119,39 @@ proc startFidget*() =
     w: int32 = 400
     h: int32 = 400
 
+
   if windowSizeFixed:
-    let frameNode = findByName(mainFrame)
+    frameNode = findByName(mainFrame)
     assert frameNode != nil, "Frame " & mainFrame & " not found!"
     w = frameNode.absoluteBoundingBox.w.int32
     h = frameNode.absoluteBoundingBox.h.int32
 
   var
     frameIndex = 0
+    #lock = false
 
-  # Init GLFW
-  if init() == 0:
-    raise newException(Exception, "Failed to Initialize GLFW")
+  createWindow(frameNode)
+
+  # # Init GLFW
+  # if init() == 0:
+  #   raise newException(Exception, "Failed to Initialize GLFW")
 
   # Open window.
-  window = createWindow(w, h, windowTitle, nil, nil)
+  #window = createWindow(w, h, windowTitle, nil, nil)
   # Connect the GL context.
-  window.makeContextCurrent()
+  #window.makeContextCurrent()
   # This must be called to make any GL function work
-  loadExtensions()
+  #loadExtensions()
 
-  # allocate a texture and bind it
-  screen = newImage(w, h)
-  var dataPtr = addr screen.data[0]
-  glTexImage2D(GL_TEXTURE_2D, 0, 3, GLsizei w, GLsizei h, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glEnable(GL_TEXTURE_2D);
+  # # allocate a texture and bind it
+  # screen = newImage(w, h)
+  # var dataPtr = addr screen.data[0]
+  # glTexImage2D(GL_TEXTURE_2D, 0, 3, GLsizei w, GLsizei h, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
+  # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+  # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+  # glEnable(GL_TEXTURE_2D);
 
   discard window.setMouseButtonCallback(onMouseButton)
 
@@ -153,6 +159,13 @@ proc startFidget*() =
   while windowShouldClose(window) == 0:
     pollEvents()
     display()
+    # if window.getKey(KEY_RIGHT) == PRESS:
+    #   if not lock:
+    #     lock = true
+    #     inc frameIndex
+    # if window.getKey(KEY_RIGHT) == RELEASE:
+    #   lock = false
+    #quit()
 
   # Destroy the window.
   window.destroyWindow()

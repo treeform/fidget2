@@ -1,5 +1,5 @@
 import chroma, os, fidget2, pixie, strutils, strformat, cligen, times,
-    imagediff, fidget2/gpurender, fidget2/zpurender
+    imagediff, fidget2/gpurender, fidget2/zpurender, fidget2/render
 
 proc main(w = "gpu", r = "", e = "", l = 10000) =
 
@@ -23,8 +23,9 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     echo frame.name, " --------------------------------- "
 
-    if firstTime and w == "gpu":
-      discard drawCompleteGpuFrame(frame)
+    if firstTime and w in ["gpu", "vs"]:
+      createWindow(frame, offscreen = true)
+      #discard drawCompleteGpuFrame(frame)
       firstTime = false
 
     let startTime = epochTime()
@@ -33,7 +34,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
     if w == "gpu":
       image = drawCompleteGpuFrame(frame)
     elif w == "cpu":
-      image = drawCompleteFrame(frame)
+      image = drawCompleteCpuFrame(frame)
     elif w == "zpu":
       image = drawCompleteZpuFrame(frame)
     elif w == "vs":
