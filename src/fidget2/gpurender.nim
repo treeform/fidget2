@@ -250,6 +250,7 @@ proc readGpuPixels(): pixie.Image =
     GL_RGBA, GL_UNSIGNED_BYTE,
     screen.data[0].addr
   )
+  screen.flipVertical()
   return screen
 
 proc transform(node: Node): Mat3 =

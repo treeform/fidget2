@@ -660,7 +660,7 @@ void L(
   x0 = x;
   y0 = y;
 }
-in vec4 gl_FragCoord;
+layout(origin_upper_left) in vec4 gl_FragCoord;
 out vec4 fragColor;
 
 void main() {

@@ -363,6 +363,8 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
               res.add " "
               res.add typeRename(param[1][1].strVal)
             else:
+              if param[0].strVal == "gl_FragCoord":
+                res.add "layout(origin_upper_left) "
               if param[1].strVal == "int":
                 res.add "flat "
               res.add "in "
