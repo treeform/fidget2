@@ -1,6 +1,6 @@
 import atlas, chroma, os, pixie, strutils, strformat, times,
   math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math,
-  pixie, tables, typography, schema, bumpy
+  pixie, tables, typography, schema, bumpy, loader
 
 var
   # Window stuff.
@@ -15,7 +15,7 @@ var
   mat*: Mat3
   opacity*: float32
   framePos*: Vec2
-  typefaceCache: Table[string, Typeface]
+  typefaceCache*: Table[string, Typeface]
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
@@ -76,7 +76,11 @@ proc updateGpuAtlas() =
     textureAtlas.image.data[0].addr
   )
 
-proc createWindow*(frameNode: Node, offscreen = false) =
+proc createWindow*(
+  frameNode: Node,
+  offscreen = false,
+  resizable = true
+) =
 
   setupRender(frameNode)
   dataBufferSeq.add(cmdExit)
@@ -87,6 +91,7 @@ proc createWindow*(frameNode: Node, offscreen = false) =
 
   # Open a window
   windowHint(VISIBLE, (not offscreen).cint)
+  windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
   window = createWindow(
     viewPortWidth.cint, viewPortHeight.cint,
@@ -733,7 +738,7 @@ proc drawNode*(node: Node, level: int) =
         for paint in node.strokes:
           drawPaint(node, paint)
 
-    of nkVector, nkStar:
+    of nkRegularPolygon, nkVector, nkStar:
       for geom in node.fillGeometry:
         drawGeom(node, geom)
       for paint in node.fills:

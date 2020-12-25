@@ -1,5 +1,5 @@
 import tables, chroma, vmath, pixie, jsony, json, bumpy,
-    httpclient, strutils, os, typography, strformat
+    strutils, os, typography, strformat
 
 type
 
@@ -168,91 +168,49 @@ type
     version*: string
     role*: string
 
-var
-  figmaFile*: FigmaFile
-  figmaFileKey*: string
+proc `$`*(node: Node): string =
+  "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
-var imageRefToUrl: Table[string, string]
+# proc firstPart(selector: string): string =
+#   let loc = selector.find(".")
+#   if loc > -1:
+#     return selector[0 ..< loc]
+#   else:
+#     selector
 
-proc downloadImageRef*(imageRef: string) =
-  if not fileExists("figma/images/" & imageRef & ".png"):
-    if imageRef in imageRefToUrl:
-      if not dirExists("figma/images"):
-        createDir("figma/images")
-      let url = imageRefToUrl[imageRef]
-      echo "Downloading ", url
-      var client = newHttpClient()
-      let data = client.getContent(url)
-      writeFile("figma/images/" & imageRef & ".png", data)
+# proc matches(s, match: string): bool =
+#   if match == "*": return true
+#   if s == match: return true
 
-proc getImageRefs*(fileKey: string) =
-  if not dirExists("figma/images"):
-    createDir("figma/images")
+# proc findByMatch*(node: Node, match: string): Node =
+#   if node.name.matches(match):
+#     return node
+#   for c in node.children:
+#     let found = c.findByMatch(match)
+#     if found != nil:
+#       return found
 
-  var client = newHttpClient()
-  client.headers = newHttpHeaders({"Accept": "*/*"})
-  client.headers["User-Agent"] = "curl/7.58.0"
-  client.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey")
+# proc find*(node: Node, selector: string): Node =
+#   result = node
+#   for match in selector.split("."):
+#     result = result.findByMatch(match)
+#     if result == nil:
+#       return
 
-  let data = client.getContent("https://api.figma.com/v1/files/" & fileKey & "/images")
-  writeFile("figma/images/images.json", data)
+# proc find*(selector: string): Node =
+#   figmaFile.document.find(selector)
 
-  let json = parseJson(data)
-  for imageRef, url in json["meta"]["images"].pairs:
-    imageRefToUrl[imageRef] = url.getStr()
+# proc findAll*(res: var seq[Node], node: Node, name: string) =
+#   if node.name == name:
+#     res.add(node)
+#   for c in node.children:
+#     findAll(res, c, name)
 
-proc downloadFont*(fontPSName: string) =
-  if fileExists("figma/fonts/" & fontPSName & ".ttf"):
-    return
+# proc findAll*(node: Node, name: string): seq[Node] =
+#   findAll(result, node, name)
 
-  if not dirExists("figma/fonts"):
-    createDir("figma/fonts")
-
-  if not fileExists("figma/fonts/fonts.csv"):
-    var client = newHttpClient()
-    let data = client.getContent("https://raw.githubusercontent.com/treeform/freefrontfinder/master/fonts.csv")
-    writeFile("figma/fonts/fonts.csv", data)
-
-  for line in readFile("figma/fonts/fonts.csv").split("\n"):
-    var line = line.split(",")
-    if line[0] == fontPSName:
-      let url = line[1]
-      echo "Downloading ", url
-      try:
-        var client = newHttpClient()
-        let data = client.getContent(url)
-        writeFile("figma/fonts/" & fontPSName & ".ttf", data)
-      except HttpRequestError:
-        echo getCurrentExceptionMsg()
-        echo &"Please download figma/fonts/{fontPSName}.ttf"
-      return
-
-  echo &"Please download figma/fonts/{fontPSName}.ttf"
-
-proc figmaClient(): HttpClient =
-  var client = newHttpClient()
-  client.headers = newHttpHeaders({"Accept": "*/*"})
-  client.headers["User-Agent"] = "curl/7.58.0"
-  client.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
-  return client
-
-proc download(figmaFileKey: string) =
-  let jsonPath = &"figma/{figmaFileKey}.json"
-  let modifiedPath = &"figma/{figmaFileKey}.lastModified"
-  if fileExists(modifiedPath):
-    ## Check if we really need to download the whole thing.
-    let
-      data1 = figmaClient().getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?depth=1")
-      figmaModified = parseJson(data1)["lastModified"].getStr()
-      haveModified = readFile(modifiedPath)
-    if figmaModified == haveModified:
-      echo "Using cached"
-      return
-  let data = figmaClient().getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
-  let json = parseJson(data)
-  writeFile(modifiedPath, json["lastModified"].getStr())
-  writeFile(jsonPath, pretty(json))
-  getImageRefs(figmaFileKey)
+# proc findAll*(name: string): seq[Node] =
+#   findAll(figmaFile.document, name)
 
 proc newHook(v: var Node) =
   v = Node()
@@ -401,18 +359,5 @@ proc enumHook(s: string, v: var WindingRule) =
     of "NONZERO": wrNonZero
     else: raise newException(ValueError, "Invalid text align mode:" & s)
 
-
-proc use*(url: string) =
-  if not dirExists("figma"):
-    createDir("figma")
-  let figmaFileKey = url.split("/")[4]
-  download(figmaFileKey)
-  var data = readFile(&"figma/{figmaFileKey}.json")
-  figmaFile = fromJson[FigmaFile](data)
-
-proc useNodeFile*(filePath: string) =
-  var data = readFile(filePath)
-  echo data
-  figmaFile = FigmaFile()
-  figmaFile.document = Node()
-  figmaFile.document.children = fromJson[seq[Node]](data)
+proc parseFigmaFile*(data: string): FigmaFile =
+  fromJson[FigmaFile](data)
