@@ -20,9 +20,16 @@ type
     `type`*: string
     rotation*: string
 
+  ConstraintsKind* = enum
+    cMin
+    cMax
+    cScale
+    cStretch
+    cCenter
+
   Constraints* = ref object
-    vertical*: string
-    horizontal*: string
+    vertical*: ConstraintsKind
+    horizontal*: ConstraintsKind
 
   GradientStops* = ref object
     color*: Color
@@ -157,6 +164,8 @@ type
     pixels*: Image   ## Pixel image cache.
     pixelBox*: Rect  ## Pixel position and size.
     editable*: bool  ## Can the user edit the text?
+    box*: Rect       ## xy/size of the node.
+    orgBox*: Rect    ## Original size needed for constraints.
 
   FigmaFile* = ref object
     document*: Node
@@ -216,6 +225,12 @@ proc newHook(v: var Node) =
   v = Node()
   v.visible = true
   v.opacity = 1.0
+
+proc postHook(v: var Node) =
+  if v.relativeTransform.len > 0:
+    v.box.xy = vec2(v.relativeTransform[0][2], v.relativeTransform[1][2])
+  v.box.wh = v.size
+  v.orgBox = v.box
 
 proc renameHook(v: var Node, fieldName: var string) =
   if fieldName == "type":
@@ -357,6 +372,18 @@ proc enumHook(s: string, v: var WindingRule) =
   v = case s:
     of "EVENODD": wrEvenOdd
     of "NONZERO": wrNonZero
+    else: raise newException(ValueError, "Invalid text align mode:" & s)
+
+proc enumHook(s: string, v: var ConstraintsKind) =
+  v = case s:
+    of "TOP": cMin
+    of "BOTTOM": cMax
+    of "CENTER": cCenter
+    of "TOP_BOTTOM": cStretch
+    of "SCALE": cScale
+    of "LEFT": cMin
+    of "RIGHT": cMax
+    of "LEFT_RIGHT": cStretch
     else: raise newException(ValueError, "Invalid text align mode:" & s)
 
 proc parseFigmaFile*(data: string): FigmaFile =

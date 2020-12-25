@@ -1,6 +1,6 @@
 import atlas, chroma, os, pixie, strutils, strformat, times,
   math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math,
-  pixie, tables, typography, schema, bumpy, loader
+  pixie, tables, typography, schema, bumpy, loader, layout
 
 var
   # Window stuff.
@@ -268,8 +268,8 @@ proc transform(node: Node): Mat3 =
   result[1, 1] = node.relativeTransform[1][1]
   result[1, 2] = 0
 
-  result[2, 0] = node.relativeTransform[0][2]
-  result[2, 1] = node.relativeTransform[1][2]
+  result[2, 0] = node.box.x #node.relativeTransform[0][2]
+  result[2, 1] = node.box.y #node.relativeTransform[1][2]
   result[2, 2] = 1
 
 proc strokeInnerOuter(node: Node): (float32, float32) =
@@ -860,6 +860,11 @@ proc drawNode*(node: Node, level: int) =
 
 proc drawGpuFrame*(node: Node) =
   setupRender(node)
+
+  node.box.xy = vec2(0, 0)
+  node.size = node.box.wh
+  for c in node.children:
+    computeLayout(node, c)
 
   drawNode(node, 0)
   dataBufferSeq.add(cmdExit)
