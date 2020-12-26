@@ -728,25 +728,25 @@ proc drawNode*(node: Node, level: int) =
         for paint in node.strokes:
           drawPaint(node, paint)
 
-    # of nkEllipse:
-    #   dataBufferSeq.add cmdStartPath
-    #   dataBufferSeq.add 0
-    #   drawEllipse(node.size/2, node.size/2)
-    #   dataBufferSeq.add cmdEndPath
-    #   for paint in node.fills:
-    #     drawPaint(node, paint)
+    of nkEllipse:
+      dataBufferSeq.add cmdStartPath
+      dataBufferSeq.add 0
+      drawEllipse(node.size/2, node.size/2)
+      dataBufferSeq.add cmdEndPath
+      for paint in node.fills:
+        drawPaint(node, paint)
 
-    #   if node.strokes.len > 0:
-    #     let (inner, outer) = node.strokeInnerOuter()
-    #     dataBufferSeq.add cmdStartPath
-    #     dataBufferSeq.add 0
-    #     drawEllipse(node.size/2, node.size/2 + vec2(outer))
-    #     drawEllipse(node.size/2, node.size/2 - vec2(inner))
-    #     dataBufferSeq.add cmdEndPath
-    #     for paint in node.strokes:
-    #       drawPaint(node, paint)
+      if node.strokes.len > 0:
+        let (inner, outer) = node.strokeInnerOuter()
+        dataBufferSeq.add cmdStartPath
+        dataBufferSeq.add 0
+        drawEllipse(node.size/2, node.size/2 + vec2(outer))
+        drawEllipse(node.size/2, node.size/2 - vec2(inner))
+        dataBufferSeq.add cmdEndPath
+        for paint in node.strokes:
+          drawPaint(node, paint)
 
-    of nkRegularPolygon, nkVector, nkStar, nkLine, nkEllipse:
+    of nkRegularPolygon, nkVector, nkStar, nkLine:
       for geom in node.fillGeometry:
         drawGeom(node, geom)
         for paint in node.fills:
