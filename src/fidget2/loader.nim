@@ -24,6 +24,8 @@ proc downloadImageRef*(imageRef: string) =
       var client = newHttpClient()
       let data = client.getContent(url)
       writeFile("figma/images/" & imageRef & ".png", data)
+    else:
+      echo "Image not in imageRefToUrl: " & imageRef
 
 proc getImageRefs*(fileKey: string) =
   if not dirExists("figma/images"):
@@ -92,7 +94,6 @@ proc download(figmaFileKey: string) =
   let json = parseJson(data)
   writeFile(modifiedPath, json["lastModified"].getStr())
   writeFile(jsonPath, pretty(json))
-  getImageRefs(figmaFileKey)
 
 proc rebuildGlobTree() =
   globTree = GlobTree[Node]()
@@ -112,6 +113,7 @@ proc use*(url: string) =
     createDir("figma")
   let figmaFileKey = url.split("/")[4]
   download(figmaFileKey)
+  getImageRefs(figmaFileKey)
   var data = readFile(&"figma/{figmaFileKey}.json")
   figmaFile = parseFigmaFile(data)
 

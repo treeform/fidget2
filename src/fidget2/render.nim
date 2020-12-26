@@ -1,5 +1,5 @@
 
-import pixie, chroma, math, vmath, schema, typography, tables, bumpy
+import pixie, chroma, math, vmath, schema, typography, tables, bumpy, loader
 
 const
   white = rgba(255, 255, 255, 255)

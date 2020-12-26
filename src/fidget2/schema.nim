@@ -2,6 +2,7 @@ import tables, chroma, vmath, pixie, jsony, json, bumpy,
     strutils, os, typography, strformat
 
 type
+  FidgetError* = object of ValueError ## Raised if an operation fails.
 
   NodeKind* = enum
     nkDocument, nkCanvas
