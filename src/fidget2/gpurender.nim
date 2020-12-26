@@ -813,18 +813,35 @@ proc drawNode*(node: Node, level: int) =
           var glyph = font.typeface.glyphs[gpos.character]
           glyph.makeReady(font)
 
+          # dataBufferSeq.add cmdStartPath
+          # dataBufferSeq.add kNonZero
+          let
+            tx = glyph.bboxMin.x * font.scale
+            ty = glyph.bboxMin.y * font.scale
+            w = glyph.bboxMax.x * font.scale - tx
+            h = glyph.bboxMax.y * font.scale - ty
+            glyphBounds = rect(
+              gpos.rect.x + tx, gpos.rect.y - h - ty,
+              w, h
+            )
+          # drawRect(glyphBounds.xy, glyphBounds.wh)
+          #   #vec2(gpos.rect.x + tx, gpos.rect.y - h - ty),
+          #   #vec2(w, h)
+          # #)
+          # dataBufferSeq.add cmdEndPath
+          # dataBufferSeq.add @[
+          #   cmdSolidFill,
+          #   1,
+          #   0,
+          #   0,
+          #   1
+          # ]
+
           dataBufferSeq.add cmdBoundCheck
-
-          # let boundsOffset = dataBufferSeq.len
-          # dataBufferSeq.add 0
-          # dataBufferSeq.add 0
-          # dataBufferSeq.add 0
-          # dataBufferSeq.add 0
-
-          dataBufferSeq.add gpos.rect.x
-          dataBufferSeq.add gpos.rect.y - gpos.rect.h
-          dataBufferSeq.add gpos.rect.x + gpos.rect.w * 1.5
-          dataBufferSeq.add gpos.rect.y + gpos.rect.h * 0.5
+          dataBufferSeq.add glyphBounds.x - 1
+          dataBufferSeq.add glyphBounds.y - 1
+          dataBufferSeq.add glyphBounds.x + glyphBounds.w + 1
+          dataBufferSeq.add glyphBounds.y + glyphBounds.h + 1
           let jmpOffset = dataBufferSeq.len
           dataBufferSeq.add 0
 
@@ -832,8 +849,6 @@ proc drawNode*(node: Node, level: int) =
           dataBufferSeq.add 1
           var
             prevPos: Vec2
-            # minB: Vec2
-            # maxB: Vec2
           for shape in glyph.shapes:
             for segment in shape:
 
@@ -842,26 +857,16 @@ proc drawNode*(node: Node, level: int) =
                 dataBufferSeq.add cmdM
                 dataBufferSeq.add posM.x
                 dataBufferSeq.add posM.y
-                # minB = min(minB, posM)
-                # maxB = max(maxB, posM)
-
               dataBufferSeq.add cmdL
               let posL = segment.to.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
               dataBufferSeq.add posL.x
               dataBufferSeq.add posL.y
               prevPos = posL
-              # minB = min(minB, posL)
-              # maxB = max(maxB, posL)
-
           dataBufferSeq.add cmdEndPath
 
           for paint in node.fills:
             drawPaint(node, paint)
 
-          # dataBufferSeq[boundsOffset + 0] = minB.x
-          # dataBufferSeq[boundsOffset + 1] = minB.y
-          # dataBufferSeq[boundsOffset + 2] = maxB.x
-          # dataBufferSeq[boundsOffset + 3] = maxB.y
           dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
     else:
