@@ -36,7 +36,8 @@ proc getImageRefs*(fileKey: string) =
   client.headers["User-Agent"] = "curl/7.58.0"
   client.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey")
 
-  let data = client.getContent("https://api.figma.com/v1/files/" & fileKey & "/images")
+  let data = client.getContent(
+    "https://api.figma.com/v1/files/" & fileKey & "/images")
   writeFile("figma/images/images.json", data)
 
   let json = parseJson(data)
@@ -52,7 +53,10 @@ proc downloadFont*(fontPSName: string) =
 
   if not fileExists("figma/fonts/fonts.csv"):
     var client = newHttpClient()
-    let data = client.getContent("https://raw.githubusercontent.com/treeform/freefrontfinder/master/fonts.csv")
+    let data = client.getContent(
+      "https://raw.githubusercontent.com/treeform/" &
+      "freefrontfinder/master/fonts.csv"
+    )
     writeFile("figma/fonts/fonts.csv", data)
 
   for line in readFile("figma/fonts/fonts.csv").split("\n"):
@@ -84,13 +88,15 @@ proc download(figmaFileKey: string) =
   if fileExists(modifiedPath):
     ## Check if we really need to download the whole thing.
     let
-      data1 = figmaClient().getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?depth=1")
+      data1 = figmaClient().getContent(
+        "https://api.figma.com/v1/files/" & figmaFileKey & "?depth=1")
       figmaModified = parseJson(data1)["lastModified"].getStr()
       haveModified = readFile(modifiedPath)
     if figmaModified == haveModified:
       echo "Using cached"
       return
-  let data = figmaClient().getContent("https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
+  let data = figmaClient().getContent(
+    "https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
   let json = parseJson(data)
   writeFile(modifiedPath, json["lastModified"].getStr())
   writeFile(jsonPath, pretty(json))
@@ -118,10 +124,3 @@ proc use*(url: string) =
   figmaFile = parseFigmaFile(data)
 
   rebuildGlobTree()
-
-# proc useNodeFile*(filePath: string) =
-#   var data = readFile(filePath)
-#   echo data
-#   figmaFile = FigmaFile()
-#   figmaFile.document = Node()
-#   figmaFile.document.children = parseFigmaFile()
