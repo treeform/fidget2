@@ -13,6 +13,7 @@ vec4 prevGradientColor;
 mat3 tMat;
 float gradientK;
 float fillMask = 0.0;
+float mask = 1.0;
 mat3 mat;
 float prevGradientK;
 mat4 crossCountMat;
@@ -164,7 +165,7 @@ void gradientRadial(
   vec2 at0,
   vec2 to0
 ) {
-    if ((float(0)) < (fillMask)) {
+    if ((float(0)) < ((fillMask) * (mask))) {
     vec2 at = ((mat) * (vec3(at0, float(1)))).xy;
     vec2 to = ((mat) * (vec3(to0, float(1)))).xy;
     float distance = length((at) - (to));
@@ -196,8 +197,8 @@ void solidFill(
   float a
 ) {
 "Set the source color.";
-  if ((float(0)) < (fillMask)) {
-        backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, (a) * (fillMask)));
+  if ((float(0)) < ((fillMask) * (mask))) {
+        backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, ((a) * (fillMask)) * (mask)));
   };
 }
 
@@ -250,12 +251,12 @@ void gradientStop(
   float b,
   float a
 ) {
-    if ((float(0)) < (fillMask)) {
+    if ((float(0)) < ((fillMask) * (mask))) {
     vec4 gradientColor = vec4(r, g, b, a);
     if (((prevGradientK) < (gradientK)) && ((gradientK) <= (k))) {
       float betweenColors = ((gradientK) - (prevGradientK)) / ((k) - (prevGradientK));
       vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
-(colorG.w) *= (fillMask);;
+(colorG.w) *= ((fillMask) * (mask));;
       backdropColor = blendNormalFloats(backdropColor, colorG);
     };
     prevGradientK = k;
@@ -447,6 +448,10 @@ void runCommands(
       if (((((screenInv.x) < (minP.x)) || ((maxP.x) < (screenInv.x))) || ((screenInv.y) < (minP.y))) || ((maxP.y) < (screenInv.y))) {
                 i = (label) - (1);
       };
+    } else if ((command) == (16.0)) {
+            mask = fillMask;
+    } else if ((command) == (17.0)) {
+            mask = float(1.0);
     };
 (i) += (1);;
   };
@@ -459,18 +464,18 @@ void textureFill(
   vec2 size
 ) {
 "Set the source color.";
-  if ((float(0)) < (fillMask)) {
+  if ((float(0)) < ((fillMask) * (mask))) {
     vec2 uv = ((tMat) * (vec3((floor(screen)) + (vec2(float(0.5), float(0.5))), float(1)))).xy;
     if ((tile) == (float(0))) {
             if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
         vec4 textureColor = texture(textureAtlasSampler, uv);
-(textureColor.w) *= (fillMask);;
+(textureColor.w) *= ((fillMask) * (mask));;
         backdropColor = blendNormalFloats(backdropColor, textureColor);
       };
     } else {
       uv = (mod((uv) - (pos), size)) + (pos);
       vec4 textureColor = texture(textureAtlasSampler, uv);
-(textureColor.w) *= (fillMask);;
+(textureColor.w) *= ((fillMask) * (mask));;
       backdropColor = blendNormalFloats(backdropColor, textureColor);
     };
   };

@@ -27,6 +27,8 @@ const
   cmdQ*: float32 = 13
   cmdz*: float32 = 14
   cmdBoundCheck*: float32 = 15
+  cmdMaskFill*: float32 = 16
+  cmdMaskClear*: float32 = 17
 
 var
   crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
@@ -40,6 +42,7 @@ var
   gradientK: float32      # Gradient constant 0 to 1.
   prevGradientK: float32
   prevGradientColor: Vec4
+  mask: float32 = 1.0
 
 proc lineDir(a, b: Vec2): float32 =
   if a.y - b.y > 0:
@@ -231,12 +234,12 @@ proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
-  if fillMask > 0:
-    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask))
+  if fillMask * mask > 0:
+    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask))
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
-  if fillMask > 0:
+  if fillMask * mask > 0:
     # WE need to undo the AA when sampling images
     # * That is why we need to floor.
     # * That is why we need to add vec2(0.5, 0.5).
@@ -245,12 +248,12 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
       if uv.x > pos.x and uv.x < pos.x + size.x and
         uv.y > pos.y and uv.y < pos.y + size.y:
         var textureColor = texture(textureAtlasSampler, uv)
-        textureColor.w *= fillMask
+        textureColor.w *= fillMask * mask
         backdropColor = blendNormalFloats(backdropColor, textureColor)
     else:
       uv = ((uv - pos) mod size) + pos
       var textureColor = texture(textureAtlasSampler, uv)
-      textureColor.w *= fillMask
+      textureColor.w *= fillMask * mask
       backdropColor = blendNormalFloats(backdropColor, textureColor)
 
 proc toLineSpace(at, to, point: Vec2): float32 =
@@ -267,7 +270,7 @@ proc gradientLinear(at0, to0: Vec2) =
     gradientK = toLineSpace(at, to, screen).clamp(0, 1)
 
 proc gradientRadial(at0, to0: Vec2) =
-  if fillMask > 0:
+  if fillMask * mask > 0:
     let
       at = (mat * vec3(at0, 1)).xy
       to = (mat * vec3(to0, 1)).xy
@@ -275,7 +278,7 @@ proc gradientRadial(at0, to0: Vec2) =
     gradientK = ((at - screen).length() / distance).clamp(0, 1)
 
 proc gradientStop(k, r, g, b, a: float32) =
-  if fillMask > 0:
+  if fillMask * mask > 0:
     let gradientColor = vec4(r, g, b, a)
     if gradientK > prevGradientK and gradientK <= k:
       let betweenColors = (gradientK - prevGradientK) / (k - prevGradientK)
@@ -284,7 +287,7 @@ proc gradientStop(k, r, g, b, a: float32) =
         gradientColor,
         betweenColors
       )
-      colorG.w *= fillMask
+      colorG.w *= fillMask * mask
       backdropColor = blendNormalFloats(backdropColor, colorG)
     prevGradientK = k
     prevGradientColor = gradientColor
@@ -467,6 +470,10 @@ proc runCommands() =
       if screenInv.x < minP.x or screenInv.x > maxP.x or
         screenInv.y < minP.y or screenInv.y > maxP.y:
           i = label - 1
+    elif command == cmdMaskFill:
+      mask = fillMask
+    elif command == cmdMaskClear:
+      mask = 1.0
 
     i += 1
 

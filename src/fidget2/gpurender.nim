@@ -461,6 +461,12 @@ proc drawPaint(node: Node, paint: Paint) =
   if not paint.visible:
     return
 
+  if node.isMask:
+    dataBufferSeq.add @[
+      cmdMaskFill
+    ]
+    return
+
   proc toImageSpace(handle: Vec2): Vec2 =
     vec2(
       handle.x * node.absoluteBoundingBox.w,
@@ -663,13 +669,16 @@ proc drawNode*(node: Node, level: int) =
   dataBufferSeq.add mat[2, 1]
 
   node.computePixelBox()
-  dataBufferSeq.add cmdBoundCheck
-  dataBufferSeq.add node.pixelBox.x
-  dataBufferSeq.add node.pixelBox.y
-  dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
-  dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
-  let jmpOffset = dataBufferSeq.len
-  dataBufferSeq.add 0
+
+  var jmpOffset = 0
+  if not node.isMask:
+    dataBufferSeq.add cmdBoundCheck
+    dataBufferSeq.add node.pixelBox.x
+    dataBufferSeq.add node.pixelBox.y
+    dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
+    dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
+    jmpOffset = dataBufferSeq.len
+    dataBufferSeq.add 0
 
   case node.kind
     of nkGroup:
@@ -858,7 +867,8 @@ proc drawNode*(node: Node, level: int) =
     else:
       echo($node.kind & " not supported")
 
-  dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
+  if not node.isMask:
+    dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
   for childNode in node.children:
     drawNode(childNode, level + 1)
