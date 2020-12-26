@@ -60,7 +60,7 @@ proc setupRender*(frameNode: Node) =
   dataBufferSeq.setLen(0)
 
   if textureAtlas == nil:
-    textureAtlas = newCpuAtlas(1024*2, 1)
+    textureAtlas = newCpuAtlas(1024*8, 1)
 
 proc updateGpuAtlas() =
   glBindTexture(GL_TEXTURE_2D, textureAtlasId)
@@ -341,6 +341,12 @@ proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
     h = size.y
     s = splinyCirlce
 
+    maxRaidus = min(w/2, h/2)
+    nw = min(nw, maxRaidus)
+    ne = min(ne, maxRaidus)
+    se = min(se, maxRaidus)
+    sw = min(sw, maxRaidus)
+
     t1 = vec2(x + nw, y)
     t2 = vec2(x + w - ne, y)
     r1 = vec2(x + w, y + ne)
@@ -469,8 +475,10 @@ proc drawPaint(node: Node, paint: Paint) =
       downloadImageRef(paint.imageRef)
       try:
         image = readImage("figma/images/" & paint.imageRef & ".png")
-      except PixieError:
+      except IOError, PixieError:
         echo "Issue loading image: ", node.name
+        return
+
       textureAtlas.put(paint.imageRef, image)
       #updateGpuAtlas()
 
@@ -671,12 +679,12 @@ proc drawNode*(node: Node, level: int) =
       if node.fills.len > 0:
         dataBufferSeq.add cmdStartPath
         dataBufferSeq.add 0
-        if node.cornerRadius > 0:
-          let r = node.cornerRadius
-          drawRect(vec2(0, 0), node.size, r, r, r, r)
-        elif node.rectangleCornerRadii.len == 4:
+        if node.rectangleCornerRadii.len == 4:
           let r = node.rectangleCornerRadii
           drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
+        elif node.cornerRadius > 0:
+          let r = node.cornerRadius
+          drawRect(vec2(0, 0), node.size, r, r, r, r)
         else:
           drawRect(vec2(0, 0), node.size)
         dataBufferSeq.add cmdEndPath
@@ -688,19 +696,7 @@ proc drawNode*(node: Node, level: int) =
 
         dataBufferSeq.add cmdStartPath
         dataBufferSeq.add 0
-        if node.cornerRadius > 0:
-          let r = node.cornerRadius
-          drawRect(
-            vec2(-outer, -outer),
-            node.size + vec2(outer*2, outer*2),
-            r + outer, r + outer, r + outer, r + outer
-          )
-          drawRect(
-            vec2(+inner, +inner),
-            node.size - vec2(inner*2, inner*2),
-            r - inner, r - inner, r - inner, r - inner
-          )
-        elif node.rectangleCornerRadii.len == 4:
+        if node.rectangleCornerRadii.len == 4:
           let r = node.rectangleCornerRadii
           drawRect(
             vec2(-outer, -outer),
@@ -712,6 +708,18 @@ proc drawNode*(node: Node, level: int) =
             node.size - vec2(inner*2, inner*2),
             r[0] - inner, r[1] - inner, r[2] - inner, r[3] - inner
           )
+        elif node.cornerRadius > 0:
+          let r = node.cornerRadius
+          drawRect(
+            vec2(-outer, -outer),
+            node.size + vec2(outer*2, outer*2),
+            r + outer, r + outer, r + outer, r + outer
+          )
+          drawRect(
+            vec2(+inner, +inner),
+            node.size - vec2(inner*2, inner*2),
+            r - inner, r - inner, r - inner, r - inner
+          )
         else:
           drawRect(vec2(-outer, -outer), node.size + vec2(outer*2, outer*2))
           drawRect(vec2(+inner, +inner), node.size - vec2(inner*2, inner*2))
@@ -720,34 +728,34 @@ proc drawNode*(node: Node, level: int) =
         for paint in node.strokes:
           drawPaint(node, paint)
 
-    of nkEllipse:
-      dataBufferSeq.add cmdStartPath
-      dataBufferSeq.add 0
-      drawEllipse(node.size/2, node.size/2)
-      dataBufferSeq.add cmdEndPath
-      for paint in node.fills:
-        drawPaint(node, paint)
+    # of nkEllipse:
+    #   dataBufferSeq.add cmdStartPath
+    #   dataBufferSeq.add 0
+    #   drawEllipse(node.size/2, node.size/2)
+    #   dataBufferSeq.add cmdEndPath
+    #   for paint in node.fills:
+    #     drawPaint(node, paint)
 
-      if node.strokes.len > 0:
-        let (inner, outer) = node.strokeInnerOuter()
-        dataBufferSeq.add cmdStartPath
-        dataBufferSeq.add 0
-        drawEllipse(node.size/2, node.size/2 + vec2(outer))
-        drawEllipse(node.size/2, node.size/2 - vec2(inner))
-        dataBufferSeq.add cmdEndPath
-        for paint in node.strokes:
-          drawPaint(node, paint)
+    #   if node.strokes.len > 0:
+    #     let (inner, outer) = node.strokeInnerOuter()
+    #     dataBufferSeq.add cmdStartPath
+    #     dataBufferSeq.add 0
+    #     drawEllipse(node.size/2, node.size/2 + vec2(outer))
+    #     drawEllipse(node.size/2, node.size/2 - vec2(inner))
+    #     dataBufferSeq.add cmdEndPath
+    #     for paint in node.strokes:
+    #       drawPaint(node, paint)
 
-    of nkRegularPolygon, nkVector, nkStar:
+    of nkRegularPolygon, nkVector, nkStar, nkLine, nkEllipse:
       for geom in node.fillGeometry:
         drawGeom(node, geom)
-      for paint in node.fills:
-        drawPaint(node, paint)
+        for paint in node.fills:
+          drawPaint(node, paint)
 
       for geom in node.strokeGeometry:
         drawGeom(node, geom)
-      for paint in node.strokes:
-        drawPaint(node, paint)
+        for paint in node.strokes:
+          drawPaint(node, paint)
 
     of nkText:
 
