@@ -14,11 +14,11 @@ proc computeLayout*(parent, node: Node) =
       node.box.x = parent.box.w - rightSpace
     of cScale:
       let xScale = parent.box.w / parent.orgBox.w
-      node.box.x *= xScale
-      node.box.w *= xScale
+      node.box.x = node.orgBox.x * xScale
+      node.box.w = node.orgBox.w * xScale
     of cStretch:
-      let xDiff = parent.box.w - parent.orgBox.w
-      node.box.w += xDiff
+      let rightSpace = parent.orgBox.w - node.orgBox.w
+      node.box.w = parent.box.w - rightSpace
     of cCenter:
       let offset = floor((node.orgBox.w - parent.orgBox.w) / 2.0 + node.orgBox.x)
       node.box.x = floor((parent.box.w - node.box.w) / 2.0) + offset
@@ -30,11 +30,11 @@ proc computeLayout*(parent, node: Node) =
       node.box.y = parent.box.h - bottomSpace
     of cScale:
       let yScale = parent.box.h / parent.orgBox.h
-      node.box.y *= yScale
-      node.box.h *= yScale
+      node.box.y = node.orgBox.y * yScale
+      node.box.h = node.orgBox.h * yScale
     of cStretch:
-      let yDiff = parent.box.h - parent.orgBox.h
-      node.box.h += yDiff
+      let bottomSpace = parent.orgBox.h - node.orgBox.h
+      node.box.h = parent.box.h - bottomSpace
     of cCenter:
       let offset = floor((node.orgBox.h - parent.orgBox.h) / 2.0 + node.orgBox.y)
       node.box.y = floor((parent.box.h - node.box.h) / 2.0) + offset
