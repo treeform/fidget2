@@ -1,6 +1,6 @@
 import staticglfw, opengl, math, schema, gpurender, pixie, vmath, bumpy,
   loader, typography, typography/textboxes, tables, input, unicode, sequtils,
-  strutils
+  strutils, strformat
 
 export textboxes
 
@@ -43,7 +43,7 @@ type
 
 var
   windowTitle* = "Fidget"
-  windowSizeFixed*: bool
+  windowResizable*: bool
   mousePos*: Vec2
   callBacks: seq[proc()]
   requestedFrame*: bool
@@ -350,6 +350,14 @@ proc display() =
     mousePos.x = x
     mousePos.y = y
 
+  if windowResizable:
+    # Stretch the current frame to fit the window.
+    currentFrame.box.wh = windowSize
+  else:
+    # Stretch the window to fit the current frame.
+    if windowSize != currentFrame.box.wh:
+      window.setWindowSize(currentFrame.box.w.cint, currentFrame.box.h.cint)
+
   for cb in callBacks:
     cb()
 
@@ -367,6 +375,10 @@ proc startFidget*(
   ## Starts Fidget Main loop.
 
   currentFrame = find(entryFrame)
+  windowResizable = resizable
+
+  if currentFrame == nil:
+    raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
 
   createWindow(
     currentFrame,
