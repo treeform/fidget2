@@ -17,6 +17,9 @@ proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
   var imgWidth = width + atlas.margin * 2
   var imgHeight = height + atlas.margin * 2
 
+  if imgWidth > atlas.image.width or imgHeight > atlas.image.height:
+    raise newException(Exception, "Atlas is too small for image.")
+
   var at: (int, int)
   block bothLoops:
     for y in 0 ..< atlas.image.height:
@@ -42,8 +45,7 @@ proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
           at = (x, y)
           break bothLoops
 
-  if at[1] + imgHeight > atlas.image.height:
-    raise newException(Exception, "Context Atlas is full")
+    raise newException(Exception, "Atlas is full.")
     #ctx.grow()
     #return ctx.findEmptyRect(width, height)
 
