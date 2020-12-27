@@ -2,7 +2,7 @@ import fidget2, strutils, chroma, strformat
 
 type
   InputState = enum
-    isEmpty, isNumber, isError
+    isEmpty, isNumber, isError,
 
 var
   # TODO empty state?
@@ -11,8 +11,8 @@ var
   fahrenheitState = isEmpty
   fahrenheit = 0.0
 
-@CelsiusInput:
-  @text:
+at CelsiusInput:
+  at text:
     onDisplay:
       if celsiusState == isEmpty:
         thisNode.characters = ""

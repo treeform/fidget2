@@ -60,9 +60,18 @@ proc globMatchOne(s, glob: string): bool =
   if i == s.len and j == glob.len:
     return true
 
+proc globSimplify(globArr: seq[string]): seq[string] =
+  ## Simplify backwards ".." paths.
+  for glob in globArr:
+    if glob == "..":
+      discard result.pop()
+    else:
+      result.add glob
+
 proc globMatch(sArr, globArr: seq[string]): bool =
   ## Match a seq string to a seq glob pattern.
   var
+    globArr = globSimplify(globArr)
     i = 0
     j = 0
   while i < sArr.len and j < globArr.len:
@@ -88,7 +97,6 @@ proc globMatch(sArr, globArr: seq[string]): bool =
 proc globMatch*(s, glob: string): bool =
   ## Match a string to a glob pattern.
   globMatch(s.split("/"), glob.split("/"))
-
 
 type
   GlobTree*[T] = ref object

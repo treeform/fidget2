@@ -7,13 +7,6 @@ var
 
 var imageRefToUrl: Table[string, string]
 
-proc find*(glob: string): Node =
-  globTree.find(glob)
-
-iterator findAll*(glob: string): Node =
-  for node in globTree.findAll(glob):
-    yield node
-
 proc downloadImageRef*(imageRef: string) =
   if not fileExists("figma/images/" & imageRef & ".png"):
     if imageRef in imageRefToUrl:

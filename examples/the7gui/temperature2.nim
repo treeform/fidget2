@@ -29,6 +29,7 @@ onDisplay "CelsiusInput/bg":
 # onFocus "CelsiusInput/text":
 #   textBox.endOfLine()
 onEdit "CelsiusInput/text":
+  # only call when text characters change
   if thisNode.characters == "":
     celsiusState = isEmpty
     fahrenheitState = isGray

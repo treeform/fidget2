@@ -81,6 +81,13 @@ assert globMatch("foo/bar/baz/at1", "**/bar*/???/at*") == true
 
 assert globMatch("foo/bar", "foo/bar.text") == false
 
+assert globMatch("foo/bar", "foo/bar/../bar") == true
+assert globMatch("foo/bar", "foo/zzz/../bar") == true
+assert globMatch("foo/bar/baz", "foo/bar/../bar/baz") == true
+assert globMatch("foo/bar/baz", "foo/zzz/../bar/baz") == true
+assert globMatch("foo", "foo/bar/../../foo") == true
+assert globMatch("foo", "foo/zzz/../../foo") == true
+
 var tree = GlobTree[int]()
 
 tree.add("foo/bar/baz", 0)

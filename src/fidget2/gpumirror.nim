@@ -1,6 +1,6 @@
 import staticglfw, opengl, math, schema, gpurender, pixie, vmath, bumpy,
   loader, typography, typography/textboxes, tables, input, unicode, sequtils,
-  strutils, strformat
+  strutils, strformat, sequtils, globs
 
 export textboxes
 
@@ -62,6 +62,9 @@ var
   pixelRatio*: float32 ## Multiplier to convert from screen coords to pixels
   pixelScale*: float32 ## Pixel multiplier user wants on the UI
 
+  currentSelector*: string
+  selectorStack: seq[string]
+
 proc display()
 
 proc clearInputs*() =
@@ -95,16 +98,43 @@ template onFrame*(body: untyped) =
     callBacks.add proc() =
       body
 
-proc makeSelector(glob: string): string =
-  if glob.startsWith('/'):
-    return glob[1..^1]
-  currentFrame .name & "/" & glob
+proc find*(glob: string): Node =
+  var glob = glob
+  if currentSelector.len > 0:
+    glob = currentSelector & "/" & glob
+  globTree.find(glob)
 
-template onClick*(glob: string, body: untyped) =
+iterator findAll*(glob: string): Node =
+  var glob = glob
+  if currentSelector.len > 0:
+    glob = currentSelector & "/" & glob
+  for node in globTree.findAll(glob):
+    yield node
+
+template find*(glob: string, body: untyped) =
+  selectorStack.add(currentSelector)
+  if currentSelector.len > 0:
+    currentSelector = currentSelector & "/" & glob
+  else:
+    currentSelector = glob
+
+  body
+
+  currentSelector = selectorStack.pop()
+
+
+proc makeSelector(glob: string): string =
+  #if glob.startsWith('/'):
+  #  return glob[1..^1]
+  # currentFrame.name & "/" & glob
+  return glob
+
+template onClick*(body: untyped) =
   ## When node is clicked.
+  var curSel = currentSelector
   onFrame:
     if mouse.click:
-      for node in findAll(makeSelector(glob)):
+      for node in findAll(makeSelector(curSel)):
         if node.rect.overlap(mousePos):
           thisNode = node
           body
@@ -136,29 +166,30 @@ proc setupTextBox(node: Node) =
   #textBox.scrollable = true
   echo "textBox created"
 
-template onEdit*(glob: string, body: untyped) =
+template onEdit*(body: untyped) =
   ## When text node is display or edited.
+  var curSel = currentSelector
   onFrame:
     if mouse.click:
-      for node in findAll(makeSelector(glob)):
+      for node in findAll(makeSelector(curSel)):
         if node.rect.overlap(mousePos):
-          thisNode = node
-          echo "start the editor on this node"
           setupTextBox(node)
-          thisNode = nil
 
     if textBoxFocus != nil and textBox != nil:
-      for node in findAll(makeSelector(glob)):
+      for node in findAll(makeSelector(curSel)):
         if textBoxFocus == node:
           node.characters = $textBox.runes
           thisNode = node
+          currentSelector = curSel
           body
           thisNode = nil
+          currentSelector = ""
 
-template onDisplay*(glob: string, body: untyped) =
+template onDisplay*(body: untyped) =
   ## When a text node is displayed and will continue to update.
+  var curSel = currentSelector
   onFrame:
-    for node in findAll(makeSelector(glob)):
+    for node in findAll(makeSelector(curSel)):
       thisNode = node
       body
       thisNode = nil
@@ -180,6 +211,7 @@ template onUnfocus*(glob: string, body: untyped) =
         thisNode = node
         body
         thisNode = nil
+
 
 proc rect*(node: Node): Rect =
   ## Gets the nodes rectangle on screen.
@@ -365,11 +397,14 @@ proc display() =
   clearInputs()
 
 proc startFidget*(
+  figmaUrl: string,
   windowTitle: string,
   entryFrame: string,
   resizable = true
 ) =
   ## Starts Fidget Main loop.
+
+  use(figmaUrl)
 
   currentFrame = find(entryFrame)
   windowResizable = resizable

@@ -1,38 +1,43 @@
 import fidget2, strutils, chroma, strformat
 
-proc `fillColor=`(node: Node, colorHtml: string) =
-  node.fills[0].color = parseHtmlColor(colorHtml)
-
-use("https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa")
+proc setVariant(node: Node, name, value: string) =
+  if name == "State":
+    if value == "Default":
+      node.fills[0].color = parseHtmlColor("#FFFFFF")
+    elif value == "Error":
+      node.fills[0].color = parseHtmlColor("#FFDAC5")
 
 var
   celsius = 0.0
   fahrenheit = 32.0
 
-onDisplay "CelsiusInput/text":
-  thisNode.characters = &"{celsius:0.2f}"
-onEdit "CelsiusInput/text":
-  try:
-    celsius = parseFloat(thisNode.characters)
-    find("**/CelsiusInput/bg").fillColor = "#FFFFFF"
-    find("**/FahrenheitInput/bg").fillColor = "#FFFFFF"
-  except ValueError:
-    find("**/CelsiusInput/bg").fillColor = "#FFDAC5"
-  fahrenheit = celsius * (9/5) + 32.0
+find "TemperatureFrame":
 
-onDisplay "FahrenheitInput/text":
-  thisNode.characters = &"{fahrenheit:0.2f}"
-onEdit "FahrenheitInput/text":
-  try:
-    fahrenheit = parseFloat(thisNode.characters)
-    find("**/FahrenheitInput/bg").fillColor = "#FFFFFF"
-    find("**/CelsiusInput/bg").fillColor = "#FFFFFF"
-  except ValueError:
-    find("**/FahrenheitInput/bg").fillColor = "#FFDAC5"
-  celsius = (fahrenheit - 32.0) * (5/9)
+  find "CelsiusInput/text":
+    onDisplay:
+      thisNode.characters = &"{celsius:0.2f}"
+    onEdit:
+      try:
+        celsius = parseFloat(thisNode.characters)
+        fahrenheit = celsius * (9/5) + 32.0
+        find("../bg").setVariant("State", "Default")
+      except ValueError:
+        find("../bg").setVariant("State", "Error")
+
+  find "FahrenheitInput/text":
+    onDisplay:
+      thisNode.characters = &"{fahrenheit:0.2f}"
+    onEdit:
+      try:
+        fahrenheit = parseFloat(thisNode.characters)
+        celsius = (fahrenheit - 32.0) * (5/9)
+        find("../bg").setVariant("State", "Default")
+      except ValueError:
+        find("../bg").setVariant("State", "Error")
 
 startFidget(
+  figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Temperature",
-  entryFrame = "Temperature",
+  entryFrame = "TemperatureFrame",
   resizable = false
 )
