@@ -1,6 +1,6 @@
 import atlas, chroma, os, pixie, strutils, strformat, times,
   math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math,
-  pixie, tables, typography, schema, bumpy, loader, layout
+  pixie, tables, typography, schema, bumpy, loader, layout, typography/textboxes
 
 var
   # Window stuff.
@@ -9,6 +9,10 @@ var
   windowReady = false
   window*: Window
   offscreen* = false
+
+  # Text edit.
+  textBox*: TextBox
+  textBoxFocus*: Node
 
   # Buffers.
   dataBufferSeq*: seq[float32]
@@ -60,7 +64,7 @@ proc setupRender*(frameNode: Node) =
   dataBufferSeq.setLen(0)
 
   if textureAtlas == nil:
-    textureAtlas = newCpuAtlas(1024*8, 1)
+    textureAtlas = newCpuAtlas(256, 1)
 
 proc updateGpuAtlas() =
   glBindTexture(GL_TEXTURE_2D, textureAtlasId)
@@ -803,18 +807,48 @@ proc drawNode*(node: Node, level: int) =
         textCase = node.style.textCase,
       )
 
-      for gpos in layout:
+      for i, gpos in layout:
         var font = gpos.font
         proc trans(v: Vec2): Vec2 =
           result = v * font.scale
           result.y = -result.y
 
+        if node == textBoxFocus:
+          proc drawCrusor(rect: Rect) =
+            dataBufferSeq.add cmdStartPath
+            dataBufferSeq.add kNonZero
+            drawRect(
+              rect.xy,
+              rect.wh
+            )
+            dataBufferSeq.add cmdEndPath
+            dataBufferSeq.add @[
+              cmdSolidFill,
+              0,
+              0,
+              0,
+              1
+            ]
+          if textBox.cursor == 0 and i == 0:
+            drawCrusor(rect(
+              gpos.selectRect.x - 1,
+              gpos.selectRect.y,
+              1,
+              gpos.selectRect.h
+            ))
+          elif textBox.cursor == i + 1:
+            drawCrusor(rect(
+              gpos.selectRect.x + gpos.selectRect.w,
+              gpos.selectRect.y,
+              1,
+              gpos.selectRect.h
+            ))
+
         if gpos.character in font.typeface.glyphs:
           var glyph = font.typeface.glyphs[gpos.character]
           glyph.makeReady(font)
 
-          # dataBufferSeq.add cmdStartPath
-          # dataBufferSeq.add kNonZero
+
           let
             tx = glyph.bboxMin.x * font.scale
             ty = glyph.bboxMin.y * font.scale
@@ -824,10 +858,11 @@ proc drawNode*(node: Node, level: int) =
               gpos.rect.x + tx, gpos.rect.y - h - ty,
               w, h
             )
+
+          # display clip regions
+          # dataBufferSeq.add cmdStartPath
+          # dataBufferSeq.add kNonZero
           # drawRect(glyphBounds.xy, glyphBounds.wh)
-          #   #vec2(gpos.rect.x + tx, gpos.rect.y - h - ty),
-          #   #vec2(w, h)
-          # #)
           # dataBufferSeq.add cmdEndPath
           # dataBufferSeq.add @[
           #   cmdSolidFill,

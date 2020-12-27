@@ -33,13 +33,12 @@ type
     ctrlKey*: bool
     shiftKey*: bool
     superKey*: bool
-    focusNode*: Node
+    #focusNode*: Node (use textBoxFocus)
     onFocusNode*: Node
     onUnFocusNode*: Node
     input*: string
-    textCursor*: int ## At which character in the input string are we
-    selectionCursor*: int ## To which character are we selecting to
-
+    # textCursor*: int ## At which character in the input string are we
+    # selectionCursor*: int ## To which character are we selecting to
 
 var
   windowTitle* = "Fidget"
@@ -53,8 +52,6 @@ var
 
   currentFrame*: Node
   thisNode*: Node
-
-  textBox*: TextBox
 
   fullscreen* = false
   running*, focused*, minimized*: bool
@@ -116,9 +113,9 @@ template onClick*(glob: string, body: untyped) =
 
 proc setupTextBox(node: Node) =
 
-  keyboard.onUnFocusNode = keyboard.focusNode
-  keyboard.focusNode = node
-  keyboard.onFocusNode = keyboard.focusNode
+  keyboard.onUnFocusNode = textBoxFocus
+  textBoxFocus = node
+  keyboard.onFocusNode = textBoxFocus
 
   var font = Font()
   font.typeface = typefaceCache[node.style.fontPostScriptName]
@@ -150,9 +147,9 @@ template onEdit*(glob: string, body: untyped) =
           setupTextBox(node)
           thisNode = nil
 
-    if keyboard.focusNode != nil and textBox != nil:
+    if textBoxFocus != nil and textBox != nil:
       for node in findAll(makeSelector(glob)):
-        if keyboard.focusNode == node:
+        if textBoxFocus == node:
           node.characters = $textBox.runes
           thisNode = node
           body
@@ -170,16 +167,16 @@ template onFocus*(glob: string, body: untyped) =
   ## When a text node is displayed and will continue to update.
   onFrame:
     for node in findAll(makeSelector(glob)):
-      if keyboard.focusNode == node:
+      if textBoxFocus == node:
         thisNode = node
         body
         thisNode = nil
 
-template onUnFocus*(glob: string, body: untyped) =
+template onUnfocus*(glob: string, body: untyped) =
   ## When a text node is displayed and will continue to update.
   onFrame:
     for node in findAll(makeSelector(glob)):
-      if keyboard.unFocusNode == node:
+      if keyboard.unfocusNode == node:
         thisNode = node
         body
         thisNode = nil
@@ -319,7 +316,7 @@ proc onSetCharCallback(window: staticglfw.Window, character: cuint) {.cdecl.} =
 
 proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
   requestedFrame = true
-  if keyboard.focusNode != nil:
+  if textBoxFocus != nil:
     textBox.scrollBy(-yoffset * 50)
   else:
     mouse.wheelDelta += yoffset

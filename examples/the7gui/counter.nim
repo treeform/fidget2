@@ -11,7 +11,8 @@ onClick("Count1Up"):
   inc count
 
 # When text is displayed it grabs the value from the count variable.
-onDisplay("CounterDisplay/text", count)
+onDisplay "CounterDisplay/text":
+  thisNode.characters = $count
 
 # Starts the fidget main loop.
 startFidget(

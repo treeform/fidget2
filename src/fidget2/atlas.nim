@@ -13,12 +13,16 @@ proc newCpuAtlas*(size, margin: int): CpuAtlas =
   result.margin = margin
   result.heights = newSeq[uint16](size)
 
+proc grow(atlas: CpuAtlas)
+
 proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
   var imgWidth = width + atlas.margin * 2
   var imgHeight = height + atlas.margin * 2
 
   if imgWidth > atlas.image.width or imgHeight > atlas.image.height:
-    raise newException(Exception, "Atlas is too small for image.")
+    #raise newException(Exception, "Atlas is too small for image.")
+    atlas.grow()
+    return atlas.findEmptyRect(width, height)
 
   var at: (int, int)
   block bothLoops:
@@ -45,9 +49,9 @@ proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
           at = (x, y)
           break bothLoops
 
-    raise newException(Exception, "Atlas is full.")
-    #ctx.grow()
-    #return ctx.findEmptyRect(width, height)
+    #raise newException(Exception, "Atlas is full.")
+    atlas.grow()
+    return atlas.findEmptyRect(width, height)
 
   let top = uint16(at[1] + imgHeight)
   for x in at[0] ..< at[0] + imgWidth:
@@ -66,3 +70,13 @@ proc put*(atlas: CpuAtlas, name: string, image: Image) =
   let rect = atlas.findEmptyRect(image.width, image.height)
   atlas.entries[name] = rect
   atlas.image.draw(image, rect.xy, blendMode = bmOverwrite)
+
+proc size(atlas: CpuAtlas): int =
+  atlas.image.width
+
+proc grow(atlas: CpuAtlas) =
+  print "**** grow ****", atlas.size*2
+  var image = newImage(atlas.size*2, atlas.size*2)
+  image.draw(atlas.image)
+  atlas.image = image
+  atlas.heights.setLen(atlas.size*2)

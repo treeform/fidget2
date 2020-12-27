@@ -3,9 +3,8 @@ import fidget2
 # Connect a figma file to the code base.
 use("https://www.figma.com/file/Cto22A31tUso9On23AIpM7")
 
-# mainFrame =
-# windowSizeFixed = true
-# startFidget()
+onFrame:
+  echo "here"
 
 startFidget(
   windowTitle = "Crew Dragon Flight Control UI",
