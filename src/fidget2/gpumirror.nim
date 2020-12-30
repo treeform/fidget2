@@ -35,7 +35,7 @@ type
     superKey*: bool
     #focusNode*: Node (use textBoxFocus)
     onFocusNode*: Node
-    onUnFocusNode*: Node
+    onUnfocusNode*: Node
     input*: string
     # textCursor*: int ## At which character in the input string are we
     # selectionCursor*: int ## To which character are we selecting to
@@ -44,7 +44,8 @@ var
   windowTitle* = "Fidget"
   windowResizable*: bool
   mousePos*: Vec2
-  callBacks: seq[proc()]
+  generaCbs: seq[proc()]
+  focusCbs: seq[proc()]
   requestedFrame*: bool
 
   mouse* = Mouse()
@@ -81,7 +82,7 @@ proc clearInputs*() =
     keyboard.state = KeyState.Empty
 
   keyboard.onFocusNode = nil
-  keyboard.onUnFocusNode = nil
+  keyboard.onUnfocusNode = nil
 
 proc click*(mouse: Mouse): bool =
   buttonPress[MOUSE_LEFT]
@@ -95,7 +96,7 @@ proc showPopup*(name: string) =
 template onFrame*(body: untyped) =
   ## Called once for each frame drawn.
   block:
-    callBacks.add proc() =
+    generaCbs.add proc() =
       body
 
 proc find*(glob: string): Node =
@@ -143,7 +144,7 @@ template onClick*(body: untyped) =
 
 proc setupTextBox(node: Node) =
 
-  keyboard.onUnFocusNode = textBoxFocus
+  keyboard.onUnfocusNode = textBoxFocus
   textBoxFocus = node
   keyboard.onFocusNode = textBoxFocus
 
@@ -191,26 +192,34 @@ template onDisplay*(body: untyped) =
   onFrame:
     for node in findAll(makeSelector(curSel)):
       thisNode = node
+      currentSelector = curSel
       body
       thisNode = nil
+      currentSelector = ""
 
-template onFocus*(glob: string, body: untyped) =
+template onFocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
-  onFrame:
-    for node in findAll(makeSelector(glob)):
-      if textBoxFocus == node:
+  var curSel = currentSelector
+  focusCbs.add proc() =
+    for node in findAll(makeSelector(curSel)):
+      if keyboard.onFocusNode == node:
         thisNode = node
+        currentSelector = curSel
         body
         thisNode = nil
+        currentSelector = ""
 
-template onUnfocus*(glob: string, body: untyped) =
+template onUnfocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
-  onFrame:
-    for node in findAll(makeSelector(glob)):
-      if keyboard.unfocusNode == node:
+  var curSel = currentSelector
+  focusCbs.add proc() =
+    for node in findAll(makeSelector(curSel)):
+      if keyboard.onUnfocusNode == node:
         thisNode = node
+        currentSelector = curSel
         body
         thisNode = nil
+        currentSelector = ""
 
 
 proc rect*(node: Node): Rect =
@@ -387,14 +396,17 @@ proc display() =
     if windowSize != currentFrame.box.wh:
       window.setWindowSize(currentFrame.box.w.cint, currentFrame.box.h.cint)
 
-  for cb in callBacks:
+  for cb in generaCbs:
     cb()
+
+  for cb in focusCbs:
+    cb()
+
+  clearInputs()
 
   drawGpuFrame(currentFrame)
 
   swapBuffers(window)
-
-  clearInputs()
 
 proc startFidget*(
   figmaUrl: string,

@@ -61,10 +61,13 @@ proc globMatchOne(s, glob: string): bool =
     return true
 
 proc globSimplify(globArr: seq[string]): seq[string] =
-  ## Simplify backwards ".." paths.
+  ## Simplify backwards ".." and absolute "//" paths.
   for glob in globArr:
     if glob == "..":
-      discard result.pop()
+      if result.len > 0:
+        discard result.pop()
+    elif glob == "":
+      result.setLen(0)
     else:
       result.add glob
 

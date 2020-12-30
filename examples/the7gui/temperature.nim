@@ -21,8 +21,12 @@ find "TemperatureFrame":
         celsius = parseFloat(thisNode.characters)
         fahrenheit = celsius * (9/5) + 32.0
         find("../bg").setVariant("State", "Default")
+        # find("/TemperatureFrame/FahrenheitInput/bg").setVariant("State", "Default")
       except ValueError:
         find("../bg").setVariant("State", "Error")
+    onUnfocus:
+      echo "unfocus CelsiusInput"
+      find("../bg").setVariant("State", "Default")
 
   find "FahrenheitInput/text":
     onDisplay:
@@ -32,8 +36,12 @@ find "TemperatureFrame":
         fahrenheit = parseFloat(thisNode.characters)
         celsius = (fahrenheit - 32.0) * (5/9)
         find("../bg").setVariant("State", "Default")
+        #find("/TemperatureFrame/CelsiusInput/bg").setVariant("State", "Default")
       except ValueError:
         find("../bg").setVariant("State", "Error")
+    onUnfocus:
+      echo "unfocus FahrenheitInput"
+      find("../bg").setVariant("State", "Default")
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
