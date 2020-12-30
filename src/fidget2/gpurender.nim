@@ -817,6 +817,7 @@ proc drawNode*(node: Node, level: int) =
         textCase = node.style.textCase,
       )
 
+
       for i, gpos in layout:
         var font = gpos.font
 
@@ -851,6 +852,9 @@ proc drawNode*(node: Node, level: int) =
               1,
               gpos.selectRect.h
             ))
+
+      for i, gpos in layout:
+        var font = gpos.font
 
         if gpos.character in font.typeface.glyphs:
           var glyph = font.typeface.glyphs[gpos.character]

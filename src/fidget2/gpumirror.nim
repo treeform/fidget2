@@ -1,6 +1,6 @@
 import staticglfw, opengl, math, schema, gpurender, pixie, vmath, bumpy,
   loader, typography, typography/textboxes, tables, input, unicode, sequtils,
-  strutils, strformat, sequtils, globs
+  strutils, strformat, sequtils, globs, algorithm, print, json
 
 export textboxes
 
@@ -40,19 +40,35 @@ type
     # textCursor*: int ## At which character in the input string are we
     # selectionCursor*: int ## To which character are we selecting to
 
+  EventCbKind* = enum
+    eOnClick
+    eOnFrame
+    eOnEdit
+    eOnDisplay
+    eOnFocus
+    eOnUnfocus
+
+  EventCb* = ref object
+    kind*: EventCbKind
+    priority*: int
+    selector*: string
+    run*: proc()
+
 var
   windowTitle* = "Fidget"
   windowResizable*: bool
   mousePos*: Vec2
-  generaCbs: seq[proc()]
-  focusCbs: seq[proc()]
+  eventCbs: seq[EventCb]
   requestedFrame*: bool
 
   mouse* = Mouse()
   keyboard* = Keyboard()
 
-  currentFrame*: Node
+  thisFrame*: Node
   thisNode*: Node
+  thisCb*: EventCb
+  thisSelector*: string
+  selectorStack: seq[string]
 
   fullscreen* = false
   running*, focused*, minimized*: bool
@@ -63,8 +79,7 @@ var
   pixelRatio*: float32 ## Multiplier to convert from screen coords to pixels
   pixelScale*: float32 ## Pixel multiplier user wants on the UI
 
-  currentSelector*: string
-  selectorStack: seq[string]
+
 
 proc display()
 
@@ -93,54 +108,89 @@ proc down*(mouse: Mouse): bool =
 proc showPopup*(name: string) =
   discard
 
-template onFrame*(body: untyped) =
-  ## Called once for each frame drawn.
-  block:
-    generaCbs.add proc() =
-      body
+proc addCb*(
+  kind: EventCbKind,
+  priority: int,
+  selector: string,
+  run: proc(),
+) =
+  eventCbs.add EventCb(
+    kind: kind,
+    priority: priority,
+    selector: selector,
+    run: run
+  )
 
 proc find*(glob: string): Node =
   var glob = glob
-  if currentSelector.len > 0:
-    glob = currentSelector & "/" & glob
+  if thisSelector.len > 0:
+    glob = thisSelector & "/" & glob
   globTree.find(glob)
 
 iterator findAll*(glob: string): Node =
   var glob = glob
-  if currentSelector.len > 0:
-    glob = currentSelector & "/" & glob
+  if thisSelector.len > 0:
+    glob = thisSelector & "/" & glob
   for node in globTree.findAll(glob):
     yield node
 
 template find*(glob: string, body: untyped) =
-  selectorStack.add(currentSelector)
-  if currentSelector.len > 0:
-    currentSelector = currentSelector & "/" & glob
+  selectorStack.add(thisSelector)
+  if thisSelector.len > 0:
+    thisSelector = thisSelector & "/" & glob
   else:
-    currentSelector = glob
+    thisSelector = glob
 
   body
 
-  currentSelector = selectorStack.pop()
+  thisSelector = selectorStack.pop()
 
 
 proc makeSelector(glob: string): string =
   #if glob.startsWith('/'):
   #  return glob[1..^1]
-  # currentFrame.name & "/" & glob
+  # thisFrame.name & "/" & glob
   return glob
+
+
+template onFrame*(body: untyped) =
+  ## Called once for each frame drawn.
+  addCb(
+    eOnFrame,
+    0,
+    "",
+    proc() =
+      body
+  )
+
+template onDisplay*(body: untyped) =
+  ## When a text node is displayed and will continue to update.
+  addCb(
+    eOnDisplay,
+    1000,
+    thisSelector,
+    proc() =
+      for node in globTree.findAll(thisSelector):
+        thisNode = node
+        body
+        thisNode = nil
+
+  )
 
 template onClick*(body: untyped) =
   ## When node is clicked.
-  var curSel = currentSelector
-  onFrame:
-    if mouse.click:
-      for node in findAll(makeSelector(curSel)):
-        if node.rect.overlap(mousePos):
-          thisNode = node
-          body
-          thisNode = nil
-          #mouse.click = false
+  addCb(
+    eOnClick,
+    100,
+    thisSelector,
+    proc() =
+      if mouse.click:
+        for node in globTree.findAll(thisSelector):
+          if node.rect.overlap(mousePos):
+            thisNode = node
+            body
+            thisNode = nil
+  )
 
 proc setupTextBox(node: Node) =
 
@@ -169,58 +219,63 @@ proc setupTextBox(node: Node) =
 
 template onEdit*(body: untyped) =
   ## When text node is display or edited.
-  var curSel = currentSelector
-  onFrame:
-    if mouse.click:
-      for node in findAll(makeSelector(curSel)):
-        if node.rect.overlap(mousePos):
-          setupTextBox(node)
+  addCb(
+    eOnClick,
+    100,
+    thisSelector,
+    proc() =
+      if mouse.click:
+        for node in globTree.findAll(thisSelector):
+          if node.rect.overlap(mousePos):
+            setupTextBox(node)
+  )
+  addCb(
+    eOnEdit,
+    1200,
+    thisSelector,
+    proc() =
+      if textBoxFocus != nil and textBox != nil:
 
-    if textBoxFocus != nil and textBox != nil:
-      for node in findAll(makeSelector(curSel)):
-        if textBoxFocus == node:
-          node.characters = $textBox.runes
-          thisNode = node
-          currentSelector = curSel
-          body
-          thisNode = nil
-          currentSelector = ""
+        textBoxFocus.characters = $textBox.runes
 
-template onDisplay*(body: untyped) =
-  ## When a text node is displayed and will continue to update.
-  var curSel = currentSelector
-  onFrame:
-    for node in findAll(makeSelector(curSel)):
-      thisNode = node
-      currentSelector = curSel
-      body
-      thisNode = nil
-      currentSelector = ""
+        for node in globTree.findAll(thisSelector):
+          if textBoxFocus == node and textBox.hasChange:
+            thisNode = node
+            body
+            thisNode = nil
+            textBox.hasChange = false
 
-template onFocus*(body: untyped) =
-  ## When a text node is displayed and will continue to update.
-  var curSel = currentSelector
-  focusCbs.add proc() =
-    for node in findAll(makeSelector(curSel)):
-      if keyboard.onFocusNode == node:
-        thisNode = node
-        currentSelector = curSel
-        body
-        thisNode = nil
-        currentSelector = ""
+    )
 
 template onUnfocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
-  var curSel = currentSelector
-  focusCbs.add proc() =
-    for node in findAll(makeSelector(curSel)):
-      if keyboard.onUnfocusNode == node:
-        thisNode = node
-        currentSelector = curSel
-        body
-        thisNode = nil
-        currentSelector = ""
+  addCb(
+    eOnUnFOcus,
+    500,
+    thisSelector,
+    proc() =
+      if keyboard.onUnfocusNode != nil:
+        for node in globTree.findAll(thisSelector):
+          if keyboard.onUnfocusNode == node:
+            thisNode = node
+            body
+            thisNode = nil
+  )
 
+template onFocus*(body: untyped) =
+  ## When a text node is displayed and will continue to update.
+  addCb(
+    eOnFocus,
+    600,
+    thisSelector,
+    proc() =
+      if keyboard.onFocusNode != nil:
+        for node in globTree.findAll(thisSelector):
+          if keyboard.onFocusNode == node:
+            thisNode = node
+            body
+            thisNode = nil
+  )
 
 proc rect*(node: Node): Rect =
   ## Gets the nodes rectangle on screen.
@@ -229,7 +284,6 @@ proc rect*(node: Node): Rect =
   result.y = node.absoluteBoundingBox.y + framePos.y
   result.w = node.absoluteBoundingBox.w
   result.h = node.absoluteBoundingBox.h
-
 
 proc updateWindowSize() =
   requestedFrame = true
@@ -255,17 +309,6 @@ proc updateWindowSize() =
   dpi = mode.width.float32 / (cwidth.float32 / 25.4)
 
   windowLogicalSize = windowSize / pixelScale * pixelRatio
-
-# proc onMouseButton(
-#   window: staticglfw.Window, button, action, modifiers: cint
-# ) {.cdecl.} =
-
-#   let
-#     setKey = action != 0
-#   mouse.click = setKey
-
-
-
 
 proc onResize(handle: staticglfw.Window, w, h: int32) {.cdecl.} =
   updateWindowSize()
@@ -390,21 +433,22 @@ proc display() =
 
   if windowResizable:
     # Stretch the current frame to fit the window.
-    currentFrame.box.wh = windowSize
+    thisFrame.box.wh = windowSize
   else:
     # Stretch the window to fit the current frame.
-    if windowSize != currentFrame.box.wh:
-      window.setWindowSize(currentFrame.box.w.cint, currentFrame.box.h.cint)
+    if windowSize != thisFrame.box.wh:
+      window.setWindowSize(thisFrame.box.w.cint, thisFrame.box.h.cint)
 
-  for cb in generaCbs:
-    cb()
-
-  for cb in focusCbs:
-    cb()
+  for cb in eventCbs:
+    thisCb = cb
+    thisSelector = thisCb.selector
+    thisCb.run()
+  thisSelector = ""
+  thisCb = nil
 
   clearInputs()
 
-  drawGpuFrame(currentFrame)
+  drawGpuFrame(thisFrame)
 
   swapBuffers(window)
 
@@ -418,14 +462,14 @@ proc startFidget*(
 
   use(figmaUrl)
 
-  currentFrame = find(entryFrame)
+  thisFrame = find(entryFrame)
   windowResizable = resizable
 
-  if currentFrame == nil:
+  if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
 
   createWindow(
-    currentFrame,
+    thisFrame,
     resizable = resizable
   )
 
@@ -440,6 +484,9 @@ proc startFidget*(
   discard window.setMouseButtonCallback(onMouseButton)
   discard window.setCursorPosCallback(onMouseMove)
   discard window.setCharCallback(onSetCharCallback)
+
+  # Sort callbacks
+  eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
 
   # Run while window is open.
   while windowShouldClose(window) == 0:

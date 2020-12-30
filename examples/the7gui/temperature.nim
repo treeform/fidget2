@@ -16,7 +16,10 @@ find "TemperatureFrame":
   find "CelsiusInput/text":
     onDisplay:
       thisNode.characters = &"{celsius:0.2f}"
+    onFocus:
+      echo "focus CelsiusInput"
     onEdit:
+      echo "edit CelsiusInput"
       try:
         celsius = parseFloat(thisNode.characters)
         fahrenheit = celsius * (9/5) + 32.0
@@ -31,7 +34,10 @@ find "TemperatureFrame":
   find "FahrenheitInput/text":
     onDisplay:
       thisNode.characters = &"{fahrenheit:0.2f}"
+    onFocus:
+      echo "focus FahrenheitInput"
     onEdit:
+      echo "edit FahrenheitInput"
       try:
         fahrenheit = parseFloat(thisNode.characters)
         celsius = (fahrenheit - 32.0) * (5/9)
