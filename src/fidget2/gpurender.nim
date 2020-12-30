@@ -871,34 +871,11 @@ proc drawNode*(node: Node, level: int) =
           dataBufferSeq.add cMat[2, 0]
           dataBufferSeq.add cMat[2, 1]
 
-          let
-            tx = glyph.bboxMin.x
-            ty = glyph.bboxMin.y
-            w = glyph.bboxMax.x - tx
-            h = glyph.bboxMax.y - ty
-            glyphBounds = rect(
-              tx, ty,
-              w, h
-            )
-
-          # Display clip regions
-          # dataBufferSeq.add cmdStartPath
-          # dataBufferSeq.add kNonZero
-          # drawRect(glyphBounds.xy, glyphBounds.wh)
-          # dataBufferSeq.add cmdEndPath
-          # dataBufferSeq.add @[
-          #   cmdSolidFill,
-          #   1,
-          #   0,
-          #   0,
-          #   1
-          # ]
-
           dataBufferSeq.add cmdBoundCheck
-          dataBufferSeq.add glyphBounds.x
-          dataBufferSeq.add glyphBounds.y
-          dataBufferSeq.add glyphBounds.x + glyphBounds.w
-          dataBufferSeq.add glyphBounds.y + glyphBounds.h
+          dataBufferSeq.add glyph.bboxMin.x
+          dataBufferSeq.add glyph.bboxMin.y
+          dataBufferSeq.add glyph.bboxMax.x
+          dataBufferSeq.add glyph.bboxMax.y
           let jmpOffset = dataBufferSeq.len
           dataBufferSeq.add 0
 
