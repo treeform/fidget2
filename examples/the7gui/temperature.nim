@@ -24,7 +24,6 @@ find "TemperatureFrame":
         celsius = parseFloat(thisNode.characters)
         fahrenheit = celsius * (9/5) + 32.0
         find("../bg").setVariant("State", "Default")
-        # find("/TemperatureFrame/FahrenheitInput/bg").setVariant("State", "Default")
       except ValueError:
         find("../bg").setVariant("State", "Error")
     onUnfocus:
@@ -42,7 +41,6 @@ find "TemperatureFrame":
         fahrenheit = parseFloat(thisNode.characters)
         celsius = (fahrenheit - 32.0) * (5/9)
         find("../bg").setVariant("State", "Default")
-        #find("/TemperatureFrame/CelsiusInput/bg").setVariant("State", "Default")
       except ValueError:
         find("../bg").setVariant("State", "Error")
     onUnfocus:

@@ -79,8 +79,6 @@ var
   pixelRatio*: float32 ## Multiplier to convert from screen coords to pixels
   pixelScale*: float32 ## Pixel multiplier user wants on the UI
 
-
-
 proc display()
 
 proc clearInputs*() =
@@ -114,6 +112,7 @@ proc addCb*(
   selector: string,
   run: proc(),
 ) =
+  ## Adds a generic call back.
   eventCbs.add EventCb(
     kind: kind,
     priority: priority,
@@ -122,36 +121,36 @@ proc addCb*(
   )
 
 proc find*(glob: string): Node =
+  ## Find a node matching a glob pattern.
   var glob = glob
   if thisSelector.len > 0:
     glob = thisSelector & "/" & glob
   globTree.find(glob)
 
 iterator findAll*(glob: string): Node =
+  ## Find all nodes matching glob pattern.
   var glob = glob
   if thisSelector.len > 0:
     glob = thisSelector & "/" & glob
   for node in globTree.findAll(glob):
     yield node
 
-template find*(glob: string, body: untyped) =
+proc pushSelector(glob: string) =
+  # Note: used to make less code in find template, do not inline.
   selectorStack.add(thisSelector)
   if thisSelector.len > 0:
     thisSelector = thisSelector & "/" & glob
   else:
     thisSelector = glob
 
-  body
-
+proc popSelector() =
+  # Note: used to make less code in find template, do not inline.
   thisSelector = selectorStack.pop()
 
-
-proc makeSelector(glob: string): string =
-  #if glob.startsWith('/'):
-  #  return glob[1..^1]
-  # thisFrame.name & "/" & glob
-  return glob
-
+template find*(glob: string, body: untyped) =
+  pushSelector(glob)
+  body
+  popSelector()
 
 template onFrame*(body: untyped) =
   ## Called once for each frame drawn.
@@ -164,7 +163,7 @@ template onFrame*(body: untyped) =
   )
 
 template onDisplay*(body: untyped) =
-  ## When a text node is displayed and will continue to update.
+  ## When a node is displayed.
   addCb(
     eOnDisplay,
     1000,
@@ -174,7 +173,6 @@ template onDisplay*(body: untyped) =
         thisNode = node
         body
         thisNode = nil
-
   )
 
 template onClick*(body: untyped) =
@@ -193,7 +191,7 @@ template onClick*(body: untyped) =
   )
 
 proc setupTextBox(node: Node) =
-
+  ## Setup a the text box around this node.
   keyboard.onUnfocusNode = textBoxFocus
   textBoxFocus = node
   keyboard.onFocusNode = textBoxFocus
@@ -231,20 +229,17 @@ template onEdit*(body: untyped) =
   )
   addCb(
     eOnEdit,
-    1200,
+    200,
     thisSelector,
     proc() =
       if textBoxFocus != nil and textBox != nil:
-
-        textBoxFocus.characters = $textBox.runes
-
         for node in globTree.findAll(thisSelector):
           if textBoxFocus == node and textBox.hasChange:
             thisNode = node
+            textBoxFocus.characters = $textBox.runes
             body
             thisNode = nil
             textBox.hasChange = false
-
     )
 
 template onUnfocus*(body: untyped) =
@@ -424,7 +419,6 @@ proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
 
 proc display() =
   ## Called every frame by main while loop.
-
   block:
     var x, y: float64
     window.getCursorPos(addr x, addr y)

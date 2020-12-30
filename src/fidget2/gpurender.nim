@@ -6,7 +6,6 @@ var
   # Window stuff.
   viewPortWidth*: int
   viewPortHeight*: int
-  windowReady = false
   window*: Window
   offscreen* = false
 
@@ -806,7 +805,10 @@ proc drawNode*(node: Node, level: int) =
           kern = false
 
       let layout = font.typeset(
-        text = node.characters,
+        text = if textBoxFocus == node:
+            textBox.text
+          else:
+            node.characters,
         pos = vec2(0, 0),
         size = node.size,
         hAlign = node.style.textAlignHorizontal,
@@ -817,13 +819,10 @@ proc drawNode*(node: Node, level: int) =
         textCase = node.style.textCase,
       )
 
-
-      for i, gpos in layout:
-        var font = gpos.font
-
-        if node == textBoxFocus:
-          # Draw text crusor and selection.
-          proc drawCrusor(rect: Rect) =
+      if node == textBoxFocus:
+        for i, gpos in layout:
+          # Draw text cursor and selection.
+          proc drawCursor(rect: Rect) =
             dataBufferSeq.add cmdStartPath
             dataBufferSeq.add kNonZero
             drawRect(
@@ -839,14 +838,14 @@ proc drawNode*(node: Node, level: int) =
               1
             ]
           if textBox.cursor == 0 and i == 0:
-            drawCrusor(rect(
+            drawCursor(rect(
               gpos.selectRect.x - 1,
               gpos.selectRect.y,
               1,
               gpos.selectRect.h
             ))
           elif textBox.cursor == i + 1:
-            drawCrusor(rect(
+            drawCursor(rect(
               gpos.selectRect.x + gpos.selectRect.w,
               gpos.selectRect.y,
               1,
