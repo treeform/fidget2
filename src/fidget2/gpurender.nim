@@ -397,15 +397,15 @@ proc drawRect(pos, size: Vec2) =
     cmdz,
   ]
 
-proc drawGeom(node: Node, geom: Geometry) =
+proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
   dataBufferSeq.add cmdStartPath
-  case geom.windingRule
+  case windingRule
   of wrEvenOdd:
     dataBufferSeq.add 0
   of wrNonZero:
     dataBufferSeq.add 1
 
-  for command in parsePath(geom.path).commands:
+  for command in commands:
     case command.kind
     of pixie.Move:
       dataBufferSeq.add cmdM
@@ -420,6 +420,16 @@ proc drawGeom(node: Node, geom: Geometry) =
     of pixie.Cubic:
       dataBufferSeq.add cmdC
       for i in 0 ..< 3:
+        var pos = vec2(
+          command.numbers[i*2+0],
+          command.numbers[i*2+1]
+        )
+        dataBufferSeq.add pos.x
+        dataBufferSeq.add pos.y
+    of pixie.Quad:
+      assert command.numbers.len == 4
+      dataBufferSeq.add cmdQ
+      for i in 0 ..< 2:
         var pos = vec2(
           command.numbers[i*2+0],
           command.numbers[i*2+1]
@@ -761,12 +771,12 @@ proc drawNode*(node: Node, level: int) =
 
     of nkRegularPolygon, nkVector, nkStar, nkLine:
       for geom in node.fillGeometry:
-        drawGeom(node, geom)
+        drawPathCommands(parsePath(geom.path).commands, geom.windingRule)
         for paint in node.fills:
           drawPaint(node, paint)
 
       for geom in node.strokeGeometry:
-        drawGeom(node, geom)
+        drawPathCommands(parsePath(geom.path).commands, geom.windingRule)
         for paint in node.strokes:
           drawPaint(node, paint)
 
@@ -809,11 +819,9 @@ proc drawNode*(node: Node, level: int) =
 
       for i, gpos in layout:
         var font = gpos.font
-        proc trans(v: Vec2): Vec2 =
-          result = v * font.scale
-          result.y = -result.y
 
         if node == textBoxFocus:
+          # Draw text crusor and selection.
           proc drawCrusor(rect: Rect) =
             dataBufferSeq.add cmdStartPath
             dataBufferSeq.add kNonZero
@@ -849,17 +857,29 @@ proc drawNode*(node: Node, level: int) =
           glyph.makeReady(font)
 
 
+          let cMat = mat * translate(vec2(
+            gpos.rect.x + gpos.subPixelShift,
+            gpos.rect.y
+          )) * scale(vec2(font.scale, -font.scale))
+          dataBufferSeq.add cmdSetMat
+          dataBufferSeq.add cMat[0, 0]
+          dataBufferSeq.add cMat[0, 1]
+          dataBufferSeq.add cMat[1, 0]
+          dataBufferSeq.add cMat[1, 1]
+          dataBufferSeq.add cMat[2, 0]
+          dataBufferSeq.add cMat[2, 1]
+
           let
-            tx = glyph.bboxMin.x * font.scale
-            ty = glyph.bboxMin.y * font.scale
-            w = glyph.bboxMax.x * font.scale - tx
-            h = glyph.bboxMax.y * font.scale - ty
+            tx = glyph.bboxMin.x - 1/font.scale
+            ty = glyph.bboxMin.y - 1/font.scale
+            w = glyph.bboxMax.x - tx + 1/font.scale
+            h = glyph.bboxMax.y - ty + 1/font.scale
             glyphBounds = rect(
-              gpos.rect.x + tx, gpos.rect.y - h - ty,
+              tx, ty,
               w, h
             )
 
-          # display clip regions
+          # Display clip regions
           # dataBufferSeq.add cmdStartPath
           # dataBufferSeq.add kNonZero
           # drawRect(glyphBounds.xy, glyphBounds.wh)
@@ -873,31 +893,33 @@ proc drawNode*(node: Node, level: int) =
           # ]
 
           dataBufferSeq.add cmdBoundCheck
-          dataBufferSeq.add glyphBounds.x - 1
-          dataBufferSeq.add glyphBounds.y - 1
-          dataBufferSeq.add glyphBounds.x + glyphBounds.w + 1
-          dataBufferSeq.add glyphBounds.y + glyphBounds.h + 1
+          dataBufferSeq.add glyphBounds.x
+          dataBufferSeq.add glyphBounds.y
+          dataBufferSeq.add glyphBounds.x + glyphBounds.w
+          dataBufferSeq.add glyphBounds.y + glyphBounds.h
           let jmpOffset = dataBufferSeq.len
           dataBufferSeq.add 0
 
-          dataBufferSeq.add cmdStartPath
-          dataBufferSeq.add 1
-          var
-            prevPos: Vec2
-          for shape in glyph.shapes:
-            for segment in shape:
+          drawPathCommands(glyph.commands, wrNonZero)
 
-              let posM = segment.at.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
-              if posM != prevPos:
-                dataBufferSeq.add cmdM
-                dataBufferSeq.add posM.x
-                dataBufferSeq.add posM.y
-              dataBufferSeq.add cmdL
-              let posL = segment.to.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
-              dataBufferSeq.add posL.x
-              dataBufferSeq.add posL.y
-              prevPos = posL
-          dataBufferSeq.add cmdEndPath
+          #dataBufferSeq.add cmdStartPath
+          #dataBufferSeq.add 1
+          #var
+          #  prevPos: Vec2
+
+          # for shape in glyph.shapes:
+          #   for segment in shape:
+          #     let posM = segment.at.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
+          #     if posM != prevPos:
+          #       dataBufferSeq.add cmdM
+          #       dataBufferSeq.add posM.x
+          #       dataBufferSeq.add posM.y
+          #     dataBufferSeq.add cmdL
+          #     let posL = segment.to.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
+          #     dataBufferSeq.add posL.x
+          #     dataBufferSeq.add posL.y
+          #     prevPos = posL
+          #dataBufferSeq.add cmdEndPath
 
           for paint in node.fills:
             drawPaint(node, paint)
