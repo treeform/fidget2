@@ -856,6 +856,9 @@ proc drawNode*(node: Node, level: int) =
           var glyph = font.typeface.glyphs[gpos.character]
           glyph.makeReady(font)
 
+          if glyph.commands.len == 0:
+            continue
+
           let cMat = mat * translate(vec2(
             gpos.rect.x + gpos.subPixelShift,
             gpos.rect.y
