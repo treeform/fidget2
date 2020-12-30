@@ -55,6 +55,7 @@ const glslGlobals = [
 
 const glslFunctions = [
   "rgb=", "rgb", "xyz", "xy", "xy=",
+  "bool",
   "vec2", "vec3", "vec4", "mat3", "mat4", "color",
   "Vec2", "Vec3", "Vec4", "Mat3", "Mat4", "Color",
   "abs", "clamp", "min", "max", "dot", "sqrt", "mix", "length",

@@ -346,6 +346,14 @@ proc z() =
   ## SVG style end of shape command.
   line(vec2(x0, y0), vec2(x1,y1))
 
+proc overlap*(minA, maxA, minB, maxB: Vec2): bool =
+  ## Test overlap: rect vs rect.
+  return
+    maxA.x >= minB.x and # A right edge past b left?
+    minA.x <= maxB.x and # A left edge past b right?
+    maxA.y >= minB.y and # A top edge past b bottom?
+    minA.y <= maxB.y # A bottom edge past b top?
+
 proc runCommands() =
   ## Runs a little command interpreter.
   var i = 0
@@ -466,10 +474,24 @@ proc runCommands() =
       let label = texelFetch(dataBuffer, i + 5).x.int
       i += 5
 
-      let screenInv = (mat.inverse() * vec3(screen, 1)).xy
-      if screenInv.x < minP.x or screenInv.x > maxP.x or
-        screenInv.y < minP.y or screenInv.y > maxP.y:
-          i = label - 1
+      # Compute pixel bounds.
+      let
+        matInv = mat.inverse()
+        screenInvA = (matInv * vec3(screen + vec2(0, 0), 1)).xy
+        screenInvB = (matInv * vec3(screen + vec2(1, 0), 1)).xy
+        screenInvC = (matInv * vec3(screen + vec2(1, 0), 1)).xy
+        screenInvD = (matInv * vec3(screen + vec2(0, 1), 1)).xy
+      var
+        minS: Vec2
+        maxS: Vec2
+      minS.x = min(min(screenInvA.x, screenInvB.x), min(screenInvC.x, screenInvD.x))
+      minS.y = min(min(screenInvA.y, screenInvB.y), min(screenInvC.y, screenInvD.y))
+      maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x))
+      maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y))
+
+      if not overlap(minS, maxS, minP, maxP):
+        i = label - 1
+
     elif command == cmdMaskFill:
       mask = fillMask
     elif command == cmdMaskClear:
@@ -502,6 +524,9 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
+
+  # if debug > 0:
+  #   fragColor = blendNormalFloats(fragColor, vec4(1,0,0,debug/4))
 
   # if pixelCrossDelta > 0:
   #   fragColor = vec4(1,0,0,1)

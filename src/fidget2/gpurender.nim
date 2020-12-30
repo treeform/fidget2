@@ -856,7 +856,6 @@ proc drawNode*(node: Node, level: int) =
           var glyph = font.typeface.glyphs[gpos.character]
           glyph.makeReady(font)
 
-
           let cMat = mat * translate(vec2(
             gpos.rect.x + gpos.subPixelShift,
             gpos.rect.y
@@ -870,10 +869,10 @@ proc drawNode*(node: Node, level: int) =
           dataBufferSeq.add cMat[2, 1]
 
           let
-            tx = glyph.bboxMin.x - 1/font.scale
-            ty = glyph.bboxMin.y - 1/font.scale
-            w = glyph.bboxMax.x - tx + 1/font.scale
-            h = glyph.bboxMax.y - ty + 1/font.scale
+            tx = glyph.bboxMin.x
+            ty = glyph.bboxMin.y
+            w = glyph.bboxMax.x - tx
+            h = glyph.bboxMax.y - ty
             glyphBounds = rect(
               tx, ty,
               w, h
@@ -901,25 +900,6 @@ proc drawNode*(node: Node, level: int) =
           dataBufferSeq.add 0
 
           drawPathCommands(glyph.commands, wrNonZero)
-
-          #dataBufferSeq.add cmdStartPath
-          #dataBufferSeq.add 1
-          #var
-          #  prevPos: Vec2
-
-          # for shape in glyph.shapes:
-          #   for segment in shape:
-          #     let posM = segment.at.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
-          #     if posM != prevPos:
-          #       dataBufferSeq.add cmdM
-          #       dataBufferSeq.add posM.x
-          #       dataBufferSeq.add posM.y
-          #     dataBufferSeq.add cmdL
-          #     let posL = segment.to.trans + gpos.rect.xy + vec2(gpos.subPixelShift, 0)
-          #     dataBufferSeq.add posL.x
-          #     dataBufferSeq.add posL.y
-          #     prevPos = posL
-          #dataBufferSeq.add cmdEndPath
 
           for paint in node.fills:
             drawPaint(node, paint)

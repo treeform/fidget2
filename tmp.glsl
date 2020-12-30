@@ -98,6 +98,13 @@ float pixelCross(
   vec2 b0
 ) ;
 
+bool overlap(
+  vec2 minA,
+  vec2 maxA,
+  vec2 minB,
+  vec2 maxB
+) ;
+
 void runCommands(
 ) ;
 
@@ -350,6 +357,16 @@ float pixelCross(
   return float(0.0);
 }
 
+bool overlap(
+  vec2 minA,
+  vec2 maxA,
+  vec2 minB,
+  vec2 maxB
+) {
+"Test overlap: rect vs rect.";
+  return ((((minB.x) <= (maxA.x)) && ((minA.x) <= (maxB.x))) && ((minB.y) <= (maxA.y))) && ((minA.y) <= (maxB.y));
+}
+
 void runCommands(
 ) {
 "Runs a little command interpreter.";
@@ -444,8 +461,18 @@ void runCommands(
       maxP.y = texelFetch(dataBuffer, (i) + (4)).x;
       int label = int(texelFetch(dataBuffer, (i) + (5)).x);
 (i) += (5);;
-      vec2 screenInv = ((inverse(mat)) * (vec3(screen, float(1)))).xy;
-      if (((((screenInv.x) < (minP.x)) || ((maxP.x) < (screenInv.x))) || ((screenInv.y) < (minP.y))) || ((maxP.y) < (screenInv.y))) {
+      mat3 matInv = inverse(mat);
+      vec2 screenInvA = ((matInv) * (vec3((screen) + (vec2(float(0), float(0))), float(1)))).xy;
+      vec2 screenInvB = ((matInv) * (vec3((screen) + (vec2(float(1), float(0))), float(1)))).xy;
+      vec2 screenInvC = ((matInv) * (vec3((screen) + (vec2(float(1), float(0))), float(1)))).xy;
+      vec2 screenInvD = ((matInv) * (vec3((screen) + (vec2(float(0), float(1))), float(1)))).xy;
+      vec2 minS = vec2(0.0);
+      vec2 maxS = vec2(0.0);
+      minS.x = min(min(screenInvA.x, screenInvB.x), min(screenInvC.x, screenInvD.x));
+      minS.y = min(min(screenInvA.y, screenInvB.y), min(screenInvC.y, screenInvD.y));
+      maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x));
+      maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y));
+      if (! (overlap(minS, maxS, minP, maxP))) {
                 i = (label) - (1);
       };
     } else if ((command) == (16.0)) {
