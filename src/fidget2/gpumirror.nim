@@ -1,6 +1,6 @@
 import staticglfw, opengl, math, schema, gpurender, pixie, vmath, bumpy,
   loader, typography, typography/textboxes, tables, input, unicode, sequtils,
-  strutils, strformat, sequtils, globs, algorithm, print, json
+  strutils, strformat, sequtils, globs, algorithm, print, json, zpurender
 
 export textboxes
 
@@ -424,6 +424,8 @@ proc display() =
     window.getCursorPos(addr x, addr y)
     mousePos.x = x
     mousePos.y = y
+
+    echo "hover index", getIndexAt(thisFrame, mousePos)
 
   if windowResizable:
     # Stretch the current frame to fit the window.

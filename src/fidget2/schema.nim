@@ -167,6 +167,7 @@ type
     editable*: bool  ## Can the user edit the text?
     box*: Rect       ## xy/size of the node.
     orgBox*: Rect    ## Original size needed for constraints.
+    idNum*: int
 
   FigmaFile* = ref object
     document*: Node

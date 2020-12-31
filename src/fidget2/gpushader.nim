@@ -29,6 +29,7 @@ const
   cmdBoundCheck*: float32 = 15
   cmdMaskFill*: float32 = 16
   cmdMaskClear*: float32 = 17
+  cmdIndex*: float32 = 18
 
 var
   crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
@@ -43,6 +44,8 @@ var
   prevGradientK: float32
   prevGradientColor: Vec4
   mask: float32 = 1.0
+
+  topIndex*: float32
 
 proc lineDir(a, b: Vec2): float32 =
   if a.y - b.y > 0:
@@ -496,6 +499,11 @@ proc runCommands() =
       mask = fillMask
     elif command == cmdMaskClear:
       mask = 1.0
+    elif command == cmdIndex:
+      let index = texelFetch(dataBuffer, i + 1).x
+      if fillMask * mask > 0:
+        topIndex = index
+      i += 1
 
     i += 1
 
@@ -512,6 +520,7 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   y0 = 0
   x1 = 0
   y1 = 0
+  topIndex = 0
 
   crossCountMat = mat4(0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0)
 
@@ -525,8 +534,7 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
 
-  # if debug > 0:
-  #   fragColor = blendNormalFloats(fragColor, vec4(1,0,0,debug/4))
+  # fragColor = blendNormalFloats(fragColor, vec4(1,0,0,topIndex/32))
 
   # if pixelCrossDelta > 0:
   #   fragColor = vec4(1,0,0,1)

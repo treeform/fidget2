@@ -1,4 +1,4 @@
-import chroma, fidget2, pixie, math, vmath, glsl, gpushader, gpurender, pixie
+import chroma, pixie, math, vmath, glsl, gpushader, gpurender, pixie, schema
 
 proc drawCompleteZpuFrame*(node: Node): pixie.Image =
   setupRender(node)
@@ -26,3 +26,20 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
       ))
 
   return image
+
+proc getIndexAt*(node: Node, mousePos: Vec2): int =
+  setupRender(node)
+
+  drawNode(node, 0)
+
+  dataBufferSeq.add(cmdExit)
+
+  textureAtlasSampler.image = textureAtlas.image #readImage("tests/test512.png")
+
+  var image = newImage(viewPortWidth, viewPortHeight)
+  dataBuffer.data = dataBufferSeq
+
+  var color: Vec4
+  svgMain(vec4(mousePos.x, mousePos.y, 0, 1), color)
+
+  return topIndex.int
