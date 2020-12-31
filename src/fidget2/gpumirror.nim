@@ -425,7 +425,7 @@ proc display() =
     mousePos.x = x
     mousePos.y = y
 
-    echo "hover index", getIndexAt(thisFrame, mousePos)
+    #echo "hover index", getIndexAt(thisFrame, mousePos)
 
   if windowResizable:
     # Stretch the current frame to fit the window.

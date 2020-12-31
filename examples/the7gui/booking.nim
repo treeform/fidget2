@@ -1,65 +1,4 @@
-import fidget2, strutils, chroma, strformat, chrono
-
-use("https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa")
-
-# type
-#   InputState = enum
-#     isEmpty, isNumber, isError
-
-# var
-#   # TODO empty state?
-#   celsiusState = isEmpty
-#   celsius = 0.0
-#   fahrenheitState = isEmpty
-#   fahrenheit = 0.0
-
-# onDisplay "CelsiusInput/text":
-#   if celsiusState == isEmpty:
-#     thisNode.characters = ""
-#   elif celsiusState == isNumber:
-#     thisNode.characters = &"{celsius:0.2f}"
-# onDisplay "CelsiusInput/bg":
-#   if celsiusState == isError:
-#     thisNode.fills[0].color = parseHtmlColor("#FFDAC5")
-#   else:
-#     thisNode.fills[0].color = parseHtmlColor("#FFFFFF")
-# onFocus "CelsiusInput/text":
-#   textBox.endOfLine()
-# onEdit "CelsiusInput/text":
-#   if thisNode.characters == "":
-#     celsiusState = isEmpty
-#   else:
-#     try:
-#       celsius = parseFloat(thisNode.characters)
-#       celsiusState = isNumber
-#     except ValueError:
-#       celsiusState = isError
-#     fahrenheit = celsius * (9/5) + 32.0
-#     fahrenheitState = isNumber
-
-# onDisplay "FahrenheitInput/text":
-#   if fahrenheitState == isEmpty:
-#     thisNode.characters = ""
-#   elif fahrenheitState == isNumber:
-#     thisNode.characters = &"{fahrenheit:0.2f}"
-# onDisplay "FahrenheitInput/bg":
-#   if fahrenheitState == isError:
-#     thisNode.fills[0].color = parseHtmlColor("#FFDAC5")
-#   else:
-#     thisNode.fills[0].color = parseHtmlColor("#FFFFFF")
-# onFocus "FahrenheitInput/text":
-#   textBox.endOfLine()
-# onEdit "FahrenheitInput/text":
-#   if thisNode.characters == "":
-#     fahrenheitState = isEmpty
-#   else:
-#     try:
-#       fahrenheit = parseFloat(thisNode.characters)
-#       fahrenheitState = isNumber
-#     except ValueError:
-#       fahrenheitState = isError
-#     celsius = (fahrenheit - 32.0) * (5/9)
-#     celsiusState = isNumber
+import fidget2, chroma, chrono
 
 type
   FlightType = enum
@@ -72,59 +11,68 @@ var
   returnStr = "03.09.2021"
   returnCal: Calendar
 
-onDisplay "**/FlightType/text":
-  if flightType == ftOneWay:
-    thisNode.characters = "one-way flight"
-  else:
-    thisNode.characters = "return flight"
-onClick "**/FlightType":
-  echo thisNode.name
-  find("**/Picker").visible = true
-  discard
+proc setVariant(node: Node, name, value: string) =
+  if name == "State":
+    if value == "Default":
+      node.fills[0].color = parseHtmlColor("#FFFFFF")
+    elif value == "Error":
+      node.fills[0].color = parseHtmlColor("#FFDAC5")
 
-onClick "**/Return":
-  flightType = ftReturn
-  find("**/Picker").visible = false
-onClick "**/OneWay":
-  flightType = ftOneWay
-  find("**/Picker").visible = false
+find "BookingFrame":
 
-onFocus "**/DepartInput/text":
-  textBox.endOfLine()
-onDisplay "**/DepartInput/text":
-  thisNode.characters = departStr
-onEdit "**/DepartInput/text":
-  departStr = textBox.text
-  try:
-    departCal = parseCalendar("{day/2}.{month/2}.{year/4}", departStr)
-    find("**/DepartInput/bg").fills[0].color = parseHtmlColor("#FFFFFF")
-  except ValueError:
-    find("**/DepartInput/bg").fills[0].color = parseHtmlColor("#FFDAC5")
+  find "Picker":
+    find "Return":
+      onClick:
+        if find("/BookingFrame/Picker").visible:
+          flightType = ftReturn
+          find("..").visible = false
+    find "OneWay":
+      onClick:
+        if find("/BookingFrame/Picker").visible:
+          flightType = ftOneWay
+          find("..").visible = false
 
-onFocus "**/ReturnInput/text":
-  textBox.endOfLine()
-onDisplay "**/ReturnInput/text":
-  thisNode.characters = returnStr
-onEdit "**/ReturnInput/text":
-  if flightType != ftReturn:
-    # TODO: unfocus node
-    return
-  returnStr = textBox.text
-  try:
-    returnCal = parseCalendar("{day/2}.{month/2}.{year/4}", returnStr)
-    find("**/ReturnInput/bg").fills[0].color = parseHtmlColor("#FFFFFF")
-  except ValueError:
-    find("**/ReturnInput/bg").fills[0].color = parseHtmlColor("#FFDAC5")
+  find "Inner":
+    find "FlightType":
+      find "text":
+        onDisplay:
+          if flightType == ftOneWay:
+            thisNode.characters = "one-way flight"
+          else:
+            thisNode.characters = "return flight"
+      onClick:
+        find("/BookingFrame/Picker").visible = true
 
+    find "DepartInput":
+      find "text":
+        onEdit:
+          departStr = thisNode.characters
+          try:
+            departCal = parseCalendar("{day/2}.{month/2}.{year/4}", departStr)
+            find("../bg").setVariant("State", "Default")
+          except ValueError:
+            find("../bg").setVariant("State", "Error")
 
-onClick "**/BookButton":
-  echo "book: ", flightType
-  echo "depart: ", departCal
-  if flightType == ftReturn:
-     echo "return:", returnCal
+    find "ReturnInput":
+      find "text":
+        onEdit:
+          returnStr = thisNode.characters
+          try:
+            returnCal = parseCalendar("{day/2}.{month/2}.{year/4}", returnStr)
+            find("../bg").setVariant("State", "Default")
+          except ValueError:
+            find("../bg").setVariant("State", "Error")
+
+    find "BookButton":
+      onClick:
+        echo "book: ", flightType
+        echo "depart: ", departCal
+        if flightType == ftReturn:
+          echo "return:", returnCal
 
 startFidget(
+  figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Booking",
-  entryFrame = "Booking",
+  entryFrame = "BookingFrame",
   resizable = false
 )

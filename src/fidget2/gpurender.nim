@@ -42,6 +42,7 @@ var
   vertShader: GLuint
   fragShader: GLuint
   shaderProgram: GLuint
+  dataBufferId: GLuint
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
   #fragShaderSrc = readFile("bufferTest.glsl")
@@ -55,10 +56,6 @@ var
   isCompiled: GLint
   isLinked: GLint
 
-  dataBufferId: GLuint
-
-  currentIndex = 0
-
 proc setupRender*(frameNode: Node) =
   viewPortWidth = frameNode.absoluteBoundingBox.w.int
   viewPortHeight = frameNode.absoluteBoundingBox.h.int
@@ -67,15 +64,14 @@ proc setupRender*(frameNode: Node) =
   if textureAtlas == nil:
     textureAtlas = newCpuAtlas(256, 1)
 
-  # number nodes
-  currentIndex = 1
+  # Number nodes
+  var currentIndex = 1
   proc number(node: Node) =
     node.idNum = currentIndex
     inc currentIndex
     for c in node.children:
       number(c)
   number(frameNode)
-
 
 proc updateGpuAtlas() =
   glBindTexture(GL_TEXTURE_2D, textureAtlasId)
