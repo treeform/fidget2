@@ -354,6 +354,9 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
       for param in n:
         if param.kind != nnkEmpty:
           if param[1].kind == nnkVarTy:
+            echo "here", param[0].strVal
+            if param[0].strVal == "fragColor":
+              res.add "layout(location = 0) "
             if param[1][0].strVal == "int":
               res.add "flat "
             res.add "out "
@@ -364,6 +367,7 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
               res.add " "
               res.add typeRename(param[1][1].strVal)
             else:
+              echo param[0].strVal
               if param[0].strVal == "gl_FragCoord":
                 res.add "layout(origin_upper_left) "
               if param[1].strVal == "int":

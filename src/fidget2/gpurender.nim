@@ -24,6 +24,8 @@ var
   dataBufferTextureId: GLuint
   textureAtlas*: CpuAtlas
   textureAtlasId: GLuint
+  backBufferId: GLuint
+  backBufferTextureId: GLuint
 
   # Vertex data
   vertices: array[8, GLfloat] = [
@@ -237,33 +239,79 @@ proc createWindow*(
   var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
   glUniform1i(textureAtlasLoc, 1) # Set textureAtlas to 1th texture.
 
+  # Generate background frame buffer.
+  glGenFramebuffers(1, backBufferId.addr)
+  glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
+
+  # Generate texture we're going to render to.
+  glGenTextures(1, backBufferTextureId.addr)
+
+  # "Bind" the newly created texture : all future texture functions will modify this texture
+  glBindTexture(GL_TEXTURE_2D, backBufferTextureId)
+
+  # Give an empty image to OpenGL ( the last "0" )
+  glTexImage2D(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA.GLint,
+    viewPortWidth.GLsizei,
+    viewPortHeight.GLsizei,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    nil
+  )
+
+  # Poor filtering. Needed !
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+  # Set "backBufferTextureId" as our colour attachement #0
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, backBufferTextureId, 0)
+
+  # Set the list of draw buffers.
+  var drawBuffers = [GL_COLOR_ATTACHMENT0]
+  glDrawBuffers(drawBuffers.len.GLsizei, drawBuffers[0].addr)
+
+  # Always check that our framebuffer is ok
+  if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
+    quit("some thing is wrong with frame buffer")
+
+  # Bind back default frame buffer of the screen.
+  # glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
 proc drawBuffers() =
 
-  # if not windowReady:
-  #   createWindow()
-  #   windowReady = true
-
-  # send texture to the CPU
+  # Send texture to the CPU.
   updateGpuAtlas()
 
-  # send commands to the CPU
+  # Send commands to the CPU.
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
   glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
-  # Clear and setup drawing
+  # Clear and setup drawing.
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glUseProgram(shaderProgram)
 
-  # Do the drawing
+  # Do the drawing.
   glBindVertexArray(vao)
   glDrawElements(GL_TRIANGLE_FAN, indices.len.GLsizei, GL_UNSIGNED_BYTE, indices.addr)
 
 proc readGpuPixels(): pixie.Image =
   var screen = newImage(viewPortWidth, viewPortHeight)
-  glReadPixels(
-    0, 0,
-    screen.width.Glint, screen.height.Glint,
-    GL_RGBA, GL_UNSIGNED_BYTE,
+  # glReadPixels(
+  #   0, 0,
+  #   screen.width.Glint, screen.height.Glint,
+  #   GL_RGBA, GL_UNSIGNED_BYTE,
+  #   screen.data[0].addr
+  # )
+
+  glBindTexture(GL_TEXTURE_2D, backBufferTextureId)
+  glGetTexImage(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
     screen.data[0].addr
   )
   screen.flipVertical()

@@ -14,6 +14,7 @@ mat3 tMat;
 float gradientK;
 float fillMask = 0.0;
 float mask = 1.0;
+float topIndex;
 mat3 mat;
 float prevGradientK;
 mat4 crossCountMat;
@@ -479,6 +480,12 @@ void runCommands(
             mask = fillMask;
     } else if ((command) == (17.0)) {
             mask = float(1.0);
+    } else if ((command) == (18.0)) {
+      float index = texelFetch(dataBuffer, (i) + (1)).x;
+      if ((float(0)) < ((fillMask) * (mask))) {
+                topIndex = index;
+      };
+(i) += (1);;
     };
 (i) += (1);;
   };
@@ -693,7 +700,7 @@ void L(
   y0 = y;
 }
 layout(origin_upper_left) in vec4 gl_FragCoord;
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
 
 void main() {
 "Main entry point to this huge shader.";
@@ -701,6 +708,7 @@ void main() {
   y0 = float(0);
   x1 = float(0);
   y1 = float(0);
+  topIndex = float(0);
   crossCountMat = mat4(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
   mat = mat3(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
   gradientK = float(0);

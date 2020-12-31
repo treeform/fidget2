@@ -1,4 +1,4 @@
-import chroma, os, fidget2, pixie, strutils, strformat, cligen, times,
+import os, fidget2, pixie, strutils, strformat, cligen, times,
     imagediff, fidget2/gpurender, fidget2/zpurender, fidget2/render
 
 proc main(w = "gpu", r = "", e = "", l = 10000) =
@@ -43,7 +43,6 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
     let frameTime = epochTime() - startTime
     renderTime += frameTime
     image.writeFile("tests/frames/" & frame.name & ".png")
-
 
     var
       diffScore: float32 = -1

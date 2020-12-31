@@ -7,7 +7,7 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
   dataBufferSeq.add(cmdExit)
 
-  textureAtlasSampler.image = textureAtlas.image #readImage("tests/test512.png")
+  textureAtlasSampler.image = textureAtlas.image
 
   var image = newImage(viewPortWidth, viewPortHeight)
   dataBuffer.data = dataBufferSeq
@@ -33,7 +33,7 @@ proc getIndexAt*(node: Node, mousePos: Vec2): int =
 
   dataBufferSeq.add(cmdExit)
 
-  textureAtlasSampler.image = textureAtlas.image #readImage("tests/test512.png")
+  textureAtlasSampler.image = textureAtlas.image
 
   dataBuffer.data = dataBufferSeq
 
