@@ -1,6 +1,6 @@
 import staticglfw, opengl, math, schema, gpurender, pixie, vmath, bumpy,
   loader, typography, typography/textboxes, tables, input, unicode, sequtils,
-  strutils, strformat, sequtils, globs, algorithm, print, json, zpurender
+  strformat, sequtils, globs, algorithm, json, zpurender
 
 export textboxes
 

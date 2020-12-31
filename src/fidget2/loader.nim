@@ -1,4 +1,4 @@
-import schema, httpclient, json, tables, os, strutils, pixie, strformat, jsony, globs
+import schema, httpclient, json, tables, os, strutils, strformat, globs
 
 var
   figmaFile*: FigmaFile

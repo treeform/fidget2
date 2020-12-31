@@ -1,5 +1,5 @@
-import atlas, chroma, os, pixie, strutils, strformat, times,
-  math, opengl, staticglfw, times, vmath, glsl, gpushader, print, math,
+import atlas, pixie,
+  math, opengl, staticglfw, vmath, glsl, gpushader, math,
   pixie, tables, typography, schema, bumpy, loader, layout, typography/textboxes
 
 var

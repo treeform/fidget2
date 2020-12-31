@@ -1,4 +1,4 @@
-import strutils, print
+import strutils
 
 type
   GlobError* = object of ValueError ## Raised on invalid globs.

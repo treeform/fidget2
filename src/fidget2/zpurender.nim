@@ -29,14 +29,12 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
 proc getIndexAt*(node: Node, mousePos: Vec2): int =
   setupRender(node)
-
   drawNode(node, 0)
 
   dataBufferSeq.add(cmdExit)
 
   textureAtlasSampler.image = textureAtlas.image #readImage("tests/test512.png")
 
-  var image = newImage(viewPortWidth, viewPortHeight)
   dataBuffer.data = dataBufferSeq
 
   var color: Vec4

@@ -1,4 +1,4 @@
-import vmath, fidget2/glsl, print
+import vmath, fidget2/glsl
 
 proc basic2dVert*(vertexPox: Vec2, gl_Position: var Vec4) =
   ## Simplest possible shader to put vertex on screen.
