@@ -5,8 +5,11 @@ proc imageDiff*(master, image: Image): (float32, Image) =
     diffImage = newImage(master.width, master.height)
     diffScore = 0
     diffTotal = 0
-  for x in 0 ..< master.width:
-    for y in 0 ..< master.height:
+
+  var image = image.subImage(0, image.height - master.height, master.width, master.height)
+
+  for x in 0 ..< min(image.width, master.width):
+    for y in 0 ..< min(image.height, master.height):
       let
         m = master.getRgbaUnsafe(x, y)
         u = image.getRgbaUnsafe(x, y)

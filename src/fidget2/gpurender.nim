@@ -1,4 +1,4 @@
-import atlas, pixie,
+import atlas, pixie, tables, print, chroma,
   math, opengl, staticglfw, vmath, glsl, gpushader, math,
   pixie, tables, typography, schema, bumpy, loader, layout, typography/textboxes
 
@@ -25,7 +25,7 @@ var
   textureAtlas*: CpuAtlas
   textureAtlasId: GLuint
   backBufferId: GLuint
-  backBufferTextureId: GLuint
+  #backBufferTextureId: GLuint
 
   # Vertex data
   vertices: array[8, GLfloat] = [
@@ -64,7 +64,12 @@ proc setupRender*(frameNode: Node) =
   dataBufferSeq.setLen(0)
 
   if textureAtlas == nil:
-    textureAtlas = newCpuAtlas(256, 1)
+    textureAtlas = newCpuAtlas(1024, 1)
+    var screen = newImage(viewPortWidth, viewPortHeight)
+    screen.fill(rgba(255, 0, 0, 255))
+    textureAtlas.put("screen", screen)
+    #let rect = textureAtlas.findEmptyRect(viewPortWidth, viewPortHeight)
+    #textureAtlas.entries["screen"] = rect
 
   # Number nodes
   var currentIndex = 1
@@ -244,10 +249,10 @@ proc createWindow*(
   glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
 
   # Generate texture we're going to render to.
-  glGenTextures(1, backBufferTextureId.addr)
+  # glGenTextures(1, backBufferTextureId.addr)
 
   # "Bind" the newly created texture : all future texture functions will modify this texture
-  glBindTexture(GL_TEXTURE_2D, backBufferTextureId)
+  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
 
   # Give an empty image to OpenGL ( the last "0" )
   glTexImage2D(
@@ -267,7 +272,7 @@ proc createWindow*(
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 
   # Set "backBufferTextureId" as our colour attachement #0
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, backBufferTextureId, 0)
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureAtlasId, 0)
 
   # Set the list of draw buffers.
   var drawBuffers = [GL_COLOR_ATTACHMENT0]
@@ -282,14 +287,37 @@ proc createWindow*(
 
 proc drawBuffers() =
 
+  glEnable(GL_SCISSOR_TEST)
+  # glScissor(
+  #   0,
+  #   0,
+  #   textureAtlas.image.width.cint div 2,
+  #   textureAtlas.image.height.cint div 2
+  # )
+  glViewport(
+    0,
+    0, #textureAtlas.image.height.cint - viewPortHeight.cint,
+    viewPortWidth.cint,
+    viewPortHeight.cint,
+    #textureAtlas.image.width.cint,
+    #textureAtlas.image.width.cint
+  )
+
+
+
+  textureAtlas.image.writeFile("atlas.png")
+
   # Send texture to the CPU.
-  updateGpuAtlas()
+  # updateGpuAtlas()
+  # for k, r in textureAtlas.entries.pairs:
+  #   print k, r
 
   # Send commands to the CPU.
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
   glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
   # Clear and setup drawing.
+  glClearColor(0, 1, 0, 1)
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glUseProgram(shaderProgram)
 
@@ -298,7 +326,7 @@ proc drawBuffers() =
   glDrawElements(GL_TRIANGLE_FAN, indices.len.GLsizei, GL_UNSIGNED_BYTE, indices.addr)
 
 proc readGpuPixels(): pixie.Image =
-  var screen = newImage(viewPortWidth, viewPortHeight)
+  # var screen = newImage(viewPortWidth, viewPortHeight)
   # glReadPixels(
   #   0, 0,
   #   screen.width.Glint, screen.height.Glint,
@@ -306,7 +334,12 @@ proc readGpuPixels(): pixie.Image =
   #   screen.data[0].addr
   # )
 
-  glBindTexture(GL_TEXTURE_2D, backBufferTextureId)
+  var screen = newImage(
+    textureAtlas.image.width.GLsizei,
+    textureAtlas.image.height.GLsizei,
+  )
+
+  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
   glGetTexImage(
     GL_TEXTURE_2D,
     0,
@@ -555,7 +588,7 @@ proc drawPaint(node: Node, paint: Paint) =
         return
 
       textureAtlas.put(paint.imageRef, image)
-      #updateGpuAtlas()
+      updateGpuAtlas()
 
     let rect = textureAtlas.entries[paint.imageRef]
     let s = 1 / textureAtlas.image.width.float32
@@ -728,6 +761,10 @@ proc drawNode*(node: Node, level: int) =
 
   if level == 0:
     mat.identity()
+    mat = mat * translate(vec2(
+      0,
+      (textureAtlas.image.height - viewPortHeight).float32
+    ))
     opacity = 1.0
     framePos = -node.absoluteBoundingBox.xy
   else:

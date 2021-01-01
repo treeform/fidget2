@@ -15,7 +15,7 @@ proc newCpuAtlas*(size, margin: int): CpuAtlas =
 
 proc grow(atlas: CpuAtlas)
 
-proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
+proc findEmptyRect*(atlas: CpuAtlas, width, height: int): Rect =
   var imgWidth = width + atlas.margin * 2
   var imgHeight = height + atlas.margin * 2
 
@@ -59,6 +59,7 @@ proc findEmptyRect(atlas: CpuAtlas, width, height: int): Rect =
 
   var rect = rect(
     float32(at[0] + atlas.margin),
+    #float32(atlas.image.height - at[1] - height + atlas.margin),
     float32(at[1] + atlas.margin),
     float32(width),
     float32(height),
