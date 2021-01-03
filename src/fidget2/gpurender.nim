@@ -80,10 +80,7 @@ proc setupRender*(frameNode: Node) =
   dataBufferSeq.setLen(0)
 
   if textureAtlas == nil:
-    textureAtlas = newCpuAtlas(1024*4, 1)
-    var screen = newImage(viewPortWidth, viewPortHeight)
-    screen.fill(rgba(255, 0, 0, 255))
-    textureAtlas.put("screen", screen)
+    textureAtlas = newCpuAtlas(512, 1)
 
   # Number nodes
   var currentIndex = 1
@@ -264,9 +261,6 @@ proc createWindow*(
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
 proc drawBuffers() =
-  # Send texture to the CPU.
-  updateGpuAtlas()
-
   # Send commands to the CPU.
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
   glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
@@ -932,6 +926,7 @@ proc drawNode*(node: Node, level: int, rootOffset = vec2(0, 0)) =
 
 proc drawGpuFrameToScreen*(node: Node) =
   setupRender(node)
+  updateGpuAtlas()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
   glViewport(
@@ -954,17 +949,30 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   setupRender(node)
 
   if name notin textureAtlas.entries:
+    # var dummyImage = newImage(1000, 212)
+    # dummyImage.fill(rgba(255, 0, 0, 255))
+    # textureAtlas.put("dummpy", dummyImage)
+
+    ## Add a spot for the screen to go
     var toImage = newImage(viewPortWidth, viewPortHeight)
     toImage.fill(rgba(255, 0, 0, 255))
     textureAtlas.put(name, toImage)
 
+  updateGpuAtlas()
+
   glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
   glEnable(GL_SCISSOR_TEST)
+
+  let entry = textureAtlas.entries[name]
+  let rootOffset = vec2(
+    entry.x,
+    -entry.y + (textureAtlas.image.height - viewPortHeight).float32
+  )
   glScissor(
-    0,
-    0,
-    viewPortWidth.cint,
-    viewPortHeight.cint,
+    entry.x.cint,
+    entry.y.cint,
+    entry.w.cint,
+    entry.h.cint,
   )
   glViewport(
     0,
@@ -978,10 +986,6 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   for c in node.children:
     computeLayout(node, c)
 
-  let rootOffset = vec2(
-    0,
-    (textureAtlas.image.height - viewPortHeight).float32
-  )
 
   drawNode(node, 0, rootOffset)
   dataBufferSeq.add(cmdExit)
@@ -1011,15 +1015,15 @@ proc readGpuPixelsFromAtlas*(name: string, crop=true): pixie.Image =
     GL_UNSIGNED_BYTE,
     screen.data[0].addr
   )
-  screen.flipVertical()
   if crop:
     let rect = textureAtlas.entries[name]
-    print rect
-    return screen.subImage(
-      rect.x.int - textureAtlas.margin,
-      textureAtlas.image.height - rect.h.int,
+    let cutout = screen.subImage(
+      rect.x.int,
+      rect.y.int, #textureAtlas.image.height - rect.h.int,
       rect.w.int,
       rect.h.int
     )
+    cutout.flipVertical()
+    return cutout
   else:
     return screen

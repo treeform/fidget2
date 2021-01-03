@@ -21,15 +21,13 @@ proc findEmptyRect*(atlas: CpuAtlas, width, height: int): Rect =
   var imgHeight = height + atlas.margin * 2
 
   if imgWidth > atlas.image.width or imgHeight > atlas.image.height:
-    #raise newException(Exception, "Atlas is too small for image.")
     atlas.grow()
     return atlas.findEmptyRect(width, height)
 
   var at: (int, int)
   block bothLoops:
-    for y in 0 ..< atlas.image.height:
+    for y in 0 ..< atlas.image.height - imgHeight:
       for x in 0 ..< atlas.image.width:
-        #print x, atlas.heights[x]
         if y < atlas.heights[x].int:
           continue
 
@@ -41,7 +39,7 @@ proc findEmptyRect*(atlas: CpuAtlas, width, height: int): Rect =
             fit = false
             break
           if y < atlas.heights[x + x1].int:
-            # Stick out at the top.
+            # Ran into the hights.
             fit = false
             break
 
@@ -50,7 +48,6 @@ proc findEmptyRect*(atlas: CpuAtlas, width, height: int): Rect =
           at = (x, y)
           break bothLoops
 
-    #raise newException(Exception, "Atlas is full.")
     atlas.grow()
     return atlas.findEmptyRect(width, height)
 
@@ -60,7 +57,6 @@ proc findEmptyRect*(atlas: CpuAtlas, width, height: int): Rect =
 
   var rect = rect(
     float32(at[0] + atlas.margin),
-    #float32(atlas.image.height - at[1] - height + atlas.margin),
     float32(at[1] + atlas.margin),
     float32(width),
     float32(height),
