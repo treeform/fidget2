@@ -25,7 +25,6 @@ var
   textureAtlas*: CpuAtlas
   textureAtlasId: GLuint
   backBufferId: GLuint
-  #backBufferTextureId: GLuint
 
   # Vertex data
   vertices: array[8, GLfloat] = [
@@ -262,7 +261,7 @@ proc createWindow*(
     quit("some thing is wrong with frame buffer")
 
   # Bind back default frame buffer of the screen.
-  # glBindFramebuffer(GL_FRAMEBUFFER, 0)
+  glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
 proc drawBuffers() =
   # Send texture to the CPU.
@@ -273,8 +272,8 @@ proc drawBuffers() =
   glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
   # Clear and setup drawing.
-  # glClearColor(0, 1, 0, 1)
-  # glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  glClearColor(0, 1, 0, 1)
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glUseProgram(shaderProgram)
 
   # Do the drawing.
@@ -682,7 +681,7 @@ proc computePixelBox*(node: Node) =
   # if node.pixelBox.h.fractional > 0:
   #   node.pixelBox.h = node.pixelBox.h.ceil
 
-proc drawNode*(node: Node, level: int) =
+proc drawNode*(node: Node, level: int, rootOffset = vec2(0, 0)) =
 
   if not node.visible or node.opacity == 0:
     return
@@ -692,10 +691,11 @@ proc drawNode*(node: Node, level: int) =
 
   if level == 0:
     mat.identity()
-    mat = mat * translate(vec2(
-      0,
-      (textureAtlas.image.height - viewPortHeight).float32
-    ))
+    mat = mat * translate(rootOffset)
+    # mat = mat * translate(vec2(
+    #   0,
+    #   (textureAtlas.image.height - viewPortHeight).float32
+    # ))
     opacity = 1.0
     framePos = -node.absoluteBoundingBox.xy
   else:
@@ -931,8 +931,15 @@ proc drawNode*(node: Node, level: int) =
   opacity = prevOpacity
 
 proc drawGpuFrameToScreen*(node: Node) =
-  echo "drawGpuFrameToScreen"
   setupRender(node)
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0)
+  glViewport(
+    0,
+    0,
+    viewPortWidth.cint,
+    viewPortHeight.cint
+  )
 
   node.box.xy = vec2(0, 0)
   node.size = node.box.wh
@@ -944,7 +951,6 @@ proc drawGpuFrameToScreen*(node: Node) =
   drawBuffers()
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
-  echo "drawGpuFrameToAtlas"
   setupRender(node)
 
   if name notin textureAtlas.entries:
@@ -952,6 +958,7 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
     toImage.fill(rgba(255, 0, 0, 255))
     textureAtlas.put(name, toImage)
 
+  glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
   glEnable(GL_SCISSOR_TEST)
   glScissor(
     0,
@@ -971,7 +978,12 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   for c in node.children:
     computeLayout(node, c)
 
-  drawNode(node, 0)
+  let rootOffset = vec2(
+    0,
+    (textureAtlas.image.height - viewPortHeight).float32
+  )
+
+  drawNode(node, 0, rootOffset)
   dataBufferSeq.add(cmdExit)
   drawBuffers()
 
@@ -986,7 +998,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   screen.flipVertical()
   return screen
 
-proc readGpuPixelsFromAtlas*(name: string): pixie.Image =
+proc readGpuPixelsFromAtlas*(name: string, crop=true): pixie.Image =
   var screen = newImage(
     textureAtlas.image.width.GLsizei,
     textureAtlas.image.height.GLsizei,
@@ -1000,12 +1012,14 @@ proc readGpuPixelsFromAtlas*(name: string): pixie.Image =
     screen.data[0].addr
   )
   screen.flipVertical()
-
-  let rect = textureAtlas.entries[name]
-  print rect
-  return screen.subImage(
-    rect.x.int - textureAtlas.margin,
-    textureAtlas.image.height - rect.h.int,
-    rect.w.int,
-    rect.h.int
-  )
+  if crop:
+    let rect = textureAtlas.entries[name]
+    print rect
+    return screen.subImage(
+      rect.x.int - textureAtlas.margin,
+      textureAtlas.image.height - rect.h.int,
+      rect.w.int,
+      rect.h.int
+    )
+  else:
+    return screen

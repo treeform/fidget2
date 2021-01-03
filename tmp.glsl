@@ -700,7 +700,7 @@ void L(
   y0 = y;
 }
 layout(origin_upper_left) in vec4 gl_FragCoord;
-layout(location = 0) out vec4 fragColor;
+out vec4 fragColor;
 
 void main() {
 "Main entry point to this huge shader.";

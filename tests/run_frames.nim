@@ -23,7 +23,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     echo frame.name, " --------------------------------- "
 
-    if firstTime and w in ["gpu_atlas", "gpu", "vs"]:
+    if firstTime and w in ["gpu_atlas", "gpu_atlas_full", "gpu", "vs"]:
       createWindow(frame, offscreen = true)
       firstTime = false
 
@@ -36,6 +36,9 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
     elif w == "gpu_atlas":
       drawGpuFrameToAtlas(frame, "screen")
       image = readGpuPixelsFromAtlas("screen")
+    elif w == "gpu_atlas_full":
+      drawGpuFrameToAtlas(frame, "screen")
+      image = readGpuPixelsFromAtlas("screen", crop=false)
     elif w == "cpu":
       image = drawCompleteCpuFrame(frame)
     elif w == "zpu":
