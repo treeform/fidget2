@@ -483,6 +483,27 @@ proc drawGradientStops(paint: Paint) =
     paint.gradientStops[^1].color.a
   ]
 
+proc readyImages(node: Node) =
+  ## Walks the node tree making sure all images are in the atlas.
+  proc readyImage(paint: Paint) =
+    if paint.kind == pkImage:
+      if paint.imageRef notin textureAtlas.entries:
+        var image: pixie.Image
+        downloadImageRef(paint.imageRef)
+        try:
+          image = readImage("figma/images/" & paint.imageRef & ".png")
+        except IOError, PixieError:
+          echo "Issue loading image: ", node.name
+          image = newImage(1,1)
+        textureAtlas.put(paint.imageRef, image)
+
+  for paint in node.fills:
+    paint.readyImage()
+  for paint in node.strokes:
+    paint.readyImage()
+  for c in node.children:
+    c.readyImages()
+
 proc drawPaint(node: Node, paint: Paint) =
   if not paint.visible:
     return
@@ -502,18 +523,7 @@ proc drawPaint(node: Node, paint: Paint) =
   case paint.kind
   of pkImage:
 
-    if paint.imageRef notin textureAtlas.entries:
-      var image: pixie.Image
-      downloadImageRef(paint.imageRef)
-      try:
-        image = readImage("figma/images/" & paint.imageRef & ".png")
-      except IOError, PixieError:
-        echo "Issue loading image: ", node.name
-        return
-
-      textureAtlas.put(paint.imageRef, image)
-      updateGpuAtlas()
-
+    assert paint.imageRef in textureAtlas.entries, "Run readyImages first."
     let rect = textureAtlas.entries[paint.imageRef]
     let s = 1 / textureAtlas.image.width.float32
 
@@ -716,6 +726,11 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
     jmpOffset = dataBufferSeq.len
     dataBufferSeq.add 0
+
+  for effect in node.effects:
+    echo effect.kind
+    if effect.kind == ekLayerBlur:
+      echo "blur!!!"
 
   case node.kind
     of nkGroup:
@@ -927,6 +942,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
 proc drawGpuFrameToScreen*(node: Node) =
   setupRender(node)
+  node.readyImages()
   updateGpuAtlas()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
@@ -959,6 +975,7 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
     toImage.fill(rgba(255, 0, 0, 255))
     textureAtlas.put(name, toImage)
 
+  node.readyImages()
   updateGpuAtlas()
 
   glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)

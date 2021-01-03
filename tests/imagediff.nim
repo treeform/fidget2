@@ -6,7 +6,9 @@ proc imageDiff*(master, image: Image): (float32, Image) =
     diffScore = 0
     diffTotal = 0
 
-  var image = image.subImage(1, 1, master.width, master.height)
+  var image = image
+  if image.width > master.width + 1 or image.height > master.height + 1:
+    image = image.subImage(1, 1, master.width, master.height)
 
   for x in 0 ..< min(image.width, master.width):
     for y in 0 ..< min(image.height, master.height):
