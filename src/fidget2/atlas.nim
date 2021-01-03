@@ -6,6 +6,7 @@ type
     image*: Image
     heights*: seq[uint16]
     margin*: int
+    dirty*: bool
 
 proc newCpuAtlas*(size, margin: int): CpuAtlas =
   result = CpuAtlas()
@@ -71,6 +72,7 @@ proc put*(atlas: CpuAtlas, name: string, image: Image) =
   let rect = atlas.findEmptyRect(image.width, image.height)
   atlas.entries[name] = rect
   atlas.image.draw(image, rect.xy, blendMode = bmOverwrite)
+  atlas.dirty = true
 
 proc size(atlas: CpuAtlas): int =
   atlas.image.width

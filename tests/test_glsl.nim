@@ -55,7 +55,7 @@ block:
   var dataBuffer: Uniform[SamplerBuffer]
 
   proc samplerBufferTest(fragColor: var Color) =
-    if texelFetch(dataBuffer, 0) == 0:
+    if texelFetch(dataBuffer, 0).x == 0:
       fragColor = color(1, 0, 0, 1)
     else:
       fragColor = color(0, 0, 0, 1)

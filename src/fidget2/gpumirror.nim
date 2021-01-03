@@ -445,7 +445,7 @@ proc display() =
 
   clearInputs()
 
-  drawGpuFrame(thisFrame)
+  drawGpuFrameToScreen(thisFrame)
 
   swapBuffers(window)
 
