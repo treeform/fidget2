@@ -675,7 +675,7 @@ proc computePixelBox*(node: Node) =
   # if node.pixelBox.h.fractional > 0:
   #   node.pixelBox.h = node.pixelBox.h.ceil
 
-proc drawNode*(node: Node, level: int, rootOffset = vec2(0, 0)) =
+proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
   if not node.visible or node.opacity == 0:
     return
@@ -684,8 +684,9 @@ proc drawNode*(node: Node, level: int, rootOffset = vec2(0, 0)) =
   var prevOpacity = opacity
 
   if level == 0:
-    mat.identity()
-    mat = mat * translate(rootOffset)
+    mat = rootMat
+    #mat.identity()
+    #mat = mat * translate(rootOffset)
     # mat = mat * translate(vec2(
     #   0,
     #   (textureAtlas.image.height - viewPortHeight).float32
@@ -964,10 +965,10 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   glEnable(GL_SCISSOR_TEST)
 
   let entry = textureAtlas.entries[name]
-  let rootOffset = vec2(
+  let rootMat = translate(vec2(
     entry.x,
-    -entry.y + (textureAtlas.image.height - viewPortHeight).float32
-  )
+    textureAtlas.image.height.float32 - entry.y
+  )) * scale(vec2(1, -1))
   glScissor(
     entry.x.cint,
     entry.y.cint,
@@ -986,8 +987,7 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   for c in node.children:
     computeLayout(node, c)
 
-
-  drawNode(node, 0, rootOffset)
+  drawNode(node, 0, rootMat)
   dataBufferSeq.add(cmdExit)
   drawBuffers()
 
@@ -1019,11 +1019,10 @@ proc readGpuPixelsFromAtlas*(name: string, crop=true): pixie.Image =
     let rect = textureAtlas.entries[name]
     let cutout = screen.subImage(
       rect.x.int,
-      rect.y.int, #textureAtlas.image.height - rect.h.int,
+      rect.y.int,
       rect.w.int,
       rect.h.int
     )
-    cutout.flipVertical()
     return cutout
   else:
     return screen
