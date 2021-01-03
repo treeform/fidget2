@@ -23,7 +23,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     echo frame.name, " --------------------------------- "
 
-    if firstTime and w in ["gpu", "vs"]:
+    if firstTime and w in ["gpu_atlas", "gpu", "vs"]:
       createWindow(frame, offscreen = true)
       #discard drawCompleteGpuFrame(frame)
       firstTime = false
@@ -32,24 +32,18 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     var image: Image
     if w == "gpu":
-
-      # drawGpuFrameToTexture(frame)
-      # image = readGpuPixelsFromTexture()
-
-      # drawGpuFrameToScreen(frame)
-      # image = readGpuPixelsFromScreen()
-
+      drawGpuFrameToScreen(frame)
+      image = readGpuPixelsFromScreen()
+    elif w == "gpu_atlas":
       drawGpuFrameToAtlas(frame, "screen")
       image = readGpuPixelsFromAtlas("screen")
-
     elif w == "cpu":
       image = drawCompleteCpuFrame(frame)
     elif w == "zpu":
       image = drawCompleteZpuFrame(frame)
     elif w == "vs":
-      discard
-      # drawGpuFrameToScreen(frame)
-      # image = readGpuPixelsFromScreen()
+      drawGpuFrameToScreen(frame)
+      image = readGpuPixelsFromScreen()
 
     let frameTime = epochTime() - startTime
     renderTime += frameTime

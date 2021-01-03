@@ -85,9 +85,6 @@ proc setupRender*(frameNode: Node) =
     var screen = newImage(viewPortWidth, viewPortHeight)
     screen.fill(rgba(255, 0, 0, 255))
     textureAtlas.put("screen", screen)
-    #let rect = textureAtlas.findEmptyRect(viewPortWidth, viewPortHeight)
-    #textureAtlas.entries["screen"] = rect
-
 
   # Number nodes
   var currentIndex = 1
@@ -97,33 +94,6 @@ proc setupRender*(frameNode: Node) =
     for c in node.children:
       number(c)
   number(frameNode)
-
-proc setupRenderToAtlas(node: Node, name: string) =
-
-  setupRender(node)
-
-  if name notin textureAtlas.entries:
-    var toImage = newImage(viewPortWidth, viewPortHeight)
-    toImage.fill(rgba(255, 0, 0, 255))
-    textureAtlas.put(name, toImage)
-
-  glEnable(GL_SCISSOR_TEST)
-  glScissor(
-    0,
-    0,
-    viewPortWidth.cint,
-    viewPortHeight.cint,
-    #textureAtlas.image.width.cint div 2,
-    #textureAtlas.image.height.cint div 2
-  )
-  glViewport(
-    0,
-    0, #textureAtlas.image.height.cint - viewPortHeight.cint,
-    #viewPortWidth.cint,
-    #viewPortHeight.cint,
-    textureAtlas.image.width.cint,
-    textureAtlas.image.width.cint
-  )
 
 proc createWindow*(
   frameNode: Node,
@@ -279,29 +249,6 @@ proc createWindow*(
   glGenFramebuffers(1, backBufferId.addr)
   glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
 
-  # Generate texture we're going to render to.
-  # glGenTextures(1, backBufferTextureId.addr)
-
-  # "Bind" the newly created texture : all future texture functions will modify this texture
-  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
-
-  # Give an empty image to OpenGL ( the last "0" )
-  glTexImage2D(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA.GLint,
-    viewPortWidth.GLsizei,
-    viewPortHeight.GLsizei,
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    nil
-  )
-
-  # Poor filtering. Needed !
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-
   # Set "backBufferTextureId" as our colour attachement #0
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureAtlasId, 0)
 
@@ -317,13 +264,8 @@ proc createWindow*(
   # glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
 proc drawBuffers() =
-
-  #textureAtlas.image.writeFile("atlas.png")
-
   # Send texture to the CPU.
   updateGpuAtlas()
-  # for k, r in textureAtlas.entries.pairs:
-  #   print k, r
 
   # Send commands to the CPU.
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
@@ -337,56 +279,6 @@ proc drawBuffers() =
   # Do the drawing.
   glBindVertexArray(vao)
   glDrawElements(GL_TRIANGLE_FAN, indices.len.GLsizei, GL_UNSIGNED_BYTE, indices.addr)
-
-proc readGpuPixelsFromScreen(): pixie.Image =
-  var screen = newImage(viewPortWidth, viewPortHeight)
-  glReadPixels(
-    0, 0,
-    screen.width.Glint, screen.height.Glint,
-    GL_RGBA, GL_UNSIGNED_BYTE,
-    screen.data[0].addr
-  )
-
-  # var screen = newImage(
-  #   textureAtlas.image.width.GLsizei,
-  #   textureAtlas.image.height.GLsizei,
-  # )
-
-  # glBindTexture(GL_TEXTURE_2D, textureAtlasId)
-  # glGetTexImage(
-  #   GL_TEXTURE_2D,
-  #   0,
-  #   GL_RGBA,
-  #   GL_UNSIGNED_BYTE,
-  #   screen.data[0].addr
-  # )
-  screen.flipVertical()
-  return screen
-
-proc readGpuPixelsFromAtlas*(name: string): pixie.Image =
-  var screen = newImage(
-    textureAtlas.image.width.GLsizei,
-    textureAtlas.image.height.GLsizei,
-  )
-  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
-  glGetTexImage(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    screen.data[0].addr
-  )
-  screen.flipVertical()
-
-  let rect = textureAtlas.entries[name]
-  print rect
-  return screen.subImage(
-    rect.x.int - textureAtlas.margin,
-    textureAtlas.image.height - rect.h.int,
-    rect.w.int,
-    rect.h.int
-  )
-  #return screen
 
 proc transform(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
@@ -1049,10 +941,27 @@ proc drawGpuFrameToScreen*(node: Node) =
   dataBufferSeq.add(cmdExit)
   drawBuffers()
 
-  #window.swapBuffers()
-
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
-  setupRenderToAtlas(node, name)
+  setupRender(node)
+
+  if name notin textureAtlas.entries:
+    var toImage = newImage(viewPortWidth, viewPortHeight)
+    toImage.fill(rgba(255, 0, 0, 255))
+    textureAtlas.put(name, toImage)
+
+  glEnable(GL_SCISSOR_TEST)
+  glScissor(
+    0,
+    0,
+    viewPortWidth.cint,
+    viewPortHeight.cint,
+  )
+  glViewport(
+    0,
+    0,
+    textureAtlas.image.width.cint,
+    textureAtlas.image.width.cint
+  )
 
   node.box.xy = vec2(0, 0)
   node.size = node.box.wh
@@ -1063,7 +972,37 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   dataBufferSeq.add(cmdExit)
   drawBuffers()
 
-# proc drawCompleteGpuFrame*(node: Node): pixie.Image =
+proc readGpuPixelsFromScreen*(): pixie.Image =
+  var screen = newImage(viewPortWidth, viewPortHeight)
+  glReadPixels(
+    0, 0,
+    screen.width.Glint, screen.height.Glint,
+    GL_RGBA, GL_UNSIGNED_BYTE,
+    screen.data[0].addr
+  )
+  screen.flipVertical()
+  return screen
 
-#   drawGpuFrame(node)
-#   result = readGpuPixels()
+proc readGpuPixelsFromAtlas*(name: string): pixie.Image =
+  var screen = newImage(
+    textureAtlas.image.width.GLsizei,
+    textureAtlas.image.height.GLsizei,
+  )
+  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
+  glGetTexImage(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    screen.data[0].addr
+  )
+  screen.flipVertical()
+
+  let rect = textureAtlas.entries[name]
+  print rect
+  return screen.subImage(
+    rect.x.int - textureAtlas.margin,
+    textureAtlas.image.height - rect.h.int,
+    rect.w.int,
+    rect.h.int
+  )
