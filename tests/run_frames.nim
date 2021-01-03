@@ -32,13 +32,24 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     var image: Image
     if w == "gpu":
-      image = drawCompleteGpuFrame(frame)
+
+      # drawGpuFrameToTexture(frame)
+      # image = readGpuPixelsFromTexture()
+
+      # drawGpuFrameToScreen(frame)
+      # image = readGpuPixelsFromScreen()
+
+      drawGpuFrameToAtlas(frame, "screen")
+      image = readGpuPixelsFromAtlas("screen")
+
     elif w == "cpu":
       image = drawCompleteCpuFrame(frame)
     elif w == "zpu":
       image = drawCompleteZpuFrame(frame)
     elif w == "vs":
-      image = drawCompleteGpuFrame(frame)
+      discard
+      # drawGpuFrameToScreen(frame)
+      # image = readGpuPixelsFromScreen()
 
     let frameTime = epochTime() - startTime
     renderTime += frameTime
