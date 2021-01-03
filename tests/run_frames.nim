@@ -25,7 +25,6 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     if firstTime and w in ["gpu_atlas", "gpu", "vs"]:
       createWindow(frame, offscreen = true)
-      #discard drawCompleteGpuFrame(frame)
       firstTime = false
 
     let startTime = epochTime()

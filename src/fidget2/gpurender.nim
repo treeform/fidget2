@@ -248,6 +248,7 @@ proc createWindow*(
   # Generate background frame buffer.
   glGenFramebuffers(1, backBufferId.addr)
   glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
+  print "glBindFramebuffer", backBufferId
 
   # Set "backBufferTextureId" as our colour attachement #0
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureAtlasId, 0)
@@ -930,6 +931,7 @@ proc drawNode*(node: Node, level: int) =
   opacity = prevOpacity
 
 proc drawGpuFrameToScreen*(node: Node) =
+  echo "drawGpuFrameToScreen"
   setupRender(node)
 
   node.box.xy = vec2(0, 0)
@@ -942,6 +944,7 @@ proc drawGpuFrameToScreen*(node: Node) =
   drawBuffers()
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
+  echo "drawGpuFrameToAtlas"
   setupRender(node)
 
   if name notin textureAtlas.entries:
