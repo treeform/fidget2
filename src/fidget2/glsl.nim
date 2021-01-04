@@ -108,6 +108,8 @@ proc addIndent(res: var string, level: int) =
   while res[idx] == ' ':
     dec idx
     inc spaces
+  if spaces == 0 and res[idx] != '\n':
+    res.add '\n'
   let level = level - spaces div 2
   for i in 0 ..< level:
     res.add "  "

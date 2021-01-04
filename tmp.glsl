@@ -197,7 +197,9 @@ void draw(
       for(int y = 0; y < n; y++) {
         if (! (float(zmod(crossCountMat[x][y], float(2.0))) == 0.0)) {
           fillMask += float(1);
-        }      }    }
+        }
+      }
+    }
     fillMask = fillMask / float(n * n);
   } else {
     fillMask = clamp(abs(fillMask), float(0), float(1));
@@ -403,7 +405,9 @@ void textureFill(
       float zNormal = 0.0;
       for(int x = 0; x < mSize; x++) {
         for(int y = 0; y < mSize; y++) {
-          zNormal = zNormal + float(kernel[(x)] * kernel[(y)]);        }      }
+          zNormal = zNormal + float(kernel[(x)] * kernel[(y)]);
+        }
+      }
 
       vec4 combinedColor = vec4(float(0));
       float colorAdj = 0.0;
@@ -419,7 +423,8 @@ void textureFill(
             combinedColor += textureColor * kValue;
             colorAdj += float(kValue);
           }
-        }      }
+        }
+      }
       if (! (colorAdj == float(0))) {
         combinedColor.x = float(float(combinedColor.x) / colorAdj);
         combinedColor.y = float(float(combinedColor.y) / colorAdj);
