@@ -275,14 +275,14 @@ void textureFill(
       float sigma = 1.9;
       for(int x = 0; x <= kSize; x++) {
         float v = normpdf(float(float(x)), float(sigma));
-        kernel[(kSize + x)] = v;
-        kernel[(kSize - x)] = v;
+        kernel[kSize + x] = v;
+        kernel[kSize - x] = v;
       }
 
       float zNormal = 0.0;
       for(int x = 0; x < mSize; x++) {
         for(int y = 0; y < mSize; y++) {
-          zNormal = zNormal + float(kernel[(x)] * kernel[(y)]);
+          zNormal = zNormal + float(kernel[x] * kernel[y]);
         }
       }
 
@@ -291,7 +291,7 @@ void textureFill(
       for(int x = - (int(layerBlur)); x <= int(layerBlur); x++) {
         for(int y = - (int(layerBlur)); y <= int(layerBlur); y++) {
           vec2 offset = vec2(float(x), float(y));
-          float kValue = kernel[(kSize + x)] * kernel[(kSize + y)];
+          float kValue = kernel[kSize + x] * kernel[kSize + y];
           vec2 uv = (tMat * vec3(floor(screen) + vec2(float(0.5), float(0.5)) + offset, float(1))).xy;
 
           if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {

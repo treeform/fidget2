@@ -271,7 +271,9 @@ proc toCode(n: NimNode, res: var string, level = 0) =
   of nnkHiddenStdConv:
     var typeStr = typeRename(n.getType.repr)
     if typeStr.startsWith("range["):
-      typeStr = ""
+      n[1].toCode(res)
+      return
+
     for j in 1 .. n.len-1:
       res.add typeStr
       res.add "("
