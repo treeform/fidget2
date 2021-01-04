@@ -179,7 +179,7 @@ void gradientRadial(
   vec2 at0,
   vec2 to0
 ) {
-    if (float(0) < fillMask * mask) {
+  if (float(0) < fillMask * mask) {
     vec2 at = (mat * vec3(at0, float(1))).xy;
     vec2 to = (mat * vec3(to0, float(1))).xy;
     float distance = length(at - to);
@@ -196,11 +196,11 @@ void draw(
     for(int x = 0; x < n; x++) {
       for(int y = 0; y < n; y++) {
         if (! (float(zmod(crossCountMat[x][y], float(2.0))) == 0.0)) {
-                    fillMask += float(1);
+          fillMask += float(1);
         }      }    };
     fillMask = fillMask / float(n * n);
   } else {
-        fillMask = clamp(abs(fillMask), float(0), float(1));
+    fillMask = clamp(abs(fillMask), float(0), float(1));
   };
 }
 
@@ -212,7 +212,7 @@ void solidFill(
 ) {
 "Set the source color.";
   if (float(0) < fillMask * mask) {
-        backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask));
+    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask));
   };
 }
 
@@ -220,7 +220,7 @@ float zmod(
   float a,
   float b
 ) {
-    return a - b * floor(a / b);
+  return a - b * floor(a / b);
 }
 
 void C(
@@ -241,7 +241,7 @@ void gradientLinear(
   vec2 at0,
   vec2 to0
 ) {
-    if (float(0) < fillMask) {
+  if (float(0) < fillMask) {
     vec2 at = (mat * vec3(at0, float(1))).xy;
     vec2 to = (mat * vec3(to0, float(1))).xy;
     gradientK = clamp(toLineSpace(at, to, screen), float(0), float(1));
@@ -265,7 +265,7 @@ void gradientStop(
   float b,
   float a
 ) {
-    if (float(0) < fillMask * mask) {
+  if (float(0) < fillMask * mask) {
     vec4 gradientColor = vec4(r, g, b, a);
     if ((prevGradientK < gradientK) && (gradientK <= k)) {
       float betweenColors = (gradientK - prevGradientK) / (k - prevGradientK);
@@ -288,14 +288,14 @@ float normpdf(
   float x,
   float sigma
 ) {
-    return float(0.39894 * exp(-0.5 * x * x / float(sigma * sigma)) / float(sigma));
+  return float(0.39894 * exp(-0.5 * x * x / float(sigma * sigma)) / float(sigma));
 }
 
 vec4 blendNormalFloats(
   vec4 backdrop,
   vec4 source
 ) {
-    return alphaFix(backdrop, source, source);
+  return alphaFix(backdrop, source, source);
 }
 
 void quadratic(
@@ -341,7 +341,7 @@ float pixelCross(
   vec2 a = a0;
   vec2 b = b0;
   if (a.y == b.y) {
-        return float(0.0);
+    return float(0.0);
   };
   if ((min(a.y, b.y) <= float(1)) && (float(1) < max(a.y, b.y))) {
     float xIntersect = 0.0;
@@ -350,10 +350,10 @@ float pixelCross(
       float bb = a.y - m * a.x;
       xIntersect = (float(1) - bb) / (m);
     } else {
-            xIntersect = a.x;
+      xIntersect = a.x;
     };
     if (xIntersect < float(1)) {
-            return lineDir(a, b);
+      return lineDir(a, b);
     };
   };
   return float(0.0);
@@ -389,7 +389,7 @@ void textureFill(
 ) {
 "Set the source color.";
   if (true || float(0) < fillMask * mask) {
-        if (float(0) < layerBlur) {
+    if (float(0) < layerBlur) {
       int mSize = int(layerBlur) * 2 + 1;
       int kSize = int(layerBlur);
       float[20] kernel;
@@ -431,7 +431,7 @@ void textureFill(
     } else {
       vec2 uv = (tMat * vec3(floor(screen) + vec2(float(0.5), float(0.5)), float(1))).xy;
       if (tile == float(0)) {
-                if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
+        if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
           vec4 textureColor = texture(textureAtlasSampler, uv);
           textureColor.w *= fillMask * mask;
           backdropColor = blendNormalFloats(backdropColor, textureColor);
@@ -453,7 +453,7 @@ void runCommands(
   while(true) {
     float command = texelFetch(dataBuffer, i).x;
     if (command == 0.0) {
-            break;
+      break;
     } else if (command == 1.0) {
       startPath(texelFetch(dataBuffer, i + 1).x);
       i += 1;
@@ -552,16 +552,16 @@ void runCommands(
       maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x));
       maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y));
       if (! (overlap(minS, maxS, minP, maxP))) {
-                i = label - 1;
+        i = label - 1;
       };
     } else if (command == 16.0) {
-            mask = fillMask;
+      mask = fillMask;
     } else if (command == 17.0) {
-            mask = float(1.0);
+      mask = float(1.0);
     } else if (command == 18.0) {
       float index = texelFetch(dataBuffer, i + 1).x;
       if (float(0) < fillMask * mask) {
-                topIndex = index;
+        topIndex = index;
       };
       i += 1;
     } else if (command == 19.0) {
@@ -591,10 +591,10 @@ float lineDir(
   vec2 a,
   vec2 b
 ) {
-    if (float(0) < a.y - b.y) {
-        return float(1);
+  if (float(0) < a.y - b.y) {
+    return float(1);
   } else {
-        return float(-1);
+    return float(-1);
   };
 }
 
@@ -641,14 +641,14 @@ float pixelCover(
     b = tmp;
   };
   if (((b.y < float(0)) || (float(1) < a.y) || float(1) <= a.x && float(1) <= b.x) || (a.y == b.y)) {
-        return float(0);
+    return float(0);
   } else if (((a.x < float(0)) && (b.x < float(0))) || (a.x == b.x)) {
-        return (float(1) - clamp(a.x, float(0), float(1))) * (min(b.y, float(1)) - max(a.y, float(0)));
+    return (float(1) - clamp(a.x, float(0), float(1))) * (min(b.y, float(1)) - max(a.y, float(0)));
   } else {
     float mm = (b.y - a.y) / (b.x - a.x);
     float bb = a.y - mm * a.x;
     if (((float(0) <= a.x) && (a.x <= float(1)) && float(0) <= a.y) && (a.y <= float(1))) {
-            aI = a;
+      aI = a;
     } else {
       aI = vec2((float(0) - bb) / (mm), float(0));
       if (aI.x < float(0)) {
@@ -661,7 +661,7 @@ float pixelCover(
       };
     };
     if (((float(0) <= b.x) && (b.x <= float(1)) && float(0) <= b.y) && (b.y <= float(1))) {
-            bI = b;
+      bI = b;
     } else {
       bI = vec2((float(1) - bb) / (mm), float(1));
       if (bI.x < float(0)) {
@@ -692,7 +692,7 @@ vec4 alphaFix(
   vec4 res = vec4(0.0);
   res.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
   if (float(res.w) == 0.0) {
-        return res;
+    return res;
   };
   float t0 = (float(source.w)) * (1.0 - float(backdrop.w));
   float t1 = source.w * backdrop.w;

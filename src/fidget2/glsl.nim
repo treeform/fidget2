@@ -102,13 +102,13 @@ proc getPrecedence(n: NimNode): int =
     -1
 
 proc addIndent(res: var string, level: int) =
-  # var
-  #   idx = res.len - 1
-  #   spaces = 0
-  # while res[idx] == ' ':
-  #   dec idx
-  #   inc spaces
-  # let level = level - spaces div 2
+  var
+    idx = res.len - 1
+    spaces = 0
+  while res[idx] == ' ':
+    dec idx
+    inc spaces
+  let level = level - spaces div 2
   for i in 0 ..< level:
     res.add "  "
 
