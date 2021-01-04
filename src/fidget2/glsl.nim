@@ -80,7 +80,35 @@ proc procRename(t: string): string =
   of "mod": "%"
   else: t
 
+proc opPrecedence(op: string): int =
+  ## Given an operator return its precedence.
+  ## Used to decide if () are needed.
+  ## See: https://learnwebgl.brown37.net/12_shader_language/glsl_mathematical_operations.html
+  case op:
+  of "*", "/": 4
+  of "+", "-": 5
+  of "<", ">", "<=", ">=": 7
+  of "==", "!=": 8
+  of "&&": 12
+  of "^^": 13
+  of "||": 14
+  of "=", "+=", "-=", "*=", "/=": 16
+  else: -1
+
+proc getPrecedence(n: NimNode): int =
+  if n.kind == nnkInfix:
+    n[0].strVal.opPrecedence()
+  else:
+    -1
+
 proc addIndent(res: var string, level: int) =
+  # var
+  #   idx = res.len - 1
+  #   spaces = 0
+  # while res[idx] == ' ':
+  #   dec idx
+  #   inc spaces
+  # let level = level - spaces div 2
   for i in 0 ..< level:
     res.add "  "
 
@@ -118,19 +146,35 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       res.add ", "
       n[2].toCode(res)
       res.add ")"
-      return
 
-    if n[0].repr in ["+=", "-=", "*=", "/="]:
+    elif n[0].repr in ["+=", "-=", "*=", "/="]:
       res.addIndent level
-    res.add "("
-    n[1].toCode(res)
-    res.add ") "
-    n[0].toCode(res)
-    res.add " ("
-    n[2].toCode(res)
-    res.add ")"
-    if n[0].repr in ["+=", "-=", "*=", "/="]:
+      n[1].toCode(res)
+      res.add " "
+      n[0].toCode(res)
+      res.add " "
+      n[2].toCode(res)
       res.addSmart ';'
+
+    else:
+      let
+        a = n.getPrecedence()
+        l = n[1].getPrecedence()
+        r = n[2].getPrecedence()
+      if l > a or r > a:
+        res.add "("
+        n[1].toCode(res)
+        res.add ") "
+        n[0].toCode(res)
+        res.add " ("
+        n[2].toCode(res)
+        res.add ")"
+      else:
+        n[1].toCode(res)
+        res.add " "
+        n[0].toCode(res)
+        res.add " "
+        n[2].toCode(res)
 
   of nnkHiddenDeref, nnkHiddenAddr:
     n[0].toCode(res)
