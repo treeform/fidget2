@@ -56,11 +56,11 @@ void gradientRadial(
   vec2 at0,
   vec2 to0
 ) {
-  if (float(0) < fillMask * mask) {
-    vec2 at = (mat * vec3(at0, float(1))).xy;
-    vec2 to = (mat * vec3(to0, float(1))).xy;
+  if (0.0 < fillMask * mask) {
+    vec2 at = (mat * vec3(at0, 1.0)).xy;
+    vec2 to = (mat * vec3(to0, 1.0)).xy;
     float distance = length(at - to);
-    gradientK = clamp(length(at - screen) / distance, float(0), float(1));
+    gradientK = clamp(length(at - screen) / distance, 0.0, 1.0);
   }
 }
 
@@ -68,18 +68,18 @@ void draw(
 ) {
   // Apply the winding rule.
   if (windingRule == 0) {
-    fillMask = float(0);
+    fillMask = 0.0;
     int n = 4;
     for(int x = 0; x < n; x++) {
       for(int y = 0; y < n; y++) {
-        if (! (float(zmod(crossCountMat[x][y], float(2.0))) == 0.0)) {
-          fillMask += float(1);
+        if (! (float(zmod(crossCountMat[x][y], 2.0)) == 0.0)) {
+          fillMask += 1.0;
         }
       }
     }
     fillMask = fillMask / float(n * n);
   } else {
-    fillMask = clamp(abs(fillMask), float(0), float(1));
+    fillMask = clamp(abs(fillMask), 0.0, 1.0);
   }
 }
 
@@ -90,7 +90,7 @@ void solidFill(
   float a
 ) {
   // Set the source color.
-  if (float(0) < fillMask * mask) {
+  if (0.0 < fillMask * mask) {
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask));
   }
 }
@@ -120,10 +120,10 @@ void gradientLinear(
   vec2 at0,
   vec2 to0
 ) {
-  if (float(0) < fillMask) {
-    vec2 at = (mat * vec3(at0, float(1))).xy;
-    vec2 to = (mat * vec3(to0, float(1))).xy;
-    gradientK = clamp(toLineSpace(at, to, screen), float(0), float(1));
+  if (0.0 < fillMask) {
+    vec2 at = (mat * vec3(at0, 1.0)).xy;
+    vec2 to = (mat * vec3(to0, 1.0)).xy;
+    gradientK = clamp(toLineSpace(at, to, screen), 0.0, 1.0);
   }
 }
 
@@ -144,7 +144,7 @@ void gradientStop(
   float b,
   float a
 ) {
-  if (float(0) < fillMask * mask) {
+  if (0.0 < fillMask * mask) {
     vec4 gradientColor = vec4(r, g, b, a);
     if ((prevGradientK < gradientK) && (gradientK <= k)) {
       float betweenColors = (gradientK - prevGradientK) / (k - prevGradientK);
@@ -207,8 +207,8 @@ void startPath(
   float rule
 ) {
   // Clear the status of things and start a new path.
-  crossCountMat = mat4(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
-  fillMask = float(0);
+  crossCountMat = mat4(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  fillMask = 0.0;
   windingRule = int(rule);
 }
 
@@ -220,22 +220,22 @@ float pixelCross(
   vec2 a = a0;
   vec2 b = b0;
   if (a.y == b.y) {
-    return float(0.0);
+    return 0.0;
   }
-  if ((min(a.y, b.y) <= float(1)) && (float(1) < max(a.y, b.y))) {
+  if ((min(a.y, b.y) <= 1.0) && (1.0 < max(a.y, b.y))) {
     float xIntersect = 0.0;
     if (! (b.x == a.x)) {
       float m = (b.y - a.y) / (b.x - a.x);
       float bb = a.y - m * a.x;
-      xIntersect = (float(1) - bb) / (m);
+      xIntersect = (1.0 - bb) / (m);
     } else {
       xIntersect = a.x;
     }
-    if (xIntersect < float(1)) {
+    if (xIntersect < 1.0) {
       return lineDir(a, b);
     }
   }
-  return float(0.0);
+  return 0.0;
 }
 
 void Q(
@@ -267,8 +267,8 @@ void textureFill(
   vec2 size
 ) {
   // Set the source color.
-  if (true || float(0) < fillMask * mask) {
-    if (float(0) < layerBlur) {
+  if (true || 0.0 < fillMask * mask) {
+    if (0.0 < layerBlur) {
       int mSize = int(layerBlur) * 2 + 1;
       int kSize = int(layerBlur);
       float[20] kernel;
@@ -286,13 +286,13 @@ void textureFill(
         }
       }
 
-      vec4 combinedColor = vec4(float(0));
+      vec4 combinedColor = vec4(0.0);
       float colorAdj = 0.0;
       for(int x = - (int(layerBlur)); x <= int(layerBlur); x++) {
         for(int y = - (int(layerBlur)); y <= int(layerBlur); y++) {
           vec2 offset = vec2(float(x), float(y));
           float kValue = kernel[kSize + x] * kernel[kSize + y];
-          vec2 uv = (tMat * vec3(floor(screen) + vec2(float(0.5), float(0.5)) + offset, float(1))).xy;
+          vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
 
           if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
             vec4 textureColor = texture(textureAtlasSampler, uv);
@@ -302,7 +302,7 @@ void textureFill(
           }
         }
       }
-      if (! (colorAdj == float(0))) {
+      if (! (colorAdj == 0.0)) {
         combinedColor.x = float(float(combinedColor.x) / colorAdj);
         combinedColor.y = float(float(combinedColor.y) / colorAdj);
         combinedColor.z = float(float(combinedColor.z) / colorAdj);
@@ -311,8 +311,8 @@ void textureFill(
 
       backdropColor = blendNormalFloats(backdropColor, combinedColor);
     } else {
-      vec2 uv = (tMat * vec3(floor(screen) + vec2(float(0.5), float(0.5)), float(1))).xy;
-      if (tile == float(0)) {
+      vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5), 1.0)).xy;
+      if (tile == 0.0) {
         if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
           vec4 textureColor = texture(textureAtlasSampler, uv);
           textureColor.w *= fillMask * mask;
@@ -351,13 +351,13 @@ void runCommands(
     } else if (command == 6.0) {
       tMat[0][0] = texelFetch(dataBuffer, i + 1).x;
       tMat[0][1] = texelFetch(dataBuffer, i + 2).x;
-      tMat[0][2] = float(0);
+      tMat[0][2] = 0.0;
       tMat[1][0] = texelFetch(dataBuffer, i + 3).x;
       tMat[1][1] = texelFetch(dataBuffer, i + 4).x;
-      tMat[1][2] = float(0);
+      tMat[1][2] = 0.0;
       tMat[2][0] = texelFetch(dataBuffer, i + 5).x;
       tMat[2][1] = texelFetch(dataBuffer, i + 6).x;
-      tMat[2][2] = float(1);
+      tMat[2][2] = 1.0;
       float tile = texelFetch(dataBuffer, i + 7).x;
       vec2 pos = vec2(0.0);
       pos.x = texelFetch(dataBuffer, i + 8).x;
@@ -391,13 +391,13 @@ void runCommands(
     } else if (command == 3.0) {
       mat[0][0] = texelFetch(dataBuffer, i + 1).x;
       mat[0][1] = texelFetch(dataBuffer, i + 2).x;
-      mat[0][2] = float(0);
+      mat[0][2] = 0.0;
       mat[1][0] = texelFetch(dataBuffer, i + 3).x;
       mat[1][1] = texelFetch(dataBuffer, i + 4).x;
-      mat[1][2] = float(0);
+      mat[1][2] = 0.0;
       mat[2][0] = texelFetch(dataBuffer, i + 5).x;
       mat[2][1] = texelFetch(dataBuffer, i + 6).x;
-      mat[2][2] = float(1);
+      mat[2][2] = 1.0;
       i += 6;
     } else if (command == 10.0) {
       M(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
@@ -423,10 +423,10 @@ void runCommands(
       int label = int(texelFetch(dataBuffer, i + 5).x);
       i += 5;
       mat3 matInv = inverse(mat);
-      vec2 screenInvA = (matInv * vec3(screen + vec2(float(0), float(0)), float(1))).xy;
-      vec2 screenInvB = (matInv * vec3(screen + vec2(float(1), float(0)), float(1))).xy;
-      vec2 screenInvC = (matInv * vec3(screen + vec2(float(1), float(0)), float(1))).xy;
-      vec2 screenInvD = (matInv * vec3(screen + vec2(float(0), float(1)), float(1))).xy;
+      vec2 screenInvA = (matInv * vec3(screen + vec2(0.0, 0.0), 1.0)).xy;
+      vec2 screenInvB = (matInv * vec3(screen + vec2(1.0, 0.0), 1.0)).xy;
+      vec2 screenInvC = (matInv * vec3(screen + vec2(1.0, 0.0), 1.0)).xy;
+      vec2 screenInvD = (matInv * vec3(screen + vec2(0.0, 1.0), 1.0)).xy;
       vec2 minS = vec2(0.0);
       vec2 maxS = vec2(0.0);
       minS.x = min(min(screenInvA.x, screenInvB.x), min(screenInvC.x, screenInvD.x));
@@ -439,10 +439,10 @@ void runCommands(
     } else if (command == 16.0) {
       mask = fillMask;
     } else if (command == 17.0) {
-      mask = float(1.0);
+      mask = 1.0;
     } else if (command == 18.0) {
       float index = texelFetch(dataBuffer, i + 1).x;
-      if (float(0) < fillMask * mask) {
+      if (0.0 < fillMask * mask) {
         topIndex = index;
       }
       i += 1;
@@ -462,9 +462,9 @@ vec2 interpolate(
   float t
 ) {
   // Solve the cubic bezier interpolation with 4 points.
-  vec2 A = G4 - G1 + (float(3)) * (G2 - G3);
-  vec2 B = (float(3)) * (G1 - float(2) * G2 + G3);
-  vec2 C = (float(3)) * (G2 - G1);
+  vec2 A = G4 - G1 + (3.0) * (G2 - G3);
+  vec2 B = (3.0) * (G1 - 2.0 * G2 + G3);
+  vec2 C = (3.0) * (G2 - G1);
   vec2 D = G1;
   return (t) * ((t) * (t * A + B) + C) + D;
 }
@@ -473,10 +473,10 @@ float lineDir(
   vec2 a,
   vec2 b
 ) {
-  if (float(0) < a.y - b.y) {
-    return float(1);
+  if (0.0 < a.y - b.y) {
+    return 1.0;
   } else {
-    return float(-1);
+    return -1.0;
   }
 }
 
@@ -517,47 +517,47 @@ float pixelCover(
   vec2 b = b0;
   vec2 aI = vec2(0.0);
   vec2 bI = vec2(0.0);
-  float area = float(0.0);
+  float area = 0.0;
   if (b.y < a.y) {
     vec2 tmp = a;
     a = b;
     b = tmp;
   }
-  if (((b.y < float(0)) || (float(1) < a.y) || float(1) <= a.x && float(1) <= b.x) || (a.y == b.y)) {
-    return float(0);
-  } else if (((a.x < float(0)) && (b.x < float(0))) || (a.x == b.x)) {
-    return (float(1) - clamp(a.x, float(0), float(1))) * (min(b.y, float(1)) - max(a.y, float(0)));
+  if (((b.y < 0.0) || (1.0 < a.y) || 1.0 <= a.x && 1.0 <= b.x) || (a.y == b.y)) {
+    return 0.0;
+  } else if (((a.x < 0.0) && (b.x < 0.0)) || (a.x == b.x)) {
+    return (1.0 - clamp(a.x, 0.0, 1.0)) * (min(b.y, 1.0) - max(a.y, 0.0));
   } else {
     float mm = (b.y - a.y) / (b.x - a.x);
     float bb = a.y - mm * a.x;
-    if (((float(0) <= a.x) && (a.x <= float(1)) && float(0) <= a.y) && (a.y <= float(1))) {
+    if (((0.0 <= a.x) && (a.x <= 1.0) && 0.0 <= a.y) && (a.y <= 1.0)) {
       aI = a;
     } else {
-      aI = vec2((float(0) - bb) / (mm), float(0));
-      if (aI.x < float(0)) {
-        float y = mm * float(0) + bb;
-        area += clamp(min(bb, float(1)) - max(a.y, float(0)), float(0), float(1));
-        aI = vec2(float(0), clamp(y, float(0), float(1)));
-      } else if (float(1) < aI.x) {
-        float y = mm * float(1) + bb;
-        aI = vec2(float(1), clamp(y, float(0), float(1)));
+      aI = vec2((0.0 - bb) / (mm), 0.0);
+      if (aI.x < 0.0) {
+        float y = mm * 0.0 + bb;
+        area += clamp(min(bb, 1.0) - max(a.y, 0.0), 0.0, 1.0);
+        aI = vec2(0.0, clamp(y, 0.0, 1.0));
+      } else if (1.0 < aI.x) {
+        float y = mm * 1.0 + bb;
+        aI = vec2(1.0, clamp(y, 0.0, 1.0));
       }
     }
-    if (((float(0) <= b.x) && (b.x <= float(1)) && float(0) <= b.y) && (b.y <= float(1))) {
+    if (((0.0 <= b.x) && (b.x <= 1.0) && 0.0 <= b.y) && (b.y <= 1.0)) {
       bI = b;
     } else {
-      bI = vec2((float(1) - bb) / (mm), float(1));
-      if (bI.x < float(0)) {
-        float y = mm * float(0) + bb;
-        area += clamp(min(b.y, float(1)) - max(bb, float(0)), float(0), float(1));
-        bI = vec2(float(0), clamp(y, float(0), float(1)));
-      } else if (float(1) < bI.x) {
-        float y = mm * float(1) + bb;
-        bI = vec2(float(1), clamp(y, float(0), float(1)));
+      bI = vec2((1.0 - bb) / (mm), 1.0);
+      if (bI.x < 0.0) {
+        float y = mm * 0.0 + bb;
+        area += clamp(min(b.y, 1.0) - max(bb, 0.0), 0.0, 1.0);
+        bI = vec2(0.0, clamp(y, 0.0, 1.0));
+      } else if (1.0 < bI.x) {
+        float y = mm * 1.0 + bb;
+        bI = vec2(1.0, clamp(y, 0.0, 1.0));
       }
     }
   }
-  area += ((float(1) - aI.x + float(1) - bI.x) / (float(2))) * (bI.y - aI.y);
+  area += ((1.0 - aI.x + 1.0 - bI.x) / (2.0)) * (bI.y - aI.y);
   return area;
 }
 
@@ -594,27 +594,27 @@ void line(
   vec2 b0
 ) {
   // Draw the lines based on windingRule.
-  vec2 a1 = (mat * vec3(a0, float(1))).xy - screen;
-  vec2 b1 = (mat * vec3(b0, float(1))).xy - screen;
+  vec2 a1 = (mat * vec3(a0, 1.0)).xy - screen;
+  vec2 b1 = (mat * vec3(b0, 1.0)).xy - screen;
   if (windingRule == 0) {
-    a1 += vec2(float(0.125), float(0.125));
-    b1 += vec2(float(0.125), float(0.125));
-    crossCountMat[0][0] = crossCountMat[0][0] + pixelCross(a1 + vec2(float(0), float(0)) / float(4), b1 + vec2(float(0), float(0)) / float(4));
-    crossCountMat[0][1] = crossCountMat[0][1] + pixelCross(a1 + vec2(float(0), float(1)) / float(4), b1 + vec2(float(0), float(1)) / float(4));
-    crossCountMat[0][2] = crossCountMat[0][2] + pixelCross(a1 + vec2(float(0), float(2)) / float(4), b1 + vec2(float(0), float(2)) / float(4));
-    crossCountMat[0][3] = crossCountMat[0][3] + pixelCross(a1 + vec2(float(0), float(3)) / float(4), b1 + vec2(float(0), float(3)) / float(4));
-    crossCountMat[1][0] = crossCountMat[1][0] + pixelCross(a1 + vec2(float(1), float(0)) / float(4), b1 + vec2(float(1), float(0)) / float(4));
-    crossCountMat[1][1] = crossCountMat[1][1] + pixelCross(a1 + vec2(float(1), float(1)) / float(4), b1 + vec2(float(1), float(1)) / float(4));
-    crossCountMat[1][2] = crossCountMat[1][2] + pixelCross(a1 + vec2(float(1), float(2)) / float(4), b1 + vec2(float(1), float(2)) / float(4));
-    crossCountMat[1][3] = crossCountMat[1][3] + pixelCross(a1 + vec2(float(1), float(3)) / float(4), b1 + vec2(float(1), float(3)) / float(4));
-    crossCountMat[2][0] = crossCountMat[2][0] + pixelCross(a1 + vec2(float(2), float(0)) / float(4), b1 + vec2(float(2), float(0)) / float(4));
-    crossCountMat[2][1] = crossCountMat[2][1] + pixelCross(a1 + vec2(float(2), float(1)) / float(4), b1 + vec2(float(2), float(1)) / float(4));
-    crossCountMat[2][2] = crossCountMat[2][2] + pixelCross(a1 + vec2(float(2), float(2)) / float(4), b1 + vec2(float(2), float(2)) / float(4));
-    crossCountMat[2][3] = crossCountMat[2][3] + pixelCross(a1 + vec2(float(2), float(3)) / float(4), b1 + vec2(float(2), float(3)) / float(4));
-    crossCountMat[3][0] = crossCountMat[3][0] + pixelCross(a1 + vec2(float(3), float(0)) / float(4), b1 + vec2(float(3), float(0)) / float(4));
-    crossCountMat[3][1] = crossCountMat[3][1] + pixelCross(a1 + vec2(float(3), float(1)) / float(4), b1 + vec2(float(3), float(1)) / float(4));
-    crossCountMat[3][2] = crossCountMat[3][2] + pixelCross(a1 + vec2(float(3), float(2)) / float(4), b1 + vec2(float(3), float(2)) / float(4));
-    crossCountMat[3][3] = crossCountMat[3][3] + pixelCross(a1 + vec2(float(3), float(3)) / float(4), b1 + vec2(float(3), float(3)) / float(4));
+    a1 += vec2(0.125, 0.125);
+    b1 += vec2(0.125, 0.125);
+    crossCountMat[0][0] = crossCountMat[0][0] + pixelCross(a1 + vec2(0.0, 0.0) / 4.0, b1 + vec2(0.0, 0.0) / 4.0);
+    crossCountMat[0][1] = crossCountMat[0][1] + pixelCross(a1 + vec2(0.0, 1.0) / 4.0, b1 + vec2(0.0, 1.0) / 4.0);
+    crossCountMat[0][2] = crossCountMat[0][2] + pixelCross(a1 + vec2(0.0, 2.0) / 4.0, b1 + vec2(0.0, 2.0) / 4.0);
+    crossCountMat[0][3] = crossCountMat[0][3] + pixelCross(a1 + vec2(0.0, 3.0) / 4.0, b1 + vec2(0.0, 3.0) / 4.0);
+    crossCountMat[1][0] = crossCountMat[1][0] + pixelCross(a1 + vec2(1.0, 0.0) / 4.0, b1 + vec2(1.0, 0.0) / 4.0);
+    crossCountMat[1][1] = crossCountMat[1][1] + pixelCross(a1 + vec2(1.0, 1.0) / 4.0, b1 + vec2(1.0, 1.0) / 4.0);
+    crossCountMat[1][2] = crossCountMat[1][2] + pixelCross(a1 + vec2(1.0, 2.0) / 4.0, b1 + vec2(1.0, 2.0) / 4.0);
+    crossCountMat[1][3] = crossCountMat[1][3] + pixelCross(a1 + vec2(1.0, 3.0) / 4.0, b1 + vec2(1.0, 3.0) / 4.0);
+    crossCountMat[2][0] = crossCountMat[2][0] + pixelCross(a1 + vec2(2.0, 0.0) / 4.0, b1 + vec2(2.0, 0.0) / 4.0);
+    crossCountMat[2][1] = crossCountMat[2][1] + pixelCross(a1 + vec2(2.0, 1.0) / 4.0, b1 + vec2(2.0, 1.0) / 4.0);
+    crossCountMat[2][2] = crossCountMat[2][2] + pixelCross(a1 + vec2(2.0, 2.0) / 4.0, b1 + vec2(2.0, 2.0) / 4.0);
+    crossCountMat[2][3] = crossCountMat[2][3] + pixelCross(a1 + vec2(2.0, 3.0) / 4.0, b1 + vec2(2.0, 3.0) / 4.0);
+    crossCountMat[3][0] = crossCountMat[3][0] + pixelCross(a1 + vec2(3.0, 0.0) / 4.0, b1 + vec2(3.0, 0.0) / 4.0);
+    crossCountMat[3][1] = crossCountMat[3][1] + pixelCross(a1 + vec2(3.0, 1.0) / 4.0, b1 + vec2(3.0, 1.0) / 4.0);
+    crossCountMat[3][2] = crossCountMat[3][2] + pixelCross(a1 + vec2(3.0, 2.0) / 4.0, b1 + vec2(3.0, 2.0) / 4.0);
+    crossCountMat[3][3] = crossCountMat[3][3] + pixelCross(a1 + vec2(3.0, 3.0) / 4.0, b1 + vec2(3.0, 3.0) / 4.0);
   } else {
     float area = pixelCover(a1, b1);
     fillMask += area * lineDir(a1, b1);
@@ -625,7 +625,7 @@ vec4 runPixel(
   vec2 xy
 ) {
   screen = xy;
-  backdropColor = vec4(float(0), float(0), float(0), float(0));
+  backdropColor = vec4(0.0, 0.0, 0.0, 0.0);
   runCommands();
   return backdropColor;
 }
@@ -644,17 +644,17 @@ out vec4 fragColor;
 
 void main() {
   // Main entry point to this huge shader.
-  x0 = float(0);
-  y0 = float(0);
-  x1 = float(0);
-  y1 = float(0);
-  topIndex = float(0);
-  crossCountMat = mat4(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
-  mat = mat3(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
-  gradientK = float(0);
-  prevGradientK = float(0);
-  prevGradientColor = vec4(float(0), float(0), float(0), float(0));
-  layerBlur = float(0.0);
+  x0 = 0.0;
+  y0 = 0.0;
+  x1 = 0.0;
+  y1 = 0.0;
+  topIndex = 0.0;
+  crossCountMat = mat4(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  mat = mat3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  gradientK = 0.0;
+  prevGradientK = 0.0;
+  prevGradientColor = vec4(0.0, 0.0, 0.0, 0.0);
+  layerBlur = 0.0;
   float bias = 0.0001;
   vec2 offset = vec2(float(bias - 0.5), float(bias - 0.5));
   fragColor = runPixel(gl_FragCoord.xy + offset);

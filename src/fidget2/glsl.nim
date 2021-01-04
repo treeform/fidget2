@@ -272,13 +272,16 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     var typeStr = typeRename(n.getType.repr)
     if typeStr.startsWith("range["):
       n[1].toCode(res)
-      return
-
-    for j in 1 .. n.len-1:
-      res.add typeStr
-      res.add "("
-      n[j].toCode(res)
-      res.add ")"
+    elif typeStr == "float" and n[1].kind == nnkIntLit:
+      res.add $n[1].intVal.float64
+    elif typeStr == "float" and n[1].kind == nnkFloatLit:
+      res.add $n[1].floatVal.float64
+    else:
+      for j in 1 .. n.len-1:
+        res.add typeStr
+        res.add "("
+        n[j].toCode(res)
+        res.add ")"
 
   of nnkEmpty, nnkNilLit, nnkDiscardStmt, nnkPragma:
     # Skip all nil, empty and discard statements.
