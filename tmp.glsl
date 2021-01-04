@@ -22,158 +22,35 @@ mat4 crossCountMat;
 float x0;
 vec4 backdropColor;
 
-void gradientRadial(
-  vec2 at0,
-  vec2 to0
-) ;
+void gradientRadial(vec2 at0, vec2 to0);
+void draw();
+void solidFill(float r, float g, float b, float a);
+float zmod(float a, float b);
+void C(float x1, float y1, float x2, float y2, float x, float y);
+void gradientLinear(vec2 at0, vec2 to0);
+float toLineSpace(vec2 at, vec2 to, vec2 point);
+void gradientStop(float k, float r, float g, float b, float a);
+void z();
+float normpdf(float x, float sigma);
+vec4 blendNormalFloats(vec4 backdrop, vec4 source);
+void quadratic(vec2 p0, vec2 p1, vec2 p2);
+void startPath(float rule);
+float pixelCross(vec2 a0, vec2 b0);
+void Q(float x1, float y1, float x, float y);
+bool overlap(vec2 minA, vec2 maxA, vec2 minB, vec2 maxB);
+void textureFill(mat3 tMat, float tile, vec2 pos, vec2 size);
+void runCommands();
+vec2 interpolate(vec2 G1, vec2 G2, vec2 G3, vec2 G4, float t);
+float lineDir(vec2 a, vec2 b);
+void bezier(vec2 A, vec2 B, vec2 C, vec2 D);
+void M(float x, float y);
+float pixelCover(vec2 a0, vec2 b0);
+void endPath();
+vec4 alphaFix(vec4 backdrop, vec4 source, vec4 mixed);
+void line(vec2 a0, vec2 b0);
+vec4 runPixel(vec2 xy);
+void L(float x, float y);
 
-void draw(
-) ;
-
-void solidFill(
-  float r,
-  float g,
-  float b,
-  float a
-) ;
-
-float zmod(
-  float a,
-  float b
-) ;
-
-void C(
-  float x1,
-  float y1,
-  float x2,
-  float y2,
-  float x,
-  float y
-) ;
-
-void gradientLinear(
-  vec2 at0,
-  vec2 to0
-) ;
-
-float toLineSpace(
-  vec2 at,
-  vec2 to,
-  vec2 point
-) ;
-
-void gradientStop(
-  float k,
-  float r,
-  float g,
-  float b,
-  float a
-) ;
-
-void z(
-) ;
-
-float normpdf(
-  float x,
-  float sigma
-) ;
-
-vec4 blendNormalFloats(
-  vec4 backdrop,
-  vec4 source
-) ;
-
-void quadratic(
-  vec2 p0,
-  vec2 p1,
-  vec2 p2
-) ;
-
-void startPath(
-  float rule
-) ;
-
-float pixelCross(
-  vec2 a0,
-  vec2 b0
-) ;
-
-void Q(
-  float x1,
-  float y1,
-  float x,
-  float y
-) ;
-
-bool overlap(
-  vec2 minA,
-  vec2 maxA,
-  vec2 minB,
-  vec2 maxB
-) ;
-
-void textureFill(
-  mat3 tMat,
-  float tile,
-  vec2 pos,
-  vec2 size
-) ;
-
-void runCommands(
-) ;
-
-vec2 interpolate(
-  vec2 G1,
-  vec2 G2,
-  vec2 G3,
-  vec2 G4,
-  float t
-) ;
-
-float lineDir(
-  vec2 a,
-  vec2 b
-) ;
-
-void bezier(
-  vec2 A,
-  vec2 B,
-  vec2 C,
-  vec2 D
-) ;
-
-void M(
-  float x,
-  float y
-) ;
-
-float pixelCover(
-  vec2 a0,
-  vec2 b0
-) ;
-
-void endPath(
-) ;
-
-vec4 alphaFix(
-  vec4 backdrop,
-  vec4 source,
-  vec4 mixed
-) ;
-
-void line(
-  vec2 a0,
-  vec2 b0
-) ;
-
-vec4 runPixel(
-  vec2 xy
-) ;
-
-void L(
-  float x,
-  float y
-) ;
 
 void gradientRadial(
   vec2 at0,

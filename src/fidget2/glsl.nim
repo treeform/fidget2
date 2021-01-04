@@ -312,7 +312,6 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkIdentDefs:
     for j in countup(0, n.len - 1, 3):
-      #echo n.treeRepr
       var typeStr = ""
       if n[1].kind == nnkBracketExpr and
         n[1][0].kind == nnkSym and
@@ -588,12 +587,16 @@ macro toShader*(s: typed, version = "410", precision = "highp float"): string =
     code.add "\n"
 
   # Put functions definition (just name and types part).
+  code.add "\n"
   for k, v in functions:
-    code.add v.split("{")[0]
+    var funCode = v.split(" {")[0]
+    funCode = funCode.replace("\n", "").replace("  ", " ").replace(",  ", ", ").replace("( ", "(")
+    code.add funCode
     code.addSmart ';'
     code.add "\n"
 
   # Put functions (with bodies) next.
+  code.add "\n"
   for k, v in functions:
     code.add v
     code.add "\n"
