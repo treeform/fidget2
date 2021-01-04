@@ -184,7 +184,7 @@ void gradientRadial(
     vec2 to = (mat * vec3(to0, float(1))).xy;
     float distance = length(at - to);
     gradientK = clamp(length(at - screen) / distance, float(0), float(1));
-  };
+  }
 }
 
 void draw(
@@ -197,11 +197,11 @@ void draw(
       for(int y = 0; y < n; y++) {
         if (! (float(zmod(crossCountMat[x][y], float(2.0))) == 0.0)) {
           fillMask += float(1);
-        }      }    };
+        }      }    }
     fillMask = fillMask / float(n * n);
   } else {
     fillMask = clamp(abs(fillMask), float(0), float(1));
-  };
+  }
 }
 
 void solidFill(
@@ -213,7 +213,7 @@ void solidFill(
 "Set the source color.";
   if (float(0) < fillMask * mask) {
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask));
-  };
+  }
 }
 
 float zmod(
@@ -245,7 +245,7 @@ void gradientLinear(
     vec2 at = (mat * vec3(at0, float(1))).xy;
     vec2 to = (mat * vec3(to0, float(1))).xy;
     gradientK = clamp(toLineSpace(at, to, screen), float(0), float(1));
-  };
+  }
 }
 
 float toLineSpace(
@@ -272,10 +272,10 @@ void gradientStop(
       vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
       colorG.w *= fillMask * mask;
       backdropColor = blendNormalFloats(backdropColor, colorG);
-    };
+    }
     prevGradientK = k;
     prevGradientColor = gradientColor;
-  };
+  }
 }
 
 void z(
@@ -310,7 +310,7 @@ void quadratic(
   if (devsq < 0.333) {
     line(p0, p2);
     return ;
-  };
+  }
   float tol = 3.0;
   float n = 1.0 + floor(sqrt(sqrt(tol * devsq)));
   vec2 p = p0;
@@ -321,7 +321,7 @@ void quadratic(
     vec2 pn = mix(mix(p0, p1, float(t)), mix(p1, p2, float(t)), float(t));
     line(p, pn);
     p = pn;
-  };
+  }
 }
 
 void startPath(
@@ -342,7 +342,7 @@ float pixelCross(
   vec2 b = b0;
   if (a.y == b.y) {
     return float(0.0);
-  };
+  }
   if ((min(a.y, b.y) <= float(1)) && (float(1) < max(a.y, b.y))) {
     float xIntersect = 0.0;
     if (! (b.x == a.x)) {
@@ -351,11 +351,11 @@ float pixelCross(
       xIntersect = (float(1) - bb) / (m);
     } else {
       xIntersect = a.x;
-    };
+    }
     if (xIntersect < float(1)) {
       return lineDir(a, b);
-    };
-  };
+    }
+  }
   return float(0.0);
 }
 
@@ -398,12 +398,12 @@ void textureFill(
         float v = normpdf(float(float(x)), float(sigma));
         kernel[(kSize + x)] = v;
         kernel[(kSize - x)] = v;
-      };
+      }
 
       float zNormal = 0.0;
       for(int x = 0; x < mSize; x++) {
         for(int y = 0; y < mSize; y++) {
-          zNormal = zNormal + float(kernel[(x)] * kernel[(y)]);        }      };
+          zNormal = zNormal + float(kernel[(x)] * kernel[(y)]);        }      }
 
       vec4 combinedColor = vec4(float(0));
       float colorAdj = 0.0;
@@ -418,13 +418,13 @@ void textureFill(
 
             combinedColor += textureColor * kValue;
             colorAdj += float(kValue);
-          };
-        }      };
+          }
+        }      }
       if (! (colorAdj == float(0))) {
         combinedColor.x = float(float(combinedColor.x) / colorAdj);
         combinedColor.y = float(float(combinedColor.y) / colorAdj);
         combinedColor.z = float(float(combinedColor.z) / colorAdj);
-      };
+      }
       combinedColor.w = float(float(combinedColor.w) / zNormal);
 
       backdropColor = blendNormalFloats(backdropColor, combinedColor);
@@ -435,15 +435,15 @@ void textureFill(
           vec4 textureColor = texture(textureAtlasSampler, uv);
           textureColor.w *= fillMask * mask;
           backdropColor = blendNormalFloats(backdropColor, textureColor);
-        };
+        }
       } else {
         uv = mod(uv - pos, size) + pos;
         vec4 textureColor = texture(textureAtlasSampler, uv);
         textureColor.w *= fillMask * mask;
         backdropColor = blendNormalFloats(backdropColor, textureColor);
-      };
-    };
-  };
+      }
+    }
+  }
 }
 
 void runCommands(
@@ -553,7 +553,7 @@ void runCommands(
       maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y));
       if (! (overlap(minS, maxS, minP, maxP))) {
         i = label - 1;
-      };
+      }
     } else if (command == 16.0) {
       mask = fillMask;
     } else if (command == 17.0) {
@@ -562,14 +562,14 @@ void runCommands(
       float index = texelFetch(dataBuffer, i + 1).x;
       if (float(0) < fillMask * mask) {
         topIndex = index;
-      };
+      }
       i += 1;
     } else if (command == 19.0) {
       layerBlur = texelFetch(dataBuffer, i + 1).x;
       i += 1;
-    };
+    }
     i += 1;
-  };
+  }
 }
 
 vec2 interpolate(
@@ -595,7 +595,7 @@ float lineDir(
     return float(1);
   } else {
     return float(-1);
-  };
+  }
 }
 
 void bezier(
@@ -611,7 +611,7 @@ void bezier(
     vec2 q = interpolate(A, B, C, D, float(t) / float(discretization));
     line(p, q);
     p = q;
-  };
+  }
 }
 
 void M(
@@ -639,7 +639,7 @@ float pixelCover(
     vec2 tmp = a;
     a = b;
     b = tmp;
-  };
+  }
   if (((b.y < float(0)) || (float(1) < a.y) || float(1) <= a.x && float(1) <= b.x) || (a.y == b.y)) {
     return float(0);
   } else if (((a.x < float(0)) && (b.x < float(0))) || (a.x == b.x)) {
@@ -658,8 +658,8 @@ float pixelCover(
       } else if (float(1) < aI.x) {
         float y = mm * float(1) + bb;
         aI = vec2(float(1), clamp(y, float(0), float(1)));
-      };
-    };
+      }
+    }
     if (((float(0) <= b.x) && (b.x <= float(1)) && float(0) <= b.y) && (b.y <= float(1))) {
       bI = b;
     } else {
@@ -671,9 +671,9 @@ float pixelCover(
       } else if (float(1) < bI.x) {
         float y = mm * float(1) + bb;
         bI = vec2(float(1), clamp(y, float(0), float(1)));
-      };
-    };
-  };
+      }
+    }
+  }
   area += ((float(1) - aI.x + float(1) - bI.x) / (float(2))) * (bI.y - aI.y);
   return area;
 }
@@ -693,7 +693,7 @@ vec4 alphaFix(
   res.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
   if (float(res.w) == 0.0) {
     return res;
-  };
+  }
   float t0 = (float(source.w)) * (1.0 - float(backdrop.w));
   float t1 = source.w * backdrop.w;
   float t2 = (1.0 - float(source.w)) * (float(backdrop.w));
@@ -735,7 +735,7 @@ void line(
   } else {
     float area = pixelCover(a1, b1);
     fillMask += area * lineDir(a1, b1);
-  };
+  }
 }
 
 vec4 runPixel(

@@ -114,12 +114,12 @@ proc addIndent(res: var string, level: int) =
 
 proc toCodeStmts(n: NimNode, res: var string, level = 0)
 
-proc addSmart(res: var string, c: char) =
+proc addSmart(res: var string, c: char, others = {'}'}) =
   ## Ads a char but first checks if its already here.
   var idx = res.len - 1
   while res[idx] in Whitespace:
     dec idx
-  if res[idx] != c:
+  if res[idx] != c and res[idx] notin others:
     res.add c
 
 proc toCode(n: NimNode, res: var string, level = 0) =
