@@ -3,11 +3,16 @@ precision highp float;
 // from svgMain
 
 float x1;
+float shadowSpread;
 int windingRule = 0;
 uniform sampler2D textureAtlasSampler;
+vec2 shadowOffset;
+bool shadowOn;
+float shadowRadius;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
 float y0;
+vec4 shadowColor;
 float y1;
 vec4 prevGradientColor;
 mat3 tMat;
@@ -268,6 +273,43 @@ void textureFill(
 ) {
   // Set the source color.
   if (true || 0.0 < fillMask * mask) {
+    if (shadowOn) {
+      int mSize = int(shadowRadius) * 2 + 1;
+      int kSize = int(shadowRadius);
+      float[20] kernel;
+      float sigma = 1.9;
+      for(int x = 0; x <= kSize; x++) {
+        float v = normpdf(float(float(x)), float(sigma));
+        kernel[kSize + x] = v;
+        kernel[kSize - x] = v;
+      }
+
+      float zNormal = 0.0;
+      for(int x = 0; x < mSize; x++) {
+        for(int y = 0; y < mSize; y++) {
+          zNormal = zNormal + float(kernel[x] * kernel[y]);
+        }
+      }
+
+      float combinedShadow = 0.0;
+      for(int x = - (int(shadowRadius)); x <= int(shadowRadius); x++) {
+        for(int y = - (int(shadowRadius)); y <= int(shadowRadius); y++) {
+          vec2 offset = vec2(float(x), float(y)) - shadowOffset;
+          float kValue = kernel[kSize + x] * kernel[kSize + y];
+          vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
+
+          if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
+            float textureColor = texture(textureAtlasSampler, uv).w;
+
+            combinedShadow += float(textureColor * kValue);
+          }
+        }
+      }
+      combinedShadow = combinedShadow / zNormal;
+      vec4 combinedColor = shadowColor;
+      combinedColor.w = float(combinedShadow * float(mask));
+      backdropColor = blendNormalFloats(backdropColor, combinedColor);
+    }
     if (0.0 < layerBlur) {
       int mSize = int(layerBlur) * 2 + 1;
       int kSize = int(layerBlur);
@@ -449,6 +491,17 @@ void runCommands(
     } else if (command == 19.0) {
       layerBlur = texelFetch(dataBuffer, i + 1).x;
       i += 1;
+    } else if (command == 20.0) {
+      shadowOn = true;
+      shadowColor.x = texelFetch(dataBuffer, i + 1).x;
+      shadowColor.y = texelFetch(dataBuffer, i + 2).x;
+      shadowColor.z = texelFetch(dataBuffer, i + 3).x;
+      shadowColor.w = texelFetch(dataBuffer, i + 4).x;
+      shadowOffset.x = texelFetch(dataBuffer, i + 5).x;
+      shadowOffset.y = texelFetch(dataBuffer, i + 6).x;
+      shadowRadius = texelFetch(dataBuffer, i + 7).x;
+      shadowSpread = texelFetch(dataBuffer, i + 8).x;
+      i += 8;
     }
     i += 1;
   }
@@ -655,6 +708,11 @@ void main() {
   prevGradientK = 0.0;
   prevGradientColor = vec4(0.0, 0.0, 0.0, 0.0);
   layerBlur = 0.0;
+  shadowOn = false;
+  shadowColor = vec4(0.0, 0.0, 0.0, 0.0);
+  shadowOffset = vec2(0.0, 0.0);
+  shadowRadius = 0.0;
+  shadowSpread = 0.0;
   float bias = 0.0001;
   vec2 offset = vec2(float(bias - 0.5), float(bias - 0.5));
   fragColor = runPixel(gl_FragCoord.xy + offset);

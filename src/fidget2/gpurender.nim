@@ -728,11 +728,22 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     dataBufferSeq.add 0
 
   for effect in node.effects:
-    echo effect.kind
     if effect.kind == ekLayerBlur:
       dataBufferSeq.add cmdLayerBlur
       print effect.radius
       dataBufferSeq.add effect.radius
+    if effect.kind == ekDropShadow:
+      dataBufferSeq.add @[
+        cmdDropShadow,
+        effect.color.r,
+        effect.color.g,
+        effect.color.b,
+        effect.color.a,
+        effect.offset.x,
+        effect.offset.y,
+        effect.radius,
+        effect.spread
+      ]
 
   case node.kind
     of nkGroup:

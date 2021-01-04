@@ -31,6 +31,7 @@ const
   cmdMaskClear*: float32 = 17
   cmdIndex*: float32 = 18
   cmdLayerBlur*: float32 = 19
+  cmdDropShadow*: float32 = 20
 
 var
   crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
@@ -47,7 +48,13 @@ var
   mask: float32 = 1.0
 
   topIndex*: float32
-  layerBlur*: float32
+  layerBlur: float32
+
+  shadowOn: bool
+  shadowColor: Vec4
+  shadowOffset: Vec2
+  shadowRadius: float32
+  shadowSpread: float32
 
 proc lineDir(a, b: Vec2): float32 =
   if a.y - b.y > 0:
@@ -251,6 +258,49 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
     # WE need to undo the AA when sampling images
     # * That is why we need to floor.
     # * That is why we need to add vec2(0.5, 0.5).
+
+    if shadowOn:
+
+      let mSize = shadowRadius.int*2 + 1
+      let kSize = shadowRadius.int
+      var kernel: array[20, float32]
+      var sigma = 2.0 - 0.1
+
+      for x in 0 .. kSize:
+        let v = normpdf((x).float32, sigma)
+        kernel[kSize + x] = v
+        kernel[kSize - x] = v
+      print kernel
+
+      var zNormal = 0.0 # Total for normalization
+      for x in 0 ..< mSize:
+        for y in 0 ..< mSize:
+          zNormal = zNormal + kernel[x]*kernel[y]
+      print zNormal
+
+      var combinedShadow = 0.0
+
+      for x in -shadowRadius.int .. shadowRadius.int:
+        for y in -shadowRadius.int .. shadowRadius.int:
+          let
+            offset = vec2(x.float32, y.float32) - shadowOffset
+            kValue = kernel[kSize + x] * kernel[kSize + y]
+            uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5) + offset, 1)).xy
+          print kValue
+          if uv.x > pos.x and uv.x < pos.x + size.x and
+            uv.y > pos.y and uv.y < pos.y + size.y:
+            let textureColor = texture(textureAtlasSampler, uv).w
+            print textureColor
+            combinedShadow += textureColor * kValue
+
+      combinedShadow = combinedShadow / zNormal
+
+      var combinedColor = shadowColor
+      combinedColor.w = combinedShadow * mask
+      # combinedColor.w *= mask
+      # print combinedColor
+      backdropColor = blendNormalFloats(backdropColor, combinedColor)
+
 
     if layerBlur > 0:
 
@@ -559,6 +609,17 @@ proc runCommands() =
     elif command == cmdLayerBlur:
       layerBlur = texelFetch(dataBuffer, i + 1).x
       i += 1
+    elif command == cmdDropShadow:
+      shadowOn = true
+      shadowColor.x = texelFetch(dataBuffer, i + 1).x
+      shadowColor.y = texelFetch(dataBuffer, i + 2).x
+      shadowColor.z = texelFetch(dataBuffer, i + 3).x
+      shadowColor.w = texelFetch(dataBuffer, i + 4).x
+      shadowOffset.x = texelFetch(dataBuffer, i + 5).x
+      shadowOffset.y = texelFetch(dataBuffer, i + 6).x
+      shadowRadius = texelFetch(dataBuffer, i + 7).x
+      shadowSpread = texelFetch(dataBuffer, i + 8).x
+      i += 8
 
     i += 1
 
@@ -586,6 +647,11 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   prevGradientColor = vec4(0,0,0,0)
 
   layerBlur = 0.0
+  shadowOn = false
+  shadowColor = vec4(0,0,0,0)
+  shadowOffset = vec2(0, 0)
+  shadowRadius = 0.0
+  shadowSpread = 0.0
 
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
