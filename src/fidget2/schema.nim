@@ -1,5 +1,4 @@
-import tables, chroma, vmath, pixie, jsony, bumpy,
-    strutils, typography
+import tables, chroma, vmath, pixie, jsony, bumpy, strutils, typography
 
 type
   FidgetError* = object of ValueError ## Raised if an operation fails.
