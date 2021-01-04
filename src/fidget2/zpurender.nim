@@ -2,6 +2,7 @@ import chroma, pixie, math, vmath, glsl, gpushader, gpurender, pixie, schema
 
 proc drawCompleteZpuFrame*(node: Node): pixie.Image =
   setupRender(node)
+  node.readyImages()
 
   drawNode(node, 0)
 

@@ -17,6 +17,7 @@ float mask = 1.0;
 float topIndex;
 mat3 mat;
 float prevGradientK;
+float layerBlur;
 mat4 crossCountMat;
 float x0;
 vec4 backdropColor;
@@ -72,11 +73,9 @@ void gradientStop(
 void z(
 ) ;
 
-void Q(
-  float x1,
-  float y1,
+float normpdf(
   float x,
-  float y
+  float sigma
 ) ;
 
 vec4 blendNormalFloats(
@@ -99,6 +98,13 @@ float pixelCross(
   vec2 b0
 ) ;
 
+void Q(
+  float x1,
+  float y1,
+  float x,
+  float y
+) ;
+
 bool overlap(
   vec2 minA,
   vec2 maxA,
@@ -106,14 +112,14 @@ bool overlap(
   vec2 maxB
 ) ;
 
-void runCommands(
-) ;
-
 void textureFill(
   mat3 tMat,
   float tile,
   vec2 pos,
   vec2 size
+) ;
+
+void runCommands(
 ) ;
 
 vec2 interpolate(
@@ -190,7 +196,7 @@ void draw(
     for(int x = 0; x < n; x++) {
       for(int y = 0; y < n; y++) {
         if (! ((float(zmod(crossCountMat[x][y], float(2.0)))) == (0.0))) {
-          (fillMask) += (float(1));;
+                    (fillMask) += (float(1));
         }      }    };
     fillMask = (fillMask) / (float((n) * (n)));
   } else {
@@ -264,7 +270,7 @@ void gradientStop(
     if (((prevGradientK) < (gradientK)) && ((gradientK) <= (k))) {
       float betweenColors = ((gradientK) - (prevGradientK)) / ((k) - (prevGradientK));
       vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
-(colorG.w) *= ((fillMask) * (mask));;
+      (colorG.w) *= ((fillMask) * (mask));
       backdropColor = blendNormalFloats(backdropColor, colorG);
     };
     prevGradientK = k;
@@ -278,16 +284,11 @@ void z(
   line(vec2(x0, y0), vec2(x1, y1));
 }
 
-void Q(
-  float x1,
-  float y1,
+float normpdf(
   float x,
-  float y
+  float sigma
 ) {
-"SVG Quadratic curve command.";
-  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
-  x0 = x;
-  y0 = y;
+    return float(((0.39894) * (exp((((-0.5) * (x)) * (x)) / (float((sigma) * (sigma)))))) / (float(sigma)));
 }
 
 vec4 blendNormalFloats(
@@ -316,7 +317,7 @@ void quadratic(
   float nrecip = (1.0) / (n);
   float t = 0.0;
   for(int i = 0; i < int(n); i++) {
-(t) += (nrecip);;
+    (t) += (nrecip);
     vec2 pn = mix(mix(p0, p1, float(t)), mix(p1, p2, float(t)), float(t));
     line(p, pn);
     p = pn;
@@ -358,6 +359,18 @@ float pixelCross(
   return float(0.0);
 }
 
+void Q(
+  float x1,
+  float y1,
+  float x,
+  float y
+) {
+"SVG Quadratic curve command.";
+  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
+  x0 = x;
+  y0 = y;
+}
+
 bool overlap(
   vec2 minA,
   vec2 maxA,
@@ -366,6 +379,71 @@ bool overlap(
 ) {
 "Test overlap: rect vs rect.";
   return ((((minB.x) <= (maxA.x)) && ((minA.x) <= (maxB.x))) && ((minB.y) <= (maxA.y))) && ((minA.y) <= (maxB.y));
+}
+
+void textureFill(
+  mat3 tMat,
+  float tile,
+  vec2 pos,
+  vec2 size
+) {
+"Set the source color.";
+  if ((true) || ((float(0)) < ((fillMask) * (mask)))) {
+        if ((float(0)) < (layerBlur)) {
+      int mSize = ((int(layerBlur)) * (2)) + (1);
+      int kSize = int(layerBlur);
+      float[20] kernel;
+      float sigma = 1.9;
+      for(int x = 0; x <= kSize; x++) {
+        float v = normpdf(float(float(x)), float(sigma));
+        kernel[((kSize) + (x))] = v;
+        kernel[((kSize) - (x))] = v;
+      };
+
+      float zNormal = 0.0;
+      for(int x = 0; x < mSize; x++) {
+        for(int y = 0; y < mSize; y++) {
+          zNormal = (zNormal) + (float((kernel[(x)]) * (kernel[(y)])));        }      };
+
+      vec4 combinedColor = vec4(float(0));
+      float colorAdj = 0.0;
+      for(int x = - (int(layerBlur)); x <= int(layerBlur); x++) {
+        for(int y = - (int(layerBlur)); y <= int(layerBlur); y++) {
+          vec2 offset = vec2(float(x), float(y));
+          float kValue = (kernel[((kSize) + (x))]) * (kernel[((kSize) + (y))]);
+          vec2 uv = ((tMat) * (vec3(((floor(screen)) + (vec2(float(0.5), float(0.5)))) + (offset), float(1)))).xy;
+
+          if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
+            vec4 textureColor = texture(textureAtlasSampler, uv);
+
+            (combinedColor) += ((textureColor) * (kValue));
+            (colorAdj) += (float(kValue));
+          };
+        }      };
+      if (! ((colorAdj) == (float(0)))) {
+        combinedColor.x = float((float(combinedColor.x)) / (colorAdj));
+        combinedColor.y = float((float(combinedColor.y)) / (colorAdj));
+        combinedColor.z = float((float(combinedColor.z)) / (colorAdj));
+      };
+      combinedColor.w = float((float(combinedColor.w)) / (zNormal));
+
+      backdropColor = blendNormalFloats(backdropColor, combinedColor);
+    } else {
+      vec2 uv = ((tMat) * (vec3((floor(screen)) + (vec2(float(0.5), float(0.5))), float(1)))).xy;
+      if ((tile) == (float(0))) {
+                if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
+          vec4 textureColor = texture(textureAtlasSampler, uv);
+          (textureColor.w) *= ((fillMask) * (mask));
+          backdropColor = blendNormalFloats(backdropColor, textureColor);
+        };
+      } else {
+        uv = (mod((uv) - (pos), size)) + (pos);
+        vec4 textureColor = texture(textureAtlasSampler, uv);
+        (textureColor.w) *= ((fillMask) * (mask));
+        backdropColor = blendNormalFloats(backdropColor, textureColor);
+      };
+    };
+  };
 }
 
 void runCommands(
@@ -378,26 +456,26 @@ void runCommands(
             break;
     } else if ((command) == (1.0)) {
       startPath(texelFetch(dataBuffer, (i) + (1)).x);
-(i) += (1);;
+      (i) += (1);
     } else if ((command) == (2.0)) {
       endPath();
     } else if ((command) == (4.0)) {
       solidFill(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x);
-(i) += (4);;
+      (i) += (4);
     } else if ((command) == (5.0)) {
       float opacity = texelFetch(dataBuffer, (i) + (1)).x;
       backdropColor = (backdropColor) * (opacity);
-(i) += (1);;
+      (i) += (1);
     } else if ((command) == (6.0)) {
-      tMat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;;
-      tMat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;;
-      tMat[0][2] = float(0);;
-      tMat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;;
-      tMat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;;
-      tMat[1][2] = float(0);;
-      tMat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;;
-      tMat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;;
-      tMat[2][2] = float(1);;
+      tMat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;
+      tMat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;
+      tMat[0][2] = float(0);
+      tMat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;
+      tMat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;
+      tMat[1][2] = float(0);
+      tMat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;
+      tMat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;
+      tMat[2][2] = float(1);
       float tile = texelFetch(dataBuffer, (i) + (7)).x;
       vec2 pos = vec2(0.0);
       pos.x = texelFetch(dataBuffer, (i) + (8)).x;
@@ -406,7 +484,7 @@ void runCommands(
       size.x = texelFetch(dataBuffer, (i) + (10)).x;
       size.y = texelFetch(dataBuffer, (i) + (11)).x;
       textureFill(tMat, tile, pos, size);
-(i) += (11);;
+      (i) += (11);
     } else if ((command) == (7.0)) {
       vec2 at = vec2(0.0);
       vec2 to = vec2(0.0);
@@ -415,7 +493,7 @@ void runCommands(
       to.x = texelFetch(dataBuffer, (i) + (3)).x;
       to.y = texelFetch(dataBuffer, (i) + (4)).x;
       gradientLinear(at, to);
-(i) += (4);;
+      (i) += (4);
     } else if ((command) == (8.0)) {
       vec2 at = vec2(0.0);
       vec2 to = vec2(0.0);
@@ -424,33 +502,33 @@ void runCommands(
       to.x = texelFetch(dataBuffer, (i) + (3)).x;
       to.y = texelFetch(dataBuffer, (i) + (4)).x;
       gradientRadial(at, to);
-(i) += (4);;
+      (i) += (4);
     } else if ((command) == (9.0)) {
       gradientStop(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x, texelFetch(dataBuffer, (i) + (5)).x);
-(i) += (5);;
+      (i) += (5);
     } else if ((command) == (3.0)) {
-      mat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;;
-      mat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;;
-      mat[0][2] = float(0);;
-      mat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;;
-      mat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;;
-      mat[1][2] = float(0);;
-      mat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;;
-      mat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;;
-      mat[2][2] = float(1);;
-(i) += (6);;
+      mat[0][0] = texelFetch(dataBuffer, (i) + (1)).x;
+      mat[0][1] = texelFetch(dataBuffer, (i) + (2)).x;
+      mat[0][2] = float(0);
+      mat[1][0] = texelFetch(dataBuffer, (i) + (3)).x;
+      mat[1][1] = texelFetch(dataBuffer, (i) + (4)).x;
+      mat[1][2] = float(0);
+      mat[2][0] = texelFetch(dataBuffer, (i) + (5)).x;
+      mat[2][1] = texelFetch(dataBuffer, (i) + (6)).x;
+      mat[2][2] = float(1);
+      (i) += (6);
     } else if ((command) == (10.0)) {
       M(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x);
-(i) += (2);;
+      (i) += (2);
     } else if ((command) == (11.0)) {
       L(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x);
-(i) += (2);;
+      (i) += (2);
     } else if ((command) == (12.0)) {
       C(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x, texelFetch(dataBuffer, (i) + (5)).x, texelFetch(dataBuffer, (i) + (6)).x);
-(i) += (6);;
+      (i) += (6);
     } else if ((command) == (13.0)) {
       Q(texelFetch(dataBuffer, (i) + (1)).x, texelFetch(dataBuffer, (i) + (2)).x, texelFetch(dataBuffer, (i) + (3)).x, texelFetch(dataBuffer, (i) + (4)).x);
-(i) += (4);;
+      (i) += (4);
     } else if ((command) == (14.0)) {
       z();
     } else if ((command) == (15.0)) {
@@ -461,7 +539,7 @@ void runCommands(
       maxP.x = texelFetch(dataBuffer, (i) + (3)).x;
       maxP.y = texelFetch(dataBuffer, (i) + (4)).x;
       int label = int(texelFetch(dataBuffer, (i) + (5)).x);
-(i) += (5);;
+      (i) += (5);
       mat3 matInv = inverse(mat);
       vec2 screenInvA = ((matInv) * (vec3((screen) + (vec2(float(0), float(0))), float(1)))).xy;
       vec2 screenInvB = ((matInv) * (vec3((screen) + (vec2(float(1), float(0))), float(1)))).xy;
@@ -485,33 +563,12 @@ void runCommands(
       if ((float(0)) < ((fillMask) * (mask))) {
                 topIndex = index;
       };
-(i) += (1);;
+      (i) += (1);
+    } else if ((command) == (19.0)) {
+      layerBlur = texelFetch(dataBuffer, (i) + (1)).x;
+      (i) += (1);
     };
-(i) += (1);;
-  };
-}
-
-void textureFill(
-  mat3 tMat,
-  float tile,
-  vec2 pos,
-  vec2 size
-) {
-"Set the source color.";
-  if ((float(0)) < ((fillMask) * (mask))) {
-    vec2 uv = ((tMat) * (vec3((floor(screen)) + (vec2(float(0.5), float(0.5))), float(1)))).xy;
-    if ((tile) == (float(0))) {
-            if (((((pos.x) < (uv.x)) && ((uv.x) < ((pos.x) + (size.x)))) && ((pos.y) < (uv.y))) && ((uv.y) < ((pos.y) + (size.y)))) {
-        vec4 textureColor = texture(textureAtlasSampler, uv);
-(textureColor.w) *= ((fillMask) * (mask));;
-        backdropColor = blendNormalFloats(backdropColor, textureColor);
-      };
-    } else {
-      uv = (mod((uv) - (pos), size)) + (pos);
-      vec4 textureColor = texture(textureAtlasSampler, uv);
-(textureColor.w) *= ((fillMask) * (mask));;
-      backdropColor = blendNormalFloats(backdropColor, textureColor);
-    };
+    (i) += (1);
   };
 }
 
@@ -596,7 +653,7 @@ float pixelCover(
       aI = vec2(((float(0)) - (bb)) / (mm), float(0));
       if ((aI.x) < (float(0))) {
         float y = ((mm) * (float(0))) + (bb);
-(area) += (clamp((min(bb, float(1))) - (max(a.y, float(0))), float(0), float(1)));;
+        (area) += (clamp((min(bb, float(1))) - (max(a.y, float(0))), float(0), float(1)));
         aI = vec2(float(0), clamp(y, float(0), float(1)));
       } else if ((float(1)) < (aI.x)) {
         float y = ((mm) * (float(1))) + (bb);
@@ -609,7 +666,7 @@ float pixelCover(
       bI = vec2(((float(1)) - (bb)) / (mm), float(1));
       if ((bI.x) < (float(0))) {
         float y = ((mm) * (float(0))) + (bb);
-(area) += (clamp((min(b.y, float(1))) - (max(bb, float(0))), float(0), float(1)));;
+        (area) += (clamp((min(b.y, float(1))) - (max(bb, float(0))), float(0), float(1)));
         bI = vec2(float(0), clamp(y, float(0), float(1)));
       } else if ((float(1)) < (bI.x)) {
         float y = ((mm) * (float(1))) + (bb);
@@ -617,7 +674,7 @@ float pixelCover(
       };
     };
   };
-(area) += (((((float(1)) - (aI.x)) + ((float(1)) - (bI.x))) / (float(2))) * ((bI.y) - (aI.y)));;
+  (area) += (((((float(1)) - (aI.x)) + ((float(1)) - (bI.x))) / (float(2))) * ((bI.y) - (aI.y)));
   return area;
 }
 
@@ -643,9 +700,9 @@ vec4 alphaFix(
   res.x = float((((t0) * (float(source.x))) + (float((t1) * (mixed.x)))) + ((t2) * (float(backdrop.x))));
   res.y = float((((t0) * (float(source.y))) + (float((t1) * (mixed.y)))) + ((t2) * (float(backdrop.y))));
   res.z = float((((t0) * (float(source.z))) + (float((t1) * (mixed.z)))) + ((t2) * (float(backdrop.z))));
-(res.x) /= (res.w);;
-(res.y) /= (res.w);;
-(res.z) /= (res.w);;
+  (res.x) /= (res.w);
+  (res.y) /= (res.w);
+  (res.z) /= (res.w);
   return res;
 }
 
@@ -657,27 +714,27 @@ void line(
   vec2 a1 = (((mat) * (vec3(a0, float(1)))).xy) - (screen);
   vec2 b1 = (((mat) * (vec3(b0, float(1)))).xy) - (screen);
   if ((windingRule) == (0)) {
-(a1) += (vec2(float(0.125), float(0.125)));;
-(b1) += (vec2(float(0.125), float(0.125)));;
-    crossCountMat[0][0] = (crossCountMat[0][0]) + (pixelCross((a1) + ((vec2(float(0), float(0))) / (float(4))), (b1) + ((vec2(float(0), float(0))) / (float(4)))));;
-    crossCountMat[0][1] = (crossCountMat[0][1]) + (pixelCross((a1) + ((vec2(float(0), float(1))) / (float(4))), (b1) + ((vec2(float(0), float(1))) / (float(4)))));;
-    crossCountMat[0][2] = (crossCountMat[0][2]) + (pixelCross((a1) + ((vec2(float(0), float(2))) / (float(4))), (b1) + ((vec2(float(0), float(2))) / (float(4)))));;
-    crossCountMat[0][3] = (crossCountMat[0][3]) + (pixelCross((a1) + ((vec2(float(0), float(3))) / (float(4))), (b1) + ((vec2(float(0), float(3))) / (float(4)))));;
-    crossCountMat[1][0] = (crossCountMat[1][0]) + (pixelCross((a1) + ((vec2(float(1), float(0))) / (float(4))), (b1) + ((vec2(float(1), float(0))) / (float(4)))));;
-    crossCountMat[1][1] = (crossCountMat[1][1]) + (pixelCross((a1) + ((vec2(float(1), float(1))) / (float(4))), (b1) + ((vec2(float(1), float(1))) / (float(4)))));;
-    crossCountMat[1][2] = (crossCountMat[1][2]) + (pixelCross((a1) + ((vec2(float(1), float(2))) / (float(4))), (b1) + ((vec2(float(1), float(2))) / (float(4)))));;
-    crossCountMat[1][3] = (crossCountMat[1][3]) + (pixelCross((a1) + ((vec2(float(1), float(3))) / (float(4))), (b1) + ((vec2(float(1), float(3))) / (float(4)))));;
-    crossCountMat[2][0] = (crossCountMat[2][0]) + (pixelCross((a1) + ((vec2(float(2), float(0))) / (float(4))), (b1) + ((vec2(float(2), float(0))) / (float(4)))));;
-    crossCountMat[2][1] = (crossCountMat[2][1]) + (pixelCross((a1) + ((vec2(float(2), float(1))) / (float(4))), (b1) + ((vec2(float(2), float(1))) / (float(4)))));;
-    crossCountMat[2][2] = (crossCountMat[2][2]) + (pixelCross((a1) + ((vec2(float(2), float(2))) / (float(4))), (b1) + ((vec2(float(2), float(2))) / (float(4)))));;
-    crossCountMat[2][3] = (crossCountMat[2][3]) + (pixelCross((a1) + ((vec2(float(2), float(3))) / (float(4))), (b1) + ((vec2(float(2), float(3))) / (float(4)))));;
-    crossCountMat[3][0] = (crossCountMat[3][0]) + (pixelCross((a1) + ((vec2(float(3), float(0))) / (float(4))), (b1) + ((vec2(float(3), float(0))) / (float(4)))));;
-    crossCountMat[3][1] = (crossCountMat[3][1]) + (pixelCross((a1) + ((vec2(float(3), float(1))) / (float(4))), (b1) + ((vec2(float(3), float(1))) / (float(4)))));;
-    crossCountMat[3][2] = (crossCountMat[3][2]) + (pixelCross((a1) + ((vec2(float(3), float(2))) / (float(4))), (b1) + ((vec2(float(3), float(2))) / (float(4)))));;
-    crossCountMat[3][3] = (crossCountMat[3][3]) + (pixelCross((a1) + ((vec2(float(3), float(3))) / (float(4))), (b1) + ((vec2(float(3), float(3))) / (float(4)))));;
+    (a1) += (vec2(float(0.125), float(0.125)));
+    (b1) += (vec2(float(0.125), float(0.125)));
+    crossCountMat[0][0] = (crossCountMat[0][0]) + (pixelCross((a1) + ((vec2(float(0), float(0))) / (float(4))), (b1) + ((vec2(float(0), float(0))) / (float(4)))));
+    crossCountMat[0][1] = (crossCountMat[0][1]) + (pixelCross((a1) + ((vec2(float(0), float(1))) / (float(4))), (b1) + ((vec2(float(0), float(1))) / (float(4)))));
+    crossCountMat[0][2] = (crossCountMat[0][2]) + (pixelCross((a1) + ((vec2(float(0), float(2))) / (float(4))), (b1) + ((vec2(float(0), float(2))) / (float(4)))));
+    crossCountMat[0][3] = (crossCountMat[0][3]) + (pixelCross((a1) + ((vec2(float(0), float(3))) / (float(4))), (b1) + ((vec2(float(0), float(3))) / (float(4)))));
+    crossCountMat[1][0] = (crossCountMat[1][0]) + (pixelCross((a1) + ((vec2(float(1), float(0))) / (float(4))), (b1) + ((vec2(float(1), float(0))) / (float(4)))));
+    crossCountMat[1][1] = (crossCountMat[1][1]) + (pixelCross((a1) + ((vec2(float(1), float(1))) / (float(4))), (b1) + ((vec2(float(1), float(1))) / (float(4)))));
+    crossCountMat[1][2] = (crossCountMat[1][2]) + (pixelCross((a1) + ((vec2(float(1), float(2))) / (float(4))), (b1) + ((vec2(float(1), float(2))) / (float(4)))));
+    crossCountMat[1][3] = (crossCountMat[1][3]) + (pixelCross((a1) + ((vec2(float(1), float(3))) / (float(4))), (b1) + ((vec2(float(1), float(3))) / (float(4)))));
+    crossCountMat[2][0] = (crossCountMat[2][0]) + (pixelCross((a1) + ((vec2(float(2), float(0))) / (float(4))), (b1) + ((vec2(float(2), float(0))) / (float(4)))));
+    crossCountMat[2][1] = (crossCountMat[2][1]) + (pixelCross((a1) + ((vec2(float(2), float(1))) / (float(4))), (b1) + ((vec2(float(2), float(1))) / (float(4)))));
+    crossCountMat[2][2] = (crossCountMat[2][2]) + (pixelCross((a1) + ((vec2(float(2), float(2))) / (float(4))), (b1) + ((vec2(float(2), float(2))) / (float(4)))));
+    crossCountMat[2][3] = (crossCountMat[2][3]) + (pixelCross((a1) + ((vec2(float(2), float(3))) / (float(4))), (b1) + ((vec2(float(2), float(3))) / (float(4)))));
+    crossCountMat[3][0] = (crossCountMat[3][0]) + (pixelCross((a1) + ((vec2(float(3), float(0))) / (float(4))), (b1) + ((vec2(float(3), float(0))) / (float(4)))));
+    crossCountMat[3][1] = (crossCountMat[3][1]) + (pixelCross((a1) + ((vec2(float(3), float(1))) / (float(4))), (b1) + ((vec2(float(3), float(1))) / (float(4)))));
+    crossCountMat[3][2] = (crossCountMat[3][2]) + (pixelCross((a1) + ((vec2(float(3), float(2))) / (float(4))), (b1) + ((vec2(float(3), float(2))) / (float(4)))));
+    crossCountMat[3][3] = (crossCountMat[3][3]) + (pixelCross((a1) + ((vec2(float(3), float(3))) / (float(4))), (b1) + ((vec2(float(3), float(3))) / (float(4)))));
   } else {
     float area = pixelCover(a1, b1);
-(fillMask) += ((area) * (lineDir(a1, b1)));;
+    (fillMask) += ((area) * (lineDir(a1, b1)));
   };
 }
 
@@ -714,6 +771,7 @@ void main() {
   gradientK = float(0);
   prevGradientK = float(0);
   prevGradientColor = vec4(float(0), float(0), float(0), float(0));
+  layerBlur = float(0.0);
   float bias = 0.0001;
   vec2 offset = vec2(float((bias) - (0.5)), float((bias) - (0.5)));
   fragColor = runPixel((gl_FragCoord.xy) + (offset));

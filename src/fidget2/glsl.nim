@@ -1,6 +1,6 @@
 ## Shader macro, converts nim code into GLSL
 
-import macros, strutils, vmath, tables, pixie, chroma
+import macros, strutils, vmath, tables, pixie, chroma, print
 
 # For the ability to look at parent nodes.
 var nodeStack {.compileTime.}: seq[NimNode]
@@ -55,13 +55,13 @@ const glslGlobals = [
 
 const glslFunctions = [
   "rgb=", "rgb", "xyz", "xy", "xy=",
-  "bool",
+  "bool", "array",
   "vec2", "vec3", "vec4", "mat3", "mat4", "color",
   "Vec2", "Vec3", "Vec4", "Mat3", "Mat4", "Color",
   "abs", "clamp", "min", "max", "dot", "sqrt", "mix", "length",
   "texelFetch", "texture",
   "normalize",
-  "floor", "ceil", "round",
+  "floor", "ceil", "round", "exp",
   "[]", "[]=",
   "inverse"
 ]
@@ -86,6 +86,14 @@ proc addIndent(res: var string, level: int) =
 
 proc toCodeStmts(n: NimNode, res: var string, level = 0)
 
+proc addSmart(res: var string, c: char) =
+  ## Ads a char but first checks if its already here.
+  var idx = res.len - 1
+  while res[idx] in Whitespace:
+    dec idx
+  if res[idx] != c:
+    res.add c
+
 proc toCode(n: NimNode, res: var string, level = 0) =
   ## Inner code block.
 
@@ -98,6 +106,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     n[0].toCode(res)
     res.add " = "
     n[1].toCode(res)
+    res.addSmart ';'
 
   of nnkInfix:
     if n[0].repr in ["mod"] and n[1].getType().repr != "int":
@@ -111,6 +120,8 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       res.add ")"
       return
 
+    if n[0].repr in ["+=", "-=", "*=", "/="]:
+      res.addIndent level
     res.add "("
     n[1].toCode(res)
     res.add ") "
@@ -119,7 +130,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     n[2].toCode(res)
     res.add ")"
     if n[0].repr in ["+=", "-=", "*=", "/="]:
-      res.add(";")
+      res.addSmart ';'
 
   of nnkHiddenDeref, nnkHiddenAddr:
     n[0].toCode(res)
@@ -136,7 +147,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
         res.add "]"
       res.add " = "
       n[n.len - 1].toCode(res)
-      res.add ";"
+      res.addSmart ';'
 
     elif procName == "[]":
       n[1].toCode(res)
@@ -182,7 +193,8 @@ proc toCode(n: NimNode, res: var string, level = 0) =
         res.addIndent level
       n[j].toCode(res, level)
       if n[j].kind notin [nnkLetSection, nnkVarSection]:
-        res.add ";\n"
+        res.addSmart ';'
+        res.add "\n"
 
   of nnkIfStmt:
     res.addIndent level
@@ -211,7 +223,9 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       inc i
 
   of nnkHiddenStdConv:
-    let typeStr = typeRename(n.getType.repr)
+    var typeStr = typeRename(n.getType.repr)
+    if typeStr.startsWith("range["):
+      typeStr = ""
     for j in 1 .. n.len-1:
       res.add typeStr
       res.add "("
@@ -240,20 +254,35 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     for j in 0 ..< n.len:
       res.addIndent level
       n[j].toCode(res, level)
-      res.add ";\n"
+      res.addSmart ';'
+      res.add "\n"
 
   of nnkIdentDefs:
     for j in countup(0, n.len - 1, 3):
-      let typeStr = typeRename(n[j].getTypeInst().strVal)
-      res.add typeStr
-      res.add " "
-      n[j].toCode(res)
-      if n[j + 2].kind != nnkEmpty:
-        res.add " = "
-        n[j + 2].toCode(res)
+      #echo n.treeRepr
+      var typeStr = ""
+      if n[1].kind == nnkBracketExpr and
+        n[1][0].kind == nnkSym and
+        n[1][0].strVal == "array":
+        typeStr = typeRename(n[1][2].strVal)
+        typeStr.add "["
+        typeStr.add n[1][1].repr
+        typeStr.add "]"
+
+        res.add typeStr
+        res.add " "
+        n[0].toCode(res)
       else:
-        res.add " = "
-        res.add typeDefault(typeStr)
+        typeStr = typeRename(n[j].getTypeInst().strVal)
+        res.add typeStr
+        res.add " "
+        n[j].toCode(res)
+        if n[j + 2].kind != nnkEmpty:
+          res.add " = "
+          n[j + 2].toCode(res)
+        else:
+          res.add " = "
+          res.add typeDefault(typeStr)
 
   of nnkReturnStmt:
     res.addIndent level
@@ -334,7 +363,8 @@ proc toCodeStmts(n: NimNode, res: var string, level = 0) =
   if n.kind != nnkStmtList:
     res.addIndent level
     n.toCode(res, level)
-    res.add ";\n"
+    res.addSmart ';'
+    res.add "\n"
   else:
     n.toCode(res, level)
 
@@ -373,7 +403,8 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
               res.add typeRename(param[1].strVal)
           res.add " "
           res.add param[0].strVal
-          res.add ";\n"
+          res.addSmart ';'
+          res.add "\n"
     else:
       res.add "\n"
       res.add "void main() {\n"
@@ -465,7 +496,7 @@ proc gatherFunction(
             defStr.add " " & name
             if impl[2].kind != nnkEmpty:
               defStr.add " = " & repr(impl[2])
-            defStr.add ";"
+            defStr.addSmart ';'
             globals[name] = defStr
 
 
@@ -506,7 +537,8 @@ macro toShader*(s: typed, version = "410", precision = "highp float"): string =
   # Put functions definition (just name and types part).
   for k, v in functions:
     code.add v.split("{")[0]
-    code.add ";\n"
+    code.addSmart ';'
+    code.add "\n"
 
   # Put functions (with bodies) next.
   for k, v in functions:

@@ -30,6 +30,7 @@ const
   cmdMaskFill*: float32 = 16
   cmdMaskClear*: float32 = 17
   cmdIndex*: float32 = 18
+  cmdLayerBlur*: float32 = 19
 
 var
   crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
@@ -46,6 +47,7 @@ var
   mask: float32 = 1.0
 
   topIndex*: float32
+  layerBlur*: float32
 
 proc lineDir(a, b: Vec2): float32 =
   if a.y - b.y > 0:
@@ -235,6 +237,9 @@ proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
   return alphaFix(backdrop, source, source)
 
+proc normpdf(x: float, sigma: float32): float32 =
+  return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma
+
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
   if fillMask * mask > 0:
@@ -242,22 +247,69 @@ proc solidFill(r, g, b, a: float32) =
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
-  if fillMask * mask > 0:
+  if true or fillMask * mask > 0:
     # WE need to undo the AA when sampling images
     # * That is why we need to floor.
     # * That is why we need to add vec2(0.5, 0.5).
-    var uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5), 1)).xy
-    if tile == 0:
-      if uv.x > pos.x and uv.x < pos.x + size.x and
-        uv.y > pos.y and uv.y < pos.y + size.y:
+
+    if layerBlur > 0:
+
+      let mSize = layerBlur.int*2 + 1
+      let kSize = layerBlur.int
+      var kernel: array[20, float32]
+      var sigma = 2.0 - 0.1
+
+      for x in 0 .. kSize:
+        let v = normpdf((x).float32, sigma)
+        kernel[kSize + x] = v
+        kernel[kSize - x] = v
+      print kernel
+
+      var zNormal = 0.0 # Total for normalization
+      for x in 0 ..< mSize:
+        for y in 0 ..< mSize:
+          zNormal = zNormal + kernel[x]*kernel[y]
+      print zNormal
+
+      var combinedColor = vec4(0)
+
+      var colorAdj = 0.0
+      for x in -layerBlur.int .. layerBlur.int:
+        for y in -layerBlur.int .. layerBlur.int:
+          let
+            offset = vec2(x.float32, y.float32)
+            kValue = kernel[kSize + x] * kernel[kSize + y]
+            uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5) + offset, 1)).xy
+          print kValue
+          if uv.x > pos.x and uv.x < pos.x + size.x and
+            uv.y > pos.y and uv.y < pos.y + size.y:
+            let textureColor = texture(textureAtlasSampler, uv)
+            print textureColor
+            combinedColor += textureColor * kValue
+            colorAdj += kValue
+
+      if colorAdj != 0:
+        combinedColor.x = combinedColor.x / colorAdj
+        combinedColor.y = combinedColor.y / colorAdj
+        combinedColor.z = combinedColor.z / colorAdj
+      combinedColor.w = combinedColor.w / zNormal
+      # combinedColor.w *= mask
+      print combinedColor
+      backdropColor = blendNormalFloats(backdropColor, combinedColor)
+
+    else:
+      var uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5), 1)).xy
+      if tile == 0:
+        if uv.x > pos.x and uv.x < pos.x + size.x and
+          uv.y > pos.y and uv.y < pos.y + size.y:
+          var textureColor = texture(textureAtlasSampler, uv)
+          textureColor.w *= fillMask * mask
+          backdropColor = blendNormalFloats(backdropColor, textureColor)
+      else:
+        uv = ((uv - pos) mod size) + pos
         var textureColor = texture(textureAtlasSampler, uv)
         textureColor.w *= fillMask * mask
         backdropColor = blendNormalFloats(backdropColor, textureColor)
-    else:
-      uv = ((uv - pos) mod size) + pos
-      var textureColor = texture(textureAtlasSampler, uv)
-      textureColor.w *= fillMask * mask
-      backdropColor = blendNormalFloats(backdropColor, textureColor)
 
 proc toLineSpace(at, to, point: Vec2): float32 =
   let
@@ -504,6 +556,9 @@ proc runCommands() =
       if fillMask * mask > 0:
         topIndex = index
       i += 1
+    elif command == cmdLayerBlur:
+      layerBlur = texelFetch(dataBuffer, i + 1).x
+      i += 1
 
     i += 1
 
@@ -529,6 +584,8 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   gradientK = 0
   prevGradientK = 0
   prevGradientColor = vec4(0,0,0,0)
+
+  layerBlur = 0.0
 
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)

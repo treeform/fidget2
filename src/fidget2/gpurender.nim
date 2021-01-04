@@ -483,7 +483,7 @@ proc drawGradientStops(paint: Paint) =
     paint.gradientStops[^1].color.a
   ]
 
-proc readyImages(node: Node) =
+proc readyImages*(node: Node) =
   ## Walks the node tree making sure all images are in the atlas.
   proc readyImage(paint: Paint) =
     if paint.kind == pkImage:
@@ -730,7 +730,9 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   for effect in node.effects:
     echo effect.kind
     if effect.kind == ekLayerBlur:
-      echo "blur!!!"
+      dataBufferSeq.add cmdLayerBlur
+      print effect.radius
+      dataBufferSeq.add effect.radius
 
   case node.kind
     of nkGroup:
