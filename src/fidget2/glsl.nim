@@ -238,7 +238,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       if n[j].kind in [nnkCall]:
         res.addIndent level
       n[j].toCode(res, level)
-      if n[j].kind notin [nnkLetSection, nnkVarSection]:
+      if n[j].kind notin [nnkLetSection, nnkVarSection, nnkCommentStmt]:
         res.addSmart ';'
         res.add "\n"
 
@@ -290,8 +290,15 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     var fv = $n.floatVal
     res.add fv
 
-  of nnkStrLit .. nnkTripleStrLit, nnkCommentStmt:
+  of nnkStrLit .. nnkTripleStrLit:
     res.add $n.strVal.newLit.repr
+
+  of nnkCommentStmt:
+    for line in n.strVal.split("\n"):
+      res.addIndent level
+      res.add "// "
+      res.add line
+      res.add "\n"
 
   of nnkNone:
     assert false

@@ -189,7 +189,7 @@ void gradientRadial(
 
 void draw(
 ) {
-"Apply the winding rule.";
+  // Apply the winding rule.
   if (windingRule == 0) {
     fillMask = float(0);
     int n = 4;
@@ -212,7 +212,7 @@ void solidFill(
   float b,
   float a
 ) {
-"Set the source color.";
+  // Set the source color.
   if (float(0) < fillMask * mask) {
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask));
   }
@@ -233,7 +233,7 @@ void C(
   float x,
   float y
 ) {
-"SVG cubic Curve command.";
+  // SVG cubic Curve command.
   bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
   x0 = x;
   y0 = y;
@@ -282,7 +282,7 @@ void gradientStop(
 
 void z(
 ) {
-"SVG style end of shape command.";
+  // SVG style end of shape command.
   line(vec2(x0, y0), vec2(x1, y1));
 }
 
@@ -305,7 +305,7 @@ void quadratic(
   vec2 p1,
   vec2 p2
 ) {
-"Turn a cubic curve into N lines.";
+  // Turn a cubic curve into N lines.
   float devx = float(p0.x) - 2.0 * float(p1.x) + float(p2.x);
   float devy = float(p0.y) - 2.0 * float(p1.y) + float(p2.y);
   float devsq = devx * devx + devy * devy;
@@ -329,7 +329,7 @@ void quadratic(
 void startPath(
   float rule
 ) {
-"Clear the status of things and start a new path.";
+  // Clear the status of things and start a new path.
   crossCountMat = mat4(float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0), float(0));
   fillMask = float(0);
   windingRule = int(rule);
@@ -339,7 +339,7 @@ float pixelCross(
   vec2 a0,
   vec2 b0
 ) {
-"Turn a line into inc/dec/ignore of the crossCount.";
+  // Turn a line into inc/dec/ignore of the crossCount.
   vec2 a = a0;
   vec2 b = b0;
   if (a.y == b.y) {
@@ -367,7 +367,7 @@ void Q(
   float x,
   float y
 ) {
-"SVG Quadratic curve command.";
+  // SVG Quadratic curve command.
   quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
   x0 = x;
   y0 = y;
@@ -379,7 +379,7 @@ bool overlap(
   vec2 minB,
   vec2 maxB
 ) {
-"Test overlap: rect vs rect.";
+  // Test overlap: rect vs rect.
   return ((minB.x <= maxA.x) && (minA.x <= maxB.x) && minB.y <= maxA.y) && (minA.y <= maxB.y);
 }
 
@@ -389,7 +389,7 @@ void textureFill(
   vec2 pos,
   vec2 size
 ) {
-"Set the source color.";
+  // Set the source color.
   if (true || float(0) < fillMask * mask) {
     if (float(0) < layerBlur) {
       int mSize = int(layerBlur) * 2 + 1;
@@ -453,7 +453,7 @@ void textureFill(
 
 void runCommands(
 ) {
-"Runs a little command interpreter.";
+  // Runs a little command interpreter.
   int i = 0;
   while(true) {
     float command = texelFetch(dataBuffer, i).x;
@@ -584,7 +584,7 @@ vec2 interpolate(
   vec2 G4,
   float t
 ) {
-"Solve the cubic bezier interpolation with 4 points.";
+  // Solve the cubic bezier interpolation with 4 points.
   vec2 A = G4 - G1 + (float(3)) * (G2 - G3);
   vec2 B = (float(3)) * (G1 - float(2) * G2 + G3);
   vec2 C = (float(3)) * (G2 - G1);
@@ -609,7 +609,7 @@ void bezier(
   vec2 C,
   vec2 D
 ) {
-"Turn a cubic curve into N lines.";
+  // Turn a cubic curve into N lines.
   vec2 p = A;
   int discretization = 20;
   for(int t = 1; t <= discretization; t++) {
@@ -623,7 +623,7 @@ void M(
   float x,
   float y
 ) {
-"SVG style Move command.";
+  // SVG style Move command.
   x1 = x;
   x0 = x;
   y1 = y;
@@ -634,7 +634,8 @@ float pixelCover(
   vec2 a0,
   vec2 b0
 ) {
-"Returns the amount of area a given segment sweeps to the right\nin a [0,0 to 1,1] box.";
+  // Returns the amount of area a given segment sweeps to the right
+  // in a [0,0 to 1,1] box.
   vec2 a = a0;
   vec2 b = b0;
   vec2 aI = vec2(0.0);
@@ -685,7 +686,7 @@ float pixelCover(
 
 void endPath(
 ) {
-"SVG style end path command.";
+  // SVG style end path command.
   draw();
 }
 
@@ -715,7 +716,7 @@ void line(
   vec2 a0,
   vec2 b0
 ) {
-"Draw the lines based on windingRule.";
+  // Draw the lines based on windingRule.
   vec2 a1 = (mat * vec3(a0, float(1))).xy - screen;
   vec2 b1 = (mat * vec3(b0, float(1))).xy - screen;
   if (windingRule == 0) {
@@ -756,7 +757,7 @@ void L(
   float x,
   float y
 ) {
-"SVG style Line command.";
+  // SVG style Line command.
   line(vec2(x0, y0), vec2(x, y));
   x0 = x;
   y0 = y;
@@ -765,7 +766,7 @@ layout(origin_upper_left) in vec4 gl_FragCoord;
 out vec4 fragColor;
 
 void main() {
-"Main entry point to this huge shader.";
+  // Main entry point to this huge shader.
   x0 = float(0);
   y0 = float(0);
   x1 = float(0);
