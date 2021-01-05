@@ -1,4 +1,5 @@
-import staticglfw, opengl, math, schema, render, pixie, vmath, bumpy
+import bumpy, math, opengl, pixie, render, schema, staticglfw, vmath
+
 export bumpy
 
 var
@@ -101,12 +102,12 @@ proc display() =
 
   # draw a quad over the whole screen
   glClear(GL_COLOR_BUFFER_BIT)
-  glBegin(GL_QUADS);
+  glBegin(GL_QUADS)
   glTexCoord2d(0.0, 0.0); glVertex2d(-1.0, +1.0)
   glTexCoord2d(1.0, 0.0); glVertex2d(+1.0, +1.0)
   glTexCoord2d(1.0, 1.0); glVertex2d(+1.0, -1.0)
   glTexCoord2d(0.0, 1.0); glVertex2d(-1.0, -1.0)
-  glEnd();
+  glEnd()
 
   swapBuffers(window)
 
@@ -140,12 +141,21 @@ proc startFidget*() =
   # allocate a texture and bind it
   screen = newImage(w, h)
   var dataPtr = addr screen.data[0]
-  glTexImage2D(GL_TEXTURE_2D, 0, 3, GLsizei w, GLsizei h, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-  glEnable(GL_TEXTURE_2D);
+  glTexImage2D(
+    GL_TEXTURE_2D,
+    0,
+    3,
+    w.GLsizei,
+    h.GLsizei,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE, dataPtr
+  )
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+  glEnable(GL_TEXTURE_2D)
 
   discard window.setMouseButtonCallback(onMouseButton)
 

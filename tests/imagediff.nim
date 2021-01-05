@@ -1,4 +1,4 @@
-import pixie, chroma
+import chroma, pixie
 
 proc imageDiff*(master, image: Image): (float32, Image) =
   var

@@ -1,4 +1,4 @@
-import fidget2/glsl, vmath, strutils
+import fidget2/glsl, strutils, vmath
 
 var buffer = ""
 proc echo(msg: varargs[string, `$`]) =

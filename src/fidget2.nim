@@ -1,2 +1,3 @@
-import fidget2/schema, fidget2/gpurender, fidget2/gpumirror, fidget2/loader
-export schema, gpurender, gpumirror, loader
+import fidget2/gpumirror, fidget2/gpurender, fidget2/loader, fidget2/schema
+
+export gpumirror, gpurender, loader, schema

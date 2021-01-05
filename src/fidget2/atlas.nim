@@ -1,4 +1,4 @@
-import tables, bumpy, pixie
+import bumpy, pixie, tables
 
 type
   CpuAtlas* = ref object

@@ -1,4 +1,4 @@
-import chroma, os, fidget2, pixie, strutils, strformat, cligen, times, benchy
+import benchy, chroma, cligen, fidget2, os, pixie, strformat, strutils, times
 
 proc main(r = "", e = "", l = 10000) =
 
@@ -46,7 +46,8 @@ proc main(r = "", e = "", l = 10000) =
           c.g = (diff).clamp(0, 255).uint8
           c.b = (-diff).clamp(0, 255).uint8
           c.a = 255
-          let diffPixel = abs(m.r.int - u.r.int) + abs(m.g.int - u.g.int) + abs(m.b.int - u.b.int) + abs(m.a.int - u.a.int)
+          let diffPixel = abs(m.r.int - u.r.int) + abs(m.g.int - u.g.int) + abs(
+              m.b.int - u.b.int) + abs(m.a.int - u.a.int)
           diffScore += diffPixel
           # if diffPixel == 0:
           #   c.a = 0

@@ -1,5 +1,5 @@
 
-import pixie, chroma, math, vmath, schema, typography, tables, bumpy, loader
+import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath
 
 const
   white = rgba(255, 255, 255, 255)
@@ -56,7 +56,14 @@ proc gradientPut(effects: Image, x, y: int, a: float32, paint: Paint) =
     )
   effects.setRgbaUnsafe(x, y, color.rgba)
 
-proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int, applyMask=true) =
+proc applyPaint(
+  mask: Image,
+  paint: Paint,
+  node: Node,
+  mat: Mat3,
+  paintNum: int,
+  applyMask = true
+) =
 
   if not paint.visible:
     return
@@ -201,11 +208,10 @@ proc applyPaint(mask: Image, paint: Paint, node: Node, mat: Mat3, paintNum: int,
     var color = paint.color
     effects.fill(color.rgba)
 
-
   ## Apply opacity
   if paint.opacity != 1.0:
     var opacity = newImage(effects.width, effects.height)
-    opacity.fill(color(0,0,0, paint.opacity).rgba)
+    opacity.fill(color(0, 0, 0, paint.opacity).rgba)
     effects.draw(opacity, blendMode = bmMask)
 
   # Optimization: if mask it simple, skip mask!
@@ -260,10 +266,10 @@ proc roundRect(path: Path, x, y, w, h, nw, ne, se, sw: float32) =
     se = min(se, maxRaidus)
     sw = min(sw, maxRaidus)
   path.moveTo(x+nw, y)
-  path.arcTo(x+w, y,   x+w, y+h, ne)
-  path.arcTo(x+w, y+h, x,   y+h, se)
-  path.arcTo(x,   y+h, x,   y,   sw)
-  path.arcTo(x,   y,   x+w, y,   nw)
+  path.arcTo(x+w, y, x+w, y+h, ne)
+  path.arcTo(x+w, y+h, x, y+h, se)
+  path.arcTo(x, y+h, x, y, sw)
+  path.arcTo(x, y, x+w, y, nw)
   path.closePath()
 
 proc roundRectRev(path: Path, x, y, w, h, nw, ne, se, sw: float32) =
@@ -275,10 +281,10 @@ proc roundRectRev(path: Path, x, y, w, h, nw, ne, se, sw: float32) =
     se = min(se, maxRaidus)
     sw = min(sw, maxRaidus)
   path.moveTo(x+w+ne, y)
-  path.arcTo(x,   y,   x,   y+h,   nw)
-  path.arcTo(x,   y+h, x+w, y+h,   sw)
+  path.arcTo(x, y, x, y+h, nw)
+  path.arcTo(x, y+h, x+w, y+h, sw)
   path.arcTo(x+w, y+h, x+w, y, se)
-  path.arcTo(x+w, y,   x,   y, ne)
+  path.arcTo(x+w, y, x, y, ne)
   path.closePath()
 
 proc markDirty*(node: Node, value = true) =
@@ -512,8 +518,16 @@ proc drawNodeInternal*(node: Node) =
         let
           r = node.cornerRadius
         path = newPath()
-        path.roundRect(x-outer,y-outer,w+outer*2,h+outer*2,r+outer,r+outer,r+outer,r+outer)
-        path.roundRectRev(x+inner,y+inner,w-inner*2,h-inner*2,r-inner,r-inner,r-inner,r-inner)
+        path.roundRect(
+          x-outer, y-outer,
+          w+outer*2, h+outer*2,
+          r+outer, r+outer, r+outer, r+outer
+        )
+        path.roundRectRev(
+          x+inner, y+inner,
+          w-inner*2, h-inner*2,
+          r-inner, r-inner, r-inner, r-inner
+        )
 
       elif node.rectangleCornerRadii.len == 4:
         # Rectangle with different corners.
@@ -523,23 +537,31 @@ proc drawNodeInternal*(node: Node) =
           ne = node.rectangleCornerRadii[1]
           se = node.rectangleCornerRadii[2]
           sw = node.rectangleCornerRadii[3]
-        path.roundRect(x-outer,y-outer,w+outer*2,h+outer*2,nw+outer,ne+outer,se+outer,sw+outer)
-        path.roundRectRev(x+inner,y+inner,w-inner*2,h-inner*2,nw-inner,ne-inner,se-inner,sw-inner)
+        path.roundRect(
+          x-outer, y-outer,
+          w+outer*2, h+outer*2,
+          nw+outer, ne+outer, se+outer, sw+outer
+        )
+        path.roundRectRev(
+          x+inner, y+inner,
+          w-inner*2, h-inner*2,
+          nw-inner, ne-inner, se-inner, sw-inner
+        )
 
       else:
         path = newPath()
-        path.moveTo(x-outer,   y-outer)
-        path.lineTo(x+w+outer, y-outer,  )
-        path.lineTo(x+w+outer, y+h+outer,)
-        path.lineTo(x-outer,   y+h+outer,)
-        path.lineTo(x-outer,   y-outer,  )
+        path.moveTo(x-outer, y-outer)
+        path.lineTo(x+w+outer, y-outer, )
+        path.lineTo(x+w+outer, y+h+outer, )
+        path.lineTo(x-outer, y+h+outer, )
+        path.lineTo(x-outer, y-outer, )
         path.closePath()
 
-        path.moveTo(x+inner,   y+inner)
-        path.lineTo(x+inner,   y+h-inner)
+        path.moveTo(x+inner, y+inner)
+        path.lineTo(x+inner, y+h-inner)
         path.lineTo(x+w-inner, y+h-inner)
         path.lineTo(x+w-inner, y+inner)
-        path.lineTo(x+inner,   y+inner)
+        path.lineTo(x+inner, y+inner)
         path.closePath()
 
       strokeMask.fillPath(
@@ -884,13 +906,12 @@ proc drawNodeScreen(node: Node) =
       #     if rgba.a == 255 and region.blendMode == bmNormal:
       #       break
 
-
       for regionIdx, region in regions:
         #if x == 100 and y == 100:
           #print region.maskUntil
         let
-            atX = x - region.x.int
-            atY = y - region.y.int
+          atX = x - region.x.int
+          atY = y - region.y.int
 
         if region.maskUntil > 0:
           var mask: uint8

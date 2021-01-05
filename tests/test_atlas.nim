@@ -1,4 +1,4 @@
-import fidget2/atlas, pixie, chroma
+import chroma, fidget2/atlas, pixie
 
 var mainAtlas = newCpuAtlas(1024, 1)
 

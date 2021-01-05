@@ -1,4 +1,4 @@
-import chroma, os, fidget2, pixie, strutils, strformat, cligen, times
+import chroma, cligen, fidget2, os, pixie, strformat, strutils, times
 
 var files = @[
   (

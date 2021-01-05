@@ -1,4 +1,4 @@
-import pixie, chroma, vmath, bumpy, print, random
+import bumpy, chroma, pixie, print, random, vmath
 
 var aaCount = 0
 
@@ -111,14 +111,13 @@ proc testCase(a0, b0: Vec2): float32 =
   pathImage.fillPath(p, rgba(0, 0, 0, 255))
   image.draw(pathImage, vec2(50, 50))
 
-
   var cover2 = 0.0
   for x in 0 ..< 100:
     for y in 0 ..< 100:
       if overlap(
         segment(a0, b0),
         segment(vec2(-1E6, y.float32 + 50), vec2(x.float32 + 50, y.float32 + 50))):
-          cover2 += 1/100.0/100.0
+        cover2 += 1/100.0/100.0
 
   # let
   #   aError = not(aI.x >= 0 and aI.x <= 1 and aI.y >= 0 and aI.y <= 1)

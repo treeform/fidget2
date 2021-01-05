@@ -1,4 +1,4 @@
-import chroma, pixie, math, vmath, glsl, gpushader, gpurender, pixie, schema
+import chroma, glsl, gpurender, gpushader, math, pixie, schema, vmath
 
 proc drawCompleteZpuFrame*(node: Node): pixie.Image =
   setupRender(node)

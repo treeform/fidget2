@@ -1,4 +1,4 @@
-import fidget2, strutils, chroma, strformat
+import chroma, fidget2, strformat, strutils
 
 use("https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa")
 

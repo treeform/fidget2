@@ -1,10 +1,10 @@
-import schema, httpclient, json, tables, os, strutils, strformat, globs
+import globs, httpclient, json, os, schema, strformat, strutils, tables
 
 var
-  figmaFile*: FigmaFile                 ## Main figma file.
-  figmaFileKey*: string                 ## Users figma key (keep private)
-  globTree*: GlobTree[Node]             ## Glob tree for faster find access.
-  imageRefToUrl: Table[string, string]  ## Mapping of image IDs to URLs.
+  figmaFile*: FigmaFile                ## Main figma file.
+  figmaFileKey*: string                ## Users figma key (keep private)
+  globTree*: GlobTree[Node]            ## Glob tree for faster find access.
+  imageRefToUrl: Table[string, string] ## Mapping of image IDs to URLs.
 
 proc downloadImageRef*(imageRef: string) =
   ## Make sure imageRef is downloaded.

@@ -1,4 +1,4 @@
-import vmath, fidget2/glsl, print
+import fidget2/glsl, print, vmath
 
 proc basic2dVert*(vertexPox: Vec2, gl_Position: var Vec4) =
   ## Simplest possible shader to put vertex on screen.
@@ -254,7 +254,10 @@ proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
   if fillMask * mask > 0:
-    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask))
+    backdropColor = blendNormalFloats(
+      backdropColor,
+      vec4(r, g, b, a * fillMask * mask)
+    )
 
 proc normPdf(x: float, sigma: float32): float32 =
   ## Normal Probability Density Function (used for shadow and blurs)
@@ -278,13 +281,11 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
         let v = normPdf((x).float32, sigma)
         kernel[kSize + x] = v
         kernel[kSize - x] = v
-      print kernel
 
       var zNormal = 0.0 # Total for normalization
       for x in 0 ..< mSize:
         for y in 0 ..< mSize:
           zNormal = zNormal + kernel[x]*kernel[y]
-      print zNormal
 
       var combinedShadow = 0.0
 
@@ -294,18 +295,15 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
             offset = vec2(x.float32, y.float32) - shadowOffset
             kValue = kernel[kSize + x] * kernel[kSize + y]
             uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5) + offset, 1)).xy
-          print kValue
           if uv.x > pos.x and uv.x < pos.x + size.x and
             uv.y > pos.y and uv.y < pos.y + size.y:
             let textureColor = texture(textureAtlasSampler, uv).w
-            print textureColor
             combinedShadow += textureColor * kValue
 
       combinedShadow = combinedShadow / zNormal
       var combinedColor = shadowColor
       combinedColor.w = combinedShadow * mask
       backdropColor = blendNormalFloats(backdropColor, combinedColor)
-
 
     if layerBlur > 0:
 
@@ -318,13 +316,11 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
         let v = normpdf((x).float32, sigma)
         kernel[kSize + x] = v
         kernel[kSize - x] = v
-      print kernel
 
       var zNormal = 0.0 # Total for normalization
       for x in 0 ..< mSize:
         for y in 0 ..< mSize:
           zNormal = zNormal + kernel[x]*kernel[y]
-      print zNormal
 
       var combinedColor = vec4(0)
 
@@ -335,11 +331,9 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
             offset = vec2(x.float32, y.float32)
             kValue = kernel[kSize + x] * kernel[kSize + y]
             uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5) + offset, 1)).xy
-          print kValue
           if uv.x > pos.x and uv.x < pos.x + size.x and
             uv.y > pos.y and uv.y < pos.y + size.y:
             let textureColor = texture(textureAtlasSampler, uv)
-            print textureColor
             combinedColor += textureColor * kValue
             colorAdj += kValue
 
@@ -349,7 +343,6 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
         combinedColor.z = combinedColor.z / colorAdj
       combinedColor.w = combinedColor.w / zNormal
       # combinedColor.w *= mask
-      print combinedColor
       backdropColor = blendNormalFloats(backdropColor, combinedColor)
 
     else:
@@ -410,7 +403,7 @@ proc gradientStop(k, r, g, b, a: float32) =
 
 proc startPath(rule: float32) =
   ## Clear the status of things and start a new path.
-  crossCountMat = mat4(0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0)
+  crossCountMat = mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
   fillMask = 0
   windingRule = rule.int
 
@@ -448,19 +441,19 @@ proc L(x, y: float32) =
 
 proc C(x1, y1, x2, y2, x, y: float32) =
   ## SVG cubic Curve command.
-  bezier(vec2(x0,y0), vec2(x1,y1), vec2(x2,y2), vec2(x,y))
+  bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y))
   x0 = x
   y0 = y
 
 proc Q(x1, y1, x, y: float32) =
   ## SVG Quadratic curve command.
-  quadratic(vec2(x0,y0), vec2(x1,y1), vec2(x,y))
+  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y))
   x0 = x
   y0 = y
 
 proc z() =
   ## SVG style end of shape command.
-  line(vec2(x0, y0), vec2(x1,y1))
+  line(vec2(x0, y0), vec2(x1, y1))
 
 proc overlap*(minA, maxA, minB, maxB: Vec2): bool =
   ## Test overlap: rect vs rect.
@@ -673,17 +666,17 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   y1 = 0
   topIndex = 0
 
-  crossCountMat = mat4(0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0)
+  crossCountMat = mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-  mat = mat3(0,0,0, 0,0,0, 0,0,0)
+  mat = mat3(0, 0, 0, 0, 0, 0, 0, 0, 0)
 
   gradientK = 0
   prevGradientK = 0
-  prevGradientColor = vec4(0,0,0,0)
+  prevGradientColor = vec4(0, 0, 0, 0)
 
   layerBlur = 0.0
   shadowOn = false
-  shadowColor = vec4(0,0,0,0)
+  shadowColor = vec4(0, 0, 0, 0)
   shadowOffset = vec2(0, 0)
   shadowRadius = 0.0
   shadowSpread = 0.0

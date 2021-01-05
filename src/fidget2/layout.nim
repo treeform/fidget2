@@ -1,4 +1,4 @@
-import schema, vmath, bumpy
+import bumpy, schema, vmath
 
 proc computeLayout*(parent, node: Node) =
   ## Computes constraints and auto-layout.

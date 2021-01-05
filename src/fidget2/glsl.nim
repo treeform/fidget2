@@ -1,6 +1,6 @@
 ## Shader macro, converts nim code into GLSL
 
-import macros, strutils, vmath, tables, pixie, chroma, print
+import chroma, macros, pixie, print, strutils, tables, vmath
 
 proc show(n: NimNode): string =
   result.add $n.kind
@@ -554,7 +554,6 @@ proc gatherFunction(
             defStr.addSmart ';'
             globals[name] = defStr
 
-
     if n.kind == nnkCall:
       # Looking for functions.
       let procName = n[0].strVal()
@@ -593,7 +592,11 @@ macro toShader*(s: typed, version = "410", precision = "highp float"): string =
   code.add "\n"
   for k, v in functions:
     var funCode = v.split(" {")[0]
-    funCode = funCode.replace("\n", "").replace("  ", " ").replace(",  ", ", ").replace("( ", "(")
+    funCode = funCode
+      .replace("\n", "")
+      .replace("  ", " ")
+      .replace(",  ", ", ")
+      .replace("( ", "(")
     code.add funCode
     code.addSmart ';'
     code.add "\n"
@@ -695,7 +698,6 @@ proc `zmod`*(a, b: Vec4): Vec4 =
   result.z = zmod(a.y, b.z)
   result.w = zmod(a.w, b.w)
 
-
 proc `*`*(m: Mat4, v: Vec4): Vec4 =
   vec4(m * v.xyz, 1.0)
 
@@ -710,7 +712,8 @@ proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): Vec4 =
   vec4(buffer.data[index], 0, 0, 0)
 
 proc texture*(buffer: Uniform[Sampler2D], pos: Vec2): Vec4 =
-  let pos = pos - vec2(0.5 / buffer.image.width.float32, 0.5 / buffer.image.height.float32)
+  let pos = pos - vec2(0.5 / buffer.image.width.float32, 0.5 /
+      buffer.image.height.float32)
   buffer.image.getRgbaSmooth(
     ((pos.x mod 1.0) * buffer.image.width.float32),
     ((pos.y mod 1.0) * buffer.image.height.float32)

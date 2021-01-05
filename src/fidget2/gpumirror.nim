@@ -1,16 +1,16 @@
-import staticglfw, opengl, math, schema, gpurender, pixie, vmath, bumpy,
-  loader, typography, typography/textboxes, tables, input, unicode, sequtils,
-  strformat, sequtils, globs, algorithm, json, zpurender
+import algorithm, bumpy, globs, gpurender, input, json, loader, math, opengl,
+    pixie, schema, sequtils, staticglfw, strformat, tables, typography,
+    typography/textboxes, unicode, vmath, zpurender
 
 export textboxes
 
 type
   KeyState* = enum
-    ksEmpty   ## Nothing.
-    ksUp      ## Key was help this frame..
-    ksDown    ## Key was just held down this frame.
-    ksRepeat  ## Os wants the key to repeat (while typing and holding).
-    ksPress   ## The key is held down right now.
+    ksEmpty  ## Nothing.
+    ksUp     ## Key was help this frame..
+    ksDown   ## Key was just held down this frame.
+    ksRepeat ## Os wants the key to repeat (while typing and holding).
+    ksPress  ## The key is held down right now.
 
   MouseCursorStyle* = enum
     Default
@@ -70,11 +70,11 @@ var
   fullscreen* = false
   running*, focused*, minimized*: bool
   windowLogicalSize*: Vec2 ## Screen size in logical coordinates.
-  windowSize*: Vec2    ## Screen coordinates
-  windowFrame*: Vec2   ## Pixel coordinates
+  windowSize*: Vec2        ## Screen coordinates
+  windowFrame*: Vec2       ## Pixel coordinates
   dpi*: float32
-  pixelRatio*: float32 ## Multiplier to convert from screen coords to pixels
-  pixelScale*: float32 ## Pixel multiplier user wants on the UI
+  pixelRatio*: float32     ## Multiplier to convert from screen coords to pixels
+  pixelScale*: float32     ## Pixel multiplier user wants on the UI
 
 proc display()
 
@@ -244,7 +244,7 @@ template onEdit*(body: untyped) =
             body
             thisNode = nil
             textBox.hasChange = false
-    )
+  )
 
 template onUnfocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.

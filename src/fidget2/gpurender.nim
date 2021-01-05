@@ -1,6 +1,5 @@
-import atlas, pixie, tables, print, chroma,
-  math, opengl, staticglfw, vmath, glsl, gpushader, math,
-  pixie, tables, typography, schema, bumpy, loader, layout, typography/textboxes
+import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
+    pixie, print, schema, staticglfw, tables, typography, typography/textboxes, vmath
 
 var
   # Window stuff.
@@ -48,9 +47,8 @@ var
   vertShaderSrc = toShader(basic2dVert, "300 es")
   fragShaderSrc = toShader(svgMain, "300 es")
 
-  vertShaderArray = allocCStringArray([vertShaderSrc])  # dealloc'd at the end
-  fragShaderArray = allocCStringArray([fragShaderSrc])  # dealloc'd at the end
-
+  vertShaderArray = allocCStringArray([vertShaderSrc]) # dealloc'd at the end
+  fragShaderArray = allocCStringArray([fragShaderSrc]) # dealloc'd at the end
 
 proc updateGpuAtlas() =
   ## Upload the atlas to the GPU (if its dirty).
@@ -87,7 +85,7 @@ proc setupRender*(frameNode: Node) =
       number(c)
   number(frameNode)
 
-proc errorWarningCheck(name: string, shaderId: GLuint, compile=true) =
+proc errorWarningCheck(name: string, shaderId: GLuint, compile = true) =
   # Check vertex compilation error, warning and status.
   var isCompiled: GLint
   if compile:
@@ -143,19 +141,25 @@ proc createWindow*(
   # Bind the vertices.
   glGenBuffers(1, vertexVBO.addr)
   glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
-  glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
+  glBufferData(
+    GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
 
   # The array to draw a single quad.
   glGenVertexArrays(1, vao.addr)
   glBindVertexArray(vao)
-  glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
   glVertexAttribPointer(0, 2, cGL_FLOAT, GL_FALSE, 0, nil)
   glEnableVertexAttribArray(0)
 
   # Command buffer object and its "texture".
   glGenBuffers(1, dataBufferId.addr)
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
-  glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
+  glBufferData(
+    GL_TEXTURE_BUFFER,
+    dataBufferSeq.len * 4,
+    dataBufferSeq[0].addr,
+    GL_STATIC_DRAW
+  )
   glActiveTexture(GL_TEXTURE0)
   glGenTextures(1, dataBufferTextureId.addr)
   glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
@@ -195,15 +199,15 @@ proc createWindow*(
 
   # Attach to a GL program.
   shaderProgram = glCreateProgram()
-  glAttachShader(shaderProgram, vertShader);
-  glAttachShader(shaderProgram, fragShader);
+  glAttachShader(shaderProgram, vertShader)
+  glAttachShader(shaderProgram, fragShader)
 
   # Insert locations.
-  glBindAttribLocation(shaderProgram, 0, "vertexPos");
+  glBindAttribLocation(shaderProgram, 0, "vertexPos")
 
   # Link shader.
-  glLinkProgram(shaderProgram);
-  errorWarningCheck("fragment", fragShader, compile=false)
+  glLinkProgram(shaderProgram)
+  errorWarningCheck("fragment", fragShader, compile = false)
 
   # Use the program.
   glUseProgram(shaderProgram)
@@ -322,7 +326,6 @@ proc drawEllipse(pos, size: Vec2) =
     cmdC, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
     cmdz,
   ]
-
 
 proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
   ## Draw an rounded corner rectangle using cubic curves.
@@ -474,7 +477,7 @@ proc readyImages*(node: Node) =
           image = readImage("figma/images/" & paint.imageRef & ".png")
         except IOError, PixieError:
           echo "Issue loading image: ", node.name
-          image = newImage(1,1)
+          image = newImage(1, 1)
         textureAtlas.put(paint.imageRef, image)
 
   for paint in node.fills:
@@ -1011,7 +1014,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   screen.flipVertical()
   return screen
 
-proc readGpuPixelsFromAtlas*(name: string, crop=true): pixie.Image =
+proc readGpuPixelsFromAtlas*(name: string, crop = true): pixie.Image =
   ## Read the GPU pixels from atlas
   ## Note: Very slow even for debugging and tests as it needs to read
   ## the whole atlas back into memory.

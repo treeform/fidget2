@@ -1,4 +1,4 @@
-import fidget2, chroma, chrono
+import chroma, chrono, fidget2
 
 type
   FlightType = enum

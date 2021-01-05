@@ -1,4 +1,4 @@
-import fidget2, bumpy
+import bumpy, fidget2
 
 use("https://www.figma.com/file/fn8PBPmPXOHAVn3N5TSTGs")
 

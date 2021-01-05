@@ -1,4 +1,4 @@
-import fidget2, strutils, chroma, strformat
+import chroma, fidget2, strformat, strutils
 
 proc setVariant(node: Node, name, value: string) =
   if name == "State":

@@ -1,4 +1,4 @@
-import tables, chroma, vmath, pixie, jsony, bumpy, strutils, typography
+import bumpy, chroma, jsony, pixie, strutils, tables, typography, vmath
 
 type
   FidgetError* = object of ValueError ## Raised if an operation fails.
@@ -121,11 +121,11 @@ type
     saCenter
 
   Node* = ref object
-    id*: string ## A string uniquely identifying this node within the document.
-    name*: string ## The name given to the node by the user in the tool.
+    id*: string     ## A string uniquely identifying this node within the document.
+    name*: string   ## The name given to the node by the user in the tool.
     kind*: NodeKind ## The type of the node, refer to table below for details.
     opacity*: float32
-    visible*: bool ## default true, Whether or not the node is visible on the canvas.
+    visible*: bool  ## default true, Whether or not the node is visible on the canvas.
     #pluginData: JsonNode ## Data written by plugins that is visible only to the plugin that wrote it. Requires the `pluginData` to include the ID of the plugin.
     #sharedPluginData: JsonNode ##  Data written by plugins that is visible to all plugins. Requires the `pluginData` parameter to include the string "shared".
     blendMode*: BlendMode
@@ -240,7 +240,7 @@ proc enumHook(s: string, v: var BlendMode) =
 
 proc enumHook(s: string, v: var TextCase) =
   v = case s:
-    of "UPPER":  tcUpper
+    of "UPPER": tcUpper
     of "LOWER": tcLower
     of "TITLE": tcTitle
     # TODO add:
