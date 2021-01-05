@@ -29,6 +29,7 @@ vec4 backdropColor;
 
 void gradientRadial(vec2 at0, vec2 to0);
 void draw();
+float normPdf(float x, float sigma);
 void solidFill(float r, float g, float b, float a);
 float zmod(float a, float b);
 void C(float x1, float y1, float x2, float y2, float x, float y);
@@ -36,15 +37,14 @@ void gradientLinear(vec2 at0, vec2 to0);
 float toLineSpace(vec2 at, vec2 to, vec2 point);
 void gradientStop(float k, float r, float g, float b, float a);
 void z();
-float normpdf(float x, float sigma);
+void Q(float x1, float y1, float x, float y);
 vec4 blendNormalFloats(vec4 backdrop, vec4 source);
 void quadratic(vec2 p0, vec2 p1, vec2 p2);
 void startPath(float rule);
 float pixelCross(vec2 a0, vec2 b0);
-void Q(float x1, float y1, float x, float y);
 bool overlap(vec2 minA, vec2 maxA, vec2 minB, vec2 maxB);
-void textureFill(mat3 tMat, float tile, vec2 pos, vec2 size);
 void runCommands();
+void textureFill(mat3 tMat, float tile, vec2 pos, vec2 size);
 vec2 interpolate(vec2 G1, vec2 G2, vec2 G3, vec2 G4, float t);
 float lineDir(vec2 a, vec2 b);
 void bezier(vec2 A, vec2 B, vec2 C, vec2 D);
@@ -61,6 +61,7 @@ void gradientRadial(
   vec2 at0,
   vec2 to0
 ) {
+  // Setup color for radial gradient.
   if (0.0 < fillMask * mask) {
     vec2 at = (mat * vec3(at0, 1.0)).xy;
     vec2 to = (mat * vec3(to0, 1.0)).xy;
@@ -86,6 +87,14 @@ void draw(
   } else {
     fillMask = clamp(abs(fillMask), 0.0, 1.0);
   }
+}
+
+float normPdf(
+  float x,
+  float sigma
+) {
+  // Normal Probability Density Function (used for shadow and blurs)
+  return float(0.39894 * exp(-0.5 * x * x / float(sigma * sigma)) / float(sigma));
 }
 
 void solidFill(
@@ -125,6 +134,7 @@ void gradientLinear(
   vec2 at0,
   vec2 to0
 ) {
+  // Setup color for linear gradient.
   if (0.0 < fillMask) {
     vec2 at = (mat * vec3(at0, 1.0)).xy;
     vec2 to = (mat * vec3(to0, 1.0)).xy;
@@ -137,6 +147,7 @@ float toLineSpace(
   vec2 to,
   vec2 point
 ) {
+  // Covert a point to be in the line space (used for gradients).
   vec2 d = to - at;
   float det = d.x * d.x + d.y * d.y;
   return ((d.y) * (point.y - at.y) + (d.x) * (point.x - at.x)) / (det);
@@ -149,6 +160,7 @@ void gradientStop(
   float b,
   float a
 ) {
+  // Compute a gradient stop.
   if (0.0 < fillMask * mask) {
     vec4 gradientColor = vec4(r, g, b, a);
     if ((prevGradientK < gradientK) && (gradientK <= k)) {
@@ -168,17 +180,23 @@ void z(
   line(vec2(x0, y0), vec2(x1, y1));
 }
 
-float normpdf(
+void Q(
+  float x1,
+  float y1,
   float x,
-  float sigma
+  float y
 ) {
-  return float(0.39894 * exp(-0.5 * x * x / float(sigma * sigma)) / float(sigma));
+  // SVG Quadratic curve command.
+  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
+  x0 = x;
+  y0 = y;
 }
 
 vec4 blendNormalFloats(
   vec4 backdrop,
   vec4 source
 ) {
+  // Do normal blend.
   return alphaFix(backdrop, source, source);
 }
 
@@ -243,18 +261,6 @@ float pixelCross(
   return 0.0;
 }
 
-void Q(
-  float x1,
-  float y1,
-  float x,
-  float y
-) {
-  // SVG Quadratic curve command.
-  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
-  x0 = x;
-  y0 = y;
-}
-
 bool overlap(
   vec2 minA,
   vec2 maxA,
@@ -263,111 +269,6 @@ bool overlap(
 ) {
   // Test overlap: rect vs rect.
   return ((minB.x <= maxA.x) && (minA.x <= maxB.x) && minB.y <= maxA.y) && (minA.y <= maxB.y);
-}
-
-void textureFill(
-  mat3 tMat,
-  float tile,
-  vec2 pos,
-  vec2 size
-) {
-  // Set the source color.
-  if (true || 0.0 < fillMask * mask) {
-    if (shadowOn) {
-      int mSize = int(shadowRadius) * 2 + 1;
-      int kSize = int(shadowRadius);
-      float[20] kernel;
-      float sigma = 1.9;
-      for(int x = 0; x <= kSize; x++) {
-        float v = normpdf(float(float(x)), float(sigma));
-        kernel[kSize + x] = v;
-        kernel[kSize - x] = v;
-      }
-
-      float zNormal = 0.0;
-      for(int x = 0; x < mSize; x++) {
-        for(int y = 0; y < mSize; y++) {
-          zNormal = zNormal + float(kernel[x] * kernel[y]);
-        }
-      }
-
-      float combinedShadow = 0.0;
-      for(int x = - (int(shadowRadius)); x <= int(shadowRadius); x++) {
-        for(int y = - (int(shadowRadius)); y <= int(shadowRadius); y++) {
-          vec2 offset = vec2(float(x), float(y)) - shadowOffset;
-          float kValue = kernel[kSize + x] * kernel[kSize + y];
-          vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
-
-          if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
-            float textureColor = texture(textureAtlasSampler, uv).w;
-
-            combinedShadow += float(textureColor * kValue);
-          }
-        }
-      }
-      combinedShadow = combinedShadow / zNormal;
-      vec4 combinedColor = shadowColor;
-      combinedColor.w = float(combinedShadow * float(mask));
-      backdropColor = blendNormalFloats(backdropColor, combinedColor);
-    }
-    if (0.0 < layerBlur) {
-      int mSize = int(layerBlur) * 2 + 1;
-      int kSize = int(layerBlur);
-      float[20] kernel;
-      float sigma = 1.9;
-      for(int x = 0; x <= kSize; x++) {
-        float v = normpdf(float(float(x)), float(sigma));
-        kernel[kSize + x] = v;
-        kernel[kSize - x] = v;
-      }
-
-      float zNormal = 0.0;
-      for(int x = 0; x < mSize; x++) {
-        for(int y = 0; y < mSize; y++) {
-          zNormal = zNormal + float(kernel[x] * kernel[y]);
-        }
-      }
-
-      vec4 combinedColor = vec4(0.0);
-      float colorAdj = 0.0;
-      for(int x = - (int(layerBlur)); x <= int(layerBlur); x++) {
-        for(int y = - (int(layerBlur)); y <= int(layerBlur); y++) {
-          vec2 offset = vec2(float(x), float(y));
-          float kValue = kernel[kSize + x] * kernel[kSize + y];
-          vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
-
-          if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
-            vec4 textureColor = texture(textureAtlasSampler, uv);
-
-            combinedColor += textureColor * kValue;
-            colorAdj += float(kValue);
-          }
-        }
-      }
-      if (! (colorAdj == 0.0)) {
-        combinedColor.x = float(float(combinedColor.x) / colorAdj);
-        combinedColor.y = float(float(combinedColor.y) / colorAdj);
-        combinedColor.z = float(float(combinedColor.z) / colorAdj);
-      }
-      combinedColor.w = float(float(combinedColor.w) / zNormal);
-
-      backdropColor = blendNormalFloats(backdropColor, combinedColor);
-    } else {
-      vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5), 1.0)).xy;
-      if (tile == 0.0) {
-        if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
-          vec4 textureColor = texture(textureAtlasSampler, uv);
-          textureColor.w *= fillMask * mask;
-          backdropColor = blendNormalFloats(backdropColor, textureColor);
-        }
-      } else {
-        uv = mod(uv - pos, size) + pos;
-        vec4 textureColor = texture(textureAtlasSampler, uv);
-        textureColor.w *= fillMask * mask;
-        backdropColor = blendNormalFloats(backdropColor, textureColor);
-      }
-    }
-  }
 }
 
 void runCommands(
@@ -507,6 +408,111 @@ void runCommands(
   }
 }
 
+void textureFill(
+  mat3 tMat,
+  float tile,
+  vec2 pos,
+  vec2 size
+) {
+  // Set the source color.
+  if (true || 0.0 < fillMask * mask) {
+    if (shadowOn) {
+      int mSize = int(shadowRadius) * 2 + 1;
+      int kSize = int(shadowRadius);
+      float[20] kernel;
+      float sigma = 1.9;
+      for(int x = 0; x <= kSize; x++) {
+        float v = normPdf(float(float(x)), float(sigma));
+        kernel[kSize + x] = v;
+        kernel[kSize - x] = v;
+      }
+
+      float zNormal = 0.0;
+      for(int x = 0; x < mSize; x++) {
+        for(int y = 0; y < mSize; y++) {
+          zNormal = zNormal + float(kernel[x] * kernel[y]);
+        }
+      }
+
+      float combinedShadow = 0.0;
+      for(int x = - (int(shadowRadius)); x <= int(shadowRadius); x++) {
+        for(int y = - (int(shadowRadius)); y <= int(shadowRadius); y++) {
+          vec2 offset = vec2(float(x), float(y)) - shadowOffset;
+          float kValue = kernel[kSize + x] * kernel[kSize + y];
+          vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
+
+          if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
+            float textureColor = texture(textureAtlasSampler, uv).w;
+
+            combinedShadow += float(textureColor * kValue);
+          }
+        }
+      }
+      combinedShadow = combinedShadow / zNormal;
+      vec4 combinedColor = shadowColor;
+      combinedColor.w = float(combinedShadow * float(mask));
+      backdropColor = blendNormalFloats(backdropColor, combinedColor);
+    }
+    if (0.0 < layerBlur) {
+      int mSize = int(layerBlur) * 2 + 1;
+      int kSize = int(layerBlur);
+      float[20] kernel;
+      float sigma = 1.9;
+      for(int x = 0; x <= kSize; x++) {
+        float v = normPdf(float(float(x)), float(sigma));
+        kernel[kSize + x] = v;
+        kernel[kSize - x] = v;
+      }
+
+      float zNormal = 0.0;
+      for(int x = 0; x < mSize; x++) {
+        for(int y = 0; y < mSize; y++) {
+          zNormal = zNormal + float(kernel[x] * kernel[y]);
+        }
+      }
+
+      vec4 combinedColor = vec4(0.0);
+      float colorAdj = 0.0;
+      for(int x = - (int(layerBlur)); x <= int(layerBlur); x++) {
+        for(int y = - (int(layerBlur)); y <= int(layerBlur); y++) {
+          vec2 offset = vec2(float(x), float(y));
+          float kValue = kernel[kSize + x] * kernel[kSize + y];
+          vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
+
+          if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
+            vec4 textureColor = texture(textureAtlasSampler, uv);
+
+            combinedColor += textureColor * kValue;
+            colorAdj += float(kValue);
+          }
+        }
+      }
+      if (! (colorAdj == 0.0)) {
+        combinedColor.x = float(float(combinedColor.x) / colorAdj);
+        combinedColor.y = float(float(combinedColor.y) / colorAdj);
+        combinedColor.z = float(float(combinedColor.z) / colorAdj);
+      }
+      combinedColor.w = float(float(combinedColor.w) / zNormal);
+
+      backdropColor = blendNormalFloats(backdropColor, combinedColor);
+    } else {
+      vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5), 1.0)).xy;
+      if (tile == 0.0) {
+        if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
+          vec4 textureColor = texture(textureAtlasSampler, uv);
+          textureColor.w *= fillMask * mask;
+          backdropColor = blendNormalFloats(backdropColor, textureColor);
+        }
+      } else {
+        uv = mod(uv - pos, size) + pos;
+        vec4 textureColor = texture(textureAtlasSampler, uv);
+        textureColor.w *= fillMask * mask;
+        backdropColor = blendNormalFloats(backdropColor, textureColor);
+      }
+    }
+  }
+}
+
 vec2 interpolate(
   vec2 G1,
   vec2 G2,
@@ -526,6 +532,7 @@ float lineDir(
   vec2 a,
   vec2 b
 ) {
+  // Return the direction of the line (up or down).
   if (0.0 < a.y - b.y) {
     return 1.0;
   } else {
@@ -625,6 +632,7 @@ vec4 alphaFix(
   vec4 source,
   vec4 mixed
 ) {
+  // After blending the color adjust their colors by alpha.
   vec4 res = vec4(0.0);
   res.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
   if (float(res.w) == 0.0) {
@@ -677,6 +685,7 @@ void line(
 vec4 runPixel(
   vec2 xy
 ) {
+  // Runs commands for a single pixel.
   screen = xy;
   backdropColor = vec4(0.0, 0.0, 0.0, 0.0);
   runCommands();

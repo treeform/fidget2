@@ -4,6 +4,7 @@ proc basic2dVert*(vertexPox: Vec2, gl_Position: var Vec4) =
   ## Simplest possible shader to put vertex on screen.
   gl_Position.xy = vertexPox
 
+## Main input data, command buffer and texture atlas.
 var dataBuffer*: Uniform[SamplerBuffer]
 var textureAtlasSampler*: Uniform[Sampler2d]
 
@@ -42,21 +43,25 @@ var
   fillMask: float32 = 0.0 # How much of the fill is visible.
   mat: Mat3               # Current transform matrix.
   tMat: Mat3              # Texture matrix.
+
   gradientK: float32      # Gradient constant 0 to 1.
-  prevGradientK: float32
-  prevGradientColor: Vec4
-  mask: float32 = 1.0
+  prevGradientK: float32  # What as the prev gradient K
+  prevGradientColor: Vec4 # Current gradient Color
 
-  topIndex*: float32
-  layerBlur: float32
+  mask: float32 = 1.0     # Current mask (from real masking not fill mask)
 
-  shadowOn: bool
+  topIndex*: float32      # Current top index (for mouse picking)
+
+  layerBlur: float32      # Layer blur param.
+
+  shadowOn: bool          # Draw the next node as a shadow?
   shadowColor: Vec4
   shadowOffset: Vec2
   shadowRadius: float32
   shadowSpread: float32
 
 proc lineDir(a, b: Vec2): float32 =
+  ## Return the direction of the line (up or down).
   if a.y - b.y > 0:
     # Count up if line is going up.
     return 1
@@ -222,6 +227,7 @@ proc quadratic(p0, p1, p2: Vec2) =
     p = pn
 
 proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
+  ## After blending the color adjust their colors by alpha.
   var res: Vec4
   res.w = (source.w + backdrop.w * (1.0 - source.w))
   if res.w == 0.0:
@@ -242,15 +248,17 @@ proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
   return res
 
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
+  ## Do normal blend.
   return alphaFix(backdrop, source, source)
-
-proc normpdf(x: float, sigma: float32): float32 =
-  return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
   if fillMask * mask > 0:
     backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask))
+
+proc normPdf(x: float, sigma: float32): float32 =
+  ## Normal Probability Density Function (used for shadow and blurs)
+  return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
@@ -267,7 +275,7 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
       var sigma = 2.0 - 0.1
 
       for x in 0 .. kSize:
-        let v = normpdf((x).float32, sigma)
+        let v = normPdf((x).float32, sigma)
         kernel[kSize + x] = v
         kernel[kSize - x] = v
       print kernel
@@ -294,11 +302,8 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
             combinedShadow += textureColor * kValue
 
       combinedShadow = combinedShadow / zNormal
-
       var combinedColor = shadowColor
       combinedColor.w = combinedShadow * mask
-      # combinedColor.w *= mask
-      # print combinedColor
       backdropColor = blendNormalFloats(backdropColor, combinedColor)
 
 
@@ -348,6 +353,8 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
       backdropColor = blendNormalFloats(backdropColor, combinedColor)
 
     else:
+
+      # Normal texture operation.
       var uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5), 1)).xy
       if tile == 0:
         if uv.x > pos.x and uv.x < pos.x + size.x and
@@ -362,12 +369,14 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
         backdropColor = blendNormalFloats(backdropColor, textureColor)
 
 proc toLineSpace(at, to, point: Vec2): float32 =
+  ## Covert a point to be in the line space (used for gradients).
   let
     d = to - at
     det = d.x*d.x + d.y*d.y
   return (d.y*(point.y-at.y)+d.x*(point.x-at.x))/det
 
 proc gradientLinear(at0, to0: Vec2) =
+  ## Setup color for linear gradient.
   if fillMask > 0:
     let
       at = (mat * vec3(at0, 1)).xy
@@ -375,6 +384,7 @@ proc gradientLinear(at0, to0: Vec2) =
     gradientK = toLineSpace(at, to, screen).clamp(0, 1)
 
 proc gradientRadial(at0, to0: Vec2) =
+  ## Setup color for radial gradient.
   if fillMask * mask > 0:
     let
       at = (mat * vec3(at0, 1)).xy
@@ -383,6 +393,7 @@ proc gradientRadial(at0, to0: Vec2) =
     gradientK = ((at - screen).length() / distance).clamp(0, 1)
 
 proc gradientStop(k, r, g, b, a: float32) =
+  ## Compute a gradient stop.
   if fillMask * mask > 0:
     let gradientColor = vec4(r, g, b, a)
     if gradientK > prevGradientK and gradientK <= k:
@@ -464,11 +475,17 @@ proc runCommands() =
   var i = 0
   while true:
     let command = texelFetch(dataBuffer, i).x
-    if command == cmdExit: break
+
+    if command == cmdExit:
+      break
+
     elif command == cmdStartPath:
       startPath(texelFetch(dataBuffer, i + 1).x)
       i += 1
-    elif command == cmdEndPath: endPath()
+
+    elif command == cmdEndPath:
+      endPath()
+
     elif command == cmdSolidFill:
       solidFill(
         texelFetch(dataBuffer, i + 1).x,
@@ -477,10 +494,12 @@ proc runCommands() =
         texelFetch(dataBuffer, i + 4).x
       )
       i += 4
+
     elif command == cmdApplyOpacity:
       let opacity = texelFetch(dataBuffer, i + 1).x
       backdropColor = backdropColor * opacity
       i += 1
+
     elif command == cmdTextureFill:
       tMat[0, 0] = texelFetch(dataBuffer, i + 1).x
       tMat[0, 1] = texelFetch(dataBuffer, i + 2).x
@@ -500,6 +519,7 @@ proc runCommands() =
       size.y = texelFetch(dataBuffer, i + 11).x
       textureFill(tMat, tile, pos, size)
       i += 11
+
     elif command == cmdGradientLinear:
       var at, to: Vec2
       at.x = texelFetch(dataBuffer, i + 1).x
@@ -508,6 +528,7 @@ proc runCommands() =
       to.y = texelFetch(dataBuffer, i + 4).x
       gradientLinear(at, to)
       i += 4
+
     elif command == cmdGradientRadial:
       var at, to: Vec2
       at.x = texelFetch(dataBuffer, i + 1).x
@@ -516,6 +537,7 @@ proc runCommands() =
       to.y = texelFetch(dataBuffer, i + 4).x
       gradientRadial(at, to)
       i += 4
+
     elif command == cmdGradientStop:
       gradientStop(
         texelFetch(dataBuffer, i + 1).x,
@@ -525,6 +547,7 @@ proc runCommands() =
         texelFetch(dataBuffer, i + 5).x
       )
       i += 5
+
     elif command == cmdSetMat:
       mat[0, 0] = texelFetch(dataBuffer, i + 1).x
       mat[0, 1] = texelFetch(dataBuffer, i + 2).x
@@ -536,18 +559,21 @@ proc runCommands() =
       mat[2, 1] = texelFetch(dataBuffer, i + 6).x
       mat[2, 2] = 1
       i += 6
+
     elif command == cmdM:
       M(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x
       )
       i += 2
+
     elif command == cmdL:
       L(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x
       )
       i += 2
+
     elif command == cmdC:
       C(
         texelFetch(dataBuffer, i + 1).x,
@@ -558,6 +584,7 @@ proc runCommands() =
         texelFetch(dataBuffer, i + 6).x
       )
       i += 6
+
     elif command == cmdQ:
       Q(
         texelFetch(dataBuffer, i + 1).x,
@@ -566,7 +593,10 @@ proc runCommands() =
         texelFetch(dataBuffer, i + 4).x,
       )
       i += 4
-    elif command == cmdz: z()
+
+    elif command == cmdz:
+      z()
+
     elif command == cmdBoundCheck:
       # Jump over code if screen not in bounds
       var
@@ -599,16 +629,20 @@ proc runCommands() =
 
     elif command == cmdMaskFill:
       mask = fillMask
+
     elif command == cmdMaskClear:
       mask = 1.0
+
     elif command == cmdIndex:
       let index = texelFetch(dataBuffer, i + 1).x
       if fillMask * mask > 0:
         topIndex = index
       i += 1
+
     elif command == cmdLayerBlur:
       layerBlur = texelFetch(dataBuffer, i + 1).x
       i += 1
+
     elif command == cmdDropShadow:
       shadowOn = true
       shadowColor.x = texelFetch(dataBuffer, i + 1).x
@@ -624,6 +658,7 @@ proc runCommands() =
     i += 1
 
 proc runPixel(xy: Vec2): Vec4 =
+  ## Runs commands for a single pixel.
   screen = xy
   backdropColor = vec4(0, 0, 0, 0)
   runCommands()

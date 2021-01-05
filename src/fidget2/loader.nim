@@ -1,13 +1,13 @@
 import schema, httpclient, json, tables, os, strutils, strformat, globs
 
 var
-  figmaFile*: FigmaFile
-  figmaFileKey*: string
-  globTree*: GlobTree[Node]
-
-var imageRefToUrl: Table[string, string]
+  figmaFile*: FigmaFile                 ## Main figma file.
+  figmaFileKey*: string                 ## Users figma key (keep private)
+  globTree*: GlobTree[Node]             ## Glob tree for faster find access.
+  imageRefToUrl: Table[string, string]  ## Mapping of image IDs to URLs.
 
 proc downloadImageRef*(imageRef: string) =
+  ## Make sure imageRef is downloaded.
   if not fileExists("figma/images/" & imageRef & ".png"):
     if imageRef in imageRefToUrl:
       if not dirExists("figma/images"):
@@ -21,6 +21,8 @@ proc downloadImageRef*(imageRef: string) =
       echo "Image not in imageRefToUrl: " & imageRef
 
 proc getImageRefs*(fileKey: string) =
+  ## Download all imageRefs.
+  ## Note: Might download a bunch of useless junk.
   if not dirExists("figma/images"):
     createDir("figma/images")
 
@@ -38,6 +40,7 @@ proc getImageRefs*(fileKey: string) =
     imageRefToUrl[imageRef] = url.getStr()
 
 proc downloadFont*(fontPSName: string) =
+  ## Try to download the font by name, or ask user to provide it.
   if fileExists("figma/fonts/" & fontPSName & ".ttf"):
     return
 
@@ -69,6 +72,7 @@ proc downloadFont*(fontPSName: string) =
   echo &"Please download figma/fonts/{fontPSName}.ttf"
 
 proc figmaClient(): HttpClient =
+  ## Helper method to get a figma API client.
   var client = newHttpClient()
   client.headers = newHttpHeaders({"Accept": "*/*"})
   client.headers["User-Agent"] = "curl/7.58.0"
@@ -76,6 +80,7 @@ proc figmaClient(): HttpClient =
   return client
 
 proc download(figmaFileKey: string) =
+  ## Download a figma file based on the file key.
   let jsonPath = &"figma/{figmaFileKey}.json"
   let modifiedPath = &"figma/{figmaFileKey}.lastModified"
   if fileExists(modifiedPath):
@@ -95,6 +100,7 @@ proc download(figmaFileKey: string) =
   writeFile(jsonPath, pretty(json))
 
 proc rebuildGlobTree() =
+  ## Nodes have changed rebuild the glob tree.
   globTree = GlobTree[Node]()
   proc walkNodes(path: string, node: Node) =
     globTree.add(path, node)
@@ -104,16 +110,15 @@ proc rebuildGlobTree() =
     # Skip pages
     for c2 in c.children:
       walkNodes(c2.name, c2)
-  # for path in globTree.keys():
-  #   echo path
 
-proc use*(url: string) =
+proc use*(figmaUrl: string) =
+  ## Use the figma url as a new figmaFile.
+  ## Will download the full file if it needs to.
   if not dirExists("figma"):
     createDir("figma")
-  let figmaFileKey = url.split("/")[4]
+  let figmaFileKey = figmaUrl.split("/")[4]
   download(figmaFileKey)
   getImageRefs(figmaFileKey)
   var data = readFile(&"figma/{figmaFileKey}.json")
   figmaFile = parseFigmaFile(data)
-
   rebuildGlobTree()

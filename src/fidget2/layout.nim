@@ -41,6 +41,7 @@ proc computeLayout*(parent, node: Node) =
 
   node.size = node.box.wh
 
+  # TODO: Implement more of the layout.
   # # Typeset text
   # if node.kind == nkText:
   #   computeTextLayout(node)

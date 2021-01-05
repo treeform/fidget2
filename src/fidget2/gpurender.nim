@@ -748,7 +748,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
         let (inner, outer) = node.strokeInnerOuter()
 
         dataBufferSeq.add cmdStartPath
-        dataBufferSeq.add kNonZero
+        dataBufferSeq.add kEvenOdd
         if node.rectangleCornerRadii.len == 4:
           let r = node.rectangleCornerRadii
           drawRect(
@@ -791,7 +791,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
       if node.strokes.len > 0:
         let (inner, outer) = node.strokeInnerOuter()
-        dataBufferSeq.add cmdStartPath
+        dataBufferSeq.add kEvenOdd
         dataBufferSeq.add kNonZero
         drawEllipse(node.size/2, node.size/2 + vec2(outer))
         drawEllipse(node.size/2, node.size/2 - vec2(inner))
