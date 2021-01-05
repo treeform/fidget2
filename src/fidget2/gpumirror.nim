@@ -6,11 +6,11 @@ export textboxes
 
 type
   KeyState* = enum
-    Empty
-    Up
-    Down
-    Repeat
-    Press # Used for text input
+    ksEmpty   ## Nothing.
+    ksUp      ## Key was help this frame..
+    ksDown    ## Key was just held down this frame.
+    ksRepeat  ## Os wants the key to repeat (while typing and holding).
+    ksPress   ## The key is held down right now.
 
   MouseCursorStyle* = enum
     Default
@@ -33,12 +33,9 @@ type
     ctrlKey*: bool
     shiftKey*: bool
     superKey*: bool
-    #focusNode*: Node (use textBoxFocus)
     onFocusNode*: Node
     onUnfocusNode*: Node
     input*: string
-    # textCursor*: int ## At which character in the input string are we
-    # selectionCursor*: int ## To which character are we selecting to
 
   EventCbKind* = enum
     eOnClick
@@ -82,6 +79,7 @@ var
 proc display()
 
 proc clearInputs*() =
+  ## Clear inputs that are only valid for 1 frame.
 
   mouse.wheelDelta = 0
   # Reset key and mouse press to default state
@@ -90,20 +88,24 @@ proc clearInputs*() =
     buttonRelease[i] = false
 
   if any(buttonDown, proc(b: bool): bool = b):
-    keyboard.state = KeyState.Down
+    keyboard.state = ksDown
   else:
-    keyboard.state = KeyState.Empty
+    keyboard.state = ksEmpty
 
   keyboard.onFocusNode = nil
   keyboard.onUnfocusNode = nil
 
 proc click*(mouse: Mouse): bool =
+  ## Was mouse just clicked?
   buttonPress[MOUSE_LEFT]
 
 proc down*(mouse: Mouse): bool =
+  ## Is the ouse button pressed down?
   buttonDown[MOUSE_LEFT]
 
 proc showPopup*(name: string) =
+  ## Pop up a given node as a popup.
+  ## TODO: implement.
   discard
 
 proc addCb*(
@@ -148,6 +150,8 @@ proc popSelector() =
   thisSelector = selectorStack.pop()
 
 template find*(glob: string, body: untyped) =
+  ## Sets the root to the glob, everything inside will be relative to
+  ## this glob pattern.
   pushSelector(glob)
   body
   popSelector()
@@ -208,12 +212,12 @@ proc setupTextBox(node: Node) =
     node.characters,
     node.style.textAlignHorizontal,
     node.style.textAlignVertical,
-    false, #node.multiline,
+    false, #TODO: node.multiline,
     worldWrap = true,
   )
+  # TODO: add these:
   #textBox.editable = node.editableText
   #textBox.scrollable = true
-  echo "textBox created"
 
 template onEdit*(body: untyped) =
   ## When text node is display or edited.
@@ -281,6 +285,7 @@ proc rect*(node: Node): Rect =
   result.h = node.absoluteBoundingBox.h
 
 proc updateWindowSize() =
+  ## Handle window resize.
   requestedFrame = true
 
   var cwidth, cheight: cint
@@ -306,16 +311,18 @@ proc updateWindowSize() =
   windowLogicalSize = windowSize / pixelScale * pixelRatio
 
 proc onResize(handle: staticglfw.Window, w, h: int32) {.cdecl.} =
+  ## Handle window resize glfw callback.
   updateWindowSize()
-  #updateLoop(poll = false)
   display()
 
 proc onFocus(window: staticglfw.Window, state: cint) {.cdecl.} =
+  ## Handle window focus glfw callback.
   focused = state == 1
 
 proc onSetKey(
   window: staticglfw.Window, key, scancode, action, modifiers: cint
 ) {.cdecl.} =
+  ## Handle keyboard button glfw callback.
   requestedFrame = true
   let setKey = action != RELEASE
 
@@ -326,7 +333,7 @@ proc onSetKey(
 
   # Do the text box commands.
   if textBox != nil and setKey:
-    keyboard.state = KeyState.Press
+    keyboard.state = ksPress
     let
       ctrl = keyboard.ctrlKey
       shift = keyboard.shiftKey
@@ -385,15 +392,17 @@ proc onSetKey(
     buttonDown[key] = setKey
 
 proc onSetCharCallback(window: staticglfw.Window, character: cuint) {.cdecl.} =
+  ## User typed a character, needed for unicode entry.
   requestedFrame = true
   if textBox != nil:
-    keyboard.state = KeyState.Press
+    keyboard.state = ksPress
     textBox.typeCharacter(Rune(character))
   else:
-    keyboard.state = KeyState.Press
+    keyboard.state = ksPress
     keyboard.keyString = Rune(character).toUTF8()
 
 proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
+  ## Scroll wheel glfw callback.
   requestedFrame = true
   if textBoxFocus != nil:
     textBox.scrollBy(-yoffset * 50)
@@ -403,6 +412,7 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
 proc onMouseButton(
   window: staticglfw.Window, button, action, modifiers: cint
 ) {.cdecl.} =
+  ## Mouse button glfw callback.
   requestedFrame = true
   let
     setKey = action != 0
@@ -415,6 +425,7 @@ proc onMouseButton(
     buttonRelease[button] = true
 
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
+  ## Mouse moved glfw callback.
   requestedFrame = true
 
 proc display() =
@@ -474,6 +485,7 @@ proc startFidget*(
 
   window.setWindowTitle(windowTitle)
 
+  # Setup glfw callbacks.
   discard window.setFramebufferSizeCallback(onResize)
   discard window.setWindowFocusCallback(onFocus)
   discard window.setKeyCallback(onSetKey)
@@ -482,7 +494,7 @@ proc startFidget*(
   discard window.setCursorPosCallback(onMouseMove)
   discard window.setCharCallback(onSetCharCallback)
 
-  # Sort callbacks
+  # Sort fidget user callbacks.
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
 
   # Run while window is open.

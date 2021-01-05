@@ -1,7 +1,8 @@
-import tables, bumpy, pixie, print
+import tables, bumpy, pixie
 
 type
   CpuAtlas* = ref object
+    ## Texture atlas.
     entries*: Table[string, Rect]
     image*: Image
     heights*: seq[uint16]
@@ -9,6 +10,7 @@ type
     dirty*: bool
 
 proc newCpuAtlas*(size, margin: int): CpuAtlas =
+  ## Creates a new CPU based texture atlas.
   result = CpuAtlas()
   result.image = newImage(size, size)
   result.margin = margin
@@ -17,6 +19,8 @@ proc newCpuAtlas*(size, margin: int): CpuAtlas =
 proc grow(atlas: CpuAtlas)
 
 proc findEmptyRect*(atlas: CpuAtlas, width, height: int): Rect =
+  ## Low level function to find an empty rectangle in the atlas,
+  ## or resizes it.
   var imgWidth = width + atlas.margin * 2
   var imgHeight = height + atlas.margin * 2
 
@@ -65,16 +69,18 @@ proc findEmptyRect*(atlas: CpuAtlas, width, height: int): Rect =
   return rect
 
 proc put*(atlas: CpuAtlas, name: string, image: Image) =
+  ## Adds an image to the atlas.
   let rect = atlas.findEmptyRect(image.width, image.height)
   atlas.entries[name] = rect
   atlas.image.draw(image, rect.xy, blendMode = bmOverwrite)
   atlas.dirty = true
 
-proc size(atlas: CpuAtlas): int =
+proc size*(atlas: CpuAtlas): int =
+  ## Returns the size of the atlas.
   atlas.image.width
 
 proc grow(atlas: CpuAtlas) =
-  print "**** grow ****", atlas.size*2
+  ## Grows the atlas by 2.
   var image = newImage(atlas.size*2, atlas.size*2)
   image.draw(atlas.image)
   atlas.image = image

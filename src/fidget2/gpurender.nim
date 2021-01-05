@@ -46,20 +46,15 @@ var
   dataBufferId: GLuint
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
-  #fragShaderSrc = readFile("bufferTest.glsl")
-  #fragShaderSrc = readFile("svg4.glsl")
   fragShaderSrc = toShader(svgMain, "300 es")
 
   vertShaderArray = allocCStringArray([vertShaderSrc])  # dealloc'd at the end
   fragShaderArray = allocCStringArray([fragShaderSrc])  # dealloc'd at the end
 
-  # Status variables
-  isCompiled: GLint
-  isLinked: GLint
 
 proc updateGpuAtlas() =
+  ## Upload the atlas to the GPU (if its dirty).
   if textureAtlas.dirty:
-    echo "upload atlas"
     glBindTexture(GL_TEXTURE_2D, textureAtlasId)
     glTexImage2D(
       GL_TEXTURE_2D,
@@ -75,6 +70,7 @@ proc updateGpuAtlas() =
     textureAtlas.dirty = false
 
 proc setupRender*(frameNode: Node) =
+  ## Setup the rendering of the frame.
   viewPortWidth = frameNode.absoluteBoundingBox.w.int
   viewPortHeight = frameNode.absoluteBoundingBox.h.int
   dataBufferSeq.setLen(0)
@@ -91,20 +87,41 @@ proc setupRender*(frameNode: Node) =
       number(c)
   number(frameNode)
 
+proc errorWarningCheck(name: string, shaderId: GLuint, compile=true) =
+  # Check vertex compilation error, warning and status.
+  var isCompiled: GLint
+  if compile:
+    glGetShaderiv(vertShader, GL_COMPILE_STATUS, isCompiled.addr)
+  else:
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, isCompiled.addr)
+
+  var logSize: GLint
+  glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, logSize.addr)
+  if logSize > 0:
+    var
+      logStr = cast[ptr GLchar](alloc(logSize))
+      logLen: GLsizei
+    glGetShaderInfoLog(vertShader, logSize.GLsizei, logLen.addr, logStr)
+    echo $logStr
+  if isCompiled == 0:
+    quit "Shader " & name & " wasn't compiled."
+
 proc createWindow*(
   frameNode: Node,
   offscreen = false,
   resizable = true
 ) =
+  ## Opens a new glfw window that is ready to draw into.
+  ## Also setups all the shaders and buffers.
 
   setupRender(frameNode)
   dataBufferSeq.add(cmdExit)
 
-  # init libraries
+  # Init glfw.
   if init() == 0:
     raise newException(Exception, "Failed to intialize GLFW")
 
-  # Open a window
+  # Open a window.
   windowHint(VISIBLE, (not offscreen).cint)
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
@@ -115,38 +132,36 @@ proc createWindow*(
     nil)
   window.makeContextCurrent()
 
-  # Load opengl
+  # Load opengl.
   loadExtensions()
 
-  # The data for (and about) OpenGL
-  # echo vertShaderSrc
-  # echo fragShaderSrc
-
+  ## Write shader file for debugging (very useful).
   writeFile("tmp.glsl", fragShaderSrc)
 
   glDisable(GL_MULTISAMPLE)
 
-  # Bind the vertices
+  # Bind the vertices.
   glGenBuffers(1, vertexVBO.addr)
   glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
   glBufferData(GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
 
-  # The array object
+  # The array to draw a single quad.
   glGenVertexArrays(1, vao.addr)
   glBindVertexArray(vao)
   glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
   glVertexAttribPointer(0, 2, cGL_FLOAT, GL_FALSE, 0, nil)
   glEnableVertexAttribArray(0)
 
+  # Command buffer object and its "texture".
   glGenBuffers(1, dataBufferId.addr)
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
   glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
-
   glActiveTexture(GL_TEXTURE0)
   glGenTextures(1, dataBufferTextureId.addr)
   glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
   glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, dataBufferId)
 
+  # Atlas texture.
   glActiveTexture(GL_TEXTURE1)
   glGenTextures(1, textureAtlasId.addr)
   glBindTexture(GL_TEXTURE_2D, textureAtlasId)
@@ -154,7 +169,6 @@ proc createWindow*(
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-
   glTexImage2D(
     GL_TEXTURE_2D,
     0,
@@ -167,79 +181,40 @@ proc createWindow*(
     textureAtlas.image.data[0].addr
   )
 
-  # Compile shaders
-  # Vertex
+  # Compile Vertex.
   vertShader = glCreateShader(GL_VERTEX_SHADER)
   glShaderSource(vertShader, 1, vertShaderArray, nil)
   glCompileShader(vertShader)
-  glGetShaderiv(vertShader, GL_COMPILE_STATUS, isCompiled.addr)
+  errorWarningCheck("vertex", vertShader)
 
-  # Check vertex compilation status
-  block:
-    var logSize: GLint
-    glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, logSize.addr)
-    if logSize > 0:
-      var
-        logStr = cast[ptr GLchar](alloc(logSize))
-        logLen: GLsizei
-      glGetShaderInfoLog(vertShader, logSize.GLsizei, logLen.addr, logStr)
-      echo $logStr
-  if isCompiled == 0:
-    quit "Vertex Shader wasn't compiled."
-
-  # Fragment
+  # Compile Fragment.
   fragShader = glCreateShader(GL_FRAGMENT_SHADER)
   glShaderSource(fragShader, 1, fragShaderArray, nil)
   glCompileShader(fragShader)
-  glGetShaderiv(fragShader, GL_COMPILE_STATUS, isCompiled.addr)
+  errorWarningCheck("fragment", fragShader)
 
-  # Check Fragment compilation status
-  block:
-    var logSize: GLint
-    glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, logSize.addr)
-    if logSize > 0:
-      var
-        logStr = cast[ptr GLchar](alloc(logSize))
-        logLen: GLsizei
-      glGetShaderInfoLog(fragShader, logSize.GLsizei, logLen.addr, logStr)
-      echo($logStr)
-  if isCompiled == 0:
-    quit("Fragment Shader wasn't compiled.")
-
-  # Attach to a GL program
+  # Attach to a GL program.
   shaderProgram = glCreateProgram()
   glAttachShader(shaderProgram, vertShader);
   glAttachShader(shaderProgram, fragShader);
 
-  # insert locations
+  # Insert locations.
   glBindAttribLocation(shaderProgram, 0, "vertexPos");
 
+  # Link shader.
   glLinkProgram(shaderProgram);
+  errorWarningCheck("fragment", fragShader, compile=false)
 
-  # Check for shader linking errors
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, isLinked.addr)
-
-  block:
-    var logSize: GLint
-    glGetProgramiv(shaderProgram, GL_INFO_LOG_LENGTH, logSize.addr)
-    if logSize > 0:
-      var
-        logStr = cast[ptr GLchar](alloc(logSize))
-        logLen: GLsizei
-      glGetProgramInfoLog(shaderProgram, logSize.GLsizei, logLen.addr, logStr)
-      echo($logStr)
-  if isLinked == 0:
-    quit("Wasn't able to link shaders.")
-
-  echo "Shader compiled"
-
+  # Use the program.
   glUseProgram(shaderProgram)
 
+  # Set dataBuffer to 0th texture.
   var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
-  glUniform1i(dataBufferLoc, 0) # Set dataBuffer to 0th texture.
+  glUniform1i(dataBufferLoc, 0)
 
+  # Set textureAtlas to 1th texture.
   var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
-  glUniform1i(textureAtlasLoc, 1) # Set textureAtlas to 1th texture.
+  glUniform1i(textureAtlasLoc, 1)
 
   # Generate background frame buffer.
   glGenFramebuffers(1, backBufferId.addr)
@@ -279,11 +254,9 @@ proc transform(node: Node): Mat3 =
   result[0, 0] = node.relativeTransform[0][0]
   result[0, 1] = node.relativeTransform[1][0]
   result[0, 2] = 0
-
   result[1, 0] = node.relativeTransform[0][1]
   result[1, 1] = node.relativeTransform[1][1]
   result[1, 2] = 0
-
   result[2, 0] = node.box.x #node.relativeTransform[0][2]
   result[2, 1] = node.box.y #node.relativeTransform[1][2]
   result[2, 2] = 1
@@ -303,9 +276,11 @@ proc strokeInnerOuter(node: Node): (float32, float32) =
     outer = node.strokeWeight / 2
   return (inner, outer)
 
+# Magic constant that makes spline circle work.
 const splinyCirlce = 4.0 * (-1.0 + sqrt(2.0)) / 3
 
 proc drawEllipse(pos, size: Vec2) =
+  ## Draw an eclipse using cubic curves.
   let
     x = 0.0
     y = 0.0
@@ -350,6 +325,7 @@ proc drawEllipse(pos, size: Vec2) =
 
 
 proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
+  ## Draw an rounded corner rectangle using cubic curves.
   let
     x = pos.x
     y = pos.y
@@ -395,6 +371,7 @@ proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
   ]
 
 proc drawRect(pos, size: Vec2) =
+  ## Draw a simple rectangle using lines.
   let
     x = pos.x
     y = pos.y
@@ -410,6 +387,9 @@ proc drawRect(pos, size: Vec2) =
   ]
 
 proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
+  ## Takes a path and turn it into commands.
+  ## Including the windingRule.
+  ## Inserts cmdStartPath/cmdEndPath.
   dataBufferSeq.add cmdStartPath
   case windingRule
   of wrEvenOdd:
@@ -456,7 +436,7 @@ proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
   dataBufferSeq.add cmdEndPath
 
 proc drawGradientStops(paint: Paint) =
-  # Gradient stops
+  # Add Gradient stops.
   dataBufferSeq.add @[
     cmdGradientStop,
     -1E6,
@@ -505,6 +485,7 @@ proc readyImages*(node: Node) =
     c.readyImages()
 
 proc drawPaint(node: Node, paint: Paint) =
+  ## Draws the paint for the node.
   if not paint.visible:
     return
 
@@ -525,7 +506,7 @@ proc drawPaint(node: Node, paint: Paint) =
 
     assert paint.imageRef in textureAtlas.entries, "Run readyImages first."
     let rect = textureAtlas.entries[paint.imageRef]
-    let s = 1 / textureAtlas.image.width.float32
+    let s = 1 / textureAtlas.size.float32
 
     var tileImage = 0.0
     var tMat: Mat3
@@ -635,9 +616,10 @@ proc drawPaint(node: Node, paint: Paint) =
   ]
 
 proc computePixelBox*(node: Node) =
-
   ## Computes pixel bounds.
   ## Takes into account width, height and shadow extent, and children.
+  ## In node's own coordinate system.
+
   node.pixelBox.xy = vec2(0, 0)
   node.pixelBox.wh = node.size
 
@@ -694,13 +676,10 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   var prevOpacity = opacity
 
   if level == 0:
+    # Outside supplies level0 matrix.
+    # Identity if drawing to screen
+    # Location in the atlas when drawing to atlas.
     mat = rootMat
-    #mat.identity()
-    #mat = mat * translate(rootOffset)
-    # mat = mat * translate(vec2(
-    #   0,
-    #   (textureAtlas.image.height - viewPortHeight).float32
-    # ))
     opacity = 1.0
     framePos = -node.absoluteBoundingBox.xy
   else:
@@ -752,7 +731,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     of nkRectangle, nkFrame, nkInstance:
       if node.fills.len > 0:
         dataBufferSeq.add cmdStartPath
-        dataBufferSeq.add 0
+        dataBufferSeq.add kNonZero
         if node.rectangleCornerRadii.len == 4:
           let r = node.rectangleCornerRadii
           drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
@@ -769,7 +748,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
         let (inner, outer) = node.strokeInnerOuter()
 
         dataBufferSeq.add cmdStartPath
-        dataBufferSeq.add 0
+        dataBufferSeq.add kNonZero
         if node.rectangleCornerRadii.len == 4:
           let r = node.rectangleCornerRadii
           drawRect(
@@ -804,7 +783,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
     of nkEllipse:
       dataBufferSeq.add cmdStartPath
-      dataBufferSeq.add 0
+      dataBufferSeq.add kNonZero
       drawEllipse(node.size/2, node.size/2)
       dataBufferSeq.add cmdEndPath
       for paint in node.fills:
@@ -813,7 +792,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
       if node.strokes.len > 0:
         let (inner, outer) = node.strokeInnerOuter()
         dataBufferSeq.add cmdStartPath
-        dataBufferSeq.add 0
+        dataBufferSeq.add kNonZero
         drawEllipse(node.size/2, node.size/2 + vec2(outer))
         drawEllipse(node.size/2, node.size/2 - vec2(inner))
         dataBufferSeq.add cmdEndPath
@@ -954,6 +933,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   opacity = prevOpacity
 
 proc drawGpuFrameToScreen*(node: Node) =
+  ## Draws the GPU frame to screen.
   setupRender(node)
   node.readyImages()
   updateGpuAtlas()
@@ -976,14 +956,11 @@ proc drawGpuFrameToScreen*(node: Node) =
   drawBuffers()
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
+  ## Draws the GPU frame to atlas.
   setupRender(node)
 
   if name notin textureAtlas.entries:
-    # var dummyImage = newImage(1000, 212)
-    # dummyImage.fill(rgba(255, 0, 0, 255))
-    # textureAtlas.put("dummpy", dummyImage)
-
-    ## Add a spot for the screen to go
+    # Add a spot for the screen to go
     var toImage = newImage(viewPortWidth, viewPortHeight)
     toImage.fill(rgba(255, 0, 0, 255))
     textureAtlas.put(name, toImage)
@@ -1022,6 +999,8 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   drawBuffers()
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
+  ## Read the GPU pixels from screen.
+  ## Use for debugging and tests only.
   var screen = newImage(viewPortWidth, viewPortHeight)
   glReadPixels(
     0, 0,
@@ -1033,6 +1012,9 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   return screen
 
 proc readGpuPixelsFromAtlas*(name: string, crop=true): pixie.Image =
+  ## Read the GPU pixels from atlas
+  ## Note: Very slow even for debugging and tests as it needs to read
+  ## the whole atlas back into memory.
   var screen = newImage(
     textureAtlas.image.width.GLsizei,
     textureAtlas.image.height.GLsizei,

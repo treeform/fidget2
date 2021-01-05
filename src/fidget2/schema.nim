@@ -181,47 +181,6 @@ type
 proc `$`*(node: Node): string =
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
-# proc firstPart(selector: string): string =
-#   let loc = selector.find(".")
-#   if loc > -1:
-#     return selector[0 ..< loc]
-#   else:
-#     selector
-
-# proc matches(s, match: string): bool =
-#   if match == "*": return true
-#   if s == match: return true
-
-# proc findByMatch*(node: Node, match: string): Node =
-#   if node.name.matches(match):
-#     return node
-#   for c in node.children:
-#     let found = c.findByMatch(match)
-#     if found != nil:
-#       return found
-
-# proc find*(node: Node, selector: string): Node =
-#   result = node
-#   for match in selector.split("."):
-#     result = result.findByMatch(match)
-#     if result == nil:
-#       return
-
-# proc find*(selector: string): Node =
-#   figmaFile.document.find(selector)
-
-# proc findAll*(res: var seq[Node], node: Node, name: string) =
-#   if node.name == name:
-#     res.add(node)
-#   for c in node.children:
-#     findAll(res, c, name)
-
-# proc findAll*(node: Node, name: string): seq[Node] =
-#   findAll(result, node, name)
-
-# proc findAll*(name: string): seq[Node] =
-#   findAll(figmaFile.document, name)
-
 proc newHook(v: var Node) =
   v = Node()
   v.visible = true

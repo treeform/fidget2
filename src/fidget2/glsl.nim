@@ -2,9 +2,6 @@
 
 import macros, strutils, vmath, tables, pixie, chroma, print
 
-# For the ability to look at parent nodes.
-var nodeStack {.compileTime.}: seq[NimNode]
-
 proc show(n: NimNode): string =
   result.add $n.kind
   case n.kind
@@ -38,6 +35,7 @@ proc typeRename(t: string): string =
   of "Sampler2d": "sampler2D"
   else: t
 
+## Default constructor for different GLSL types.
 proc typeDefault(t: string): string =
   case t
   of "mat4": "mat4(0.0)"
@@ -53,6 +51,7 @@ const glslGlobals = [
   "gl_Position", "gl_FragCoord",
 ]
 
+## List of function that GLSL provides, don't include their NIM src.
 const glslFunctions = [
   "rgb=", "rgb", "xyz", "xy", "xy=",
   "bool", "array",
@@ -66,6 +65,7 @@ const glslFunctions = [
   "inverse"
 ]
 
+## Simply SKIP these functions.
 const ignoreFunctions = [
   "echo", "print", "debugEcho"
 ]
@@ -96,12 +96,14 @@ proc opPrecedence(op: string): int =
   else: -1
 
 proc getPrecedence(n: NimNode): int =
+  ## Return the opPrecedence of the node operator or -1.
   if n.kind == nnkInfix:
     n[0].strVal.opPrecedence()
   else:
     -1
 
 proc addIndent(res: var string, level: int) =
+  ## Add indent (only if its needed).
   var
     idx = res.len - 1
     spaces = 0
@@ -114,8 +116,6 @@ proc addIndent(res: var string, level: int) =
   for i in 0 ..< level:
     res.add "  "
 
-proc toCodeStmts(n: NimNode, res: var string, level = 0)
-
 proc addSmart(res: var string, c: char, others = {'}'}) =
   ## Ads a char but first checks if its already here.
   var idx = res.len - 1
@@ -124,10 +124,10 @@ proc addSmart(res: var string, c: char, others = {'}'}) =
   if res[idx] != c and res[idx] notin others:
     res.add c
 
+proc toCodeStmts(n: NimNode, res: var string, level = 0)
+
 proc toCode(n: NimNode, res: var string, level = 0) =
   ## Inner code block.
-
-  nodeStack.add(n)
 
   case n.kind
 
@@ -226,6 +226,12 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.add "."
     n[1].toCode(res)
 
+  of nnkBracketExpr:
+    n[0].toCode(res)
+    res.add "["
+    n[1].toCode(res)
+    res.add "]"
+
   of nnkIdent, nnkSym:
     res.add procRename(n.strVal)
 
@@ -268,6 +274,12 @@ proc toCode(n: NimNode, res: var string, level = 0) =
         quit("Not supported if branch")
       inc i
 
+  of nnkConv:
+    res.add typeRename(n[0].strVal)
+    res.add "("
+    n[1].toCode(res)
+    res.add ")"
+
   of nnkHiddenStdConv:
     var typeStr = typeRename(n.getType.repr)
     if typeStr.startsWith("range["):
@@ -282,6 +294,9 @@ proc toCode(n: NimNode, res: var string, level = 0) =
         res.add "("
         n[j].toCode(res)
         res.add ")"
+
+  of nnkNone:
+    assert false
 
   of nnkEmpty, nnkNilLit, nnkDiscardStmt, nnkPragma:
     # Skip all nil, empty and discard statements.
@@ -304,9 +319,6 @@ proc toCode(n: NimNode, res: var string, level = 0) =
       res.add "// "
       res.add line
       res.add "\n"
-
-  of nnkNone:
-    assert false
 
   of nnkVarSection, nnkLetSection:
     for j in 0 ..< n.len:
@@ -347,10 +359,6 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     if n[0].kind != nnkEmpty:
       n[0][1].toCode(res)
 
-  of nnkBreakStmt:
-    res.addIndent level
-    res.add "break"
-
   of nnkPrefix:
     res.add procRename(n[0].strVal) & " ("
     n[1].toCode(res)
@@ -389,20 +397,12 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.addIndent level
     res.add "}"
 
-  of nnkConv:
-    res.add typeRename(n[0].strVal)
-    res.add "("
-    n[1].toCode(res)
-    res.add ")"
+  of nnkBreakStmt:
+    res.addIndent level
+    res.add "break"
 
   of nnkProcDef:
     quit "Nested proc definitions are not allowed."
-
-  of nnkBracketExpr:
-    n[0].toCode(res)
-    res.add "["
-    n[1].toCode(res)
-    res.add "]"
 
   else:
     echo show(n)
@@ -413,8 +413,6 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     # for j in 0 .. n.len-1:
     #   n[j].toCode(res)
     # res.add "}}"
-
-  discard nodeStack.pop()
 
 proc toCodeStmts(n: NimNode, res: var string, level = 0) =
   if n.kind != nnkStmtList:
@@ -755,35 +753,3 @@ proc max*(a, b: Vec4): Vec4 =
   result.y = max(a.y, b.y)
   result.z = max(a.z, b.z)
   result.w = max(a.w, b.w)
-
-# proc setf*(mat: var Mat3, i, j: int, v: float32) =
-#   mat[i, j] = v
-#   mat[i][j] = v
-
-# proc r*(v: Vec4|Vec3|Vec2): float = v.x
-# proc g*(v: Vec4|Vec3|Vec2): float = v.y
-# proc b*(v: Vec4|Vec3): float = v.z
-# proc a*(v: Vec4): float = v.w
-
-# proc `r=`*(v: var (Vec4|Vec3|Vec2), f: float32) = v.x = f
-# proc `g=`*(v: var (Vec4|Vec3|Vec2), f: float32) = v.y = f
-# proc `b=`*(v: var (Vec4|Vec3), f: float32) = v.z = f
-# proc `a=`*(v: var Vec4, f: float32) = v.w = f
-
-# proc r*(v: Vec4): float = v.x
-# proc g*(v: Vec4): float = v.y
-# proc b*(v: Vec4): float = v.z
-# proc a*(v: Vec4): float = v.w
-
-# proc `r=`*(v: var Vec4, f: float32) = v.x = f
-# proc `g=`*(v: var Vec4, f: float32) = v.y = f
-# proc `b=`*(v: var Vec4, f: float32) = v.z = f
-# proc `a=`*(v: var Vec4, f: float32) = v.w = f
-
-# proc rgb*(c: Vec4): Vec3 =
-#   vec3(c.r, c.g, c.b)
-
-# proc `rgb=`*(c: var Vec4, v: Vec3) =
-#   c.r = v.x
-#   c.g = v.y
-#   c.b = v.z
