@@ -44,6 +44,8 @@ var
   shaderProgram: GLuint
   dataBufferId: GLuint
 
+  currentBlendMode: BlendMode
+
   vertShaderSrc = toShader(basic2dVert, "300 es")
   fragShaderSrc = toShader(svgMain, "300 es")
 
@@ -89,17 +91,23 @@ proc errorWarningCheck(name: string, shaderId: GLuint, compile = true) =
   # Check vertex compilation error, warning and status.
   var isCompiled: GLint
   if compile:
-    glGetShaderiv(vertShader, GL_COMPILE_STATUS, isCompiled.addr)
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, isCompiled.addr)
   else:
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, isCompiled.addr)
+    glGetProgramiv(shaderId, GL_LINK_STATUS, isCompiled.addr)
 
   var logSize: GLint
-  glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, logSize.addr)
+  if compile:
+    glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, logSize.addr)
+  else:
+    glGetProgramiv(shaderId, GL_INFO_LOG_LENGTH, logSize.addr)
   if logSize > 0:
     var
       logStr = cast[ptr GLchar](alloc(logSize))
       logLen: GLsizei
-    glGetShaderInfoLog(vertShader, logSize.GLsizei, logLen.addr, logStr)
+    if compile:
+      glGetShaderInfoLog(shaderId, logSize.GLsizei, logLen.addr, logStr)
+    else:
+      glGetProgramInfoLog(shaderId, logSize.GLsizei, logLen.addr, logStr)
     echo $logStr
   if isCompiled == 0:
     quit "Shader " & name & " wasn't compiled."
@@ -207,7 +215,7 @@ proc createWindow*(
 
   # Link shader.
   glLinkProgram(shaderProgram)
-  errorWarningCheck("fragment", fragShader, compile = false)
+  errorWarningCheck("linking", shaderProgram, compile = false)
 
   # Use the program.
   glUseProgram(shaderProgram)
@@ -223,7 +231,6 @@ proc createWindow*(
   # Generate background frame buffer.
   glGenFramebuffers(1, backBufferId.addr)
   glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
-  print "glBindFramebuffer", backBufferId
 
   # Set "backBufferTextureId" as our colour attachement #0
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureAtlasId, 0)
@@ -492,12 +499,6 @@ proc drawPaint(node: Node, paint: Paint) =
   if not paint.visible:
     return
 
-  if node.isMask:
-    dataBufferSeq.add @[
-      cmdMaskFill
-    ]
-    return
-
   proc toImageSpace(handle: Vec2): Vec2 =
     vec2(
       handle.x * node.absoluteBoundingBox.w,
@@ -689,6 +690,9 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     mat = mat * node.transform()
     opacity = opacity * node.opacity
 
+  if node.isMask:
+    dataBufferSeq.add cmdMaskStart
+
   dataBufferSeq.add cmdSetMat
   dataBufferSeq.add mat[0, 0]
   dataBufferSeq.add mat[0, 1]
@@ -697,22 +701,26 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   dataBufferSeq.add mat[2, 0]
   dataBufferSeq.add mat[2, 1]
 
+  if node.blendMode != currentBlendMode:
+    print node.blendMode, ord(node.blendMode).float32
+    currentBlendMode = node.blendMode
+    dataBufferSeq.add cmdSetBlendMode
+    dataBufferSeq.add ord(node.blendMode).float32
+
   node.computePixelBox()
 
   var jmpOffset = 0
-  if not node.isMask:
-    dataBufferSeq.add cmdBoundCheck
-    dataBufferSeq.add node.pixelBox.x
-    dataBufferSeq.add node.pixelBox.y
-    dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
-    dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
-    jmpOffset = dataBufferSeq.len
-    dataBufferSeq.add 0
+  dataBufferSeq.add cmdBoundCheck
+  dataBufferSeq.add node.pixelBox.x
+  dataBufferSeq.add node.pixelBox.y
+  dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
+  dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
+  jmpOffset = dataBufferSeq.len
+  dataBufferSeq.add 0
 
   for effect in node.effects:
     if effect.kind == ekLayerBlur:
       dataBufferSeq.add cmdLayerBlur
-      print effect.radius
       dataBufferSeq.add effect.radius
     if effect.kind == ekDropShadow:
       dataBufferSeq.add @[
@@ -926,11 +934,19 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     else:
       echo($node.kind & " not supported")
 
-  if not node.isMask:
-    dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
+  dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
-  for childNode in node.children:
-    drawNode(childNode, level + 1)
+  # Draw the child nodes
+  for c in node.children:
+    drawNode(c, level + 1)
+
+  # Pop all of the child mask nodes.
+  for c in node.children:
+    if c.isMask:
+      dataBufferSeq.add cmdMaskPop
+
+  if node.isMask:
+    dataBufferSeq.add cmdMaskPush
 
   mat = prevMat
   opacity = prevOpacity

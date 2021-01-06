@@ -2,6 +2,7 @@
 precision highp float;
 // from svgMain
 
+float blendMode;
 float x1;
 float shadowSpread;
 int windingRule = 0;
@@ -11,6 +12,7 @@ bool shadowOn;
 float shadowRadius;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
+float[99] maskStack;
 float y0;
 vec4 shadowColor;
 float y1;
@@ -19,14 +21,17 @@ mat3 tMat;
 float gradientK;
 float fillMask = 0.0;
 float mask = 1.0;
+int maskStackTop;
+bool maskOn;
 float topIndex;
 mat3 mat;
 float prevGradientK;
-float layerBlur;
 mat4 crossCountMat;
+float layerBlur;
 float x0;
 vec4 backdropColor;
 
+void finalColor(vec4 applyColor);
 void gradientRadial(vec2 at0, vec2 to0);
 void draw();
 float normPdf(float x, float sigma);
@@ -57,12 +62,26 @@ vec4 runPixel(vec2 xy);
 void L(float x, float y);
 
 
+void finalColor(
+  vec4 applyColor
+) {
+  if (maskOn) {
+    maskStack[maskStackTop] += applyColor.w;
+  } else {
+    vec4 c = applyColor;
+    c.w = c.w * maskStack[maskStackTop];
+    if (blendMode == 0.0) {
+      backdropColor = blendNormalFloats(backdropColor, c);
+    }
+  }
+}
+
 void gradientRadial(
   vec2 at0,
   vec2 to0
 ) {
   // Setup color for radial gradient.
-  if (0.0 < fillMask * mask) {
+  if (0.0 < fillMask) {
     vec2 at = (mat * vec3(at0, 1.0)).xy;
     vec2 to = (mat * vec3(to0, 1.0)).xy;
     float distance = length(at - to);
@@ -104,8 +123,8 @@ void solidFill(
   float a
 ) {
   // Set the source color.
-  if (0.0 < fillMask * mask) {
-    backdropColor = blendNormalFloats(backdropColor, vec4(r, g, b, a * fillMask * mask));
+  if (0.0 < fillMask) {
+    finalColor(vec4(r, g, b, a * fillMask));
   }
 }
 
@@ -161,13 +180,13 @@ void gradientStop(
   float a
 ) {
   // Compute a gradient stop.
-  if (0.0 < fillMask * mask) {
+  if (0.0 < fillMask) {
     vec4 gradientColor = vec4(r, g, b, a);
     if ((prevGradientK < gradientK) && (gradientK <= k)) {
       float betweenColors = (gradientK - prevGradientK) / (k - prevGradientK);
       vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
-      colorG.w *= fillMask * mask;
-      backdropColor = blendNormalFloats(backdropColor, colorG);
+      colorG.w *= fillMask;
+      finalColor(colorG);
     }
     prevGradientK = k;
     prevGradientColor = gradientColor;
@@ -196,8 +215,14 @@ vec4 blendNormalFloats(
   vec4 backdrop,
   vec4 source
 ) {
-  // Do normal blend.
-  return alphaFix(backdrop, source, source);
+  ;
+}
+vec4 blendNormalFloats(
+  vec4 backdrop,
+  vec4 sourc
+) {
+  result = source;
+  result = alphaFix(backdrop, source, result);
 }
 
 void quadratic(
@@ -380,19 +405,23 @@ void runCommands(
         i = label - 1;
       }
     } else if (command == 16.0) {
-      mask = fillMask;
+      maskOn = true;
+      maskStackTop += 1;
+      maskStack[maskStackTop] = 0.0;
     } else if (command == 17.0) {
-      mask = 1.0;
+      maskOn = false;
     } else if (command == 18.0) {
+      maskStackTop -= 1;
+    } else if (command == 19.0) {
       float index = texelFetch(dataBuffer, i + 1).x;
       if (0.0 < fillMask * mask) {
         topIndex = index;
       }
       i += 1;
-    } else if (command == 19.0) {
+    } else if (command == 20.0) {
       layerBlur = texelFetch(dataBuffer, i + 1).x;
       i += 1;
-    } else if (command == 20.0) {
+    } else if (command == 21.0) {
       shadowOn = true;
       shadowColor.x = texelFetch(dataBuffer, i + 1).x;
       shadowColor.y = texelFetch(dataBuffer, i + 2).x;
@@ -403,6 +432,9 @@ void runCommands(
       shadowRadius = texelFetch(dataBuffer, i + 7).x;
       shadowSpread = texelFetch(dataBuffer, i + 8).x;
       i += 8;
+    } else if (command == 22.0) {
+      blendMode = texelFetch(dataBuffer, i + 1).x;
+      i += 1;
     }
     i += 1;
   }
@@ -415,43 +447,40 @@ void textureFill(
   vec2 size
 ) {
   // Set the source color.
-  if (true || 0.0 < fillMask * mask) {
+  if (true || 0.0 < fillMask) {
     if (shadowOn) {
+      shadowRadius = min(50.0, shadowRadius);
       int mSize = int(shadowRadius) * 2 + 1;
       int kSize = int(shadowRadius);
-      float[20] kernel;
+      float[101] kernel;
       float sigma = 1.9;
       for(int x = 0; x <= kSize; x++) {
         float v = normPdf(float(float(x)), float(sigma));
         kernel[kSize + x] = v;
         kernel[kSize - x] = v;
       }
-
       float zNormal = 0.0;
       for(int x = 0; x < mSize; x++) {
         for(int y = 0; y < mSize; y++) {
           zNormal = zNormal + float(kernel[x] * kernel[y]);
         }
       }
-
       float combinedShadow = 0.0;
       for(int x = - (int(shadowRadius)); x <= int(shadowRadius); x++) {
         for(int y = - (int(shadowRadius)); y <= int(shadowRadius); y++) {
           vec2 offset = vec2(float(x), float(y)) - shadowOffset;
           float kValue = kernel[kSize + x] * kernel[kSize + y];
           vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
-
           if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
             float textureColor = texture(textureAtlasSampler, uv).w;
-
             combinedShadow += float(textureColor * kValue);
           }
         }
       }
       combinedShadow = combinedShadow / zNormal;
       vec4 combinedColor = shadowColor;
-      combinedColor.w = float(combinedShadow * float(mask));
-      backdropColor = blendNormalFloats(backdropColor, combinedColor);
+      combinedColor.w = float(combinedShadow);
+      finalColor(combinedColor);
     }
     if (0.0 < layerBlur) {
       int mSize = int(layerBlur) * 2 + 1;
@@ -463,14 +492,12 @@ void textureFill(
         kernel[kSize + x] = v;
         kernel[kSize - x] = v;
       }
-
       float zNormal = 0.0;
       for(int x = 0; x < mSize; x++) {
         for(int y = 0; y < mSize; y++) {
           zNormal = zNormal + float(kernel[x] * kernel[y]);
         }
       }
-
       vec4 combinedColor = vec4(0.0);
       float colorAdj = 0.0;
       for(int x = - (int(layerBlur)); x <= int(layerBlur); x++) {
@@ -478,10 +505,8 @@ void textureFill(
           vec2 offset = vec2(float(x), float(y));
           float kValue = kernel[kSize + x] * kernel[kSize + y];
           vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5) + offset, 1.0)).xy;
-
           if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
             vec4 textureColor = texture(textureAtlasSampler, uv);
-
             combinedColor += textureColor * kValue;
             colorAdj += float(kValue);
           }
@@ -493,21 +518,20 @@ void textureFill(
         combinedColor.z = float(float(combinedColor.z) / colorAdj);
       }
       combinedColor.w = float(float(combinedColor.w) / zNormal);
-
-      backdropColor = blendNormalFloats(backdropColor, combinedColor);
+      finalColor(combinedColor);
     } else {
       vec2 uv = (tMat * vec3(floor(screen) + vec2(0.5, 0.5), 1.0)).xy;
       if (tile == 0.0) {
         if (((pos.x < uv.x) && (uv.x < pos.x + size.x) && pos.y < uv.y) && (uv.y < pos.y + size.y)) {
           vec4 textureColor = texture(textureAtlasSampler, uv);
-          textureColor.w *= fillMask * mask;
-          backdropColor = blendNormalFloats(backdropColor, textureColor);
+          textureColor.w *= fillMask;
+          finalColor(textureColor);
         }
       } else {
         uv = mod(uv - pos, size) + pos;
         vec4 textureColor = texture(textureAtlasSampler, uv);
-        textureColor.w *= fillMask * mask;
-        backdropColor = blendNormalFloats(backdropColor, textureColor);
+        textureColor.w *= fillMask;
+        finalColor(textureColor);
       }
     }
   }
@@ -632,22 +656,19 @@ vec4 alphaFix(
   vec4 source,
   vec4 mixed
 ) {
-  // After blending the color adjust their colors by alpha.
-  vec4 res = vec4(0.0);
-  res.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
-  if (float(res.w) == 0.0) {
-    return res;
+  result.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
+  if (result.w == 0.0) {
+    return ;
   }
-  float t0 = (float(source.w)) * (1.0 - float(backdrop.w));
+  float t0 = (source.w) * (1.0 - backdrop.w);
   float t1 = source.w * backdrop.w;
-  float t2 = (1.0 - float(source.w)) * (float(backdrop.w));
-  res.x = float(t0 * float(source.x) + float(t1 * mixed.x) + t2 * float(backdrop.x));
-  res.y = float(t0 * float(source.y) + float(t1 * mixed.y) + t2 * float(backdrop.y));
-  res.z = float(t0 * float(source.z) + float(t1 * mixed.z) + t2 * float(backdrop.z));
-  res.x /= res.w;
-  res.y /= res.w;
-  res.z /= res.w;
-  return res;
+  float t2 = (1.0 - source.w) * (backdrop.w);
+  result.x = t0 * source.x + t1 * mixed.x + t2 * backdrop.x;
+  result.y = t0 * source.y + t1 * mixed.y + t2 * backdrop.y;
+  result.z = t0 * source.z + t1 * mixed.z + t2 * backdrop.z;
+  result.x /= result.w;
+  result.y /= result.w;
+  result.z /= result.w;
 }
 
 void line(
@@ -706,6 +727,9 @@ out vec4 fragColor;
 
 void main() {
   // Main entry point to this huge shader.
+  maskOn = false;
+  maskStackTop = 0;
+  maskStack[maskStackTop] = 1.0;
   x0 = 0.0;
   y0 = 0.0;
   x1 = 0.0;

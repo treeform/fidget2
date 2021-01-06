@@ -544,7 +544,13 @@ proc gatherFunction(
                 defStr.add typeRename(typeInst[0].repr)
                 defStr.add " "
                 defStr.add typeRename(typeInst[1].repr)
+              elif typeInst[0].repr == "array":
+                defStr.add typeRename(typeInst[2].repr)
+                defStr.add "["
+                defStr.add typeRename(typeInst[1][2].repr)
+                defStr.add "]"
               else:
+                echo typeInst.treeRepr
                 quit("Invalid x[y].")
             else:
               defStr.add typeRename(typeInst.repr)
@@ -756,3 +762,9 @@ proc max*(a, b: Vec4): Vec4 =
   result.y = max(a.y, b.y)
   result.z = max(a.z, b.z)
   result.w = max(a.w, b.w)
+
+proc `/`*(a: Vec4, b: float32): Vec4 =
+  result.x = a.x / b
+  result.y = a.y / b
+  result.z = a.z / b
+  result.w = a.w / b

@@ -1,4 +1,4 @@
-import fidget2/glsl, print, vmath
+import fidget2/glsl, print, vmath, gpublends
 
 proc basic2dVert*(vertexPox: Vec2, gl_Position: var Vec4) =
   ## Simplest possible shader to put vertex on screen.
@@ -28,11 +28,37 @@ const
   cmdQ*: float32 = 13
   cmdz*: float32 = 14
   cmdBoundCheck*: float32 = 15
-  cmdMaskFill*: float32 = 16
-  cmdMaskClear*: float32 = 17
-  cmdIndex*: float32 = 18
-  cmdLayerBlur*: float32 = 19
-  cmdDropShadow*: float32 = 20
+  cmdMaskStart*: float32 = 16
+  cmdMaskPush*: float32 = 17
+  cmdMaskPop*: float32 = 18
+  cmdIndex*: float32 = 19
+  cmdLayerBlur*: float32 = 20
+  cmdDropShadow*: float32 = 21
+  cmdSetBlendMode*: float32 = 22
+
+  cbmNormal*: float32 = 0
+  cbmDarken*: float32 = 1
+  cbmMultiply*: float32 = 2
+  cbmLinearBurn*: float32 = 3
+  cbmColorBurn*: float32 = 4
+  cbmLighten*: float32 = 5
+  cbmScreen*: float32 = 6
+  cbmLinearDodge*: float32 = 7
+  cbmColorDodge*: float32 = 8
+  cbmOverlay*: float32 = 9
+  cbmSoftLight*: float32 = 10
+  cbmHardLight*: float32 = 11
+  cbmDifference*: float32 = 12
+  cbmExclusion*: float32 = 13
+  cbmHue*: float32 = 14
+  cbmSaturation*: float32 = 15
+  cbmColor*: float32 = 16
+  cbmLuminosity*: float32 = 17
+  cbmMask *: float32 = 18
+  cbmOverwrite  *: float32 = 19
+  cbmSubtractMask *: float32 = 20
+  cbmIntersectMask*: float32 = 21
+  cbmExcludeMask*: float32 = 22
 
 var
   crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
@@ -45,10 +71,13 @@ var
   tMat: Mat3              # Texture matrix.
 
   gradientK: float32      # Gradient constant 0 to 1.
-  prevGradientK: float32  # What as the prev gradient K
-  prevGradientColor: Vec4 # Current gradient Color
+  prevGradientK: float32  # What as the prev gradient K.
+  prevGradientColor: Vec4 # Current gradient Color.
 
+  maskOn: bool            # Are we recording a mask?
   mask: float32 = 1.0     # Current mask (from real masking not fill mask)
+  maskStack: array[100, float32]
+  maskStackTop: int
 
   topIndex*: float32      # Current top index (for mouse picking)
 
@@ -59,6 +88,8 @@ var
   shadowOffset: Vec2
   shadowRadius: float32
   shadowSpread: float32
+
+  blendMode: float32      # Current blend mode.
 
 proc lineDir(a, b: Vec2): float32 =
   ## Return the direction of the line (up or down).
@@ -247,17 +278,23 @@ proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
   res.z /= res.w
   return res
 
-proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
-  ## Do normal blend.
-  return alphaFix(backdrop, source, source)
+# proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
+#   ## Do normal blend.
+#   return alphaFix(backdrop, source, source)
+
+proc finalColor(applyColor: Vec4) =
+  if maskOn:
+    maskStack[maskStackTop] += applyColor.w
+  else:
+    var c = applyColor
+    c.w = c.w * maskStack[maskStackTop]
+    if blendMode == cbmNormal:
+      backdropColor = blendNormalFloats(backdropColor, c)
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
-  if fillMask * mask > 0:
-    backdropColor = blendNormalFloats(
-      backdropColor,
-      vec4(r, g, b, a * fillMask * mask)
-    )
+  if fillMask > 0:
+    finalColor(vec4(r, g, b, a * fillMask))
 
 proc normPdf(x: float, sigma: float32): float32 =
   ## Normal Probability Density Function (used for shadow and blurs)
@@ -265,16 +302,17 @@ proc normPdf(x: float, sigma: float32): float32 =
 
 proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
   ## Set the source color.
-  if true or fillMask * mask > 0:
+  if true or fillMask > 0:
     # WE need to undo the AA when sampling images
     # * That is why we need to floor.
     # * That is why we need to add vec2(0.5, 0.5).
 
     if shadowOn:
-
+      # TODO: Some thing when shadow radius is more then 50px
+      shadowRadius = min(50, shadowRadius)
       let mSize = shadowRadius.int*2 + 1
       let kSize = shadowRadius.int
-      var kernel: array[20, float32]
+      var kernel: array[101, float32]
       var sigma = 2.0 - 0.1
 
       for x in 0 .. kSize:
@@ -302,8 +340,8 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
 
       combinedShadow = combinedShadow / zNormal
       var combinedColor = shadowColor
-      combinedColor.w = combinedShadow * mask
-      backdropColor = blendNormalFloats(backdropColor, combinedColor)
+      combinedColor.w = combinedShadow
+      finalColor(combinedColor)
 
     if layerBlur > 0:
 
@@ -342,8 +380,7 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
         combinedColor.y = combinedColor.y / colorAdj
         combinedColor.z = combinedColor.z / colorAdj
       combinedColor.w = combinedColor.w / zNormal
-      # combinedColor.w *= mask
-      backdropColor = blendNormalFloats(backdropColor, combinedColor)
+      finalColor(combinedColor)
 
     else:
 
@@ -353,13 +390,13 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
         if uv.x > pos.x and uv.x < pos.x + size.x and
           uv.y > pos.y and uv.y < pos.y + size.y:
           var textureColor = texture(textureAtlasSampler, uv)
-          textureColor.w *= fillMask * mask
-          backdropColor = blendNormalFloats(backdropColor, textureColor)
+          textureColor.w *= fillMask
+          finalColor(textureColor)
       else:
         uv = ((uv - pos) mod size) + pos
         var textureColor = texture(textureAtlasSampler, uv)
-        textureColor.w *= fillMask * mask
-        backdropColor = blendNormalFloats(backdropColor, textureColor)
+        textureColor.w *= fillMask
+        finalColor(textureColor)
 
 proc toLineSpace(at, to, point: Vec2): float32 =
   ## Covert a point to be in the line space (used for gradients).
@@ -378,7 +415,7 @@ proc gradientLinear(at0, to0: Vec2) =
 
 proc gradientRadial(at0, to0: Vec2) =
   ## Setup color for radial gradient.
-  if fillMask * mask > 0:
+  if fillMask > 0:
     let
       at = (mat * vec3(at0, 1)).xy
       to = (mat * vec3(to0, 1)).xy
@@ -387,7 +424,7 @@ proc gradientRadial(at0, to0: Vec2) =
 
 proc gradientStop(k, r, g, b, a: float32) =
   ## Compute a gradient stop.
-  if fillMask * mask > 0:
+  if fillMask > 0:
     let gradientColor = vec4(r, g, b, a)
     if gradientK > prevGradientK and gradientK <= k:
       let betweenColors = (gradientK - prevGradientK) / (k - prevGradientK)
@@ -396,8 +433,8 @@ proc gradientStop(k, r, g, b, a: float32) =
         gradientColor,
         betweenColors
       )
-      colorG.w *= fillMask * mask
-      backdropColor = blendNormalFloats(backdropColor, colorG)
+      colorG.w *= fillMask
+      finalColor(colorG)
     prevGradientK = k
     prevGradientColor = gradientColor
 
@@ -620,11 +657,16 @@ proc runCommands() =
       if not overlap(minS, maxS, minP, maxP):
         i = label - 1
 
-    elif command == cmdMaskFill:
-      mask = fillMask
+    elif command == cmdMaskStart:
+      maskOn = true
+      maskStackTop += 1
+      maskStack[maskStackTop] = 0.0
 
-    elif command == cmdMaskClear:
-      mask = 1.0
+    elif command == cmdMaskPush:
+      maskOn = false
+
+    elif command == cmdMaskPop:
+      maskStackTop -= 1
 
     elif command == cmdIndex:
       let index = texelFetch(dataBuffer, i + 1).x
@@ -648,6 +690,10 @@ proc runCommands() =
       shadowSpread = texelFetch(dataBuffer, i + 8).x
       i += 8
 
+    elif command == cmdSetBlendMode:
+      blendMode =  texelFetch(dataBuffer, i + 1).x
+      i += 1
+
     i += 1
 
 proc runPixel(xy: Vec2): Vec4 =
@@ -659,6 +705,10 @@ proc runPixel(xy: Vec2): Vec4 =
 
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   ## Main entry point to this huge shader.
+
+  maskOn = false
+  maskStackTop = 0
+  maskStack[maskStackTop] = 1.0
 
   x0 = 0
   y0 = 0
