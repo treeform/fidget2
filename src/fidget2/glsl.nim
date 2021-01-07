@@ -2,6 +2,8 @@
 
 import chroma, macros, pixie, print, strutils, tables, vmath
 
+var useResult {.compiletime.}: bool
+
 proc show(n: NimNode): string =
   result.add $n.kind
   case n.kind
@@ -274,6 +276,15 @@ proc toCode(n: NimNode, res: var string, level = 0) =
         quit("Not supported if branch")
       inc i
 
+  # of nnkIfExpr:
+  #   res.add "("
+  #   n[0][0].toCode(res)
+  #   res.add ") ? ("
+  #   n[1][0].toCode(res)
+  #   res.add ") : ("
+  #   n[2][0].toCode(res)
+  #   res.add ")"
+
   of nnkConv:
     res.add typeRename(n[0].strVal)
     res.add "("
@@ -355,9 +366,18 @@ proc toCode(n: NimNode, res: var string, level = 0) =
 
   of nnkReturnStmt:
     res.addIndent level
-    res.add "return "
-    if n[0].kind != nnkEmpty:
+    if n[0].kind == nnkAsgn:
+      n[0].toCode(res)
+      res.add "\n"
+      res.addIndent level
+      res.add "return result"
+    elif n[0].kind != nnkEmpty:
+      res.add "return "
       n[0][1].toCode(res)
+    elif useResult:
+      res.add "return result"
+    else:
+      res.add "return"
 
   of nnkPrefix:
     res.add procRename(n[0].strVal) & " ("
@@ -405,8 +425,7 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     quit "Nested proc definitions are not allowed."
 
   else:
-    echo show(n)
-    echo n.repr
+    echo n.treeRepr
     quit "^ can't compile"
     # res.add ($n.kind)
     # res.add "{{"
@@ -466,6 +485,14 @@ proc toCodeTopLevel(topLevelNode: NimNode, res: var string, level = 0) =
       n.toCodeStmts(res, level+1)
       res.add "}\n"
 
+proc hasResult(node: NimNode): bool =
+  if node.kind == nnkSym and node.strVal == "result":
+    return true
+  for c in node.children:
+    if c.hasResult():
+      return true
+  return false
+
 proc procDef(topLevelNode: NimNode): string =
   ## Process whole function (that is not the main function).
 
@@ -476,7 +503,7 @@ proc procDef(topLevelNode: NimNode): string =
   assert topLevelNode.kind == nnkProcDef
   for n in topLevelNode:
     case n.kind
-    of nnkEmpty:
+    of nnkEmpty, nnkPragma:
       discard
     of nnkSym:
       procName = $n
@@ -517,7 +544,16 @@ proc procDef(topLevelNode: NimNode): string =
       if paramsStr.len > 0:
         paramsStr = paramsStr[0 .. ^3] & "\n"
       result.add returnType & " " & procName & "(\n" & paramsStr & ") {\n"
+      useResult = n.hasResult()
+      if useResult:
+        result.addIndent(1)
+        result.add returnType
+        result.add " result;"
       n.toCodeStmts(result, 1)
+      if useResult:
+        if "return result" notin result[^20..^1]:
+          result.addIndent(1)
+          result.add "return result;\n"
       result.add "}"
 
 proc gatherFunction(

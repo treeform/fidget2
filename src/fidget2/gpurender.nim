@@ -702,7 +702,6 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   dataBufferSeq.add mat[2, 1]
 
   if node.blendMode != currentBlendMode:
-    print node.blendMode, ord(node.blendMode).float32
     currentBlendMode = node.blendMode
     dataBufferSeq.add cmdSetBlendMode
     dataBufferSeq.add ord(node.blendMode).float32

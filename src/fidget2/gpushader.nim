@@ -257,31 +257,6 @@ proc quadratic(p0, p1, p2: Vec2) =
     line(p, pn)
     p = pn
 
-proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
-  ## After blending the color adjust their colors by alpha.
-  var res: Vec4
-  res.w = (source.w + backdrop.w * (1.0 - source.w))
-  if res.w == 0.0:
-    return res
-
-  let
-    t0 = source.w * (1.0 - backdrop.w)
-    t1 = source.w * backdrop.w
-    t2 = (1.0 - source.w) * backdrop.w
-
-  res.x = t0 * source.x + t1 * mixed.x + t2 * backdrop.x
-  res.y = t0 * source.y + t1 * mixed.y + t2 * backdrop.y
-  res.z = t0 * source.z + t1 * mixed.z + t2 * backdrop.z
-
-  res.x /= res.w
-  res.y /= res.w
-  res.z /= res.w
-  return res
-
-# proc blendNormalFloats*(backdrop, source: Vec4): Vec4 =
-#   ## Do normal blend.
-#   return alphaFix(backdrop, source, source)
-
 proc finalColor(applyColor: Vec4) =
   if maskOn:
     maskStack[maskStackTop] += applyColor.w
@@ -290,6 +265,52 @@ proc finalColor(applyColor: Vec4) =
     c.w = c.w * maskStack[maskStackTop]
     if blendMode == cbmNormal:
       backdropColor = blendNormalFloats(backdropColor, c)
+    elif blendMode == cbmDarken:
+      backdropColor = blendDarkenFloats(backdropColor, c)
+    elif blendMode == cbmDarken:
+      backdropColor = blendDarkenFloats(backdropColor, c)
+    elif blendMode == cbmMultiply:
+      backdropColor = blendMultiplyFloats(backdropColor, c)
+    elif blendMode == cbmLinearBurn:
+      backdropColor = blendLinearBurnFloats(backdropColor, c)
+    elif blendMode == cbmColorBurn:
+      backdropColor = blendColorBurnFloats(backdropColor, c)
+    elif blendMode == cbmLighten:
+      backdropColor = blendLightenFloats(backdropColor, c)
+    elif blendMode == cbmScreen:
+      backdropColor = blendScreenFloats(backdropColor, c)
+    elif blendMode == cbmLinearDodge:
+      backdropColor = blendLinearDodgeFloats(backdropColor, c)
+    elif blendMode == cbmColorDodge:
+      backdropColor = blendColorDodgeFloats(backdropColor, c)
+    elif blendMode == cbmOverlay:
+      backdropColor = blendOverlayFloats(backdropColor, c)
+    elif blendMode == cbmSoftLight:
+      backdropColor = blendSoftLightFloats(backdropColor, c)
+    elif blendMode == cbmHardLight:
+      backdropColor = blendHardLightFloats(backdropColor, c)
+    elif blendMode == cbmDifference:
+      backdropColor = blendDifferenceFloats(backdropColor, c)
+    elif blendMode == cbmExclusion:
+      backdropColor = blendExclusionFloats(backdropColor, c)
+    elif blendMode == cbmColor:
+      backdropColor = blendColorFloats(backdropColor, c)
+    elif blendMode == cbmLuminosity:
+      backdropColor = blendLuminosityFloats(backdropColor, c)
+    elif blendMode == cbmHue:
+      backdropColor = blendHueFloats(backdropColor, c)
+    elif blendMode == cbmSaturation:
+      backdropColor = blendSaturationFloats(backdropColor, c)
+    elif blendMode == cbmMask:
+      backdropColor = blendMaskFloats(backdropColor, c)
+    elif blendMode == cbmSubtractMask:
+      backdropColor = blendSubtractMaskFloats(backdropColor, c)
+    elif blendMode == cbmIntersectMask:
+      backdropColor = blendIntersectMaskFloats(backdropColor, c)
+    elif blendMode == cbmExcludeMask:
+      backdropColor = blendExcludeMaskFloats(backdropColor, c)
+    elif blendMode == cbmOverwrite:
+      backdropColor = blendOverwriteFloats(backdropColor, c)
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
@@ -730,6 +751,8 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   shadowOffset = vec2(0, 0)
   shadowRadius = 0.0
   shadowSpread = 0.0
+
+  blendMode = 0.0
 
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
