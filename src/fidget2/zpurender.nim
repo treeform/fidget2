@@ -1,6 +1,8 @@
 import chroma, glsl, gpurender, gpushader, math, pixie, schema, vmath
 
 proc drawCompleteZpuFrame*(node: Node): pixie.Image =
+  viewPortWidth = node.absoluteBoundingBox.w.int
+  viewPortHeight = node.absoluteBoundingBox.h.int
   setupRender(node)
   node.readyImages()
 
