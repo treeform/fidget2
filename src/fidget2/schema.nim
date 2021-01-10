@@ -347,4 +347,4 @@ proc enumHook(s: string, v: var ConstraintsKind) =
     else: raise newException(ValueError, "Invalid text align mode:" & s)
 
 proc parseFigmaFile*(data: string): FigmaFile =
-  fromJson[FigmaFile](data)
+  data.fromJson(FigmaFile)

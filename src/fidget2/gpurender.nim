@@ -7,6 +7,7 @@ var
   viewPortHeight*: int
   window*: Window
   offscreen* = false
+  windowResizable*: bool
 
   # Text edit.
   textBox*: TextBox
@@ -71,8 +72,6 @@ proc updateGpuAtlas() =
 
 proc setupRender*(frameNode: Node) =
   ## Setup the rendering of the frame.
-  viewPortWidth = frameNode.absoluteBoundingBox.w.int
-  viewPortHeight = frameNode.absoluteBoundingBox.h.int
   dataBufferSeq.setLen(0)
 
   if textureAtlas == nil:
@@ -127,6 +126,9 @@ proc createWindow*(
   if init() == 0:
     raise newException(Exception, "Failed to intialize GLFW")
 
+  viewPortWidth = frameNode.absoluteBoundingBox.w.int
+  viewPortHeight = frameNode.absoluteBoundingBox.h.int
+
   # Open a window.
   windowHint(VISIBLE, (not offscreen).cint)
   windowHint(RESIZABLE, resizable.cint)
@@ -136,6 +138,8 @@ proc createWindow*(
     "run_shaders",
     nil,
     nil)
+  if window == nil:
+    raise newException(Exception, "Failed to create GLFW window.")
   window.makeContextCurrent()
 
   # Load opengl.
@@ -956,6 +960,7 @@ proc drawGpuFrameToScreen*(node: Node) =
   node.readyImages()
   updateGpuAtlas()
 
+  glDisable(GL_SCISSOR_TEST)
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
   glViewport(
     0,

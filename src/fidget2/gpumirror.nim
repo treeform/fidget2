@@ -53,7 +53,6 @@ type
 
 var
   windowTitle* = "Fidget"
-  windowResizable*: bool
   mousePos*: Vec2
   eventCbs: seq[EventCb]
   requestedFrame*: bool
@@ -297,10 +296,13 @@ proc updateWindowSize() =
   windowFrame.x = float32(cwidth)
   windowFrame.y = float32(cheight)
 
+  viewPortWidth = windowFrame.x.int
+  viewPortHeight = windowFrame.y.int
+
   minimized = windowSize == vec2(0, 0)
   pixelRatio = if windowSize.x > 0: windowFrame.x / windowSize.x else: 0
 
-  glViewport(0, 0, cwidth, cheight)
+  #glViewport(0, 0, cwidth, cheight)
 
   let
     monitor = getPrimaryMonitor()
@@ -437,7 +439,7 @@ proc display() =
     mousePos.y = y
 
     let hoverIndex = getIndexAt(thisFrame, mousePos)
-    echo "hover index", hoverIndex
+    #echo "hover index", hoverIndex
 
   if windowResizable:
     # Stretch the current frame to fit the window.
@@ -472,6 +474,9 @@ proc startFidget*(
 
   thisFrame = find(entryFrame)
   windowResizable = resizable
+
+  viewPortWidth = thisFrame.absoluteBoundingBox.w.int
+  viewPortHeight = thisFrame.absoluteBoundingBox.h.int
 
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")

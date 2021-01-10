@@ -712,7 +712,7 @@ proc runCommands() =
       i += 8
 
     elif command == cmdSetBlendMode:
-      blendMode =  texelFetch(dataBuffer, i + 1).x
+      blendMode = texelFetch(dataBuffer, i + 1).x
       i += 1
 
     i += 1
