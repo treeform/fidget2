@@ -438,7 +438,7 @@ proc display() =
     mousePos.x = x
     mousePos.y = y
 
-    let hoverIndex = getIndexAt(thisFrame, mousePos)
+    #let hoverIndex = getIndexAt(thisFrame, mousePos)
     #echo "hover index", hoverIndex
 
   if windowResizable:

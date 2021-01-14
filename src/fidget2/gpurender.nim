@@ -705,6 +705,34 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   dataBufferSeq.add mat[2, 0]
   dataBufferSeq.add mat[2, 1]
 
+  if node.clipsContent:
+    # Node frame needs to clip its children.
+    # Create a mask.
+    # All frames are rounded rectangles of some sort.
+    dataBufferSeq.add cmdMaskStart
+
+    dataBufferSeq.add cmdStartPath
+    dataBufferSeq.add kNonZero
+    if node.rectangleCornerRadii.len == 4:
+      let r = node.rectangleCornerRadii
+      drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
+    elif node.cornerRadius > 0:
+      let r = node.cornerRadius
+      drawRect(vec2(0, 0), node.size, r, r, r, r)
+    else:
+      drawRect(vec2(0, 0), node.size)
+    dataBufferSeq.add cmdEndPath
+
+    dataBufferSeq.add @[
+      cmdSolidFill,
+      1,
+      0.5,
+      0.5,
+      1
+    ]
+
+    dataBufferSeq.add cmdMaskPush
+
   if node.blendMode != currentBlendMode:
     currentBlendMode = node.blendMode
     dataBufferSeq.add cmdSetBlendMode
@@ -739,10 +767,10 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
       ]
 
   case node.kind
-    of nkGroup:
+    of nkGroup, nkBooleanOperation:
       discard
 
-    of nkRectangle, nkFrame, nkInstance:
+    of nkRectangle, nkFrame, nkInstance, nkComponent:
       if node.fills.len > 0:
         dataBufferSeq.add cmdStartPath
         dataBufferSeq.add kNonZero
@@ -939,7 +967,20 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
   dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
-  # Draw the child nodes
+  if node.kind == nkBooleanOperation:
+    # Set the child nodes as boolean operations
+    for i, c in node.children:
+      c.blendMode =
+        if i == 0:
+          bmNormal
+        else:
+          case node.booleanOperation
+            of boSubtract: bmSubtractMask
+            of boIntersect: bmIntersectMask
+            of boExclude: bmExcludeMask
+            of boUnion: bmNormal
+
+  # Draw the child nodes normally
   for c in node.children:
     drawNode(c, level + 1)
 
@@ -947,6 +988,9 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   for c in node.children:
     if c.isMask:
       dataBufferSeq.add cmdMaskPop
+
+  if node.clipsContent:
+    dataBufferSeq.add cmdMaskPop
 
   if node.isMask:
     dataBufferSeq.add cmdMaskPush
