@@ -1,6 +1,6 @@
 import algorithm, bumpy, globs, gpurender, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, zpurender
+    typography/textboxes, unicode, vmath, zpurender, times
 
 export textboxes
 
@@ -74,6 +74,8 @@ var
   dpi*: float32
   pixelRatio*: float32     ## Multiplier to convert from screen coords to pixels
   pixelScale*: float32     ## Pixel multiplier user wants on the UI
+
+  frameNum*: int
 
 proc display()
 
@@ -432,6 +434,9 @@ proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
 
 proc display() =
   ## Called every frame by main while loop.
+
+  let start = epochTime()
+
   block:
     var x, y: float64
     window.getCursorPos(addr x, addr y)
@@ -460,7 +465,14 @@ proc display() =
 
   drawGpuFrameToScreen(thisFrame)
 
-  swapBuffers(window)
+  if vSync:
+    swapBuffers(window)
+  else:
+    glFlush()
+
+  if frameNum mod 60 == 0:
+    echo "frame ", (epochTime() - start)*1000, "ms"
+  inc frameNum
 
 proc startFidget*(
   figmaUrl: string,

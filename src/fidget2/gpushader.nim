@@ -9,6 +9,10 @@ var dataBuffer*: Uniform[SamplerBuffer]
 var textureAtlasSampler*: Uniform[Sampler2d]
 
 const
+  useAA = true
+  useBlends = true
+
+const
   ## Command "enums"
   cmdExit*: float32 = 0
   cmdStartPath*: float32 = 1
@@ -193,31 +197,36 @@ proc line(a0, b0: Vec2) =
   var
     a1 = (mat * vec3(a0, 1)).xy - screen
     b1 = (mat * vec3(b0, 1)).xy - screen
-  if windingRule == 0:
-    # Event-odd
-    a1 += vec2(0.125, 0.125) # Center scan lines in each quarter.
-    b1 += vec2(0.125, 0.125) # 1/4/2
-    # DO I KNOW WHAT I AM DOING? NO...
-    crossCountMat[0, 0] = crossCountMat[0, 0] + pixelCross(a1 + vec2(0,0)/4, b1 + vec2(0,0)/4)
-    crossCountMat[0, 1] = crossCountMat[0, 1] + pixelCross(a1 + vec2(0,1)/4, b1 + vec2(0,1)/4)
-    crossCountMat[0, 2] = crossCountMat[0, 2] + pixelCross(a1 + vec2(0,2)/4, b1 + vec2(0,2)/4)
-    crossCountMat[0, 3] = crossCountMat[0, 3] + pixelCross(a1 + vec2(0,3)/4, b1 + vec2(0,3)/4)
-    crossCountMat[1, 0] = crossCountMat[1, 0] + pixelCross(a1 + vec2(1,0)/4, b1 + vec2(1,0)/4)
-    crossCountMat[1, 1] = crossCountMat[1, 1] + pixelCross(a1 + vec2(1,1)/4, b1 + vec2(1,1)/4)
-    crossCountMat[1, 2] = crossCountMat[1, 2] + pixelCross(a1 + vec2(1,2)/4, b1 + vec2(1,2)/4)
-    crossCountMat[1, 3] = crossCountMat[1, 3] + pixelCross(a1 + vec2(1,3)/4, b1 + vec2(1,3)/4)
-    crossCountMat[2, 0] = crossCountMat[2, 0] + pixelCross(a1 + vec2(2,0)/4, b1 + vec2(2,0)/4)
-    crossCountMat[2, 1] = crossCountMat[2, 1] + pixelCross(a1 + vec2(2,1)/4, b1 + vec2(2,1)/4)
-    crossCountMat[2, 2] = crossCountMat[2, 2] + pixelCross(a1 + vec2(2,2)/4, b1 + vec2(2,2)/4)
-    crossCountMat[2, 3] = crossCountMat[2, 3] + pixelCross(a1 + vec2(2,3)/4, b1 + vec2(2,3)/4)
-    crossCountMat[3, 0] = crossCountMat[3, 0] + pixelCross(a1 + vec2(3,0)/4, b1 + vec2(3,0)/4)
-    crossCountMat[3, 1] = crossCountMat[3, 1] + pixelCross(a1 + vec2(3,1)/4, b1 + vec2(3,1)/4)
-    crossCountMat[3, 2] = crossCountMat[3, 2] + pixelCross(a1 + vec2(3,2)/4, b1 + vec2(3,2)/4)
-    crossCountMat[3, 3] = crossCountMat[3, 3] + pixelCross(a1 + vec2(3,3)/4, b1 + vec2(3,3)/4)
+
+  when useAA:
+    if windingRule == 0:
+      # Event-odd
+      a1 += vec2(0.125, 0.125) # Center scan lines in each quarter.
+      b1 += vec2(0.125, 0.125) # 1/4/2
+      # DO I KNOW WHAT I AM DOING? NO...
+      crossCountMat[0, 0] = crossCountMat[0, 0] + pixelCross(a1 + vec2(0,0)/4, b1 + vec2(0,0)/4)
+      crossCountMat[0, 1] = crossCountMat[0, 1] + pixelCross(a1 + vec2(0,1)/4, b1 + vec2(0,1)/4)
+      crossCountMat[0, 2] = crossCountMat[0, 2] + pixelCross(a1 + vec2(0,2)/4, b1 + vec2(0,2)/4)
+      crossCountMat[0, 3] = crossCountMat[0, 3] + pixelCross(a1 + vec2(0,3)/4, b1 + vec2(0,3)/4)
+      crossCountMat[1, 0] = crossCountMat[1, 0] + pixelCross(a1 + vec2(1,0)/4, b1 + vec2(1,0)/4)
+      crossCountMat[1, 1] = crossCountMat[1, 1] + pixelCross(a1 + vec2(1,1)/4, b1 + vec2(1,1)/4)
+      crossCountMat[1, 2] = crossCountMat[1, 2] + pixelCross(a1 + vec2(1,2)/4, b1 + vec2(1,2)/4)
+      crossCountMat[1, 3] = crossCountMat[1, 3] + pixelCross(a1 + vec2(1,3)/4, b1 + vec2(1,3)/4)
+      crossCountMat[2, 0] = crossCountMat[2, 0] + pixelCross(a1 + vec2(2,0)/4, b1 + vec2(2,0)/4)
+      crossCountMat[2, 1] = crossCountMat[2, 1] + pixelCross(a1 + vec2(2,1)/4, b1 + vec2(2,1)/4)
+      crossCountMat[2, 2] = crossCountMat[2, 2] + pixelCross(a1 + vec2(2,2)/4, b1 + vec2(2,2)/4)
+      crossCountMat[2, 3] = crossCountMat[2, 3] + pixelCross(a1 + vec2(2,3)/4, b1 + vec2(2,3)/4)
+      crossCountMat[3, 0] = crossCountMat[3, 0] + pixelCross(a1 + vec2(3,0)/4, b1 + vec2(3,0)/4)
+      crossCountMat[3, 1] = crossCountMat[3, 1] + pixelCross(a1 + vec2(3,1)/4, b1 + vec2(3,1)/4)
+      crossCountMat[3, 2] = crossCountMat[3, 2] + pixelCross(a1 + vec2(3,2)/4, b1 + vec2(3,2)/4)
+      crossCountMat[3, 3] = crossCountMat[3, 3] + pixelCross(a1 + vec2(3,3)/4, b1 + vec2(3,3)/4)
+    else:
+      # Non-Zero
+      let area = pixelCover(a1, b1)
+      fillMask += area * lineDir(a1, b1)
   else:
-    # Non-Zero
-    let area = pixelCover(a1, b1)
-    fillMask += area * lineDir(a1, b1)
+    # NO AA way:
+    crossCountMat[0, 0] = crossCountMat[0, 0] + pixelCross(a1 + vec2(0,0)/4, b1 + vec2(0,0)/4)
 
 proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
@@ -228,10 +237,15 @@ proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
     D = G1
   return t * (t * (t * A + B) + C) + D
 
+const
+  # Quality of bezier discretization:
+  perPixel = 0.5
+  maxLines = 20
 proc bezier(A, B, C, D: Vec2) =
   ## Turn a cubic curve into N lines.
   var p = A
-  let discretization = 20
+  let dist = (A - B).length + (B - C).length + (C - D).length
+  let discretization = clamp(int(dist*perPixel), 1, maxLines)
   for t in 1 .. discretization:
     let
       q = interpolate(A, B, C, D, float32(t)/float32(discretization))
@@ -263,54 +277,57 @@ proc finalColor(applyColor: Vec4) =
   else:
     var c = applyColor
     c.w = c.w * maskStack[maskStackTop]
-    if blendMode == cbmNormal:
+    when useBlends:
+      if blendMode == cbmNormal:
+        backdropColor = blendNormalFloats(backdropColor, c)
+      elif blendMode == cbmDarken:
+        backdropColor = blendDarkenFloats(backdropColor, c)
+      elif blendMode == cbmDarken:
+        backdropColor = blendDarkenFloats(backdropColor, c)
+      elif blendMode == cbmMultiply:
+        backdropColor = blendMultiplyFloats(backdropColor, c)
+      elif blendMode == cbmLinearBurn:
+        backdropColor = blendLinearBurnFloats(backdropColor, c)
+      elif blendMode == cbmColorBurn:
+        backdropColor = blendColorBurnFloats(backdropColor, c)
+      elif blendMode == cbmLighten:
+        backdropColor = blendLightenFloats(backdropColor, c)
+      elif blendMode == cbmScreen:
+        backdropColor = blendScreenFloats(backdropColor, c)
+      elif blendMode == cbmLinearDodge:
+        backdropColor = blendLinearDodgeFloats(backdropColor, c)
+      elif blendMode == cbmColorDodge:
+        backdropColor = blendColorDodgeFloats(backdropColor, c)
+      elif blendMode == cbmOverlay:
+        backdropColor = blendOverlayFloats(backdropColor, c)
+      elif blendMode == cbmSoftLight:
+        backdropColor = blendSoftLightFloats(backdropColor, c)
+      elif blendMode == cbmHardLight:
+        backdropColor = blendHardLightFloats(backdropColor, c)
+      elif blendMode == cbmDifference:
+        backdropColor = blendDifferenceFloats(backdropColor, c)
+      elif blendMode == cbmExclusion:
+        backdropColor = blendExclusionFloats(backdropColor, c)
+      elif blendMode == cbmColor:
+        backdropColor = blendColorFloats(backdropColor, c)
+      elif blendMode == cbmLuminosity:
+        backdropColor = blendLuminosityFloats(backdropColor, c)
+      elif blendMode == cbmHue:
+        backdropColor = blendHueFloats(backdropColor, c)
+      elif blendMode == cbmSaturation:
+        backdropColor = blendSaturationFloats(backdropColor, c)
+      elif blendMode == cbmMask:
+        backdropColor = blendMaskFloats(backdropColor, c)
+      elif blendMode == cbmSubtractMask:
+        backdropColor = blendSubtractMaskFloats(backdropColor, c)
+      elif blendMode == cbmIntersectMask:
+        backdropColor = blendIntersectMaskFloats(backdropColor, c)
+      elif blendMode == cbmExcludeMask:
+        backdropColor = blendExcludeMaskFloats(backdropColor, c)
+      elif blendMode == cbmOverwrite:
+        backdropColor = blendOverwriteFloats(backdropColor, c)
+    else:
       backdropColor = blendNormalFloats(backdropColor, c)
-    elif blendMode == cbmDarken:
-      backdropColor = blendDarkenFloats(backdropColor, c)
-    elif blendMode == cbmDarken:
-      backdropColor = blendDarkenFloats(backdropColor, c)
-    elif blendMode == cbmMultiply:
-      backdropColor = blendMultiplyFloats(backdropColor, c)
-    elif blendMode == cbmLinearBurn:
-      backdropColor = blendLinearBurnFloats(backdropColor, c)
-    elif blendMode == cbmColorBurn:
-      backdropColor = blendColorBurnFloats(backdropColor, c)
-    elif blendMode == cbmLighten:
-      backdropColor = blendLightenFloats(backdropColor, c)
-    elif blendMode == cbmScreen:
-      backdropColor = blendScreenFloats(backdropColor, c)
-    elif blendMode == cbmLinearDodge:
-      backdropColor = blendLinearDodgeFloats(backdropColor, c)
-    elif blendMode == cbmColorDodge:
-      backdropColor = blendColorDodgeFloats(backdropColor, c)
-    elif blendMode == cbmOverlay:
-      backdropColor = blendOverlayFloats(backdropColor, c)
-    elif blendMode == cbmSoftLight:
-      backdropColor = blendSoftLightFloats(backdropColor, c)
-    elif blendMode == cbmHardLight:
-      backdropColor = blendHardLightFloats(backdropColor, c)
-    elif blendMode == cbmDifference:
-      backdropColor = blendDifferenceFloats(backdropColor, c)
-    elif blendMode == cbmExclusion:
-      backdropColor = blendExclusionFloats(backdropColor, c)
-    elif blendMode == cbmColor:
-      backdropColor = blendColorFloats(backdropColor, c)
-    elif blendMode == cbmLuminosity:
-      backdropColor = blendLuminosityFloats(backdropColor, c)
-    elif blendMode == cbmHue:
-      backdropColor = blendHueFloats(backdropColor, c)
-    elif blendMode == cbmSaturation:
-      backdropColor = blendSaturationFloats(backdropColor, c)
-    elif blendMode == cbmMask:
-      backdropColor = blendMaskFloats(backdropColor, c)
-    elif blendMode == cbmSubtractMask:
-      backdropColor = blendSubtractMaskFloats(backdropColor, c)
-    elif blendMode == cbmIntersectMask:
-      backdropColor = blendIntersectMaskFloats(backdropColor, c)
-    elif blendMode == cbmExcludeMask:
-      backdropColor = blendExcludeMaskFloats(backdropColor, c)
-    elif blendMode == cbmOverwrite:
-      backdropColor = blendOverwriteFloats(backdropColor, c)
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
@@ -467,18 +484,29 @@ proc startPath(rule: float32) =
 
 proc draw() =
   ## Apply the winding rule.
-  if windingRule == 0:
-    # Even-Odd winding rule:
-    fillMask = 0
-    let n = 4
-    for x in 0 ..< n:
-      for y in 0 ..< n:
-        if zmod(crossCountMat[x, y], 2.0) != 0.0:
-          fillMask += 1
-    fillMask = fillMask / (n * n).float32
+
+  when useAA:
+    if windingRule == 0:
+      # Even-Odd winding rule:
+      fillMask = 0
+      let n = 4
+      for x in 0 ..< n:
+        for y in 0 ..< n:
+          if zmod(crossCountMat[x, y], 2.0) != 0.0:
+            fillMask += 1
+      fillMask = fillMask / (n * n).float32
+    else:
+      # Non-Zero winding rule:
+      fillMask = abs(fillMask).clamp(0, 1)
   else:
-    # Non-Zero winding rule:
-    fillMask = abs(fillMask).clamp(0, 1)
+    ## NO AA WAY
+    if windingRule == 0:
+      if zmod(crossCountMat[0, 0], 2) != 0:
+        fillMask = 1
+    else:
+      if crossCountMat[0, 0] != 0:
+        fillMask = 1
+
 
 proc endPath() =
   ## SVG style end path command.
@@ -757,6 +785,9 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
+
+
+
 
   # fragColor = blendNormalFloats(fragColor, vec4(1,0,0,topIndex/32))
 

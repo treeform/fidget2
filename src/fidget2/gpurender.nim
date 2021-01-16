@@ -1,5 +1,6 @@
 import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
-    pixie, print, schema, staticglfw, tables, typography, typography/textboxes, vmath
+    pixie, print, schema, staticglfw, tables, typography, typography/textboxes,
+    vmath, times
 
 var
   # Window stuff.
@@ -8,6 +9,7 @@ var
   window*: Window
   offscreen* = false
   windowResizable*: bool
+  vSync*: bool
 
   # Text edit.
   textBox*: TextBox
@@ -53,9 +55,15 @@ var
   vertShaderArray = allocCStringArray([vertShaderSrc]) # dealloc'd at the end
   fragShaderArray = allocCStringArray([fragShaderSrc]) # dealloc'd at the end
 
+  scissorOn = false
+  currentFrameBufferId = 0
+  viewPortRect: Rect
+
+
 proc updateGpuAtlas() =
   ## Upload the atlas to the GPU (if its dirty).
   if textureAtlas.dirty:
+    echo "upload atlas"
     glBindTexture(GL_TEXTURE_2D, textureAtlasId)
     glTexImage2D(
       GL_TEXTURE_2D,
@@ -130,6 +138,11 @@ proc createWindow*(
   viewPortHeight = frameNode.absoluteBoundingBox.h.int
 
   # Open a window.
+
+  if not vSync:
+    # Disable V-Sync
+    windowHint(DOUBLEBUFFER, false.cint)
+
   windowHint(VISIBLE, (not offscreen).cint)
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
@@ -860,7 +873,8 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
 
         downloadFont(node.style.fontPostScriptName)
-        font = readFontTtf("figma/fonts/" & node.style.fontPostScriptName & ".ttf")
+        let fontPath = "figma/fonts/" & node.style.fontPostScriptName & ".ttf"
+        font = readFontTtf(fontPath)
         typefaceCache[node.style.fontPostScriptName] = font.typeface
       else:
         font = Font()
@@ -1000,27 +1014,44 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
 proc drawGpuFrameToScreen*(node: Node) =
   ## Draws the GPU frame to screen.
+
+  let start1 = epochTime()
+
   setupRender(node)
   node.readyImages()
   updateGpuAtlas()
 
-  glDisable(GL_SCISSOR_TEST)
-  glBindFramebuffer(GL_FRAMEBUFFER, 0)
-  glViewport(
-    0,
-    0,
-    viewPortWidth.cint,
-    viewPortHeight.cint
-  )
+  if scissorOn:
+    glDisable(GL_SCISSOR_TEST)
+    scissorOn = false
+  if currentFrameBufferId != 0:
+    currentFrameBufferId = 0
+    glBindFramebuffer(GL_FRAMEBUFFER, 0)
+  if viewPortRect != rect(0, 0, viewPortWidth.float32, viewPortHeight.float32):
+    viewPortRect = rect(0, 0, viewPortWidth.float32, viewPortHeight.float32)
+    echo "set vp"
+    glViewport(
+      viewPortRect.x.cint,
+      viewPortRect.y.cint,
+      viewPortRect.w.cint,
+      viewPortRect.h.cint
+    )
 
   node.box.xy = vec2(0, 0)
   node.size = node.box.wh
   for c in node.children:
     computeLayout(node, c)
 
+  #echo "setup part ", (epochTime() - start1)*1000, "ms"
+
+  let start = epochTime()
+
   drawNode(node, 0)
   dataBufferSeq.add(cmdExit)
+  #print dataBufferSeq
   drawBuffers()
+
+  #echo "draw part ", (epochTime() - start)*1000, "ms"
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
   ## Draws the GPU frame to atlas.
