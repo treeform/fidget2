@@ -2,7 +2,7 @@
 precision highp float;
 // from svgMain
 
-float blendMode;
+int blendMode;
 float x1;
 float shadowSpread;
 int windingRule = 0;
@@ -337,21 +337,27 @@ void runCommands(
   int i = 0;
   while(true) {
     float command = texelFetch(dataBuffer, i).x;
-    if (command == 0.0) {
-      break;
-    } else if (command == 1.0) {
+    switch(int(command)) {
+    case 0:{
+      return;
+    }; break;
+    case 1:{
       startPath(texelFetch(dataBuffer, i + 1).x);
       i += 1;
-    } else if (command == 2.0) {
+    }; break;
+    case 2:{
       endPath();
-    } else if (command == 4.0) {
+    }; break;
+    case 4:{
       solidFill(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x);
       i += 4;
-    } else if (command == 5.0) {
+    }; break;
+    case 5:{
       float opacity = texelFetch(dataBuffer, i + 1).x;
       backdropColor = backdropColor * opacity;
       i += 1;
-    } else if (command == 6.0) {
+    }; break;
+    case 6:{
       tMat[0][0] = texelFetch(dataBuffer, i + 1).x;
       tMat[0][1] = texelFetch(dataBuffer, i + 2).x;
       tMat[0][2] = 0.0;
@@ -370,7 +376,8 @@ void runCommands(
       size.y = texelFetch(dataBuffer, i + 11).x;
       textureFill(tMat, tile, pos, size);
       i += 11;
-    } else if (command == 7.0) {
+    }; break;
+    case 7:{
       vec2 at = vec2(0.0);
       vec2 to = vec2(0.0);
       at.x = texelFetch(dataBuffer, i + 1).x;
@@ -379,7 +386,8 @@ void runCommands(
       to.y = texelFetch(dataBuffer, i + 4).x;
       gradientLinear(at, to);
       i += 4;
-    } else if (command == 8.0) {
+    }; break;
+    case 8:{
       vec2 at = vec2(0.0);
       vec2 to = vec2(0.0);
       at.x = texelFetch(dataBuffer, i + 1).x;
@@ -388,10 +396,12 @@ void runCommands(
       to.y = texelFetch(dataBuffer, i + 4).x;
       gradientRadial(at, to);
       i += 4;
-    } else if (command == 9.0) {
+    }; break;
+    case 9:{
       gradientStop(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x, texelFetch(dataBuffer, i + 5).x);
       i += 5;
-    } else if (command == 3.0) {
+    }; break;
+    case 3:{
       mat[0][0] = texelFetch(dataBuffer, i + 1).x;
       mat[0][1] = texelFetch(dataBuffer, i + 2).x;
       mat[0][2] = 0.0;
@@ -402,21 +412,27 @@ void runCommands(
       mat[2][1] = texelFetch(dataBuffer, i + 6).x;
       mat[2][2] = 1.0;
       i += 6;
-    } else if (command == 10.0) {
+    }; break;
+    case 10:{
       M(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
       i += 2;
-    } else if (command == 11.0) {
+    }; break;
+    case 11:{
       L(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
       i += 2;
-    } else if (command == 12.0) {
+    }; break;
+    case 12:{
       C(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x, texelFetch(dataBuffer, i + 5).x, texelFetch(dataBuffer, i + 6).x);
       i += 6;
-    } else if (command == 13.0) {
+    }; break;
+    case 13:{
       Q(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x);
       i += 4;
-    } else if (command == 14.0) {
+    }; break;
+    case 14:{
       z();
-    } else if (command == 15.0) {
+    }; break;
+    case 15:{
       vec2 minP = vec2(0.0);
       vec2 maxP = vec2(0.0);
       minP.x = texelFetch(dataBuffer, i + 1).x;
@@ -439,24 +455,30 @@ void runCommands(
       if (! (overlap(minS, maxS, minP, maxP))) {
         i = label - 1;
       }
-    } else if (command == 16.0) {
+    }; break;
+    case 16:{
       maskOn = true;
       maskStackTop += 1;
       maskStack[maskStackTop] = 0.0;
-    } else if (command == 17.0) {
+    }; break;
+    case 17:{
       maskOn = false;
-    } else if (command == 18.0) {
+    }; break;
+    case 18:{
       maskStackTop -= 1;
-    } else if (command == 19.0) {
+    }; break;
+    case 19:{
       float index = texelFetch(dataBuffer, i + 1).x;
       if (0.0 < fillMask * mask) {
         topIndex = index;
       }
       i += 1;
-    } else if (command == 20.0) {
+    }; break;
+    case 20:{
       layerBlur = texelFetch(dataBuffer, i + 1).x;
       i += 1;
-    } else if (command == 21.0) {
+    }; break;
+    case 21:{
       shadowOn = true;
       shadowColor.x = texelFetch(dataBuffer, i + 1).x;
       shadowColor.y = texelFetch(dataBuffer, i + 2).x;
@@ -467,9 +489,14 @@ void runCommands(
       shadowRadius = texelFetch(dataBuffer, i + 7).x;
       shadowSpread = texelFetch(dataBuffer, i + 8).x;
       i += 8;
-    } else if (command == 22.0) {
-      blendMode = texelFetch(dataBuffer, i + 1).x;
+    }; break;
+    case 22:{
+      blendMode = int(texelFetch(dataBuffer, i + 1).x);
       i += 1;
+    }; break;
+    default: {
+      ;
+    }; break;
     }
     i += 1;
   }
@@ -643,54 +670,79 @@ void finalColor(
   } else {
     vec4 c = applyColor;
     c.w = c.w * maskStack[maskStackTop];
-    if (blendMode == 0.0) {
+    switch(blendMode) {
+    case 0:{
       backdropColor = blendNormalFloats(backdropColor, c);
-    } else if (blendMode == 1.0) {
+    }; break;
+    case 1:{
       backdropColor = blendDarkenFloats(backdropColor, c);
-    } else if (blendMode == 1.0) {
-      backdropColor = blendDarkenFloats(backdropColor, c);
-    } else if (blendMode == 2.0) {
+    }; break;
+    case 2:{
       backdropColor = blendMultiplyFloats(backdropColor, c);
-    } else if (blendMode == 3.0) {
+    }; break;
+    case 3:{
       backdropColor = blendLinearBurnFloats(backdropColor, c);
-    } else if (blendMode == 4.0) {
+    }; break;
+    case 4:{
       backdropColor = blendColorBurnFloats(backdropColor, c);
-    } else if (blendMode == 5.0) {
+    }; break;
+    case 5:{
       backdropColor = blendLightenFloats(backdropColor, c);
-    } else if (blendMode == 6.0) {
+    }; break;
+    case 6:{
       backdropColor = blendScreenFloats(backdropColor, c);
-    } else if (blendMode == 7.0) {
+    }; break;
+    case 7:{
       backdropColor = blendLinearDodgeFloats(backdropColor, c);
-    } else if (blendMode == 8.0) {
+    }; break;
+    case 8:{
       backdropColor = blendColorDodgeFloats(backdropColor, c);
-    } else if (blendMode == 9.0) {
+    }; break;
+    case 9:{
       backdropColor = blendOverlayFloats(backdropColor, c);
-    } else if (blendMode == 10.0) {
+    }; break;
+    case 10:{
       backdropColor = blendSoftLightFloats(backdropColor, c);
-    } else if (blendMode == 11.0) {
+    }; break;
+    case 11:{
       backdropColor = blendHardLightFloats(backdropColor, c);
-    } else if (blendMode == 12.0) {
+    }; break;
+    case 12:{
       backdropColor = blendDifferenceFloats(backdropColor, c);
-    } else if (blendMode == 13.0) {
+    }; break;
+    case 13:{
       backdropColor = blendExclusionFloats(backdropColor, c);
-    } else if (blendMode == 16.0) {
+    }; break;
+    case 16:{
       backdropColor = blendColorFloats(backdropColor, c);
-    } else if (blendMode == 17.0) {
+    }; break;
+    case 17:{
       backdropColor = blendLuminosityFloats(backdropColor, c);
-    } else if (blendMode == 14.0) {
+    }; break;
+    case 14:{
       backdropColor = blendHueFloats(backdropColor, c);
-    } else if (blendMode == 15.0) {
+    }; break;
+    case 15:{
       backdropColor = blendSaturationFloats(backdropColor, c);
-    } else if (blendMode == 18.0) {
+    }; break;
+    case 18:{
       backdropColor = blendMaskFloats(backdropColor, c);
-    } else if (blendMode == 20.0) {
+    }; break;
+    case 20:{
       backdropColor = blendSubtractMaskFloats(backdropColor, c);
-    } else if (blendMode == 21.0) {
+    }; break;
+    case 21:{
       backdropColor = blendIntersectMaskFloats(backdropColor, c);
-    } else if (blendMode == 22.0) {
+    }; break;
+    case 22:{
       backdropColor = blendExcludeMaskFloats(backdropColor, c);
-    } else if (blendMode == 19.0) {
+    }; break;
+    case 19:{
       backdropColor = blendOverwriteFloats(backdropColor, c);
+    }; break;
+    default: {
+      ;
+    }; break;
     }
   }
 }
@@ -1064,7 +1116,7 @@ void bezier(
   // Turn a cubic curve into N lines.
   vec2 p = A;
   float dist = length(A - B) + length(B - C) + length(C - D);
-  int discretization = clamp(int(float(dist) * 0.5), 1, 1);
+  int discretization = clamp(int(float(dist) * 0.5), 1, 20);
   for(int t = 1; t <= discretization; t++) {
     vec2 q = interpolate(A, B, C, D, float(t) / float(discretization));
     line(p, q);
@@ -1223,7 +1275,7 @@ void main() {
   shadowOffset = vec2(0.0, 0.0);
   shadowRadius = 0.0;
   shadowSpread = 0.0;
-  blendMode = 0.0;
+  blendMode = 0;
   float bias = 0.0001;
   vec2 offset = vec2(float(bias - 0.5), float(bias - 0.5));
   fragColor = runPixel(gl_FragCoord.xy + offset);
