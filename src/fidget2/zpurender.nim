@@ -8,7 +8,7 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
   drawNode(node, 0)
 
-  dataBufferSeq.add(cmdExit)
+  dataBufferSeq.add(cmdExit.float32)
 
   textureAtlasSampler.image = textureAtlas.image
 
@@ -34,7 +34,7 @@ proc getIndexAt*(node: Node, mousePos: Vec2): int =
   setupRender(node)
   drawNode(node, 0)
 
-  dataBufferSeq.add(cmdExit)
+  dataBufferSeq.add(cmdExit.float32)
 
   textureAtlasSampler.image = textureAtlas.image
 

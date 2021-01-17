@@ -14,55 +14,55 @@ const
 
 const
   ## Command "enums"
-  cmdExit*: float32 = 0
-  cmdStartPath*: float32 = 1
-  kEvenOdd*: float32 = 0
-  kNonZero*: float32 = 1
-  cmdEndPath*: float32 = 2
-  cmdSetMat*: float32 = 3
-  cmdSolidFill*: float32 = 4
-  cmdApplyOpacity*: float32 = 5
-  cmdTextureFill*: float32 = 6
-  cmdGradientLinear*: float32 = 7
-  cmdGradientRadial*: float32 = 8
-  cmdGradientStop*: float32 = 9
-  cmdM*: float32 = 10
-  cmdL*: float32 = 11
-  cmdC*: float32 = 12
-  cmdQ*: float32 = 13
-  cmdz*: float32 = 14
-  cmdBoundCheck*: float32 = 15
-  cmdMaskStart*: float32 = 16
-  cmdMaskPush*: float32 = 17
-  cmdMaskPop*: float32 = 18
-  cmdIndex*: float32 = 19
-  cmdLayerBlur*: float32 = 20
-  cmdDropShadow*: float32 = 21
-  cmdSetBlendMode*: float32 = 22
+  cmdExit*: int = 0
+  cmdStartPath*: int = 1
+  kEvenOdd*: int = 0
+  kNonZero*: int = 1
+  cmdEndPath*: int = 2
+  cmdSetMat*: int = 3
+  cmdSolidFill*: int = 4
+  cmdApplyOpacity*: int = 5
+  cmdTextureFill*: int = 6
+  cmdGradientLinear*: int = 7
+  cmdGradientRadial*: int = 8
+  cmdGradientStop*: int = 9
+  cmdM*: int = 10
+  cmdL*: int = 11
+  cmdC*: int = 12
+  cmdQ*: int = 13
+  cmdz*: int = 14
+  cmdBoundCheck*: int = 15
+  cmdMaskStart*: int = 16
+  cmdMaskPush*: int = 17
+  cmdMaskPop*: int = 18
+  cmdIndex*: int = 19
+  cmdLayerBlur*: int = 20
+  cmdDropShadow*: int = 21
+  cmdSetBlendMode*: int = 22
 
-  cbmNormal*: float32 = 0
-  cbmDarken*: float32 = 1
-  cbmMultiply*: float32 = 2
-  cbmLinearBurn*: float32 = 3
-  cbmColorBurn*: float32 = 4
-  cbmLighten*: float32 = 5
-  cbmScreen*: float32 = 6
-  cbmLinearDodge*: float32 = 7
-  cbmColorDodge*: float32 = 8
-  cbmOverlay*: float32 = 9
-  cbmSoftLight*: float32 = 10
-  cbmHardLight*: float32 = 11
-  cbmDifference*: float32 = 12
-  cbmExclusion*: float32 = 13
-  cbmHue*: float32 = 14
-  cbmSaturation*: float32 = 15
-  cbmColor*: float32 = 16
-  cbmLuminosity*: float32 = 17
-  cbmMask *: float32 = 18
-  cbmOverwrite  *: float32 = 19
-  cbmSubtractMask *: float32 = 20
-  cbmIntersectMask*: float32 = 21
-  cbmExcludeMask*: float32 = 22
+  cbmNormal*: int = 0
+  cbmDarken*: int = 1
+  cbmMultiply*: int = 2
+  cbmLinearBurn*: int = 3
+  cbmColorBurn*: int = 4
+  cbmLighten*: int = 5
+  cbmScreen*: int = 6
+  cbmLinearDodge*: int = 7
+  cbmColorDodge*: int = 8
+  cbmOverlay*: int = 9
+  cbmSoftLight*: int = 10
+  cbmHardLight*: int = 11
+  cbmDifference*: int = 12
+  cbmExclusion*: int = 13
+  cbmHue*: int = 14
+  cbmSaturation*: int = 15
+  cbmColor*: int = 16
+  cbmLuminosity*: int = 17
+  cbmMask*: int = 18
+  cbmOverwrite*: int = 19
+  cbmSubtractMask*: int = 20
+  cbmIntersectMask*: int = 21
+  cbmExcludeMask*: int = 22
 
 var
   crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
@@ -93,7 +93,7 @@ var
   shadowRadius: float32
   shadowSpread: float32
 
-  blendMode: float32      # Current blend mode.
+  blendMode: int          # Current blend mode.
 
 proc lineDir(a, b: Vec2): float32 =
   ## Return the direction of the line (up or down).
@@ -278,54 +278,55 @@ proc finalColor(applyColor: Vec4) =
     var c = applyColor
     c.w = c.w * maskStack[maskStackTop]
     when useBlends:
-      if blendMode == cbmNormal:
-        backdropColor = blendNormalFloats(backdropColor, c)
-      elif blendMode == cbmDarken:
-        backdropColor = blendDarkenFloats(backdropColor, c)
-      elif blendMode == cbmDarken:
-        backdropColor = blendDarkenFloats(backdropColor, c)
-      elif blendMode == cbmMultiply:
-        backdropColor = blendMultiplyFloats(backdropColor, c)
-      elif blendMode == cbmLinearBurn:
-        backdropColor = blendLinearBurnFloats(backdropColor, c)
-      elif blendMode == cbmColorBurn:
-        backdropColor = blendColorBurnFloats(backdropColor, c)
-      elif blendMode == cbmLighten:
-        backdropColor = blendLightenFloats(backdropColor, c)
-      elif blendMode == cbmScreen:
-        backdropColor = blendScreenFloats(backdropColor, c)
-      elif blendMode == cbmLinearDodge:
-        backdropColor = blendLinearDodgeFloats(backdropColor, c)
-      elif blendMode == cbmColorDodge:
-        backdropColor = blendColorDodgeFloats(backdropColor, c)
-      elif blendMode == cbmOverlay:
-        backdropColor = blendOverlayFloats(backdropColor, c)
-      elif blendMode == cbmSoftLight:
-        backdropColor = blendSoftLightFloats(backdropColor, c)
-      elif blendMode == cbmHardLight:
-        backdropColor = blendHardLightFloats(backdropColor, c)
-      elif blendMode == cbmDifference:
-        backdropColor = blendDifferenceFloats(backdropColor, c)
-      elif blendMode == cbmExclusion:
-        backdropColor = blendExclusionFloats(backdropColor, c)
-      elif blendMode == cbmColor:
-        backdropColor = blendColorFloats(backdropColor, c)
-      elif blendMode == cbmLuminosity:
-        backdropColor = blendLuminosityFloats(backdropColor, c)
-      elif blendMode == cbmHue:
-        backdropColor = blendHueFloats(backdropColor, c)
-      elif blendMode == cbmSaturation:
-        backdropColor = blendSaturationFloats(backdropColor, c)
-      elif blendMode == cbmMask:
-        backdropColor = blendMaskFloats(backdropColor, c)
-      elif blendMode == cbmSubtractMask:
-        backdropColor = blendSubtractMaskFloats(backdropColor, c)
-      elif blendMode == cbmIntersectMask:
-        backdropColor = blendIntersectMaskFloats(backdropColor, c)
-      elif blendMode == cbmExcludeMask:
-        backdropColor = blendExcludeMaskFloats(backdropColor, c)
-      elif blendMode == cbmOverwrite:
-        backdropColor = blendOverwriteFloats(backdropColor, c)
+      case blendMode:
+        of cbmNormal:
+          backdropColor = blendNormalFloats(backdropColor, c)
+        of cbmDarken:
+          backdropColor = blendDarkenFloats(backdropColor, c)
+        of cbmMultiply:
+          backdropColor = blendMultiplyFloats(backdropColor, c)
+        of cbmLinearBurn:
+          backdropColor = blendLinearBurnFloats(backdropColor, c)
+        of cbmColorBurn:
+          backdropColor = blendColorBurnFloats(backdropColor, c)
+        of cbmLighten:
+          backdropColor = blendLightenFloats(backdropColor, c)
+        of cbmScreen:
+          backdropColor = blendScreenFloats(backdropColor, c)
+        of cbmLinearDodge:
+          backdropColor = blendLinearDodgeFloats(backdropColor, c)
+        of cbmColorDodge:
+          backdropColor = blendColorDodgeFloats(backdropColor, c)
+        of cbmOverlay:
+          backdropColor = blendOverlayFloats(backdropColor, c)
+        of cbmSoftLight:
+          backdropColor = blendSoftLightFloats(backdropColor, c)
+        of cbmHardLight:
+          backdropColor = blendHardLightFloats(backdropColor, c)
+        of cbmDifference:
+          backdropColor = blendDifferenceFloats(backdropColor, c)
+        of cbmExclusion:
+          backdropColor = blendExclusionFloats(backdropColor, c)
+        of cbmColor:
+          backdropColor = blendColorFloats(backdropColor, c)
+        of cbmLuminosity:
+          backdropColor = blendLuminosityFloats(backdropColor, c)
+        of cbmHue:
+          backdropColor = blendHueFloats(backdropColor, c)
+        of cbmSaturation:
+          backdropColor = blendSaturationFloats(backdropColor, c)
+        of cbmMask:
+          backdropColor = blendMaskFloats(backdropColor, c)
+        of cbmSubtractMask:
+          backdropColor = blendSubtractMaskFloats(backdropColor, c)
+        of cbmIntersectMask:
+          backdropColor = blendIntersectMaskFloats(backdropColor, c)
+        of cbmExcludeMask:
+          backdropColor = blendExcludeMaskFloats(backdropColor, c)
+        of cbmOverwrite:
+          backdropColor = blendOverwriteFloats(backdropColor, c)
+        else:
+          discard
     else:
       backdropColor = blendNormalFloats(backdropColor, c)
 
@@ -554,18 +555,18 @@ proc runCommands() =
   var i = 0
   while true:
     let command = texelFetch(dataBuffer, i).x
+    case command.int:
+    of cmdExit:
+      return
 
-    if command == cmdExit:
-      break
-
-    elif command == cmdStartPath:
+    of cmdStartPath:
       startPath(texelFetch(dataBuffer, i + 1).x)
       i += 1
 
-    elif command == cmdEndPath:
+    of cmdEndPath:
       endPath()
 
-    elif command == cmdSolidFill:
+    of cmdSolidFill:
       solidFill(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x,
@@ -574,12 +575,12 @@ proc runCommands() =
       )
       i += 4
 
-    elif command == cmdApplyOpacity:
+    of cmdApplyOpacity:
       let opacity = texelFetch(dataBuffer, i + 1).x
       backdropColor = backdropColor * opacity
       i += 1
 
-    elif command == cmdTextureFill:
+    of cmdTextureFill:
       tMat[0, 0] = texelFetch(dataBuffer, i + 1).x
       tMat[0, 1] = texelFetch(dataBuffer, i + 2).x
       tMat[0, 2] = 0
@@ -599,7 +600,7 @@ proc runCommands() =
       textureFill(tMat, tile, pos, size)
       i += 11
 
-    elif command == cmdGradientLinear:
+    of cmdGradientLinear:
       var at, to: Vec2
       at.x = texelFetch(dataBuffer, i + 1).x
       at.y = texelFetch(dataBuffer, i + 2).x
@@ -608,7 +609,7 @@ proc runCommands() =
       gradientLinear(at, to)
       i += 4
 
-    elif command == cmdGradientRadial:
+    of cmdGradientRadial:
       var at, to: Vec2
       at.x = texelFetch(dataBuffer, i + 1).x
       at.y = texelFetch(dataBuffer, i + 2).x
@@ -617,7 +618,7 @@ proc runCommands() =
       gradientRadial(at, to)
       i += 4
 
-    elif command == cmdGradientStop:
+    of cmdGradientStop:
       gradientStop(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x,
@@ -627,7 +628,7 @@ proc runCommands() =
       )
       i += 5
 
-    elif command == cmdSetMat:
+    of cmdSetMat:
       mat[0, 0] = texelFetch(dataBuffer, i + 1).x
       mat[0, 1] = texelFetch(dataBuffer, i + 2).x
       mat[0, 2] = 0
@@ -639,21 +640,21 @@ proc runCommands() =
       mat[2, 2] = 1
       i += 6
 
-    elif command == cmdM:
+    of cmdM:
       M(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x
       )
       i += 2
 
-    elif command == cmdL:
+    of cmdL:
       L(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x
       )
       i += 2
 
-    elif command == cmdC:
+    of cmdC:
       C(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x,
@@ -664,7 +665,7 @@ proc runCommands() =
       )
       i += 6
 
-    elif command == cmdQ:
+    of cmdQ:
       Q(
         texelFetch(dataBuffer, i + 1).x,
         texelFetch(dataBuffer, i + 2).x,
@@ -673,10 +674,10 @@ proc runCommands() =
       )
       i += 4
 
-    elif command == cmdz:
+    of cmdz:
       z()
 
-    elif command == cmdBoundCheck:
+    of cmdBoundCheck:
       # Jump over code if screen not in bounds
       var
         minP: Vec2
@@ -706,28 +707,28 @@ proc runCommands() =
       if not overlap(minS, maxS, minP, maxP):
         i = label - 1
 
-    elif command == cmdMaskStart:
+    of cmdMaskStart:
       maskOn = true
       maskStackTop += 1
       maskStack[maskStackTop] = 0.0
 
-    elif command == cmdMaskPush:
+    of cmdMaskPush:
       maskOn = false
 
-    elif command == cmdMaskPop:
+    of cmdMaskPop:
       maskStackTop -= 1
 
-    elif command == cmdIndex:
+    of cmdIndex:
       let index = texelFetch(dataBuffer, i + 1).x
       if fillMask * mask > 0:
         topIndex = index
       i += 1
 
-    elif command == cmdLayerBlur:
+    of cmdLayerBlur:
       layerBlur = texelFetch(dataBuffer, i + 1).x
       i += 1
 
-    elif command == cmdDropShadow:
+    of cmdDropShadow:
       shadowOn = true
       shadowColor.x = texelFetch(dataBuffer, i + 1).x
       shadowColor.y = texelFetch(dataBuffer, i + 2).x
@@ -739,9 +740,12 @@ proc runCommands() =
       shadowSpread = texelFetch(dataBuffer, i + 8).x
       i += 8
 
-    elif command == cmdSetBlendMode:
-      blendMode = texelFetch(dataBuffer, i + 1).x
+    of cmdSetBlendMode:
+      blendMode = texelFetch(dataBuffer, i + 1).x.int
       i += 1
+
+    else:
+      discard
 
     i += 1
 
@@ -780,7 +784,7 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   shadowRadius = 0.0
   shadowSpread = 0.0
 
-  blendMode = 0.0
+  blendMode = 0
 
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)

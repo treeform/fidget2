@@ -59,7 +59,6 @@ var
   currentFrameBufferId = 0
   viewPortRect: Rect
 
-
 proc updateGpuAtlas() =
   ## Upload the atlas to the GPU (if its dirty).
   if textureAtlas.dirty:
@@ -128,7 +127,7 @@ proc createWindow*(
   ## Also setups all the shaders and buffers.
 
   setupRender(frameNode)
-  dataBufferSeq.add(cmdExit)
+  dataBufferSeq.add(cmdExit.float32)
 
   # Init glfw.
   if init() == 0:
@@ -343,12 +342,12 @@ proc drawEllipse(pos, size: Vec2) =
   l2h = matC * l2h
 
   dataBufferSeq.add @[
-    cmdM, t1.x, t1.y,
-    cmdC, t2h.x, t2h.y, r1h.x, r1h.y, r1.x, r1.y,
-    cmdC, r2h.x, r2h.y, b1h.x, b1h.y, b1.x, b1.y,
-    cmdC, b2h.x, b2h.y, l1h.x, l1h.y, l1.x, l1.y,
-    cmdC, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
-    cmdz,
+    cmdM.float32, t1.x, t1.y,
+    cmdC.float32, t2h.x, t2h.y, r1h.x, r1h.y, r1.x, r1.y,
+    cmdC.float32, r2h.x, r2h.y, b1h.x, b1h.y, b1.x, b1.y,
+    cmdC.float32, b2h.x, b2h.y, l1h.x, l1h.y, l1.x, l1.y,
+    cmdC.float32, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
+    cmdz.float32,
   ]
 
 proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
@@ -385,16 +384,16 @@ proc drawRect(pos, size: Vec2, nw, ne, se, sw: float32) =
     l2h = l2 + vec2(0, -nw*s)
 
   dataBufferSeq.add @[
-    cmdM, t1.x, t1.y,
-    cmdL, t2.x, t2.y,
-    cmdC, t2h.x, t2h.y, r1h.x, r1h.y, r1.x, r1.y,
-    cmdL, r2.x, r2.y,
-    cmdC, r2h.x, r2h.y, b1h.x, b1h.y, b1.x, b1.y,
-    cmdL, b2.x, b2.y,
-    cmdC, b2h.x, b2h.y, l1h.x, l1h.y, l1.x, l1.y,
-    cmdL, l2.x, l2.y,
-    cmdC, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
-    cmdz,
+    cmdM.float32, t1.x, t1.y,
+    cmdL.float32, t2.x, t2.y,
+    cmdC.float32, t2h.x, t2h.y, r1h.x, r1h.y, r1.x, r1.y,
+    cmdL.float32, r2.x, r2.y,
+    cmdC.float32, r2h.x, r2h.y, b1h.x, b1h.y, b1.x, b1.y,
+    cmdL.float32, b2.x, b2.y,
+    cmdC.float32, b2h.x, b2h.y, l1h.x, l1h.y, l1.x, l1.y,
+    cmdL.float32, l2.x, l2.y,
+    cmdC.float32, l2h.x, l2h.y, t1h.x, t1h.y, t1.x, t1.y,
+    cmdz.float32,
   ]
 
 proc drawRect(pos, size: Vec2) =
@@ -405,19 +404,19 @@ proc drawRect(pos, size: Vec2) =
     w = size.x
     h = size.y
   dataBufferSeq.add @[
-    cmdM, x, y,
-    cmdL, x, y,
-    cmdL, x + w, y,
-    cmdL, x + w, y + h,
-    cmdL, x, y + h,
-    cmdz,
+    cmdM.float32, x, y,
+    cmdL.float32, x, y,
+    cmdL.float32, x + w, y,
+    cmdL.float32, x + w, y + h,
+    cmdL.float32, x, y + h,
+    cmdz.float32,
   ]
 
 proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
   ## Takes a path and turn it into commands.
   ## Including the windingRule.
   ## Inserts cmdStartPath/cmdEndPath.
-  dataBufferSeq.add cmdStartPath
+  dataBufferSeq.add cmdStartPath.float32
   case windingRule
   of wrEvenOdd:
     dataBufferSeq.add 0
@@ -427,17 +426,17 @@ proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
   for command in commands:
     case command.kind
     of pixie.Move:
-      dataBufferSeq.add cmdM
+      dataBufferSeq.add cmdM.float32
       var pos = vec2(command.numbers[0], command.numbers[1])
       dataBufferSeq.add pos.x
       dataBufferSeq.add pos.y
     of pixie.Line:
-      dataBufferSeq.add cmdL
+      dataBufferSeq.add cmdL.float32
       var pos = vec2(command.numbers[0], command.numbers[1])
       dataBufferSeq.add pos.x
       dataBufferSeq.add pos.y
     of pixie.Cubic:
-      dataBufferSeq.add cmdC
+      dataBufferSeq.add cmdC.float32
       for i in 0 ..< 3:
         var pos = vec2(
           command.numbers[i*2+0],
@@ -447,7 +446,7 @@ proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
         dataBufferSeq.add pos.y
     of pixie.Quad:
       assert command.numbers.len == 4
-      dataBufferSeq.add cmdQ
+      dataBufferSeq.add cmdQ.float32
       for i in 0 ..< 2:
         var pos = vec2(
           command.numbers[i*2+0],
@@ -456,16 +455,16 @@ proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
         dataBufferSeq.add pos.x
         dataBufferSeq.add pos.y
     of pixie.End:
-      dataBufferSeq.add cmdz
+      dataBufferSeq.add cmdz.float32
     else:
       quit($command.kind & " not supported command kind.")
 
-  dataBufferSeq.add cmdEndPath
+  dataBufferSeq.add cmdEndPath.float32
 
 proc drawGradientStops(paint: Paint) =
   # Add Gradient stops.
   dataBufferSeq.add @[
-    cmdGradientStop,
+    cmdGradientStop.float32,
     -1E6,
     paint.gradientStops[0].color.r,
     paint.gradientStops[0].color.g,
@@ -474,7 +473,7 @@ proc drawGradientStops(paint: Paint) =
   ]
   for stop in paint.gradientStops:
     dataBufferSeq.add @[
-      cmdGradientStop,
+      cmdGradientStop.float32,
       stop.position,
       stop.color.r,
       stop.color.g,
@@ -482,7 +481,7 @@ proc drawGradientStops(paint: Paint) =
       stop.color.a
     ]
   dataBufferSeq.add @[
-    cmdGradientStop,
+    cmdGradientStop.float32,
     1E6,
     paint.gradientStops[^1].color.r,
     paint.gradientStops[^1].color.g,
@@ -576,7 +575,7 @@ proc drawPaint(node: Node, paint: Paint) =
       tMat = scale(vec2(s)) * translate(rect.xy) *
         (mat * scale(vec2(paint.scalingFactor))).inverse()
 
-    dataBufferSeq.add cmdTextureFill
+    dataBufferSeq.add cmdTextureFill.float32
     dataBufferSeq.add tMat[0, 0]
     dataBufferSeq.add tMat[0, 1]
     dataBufferSeq.add tMat[1, 0]
@@ -591,7 +590,7 @@ proc drawPaint(node: Node, paint: Paint) =
 
   of pkSolid:
     dataBufferSeq.add @[
-      cmdSolidFill,
+      cmdSolidFill.float32,
       paint.color.r,
       paint.color.g,
       paint.color.b,
@@ -603,7 +602,7 @@ proc drawPaint(node: Node, paint: Paint) =
       to = paint.gradientHandlePositions[1].toImageSpace()
     # Setup the gradient location
     dataBufferSeq.add @[
-      cmdGradientLinear,
+      cmdGradientLinear.float32,
       at.x, at.y,
       to.x, to.y
     ]
@@ -615,7 +614,7 @@ proc drawPaint(node: Node, paint: Paint) =
       to = paint.gradientHandlePositions[1].toImageSpace()
     # Setup the gradient location
     dataBufferSeq.add @[
-      cmdGradientRadial,
+      cmdGradientRadial.float32,
       at.x, at.y,
       to.x, to.y
     ]
@@ -624,7 +623,7 @@ proc drawPaint(node: Node, paint: Paint) =
   else:
     # debug pink
     dataBufferSeq.add @[
-      cmdSolidFill,
+      cmdSolidFill.float32,
       1,
       0.5,
       0.5,
@@ -632,7 +631,7 @@ proc drawPaint(node: Node, paint: Paint) =
     ]
 
   dataBufferSeq.add @[
-    cmdIndex,
+    cmdIndex.float32,
     node.idNum.float32
   ]
 
@@ -708,9 +707,9 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     opacity = opacity * node.opacity
 
   if node.isMask:
-    dataBufferSeq.add cmdMaskStart
+    dataBufferSeq.add cmdMaskStart.float32
 
-  dataBufferSeq.add cmdSetMat
+  dataBufferSeq.add cmdSetMat.float32
   dataBufferSeq.add mat[0, 0]
   dataBufferSeq.add mat[0, 1]
   dataBufferSeq.add mat[1, 0]
@@ -722,10 +721,10 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     # Node frame needs to clip its children.
     # Create a mask.
     # All frames are rounded rectangles of some sort.
-    dataBufferSeq.add cmdMaskStart
+    dataBufferSeq.add cmdMaskStart.float32
 
-    dataBufferSeq.add cmdStartPath
-    dataBufferSeq.add kNonZero
+    dataBufferSeq.add cmdStartPath.float32
+    dataBufferSeq.add kNonZero.float32
     if node.rectangleCornerRadii.len == 4:
       let r = node.rectangleCornerRadii
       drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
@@ -734,27 +733,27 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
       drawRect(vec2(0, 0), node.size, r, r, r, r)
     else:
       drawRect(vec2(0, 0), node.size)
-    dataBufferSeq.add cmdEndPath
+    dataBufferSeq.add cmdEndPath.float32
 
     dataBufferSeq.add @[
-      cmdSolidFill,
+      cmdSolidFill.float32,
       1,
       0.5,
       0.5,
       1
     ]
 
-    dataBufferSeq.add cmdMaskPush
+    dataBufferSeq.add cmdMaskPush.float32
 
   if node.blendMode != currentBlendMode:
     currentBlendMode = node.blendMode
-    dataBufferSeq.add cmdSetBlendMode
+    dataBufferSeq.add cmdSetBlendMode.float32
     dataBufferSeq.add ord(node.blendMode).float32
 
   node.computePixelBox()
 
   var jmpOffset = 0
-  dataBufferSeq.add cmdBoundCheck
+  dataBufferSeq.add cmdBoundCheck.float32
   dataBufferSeq.add node.pixelBox.x
   dataBufferSeq.add node.pixelBox.y
   dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
@@ -764,11 +763,11 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
   for effect in node.effects:
     if effect.kind == ekLayerBlur:
-      dataBufferSeq.add cmdLayerBlur
+      dataBufferSeq.add cmdLayerBlur.float32
       dataBufferSeq.add effect.radius
     if effect.kind == ekDropShadow:
       dataBufferSeq.add @[
-        cmdDropShadow,
+        cmdDropShadow.float32,
         effect.color.r,
         effect.color.g,
         effect.color.b,
@@ -785,8 +784,8 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
     of nkRectangle, nkFrame, nkInstance, nkComponent:
       if node.fills.len > 0:
-        dataBufferSeq.add cmdStartPath
-        dataBufferSeq.add kNonZero
+        dataBufferSeq.add cmdStartPath.float32
+        dataBufferSeq.add kNonZero.float32
         if node.rectangleCornerRadii.len == 4:
           let r = node.rectangleCornerRadii
           drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
@@ -795,15 +794,15 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           drawRect(vec2(0, 0), node.size, r, r, r, r)
         else:
           drawRect(vec2(0, 0), node.size)
-        dataBufferSeq.add cmdEndPath
+        dataBufferSeq.add cmdEndPath.float32
         for paint in node.fills:
           drawPaint(node, paint)
 
       if node.strokes.len > 0:
         let (inner, outer) = node.strokeInnerOuter()
 
-        dataBufferSeq.add cmdStartPath
-        dataBufferSeq.add kEvenOdd
+        dataBufferSeq.add cmdStartPath.float32
+        dataBufferSeq.add kEvenOdd.float32
         if node.rectangleCornerRadii.len == 4:
           let r = node.rectangleCornerRadii
           drawRect(
@@ -831,26 +830,26 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
         else:
           drawRect(vec2(-outer, -outer), node.size + vec2(outer*2, outer*2))
           drawRect(vec2(+inner, +inner), node.size - vec2(inner*2, inner*2))
-        dataBufferSeq.add cmdEndPath
+        dataBufferSeq.add cmdEndPath.float32
 
         for paint in node.strokes:
           drawPaint(node, paint)
 
     of nkEllipse:
-      dataBufferSeq.add cmdStartPath
-      dataBufferSeq.add kNonZero
+      dataBufferSeq.add cmdStartPath.float32
+      dataBufferSeq.add kNonZero.float32
       drawEllipse(node.size/2, node.size/2)
-      dataBufferSeq.add cmdEndPath
+      dataBufferSeq.add cmdEndPath.float32
       for paint in node.fills:
         drawPaint(node, paint)
 
       if node.strokes.len > 0:
         let (inner, outer) = node.strokeInnerOuter()
-        dataBufferSeq.add kEvenOdd
-        dataBufferSeq.add kNonZero
+        dataBufferSeq.add kEvenOdd.float32
+        dataBufferSeq.add kNonZero.float32
         drawEllipse(node.size/2, node.size/2 + vec2(outer))
         drawEllipse(node.size/2, node.size/2 - vec2(inner))
-        dataBufferSeq.add cmdEndPath
+        dataBufferSeq.add cmdEndPath.float32
         for paint in node.strokes:
           drawPaint(node, paint)
 
@@ -910,15 +909,15 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
         for i, gpos in layout:
           # Draw text cursor and selection.
           proc drawCursor(rect: Rect) =
-            dataBufferSeq.add cmdStartPath
-            dataBufferSeq.add kNonZero
+            dataBufferSeq.add cmdStartPath.float32
+            dataBufferSeq.add kNonZero.float32
             drawRect(
               rect.xy,
               rect.wh
             )
-            dataBufferSeq.add cmdEndPath
+            dataBufferSeq.add cmdEndPath.float32
             dataBufferSeq.add @[
-              cmdSolidFill,
+              cmdSolidFill.float32,
               0,
               0,
               0,
@@ -953,7 +952,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
             gpos.rect.x + gpos.subPixelShift,
             gpos.rect.y
           )) * scale(vec2(font.scale, -font.scale))
-          dataBufferSeq.add cmdSetMat
+          dataBufferSeq.add cmdSetMat.float32
           dataBufferSeq.add cMat[0, 0]
           dataBufferSeq.add cMat[0, 1]
           dataBufferSeq.add cMat[1, 0]
@@ -961,7 +960,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           dataBufferSeq.add cMat[2, 0]
           dataBufferSeq.add cMat[2, 1]
 
-          dataBufferSeq.add cmdBoundCheck
+          dataBufferSeq.add cmdBoundCheck.float32
           dataBufferSeq.add glyph.bboxMin.x
           dataBufferSeq.add glyph.bboxMin.y
           dataBufferSeq.add glyph.bboxMax.x
@@ -1001,13 +1000,13 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   # Pop all of the child mask nodes.
   for c in node.children:
     if c.isMask:
-      dataBufferSeq.add cmdMaskPop
+      dataBufferSeq.add cmdMaskPop.float32
 
   if node.clipsContent and level != 0:
-    dataBufferSeq.add cmdMaskPop
+    dataBufferSeq.add cmdMaskPop.float32
 
   if node.isMask:
-    dataBufferSeq.add cmdMaskPush
+    dataBufferSeq.add cmdMaskPush.float32
 
   mat = prevMat
   opacity = prevOpacity
@@ -1047,7 +1046,7 @@ proc drawGpuFrameToScreen*(node: Node) =
   let start = epochTime()
 
   drawNode(node, 0)
-  dataBufferSeq.add(cmdExit)
+  dataBufferSeq.add(cmdExit.float32)
   #print dataBufferSeq
   drawBuffers()
 
@@ -1093,7 +1092,7 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
     computeLayout(node, c)
 
   drawNode(node, 0, rootMat)
-  dataBufferSeq.add(cmdExit)
+  dataBufferSeq.add(cmdExit.float32)
   drawBuffers()
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
@@ -1141,7 +1140,7 @@ proc dumpCommandStream*() =
   ## Prints commands stream in a readable format:
   var i = 0
   while true:
-    let command = dataBufferSeq[i]
+    let command = dataBufferSeq[i].int
 
     if command == cmdExit:
       print "cmdExit"

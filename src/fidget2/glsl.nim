@@ -424,6 +424,32 @@ proc toCode(n: NimNode, res: var string, level = 0) =
   of nnkProcDef:
     quit "Nested proc definitions are not allowed."
 
+  of nnkCaseStmt:
+    res.addIndent level
+    res.add "switch("
+    n[0].toCode(res)
+    res.add ") {\n"
+    for branch in n[1 .. ^1]:
+      if branch.kind == nnkOfBranch:
+        res.addIndent level
+        res.add "case "
+        branch[0].toCode(res)
+        res.add ":{\n"
+        branch[1].toCodeStmts(res, level + 1)
+        res.addIndent level
+        res.add "}; break;\n"
+      elif branch.kind == nnkElse:
+        res.addIndent level
+        res.add "default: {\n"
+        branch[0].toCodeStmts(res, level + 1)
+        res.addIndent level
+        res.add "}; break;\n"
+      else:
+        echo n.treeRepr
+        quit "^ can't compile branch"
+    res.addIndent level
+    res.add "}"
+
   else:
     echo n.treeRepr
     quit "^ can't compile"
