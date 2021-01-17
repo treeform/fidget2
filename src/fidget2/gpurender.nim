@@ -718,7 +718,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   dataBufferSeq.add mat[2, 0]
   dataBufferSeq.add mat[2, 1]
 
-  if node.clipsContent:
+  if node.clipsContent and level != 0:
     # Node frame needs to clip its children.
     # Create a mask.
     # All frames are rounded rectangles of some sort.
@@ -1003,7 +1003,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     if c.isMask:
       dataBufferSeq.add cmdMaskPop
 
-  if node.clipsContent:
+  if node.clipsContent and level != 0:
     dataBufferSeq.add cmdMaskPop
 
   if node.isMask:
@@ -1136,3 +1136,193 @@ proc readGpuPixelsFromAtlas*(name: string, crop = true): pixie.Image =
     return cutout
   else:
     return screen
+
+proc dumpCommandStream*() =
+  ## Prints commands stream in a readable format:
+  var i = 0
+  while true:
+    let command = dataBufferSeq[i]
+
+    if command == cmdExit:
+      print "cmdExit"
+      break
+
+    elif command == cmdStartPath:
+      let rule = dataBufferSeq[i + 1]
+      print "cmdStartPath", rule
+      i += 1
+
+    elif command == cmdEndPath:
+      print "cmdEndPath"
+
+    elif command == cmdSolidFill:
+      let c = chroma.color(
+        dataBufferSeq[i + 1],
+        dataBufferSeq[i + 2],
+        dataBufferSeq[i + 3],
+        dataBufferSeq[i + 4]
+      )
+      i += 4
+      print "cmdSolidFill", c
+
+    elif command == cmdApplyOpacity:
+      let opacity = dataBufferSeq[i + 1]
+      print "cmdApplyOpacity", opacity
+      i += 1
+
+    elif command == cmdTextureFill:
+      var tMat: Mat3
+      tMat[0, 0] = dataBufferSeq[i + 1]
+      tMat[0, 1] = dataBufferSeq[i + 2]
+      tMat[0, 2] = 0
+      tMat[1, 0] = dataBufferSeq[i + 3]
+      tMat[1, 1] = dataBufferSeq[i + 4]
+      tMat[1, 2] = 0
+      tMat[2, 0] = dataBufferSeq[i + 5]
+      tMat[2, 1] = dataBufferSeq[i + 6]
+      tMat[2, 2] = 1
+      let tile = dataBufferSeq[i + 7]
+      var pos: Vec2
+      pos.x = dataBufferSeq[i + 8]
+      pos.y = dataBufferSeq[i + 9]
+      var size: Vec2
+      size.x = dataBufferSeq[i + 10]
+      size.y = dataBufferSeq[i + 11]
+      i += 11
+      print "cmdTextureFill", tMat, tile, pos, size
+
+    elif command == cmdGradientLinear:
+      var at, to: Vec2
+      at.x = dataBufferSeq[i + 1]
+      at.y = dataBufferSeq[i + 2]
+      to.x = dataBufferSeq[i + 3]
+      to.y = dataBufferSeq[i + 4]
+      i += 4
+      print "cmdGradientLinear", at, to
+
+    elif command == cmdGradientRadial:
+      var at, to: Vec2
+      at.x = dataBufferSeq[i + 1]
+      at.y = dataBufferSeq[i + 2]
+      to.x = dataBufferSeq[i + 3]
+      to.y = dataBufferSeq[i + 4]
+      i += 4
+      print "cmdGradientRadial", at, to
+
+    elif command == cmdGradientStop:
+      print "cmdGradientStop", (
+        dataBufferSeq[i + 1],
+        dataBufferSeq[i + 2],
+        dataBufferSeq[i + 3],
+        dataBufferSeq[i + 4],
+        dataBufferSeq[i + 5]
+      )
+      i += 5
+
+    elif command == cmdSetMat:
+      var mat: Mat3
+      mat[0, 0] = dataBufferSeq[i + 1]
+      mat[0, 1] = dataBufferSeq[i + 2]
+      mat[0, 2] = 0
+      mat[1, 0] = dataBufferSeq[i + 3]
+      mat[1, 1] = dataBufferSeq[i + 4]
+      mat[1, 2] = 0
+      mat[2, 0] = dataBufferSeq[i + 5]
+      mat[2, 1] = dataBufferSeq[i + 6]
+      mat[2, 2] = 1
+      i += 6
+      print "cmdSetMat", mat
+
+    elif command == cmdM:
+      let to = vec2(
+        dataBufferSeq[i + 1],
+        dataBufferSeq[i + 2]
+      )
+      i += 2
+      print "cmdM", to
+
+    elif command == cmdL:
+      let to = vec2(
+        dataBufferSeq[i + 1],
+        dataBufferSeq[i + 2]
+      )
+      i += 2
+      print "cmdL", to
+
+    elif command == cmdC:
+      let args = (
+        dataBufferSeq[i + 1],
+        dataBufferSeq[i + 2],
+        dataBufferSeq[i + 3],
+        dataBufferSeq[i + 4],
+        dataBufferSeq[i + 5],
+        dataBufferSeq[i + 6]
+      )
+      i += 6
+      print "cmdC", args
+
+    elif command == cmdQ:
+      let args = (
+        dataBufferSeq[i + 1],
+        dataBufferSeq[i + 2],
+        dataBufferSeq[i + 3],
+        dataBufferSeq[i + 4],
+      )
+      i += 4
+      print "cmdQ", args
+
+    elif command == cmdz:
+      print "cmdz"
+
+    elif command == cmdBoundCheck:
+      # Jump over code if screen not in bounds
+      var
+        minP: Vec2
+        maxP: Vec2
+      minP.x = dataBufferSeq[i + 1]
+      minP.y = dataBufferSeq[i + 2]
+      maxP.x = dataBufferSeq[i + 3]
+      maxP.y = dataBufferSeq[i + 4]
+      let label = dataBufferSeq[i + 5].int
+      i += 5
+      print "cmdBoundCheck", minP, maxP, label
+
+    elif command == cmdMaskStart:
+      print "cmdMaskStart"
+
+    elif command == cmdMaskPush:
+      print "cmdMaskPush"
+
+    elif command == cmdMaskPop:
+      print "cmdMaskPop"
+
+    elif command == cmdIndex:
+      let index = dataBufferSeq[i + 1]
+      i += 1
+      print "cmdIndex", index
+
+    elif command == cmdLayerBlur:
+      let layerBlur = dataBufferSeq[i + 1]
+      i += 1
+      print "cmdLayerBlur", layerBlur
+
+    elif command == cmdDropShadow:
+      var shadowColor: Vec4
+      shadowColor.x = dataBufferSeq[i + 1]
+      shadowColor.y = dataBufferSeq[i + 2]
+      shadowColor.z = dataBufferSeq[i + 3]
+      shadowColor.w = dataBufferSeq[i + 4]
+      var shadowOffset: Vec2
+      shadowOffset.x = dataBufferSeq[i + 5]
+      shadowOffset.y = dataBufferSeq[i + 6]
+      let shadowRadius = dataBufferSeq[i + 7]
+      let shadowSpread = dataBufferSeq[i + 8]
+      i += 8
+      print "cmdDropShadow", shadowColor, shadowOffset, shadowRadius, shadowSpread
+
+    elif command == cmdSetBlendMode:
+      let blendMode = dataBufferSeq[i + 1]
+      print "cmdSetBlendMode", blendMode
+      i += 1
+
+    i += 1

@@ -1064,7 +1064,7 @@ void bezier(
   // Turn a cubic curve into N lines.
   vec2 p = A;
   float dist = length(A - B) + length(B - C) + length(C - D);
-  int discretization = clamp(int(float(dist) * 0.5), 1, 20);
+  int discretization = clamp(int(float(dist) * 0.5), 1, 1);
   for(int t = 1; t <= discretization; t++) {
     vec2 q = interpolate(A, B, C, D, float(t) / float(discretization));
     line(p, q);

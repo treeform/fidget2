@@ -472,6 +472,8 @@ proc display() =
 
   if frameNum mod 60 == 0:
     echo "frame ", (epochTime() - start)*1000, "ms"
+  if frameNum == 1:
+    dumpCommandStream()
   inc frameNum
 
 proc startFidget*(
