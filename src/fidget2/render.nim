@@ -223,7 +223,6 @@ proc applyPaint(
   # Optimization: if its the first paint and blend mode is normal,
   # pixels are just the effects.
   if paint.blendMode == bmNormal and paintNum == 0:
-  #   #echo "skip re-draw"
     node.pixels = effects
   else:
     node.pixels.draw(effects, blendMode = paint.blendMode)
@@ -442,7 +441,6 @@ proc drawNodeInternal*(node: Node) =
 
   of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
     if node.fills.len > 0:
-      #echo "making rect", node.size
       fillMask = newImage(w, h)
       var path = newPath()
       if node.cornerRadius > 0:
@@ -474,9 +472,7 @@ proc drawNodeInternal*(node: Node) =
         if node.pixelBox.x == 0 and
           node.pixelBox.y == 0 and
           node.pixelBox.wh == node.size:
-          #echo "simple mask case"
           applyMask = false
-          #fillMask.fill(white)
 
         if applyMask:
           path.rect(
@@ -573,15 +569,13 @@ proc drawNodeInternal*(node: Node) =
   of nkVector, nkStar, nkEllipse, nkLine, nkRegularPolygon:
     if node.fills.len > 0:
       fillMask = newImage(w, h)
-      var geometry = newImage(w, h)
       for geom in node.fillGeometry:
-        geometry.fillPath(
+        fillMask.fillPath(
           geom.path,
           white,
           mat,
           geom.windingRule
         )
-        fillMask.draw(geometry)
 
     if node.strokes.len > 0:
       strokeMask = newImage(w, h)
@@ -657,11 +651,14 @@ proc drawNodeInternal*(node: Node) =
         blendMode
       )
 
-  for i, fill in node.fills:
-    applyPaint(fillMask, fill, node, mat, i, applyMask = applyMask)
+  var paintNum = 0
+  for fill in node.fills:
+    applyPaint(fillMask, fill, node, mat, paintNum, applyMask = applyMask)
+    inc paintNum
 
-  for i, stroke in node.strokes:
-    applyPaint(strokeMask, stroke, node, mat, i)
+  for stroke in node.strokes:
+    applyPaint(strokeMask, stroke, node, mat, paintNum)
+    inc paintNum
 
   for effect in node.effects:
     if effect.kind == ekInnerShadow:

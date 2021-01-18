@@ -437,13 +437,19 @@ proc toCode(n: NimNode, res: var string, level = 0) =
         res.add ":{\n"
         branch[1].toCodeStmts(res, level + 1)
         res.addIndent level
-        res.add "}; break;\n"
+        if branch[1].kind == nnkReturnStmt or branch[1].kind == nnkBreakStmt:
+          res.add "};\n"
+        else:
+          res.add "}; break;\n"
       elif branch.kind == nnkElse:
         res.addIndent level
         res.add "default: {\n"
         branch[0].toCodeStmts(res, level + 1)
         res.addIndent level
-        res.add "}; break;\n"
+        if branch[0].kind == nnkReturnStmt or branch[0].kind == nnkBreakStmt:
+          res.add "};\n"
+        else:
+          res.add "}; break;\n"
       else:
         echo n.treeRepr
         quit "^ can't compile branch"
@@ -787,9 +793,9 @@ proc texture*(buffer: Uniform[Sampler2D], pos: Vec2): Vec4 =
     ((pos.y mod 1.0) * buffer.image.height.float32)
   ).vec4
 
-proc floor*(a: Vec2): Vec2 =
-  result.x = a.x.floor
-  result.y = a.y.floor
+# proc floor*(a: Vec2): Vec2 =
+#   result.x = a.x.floor
+#   result.y = a.y.floor
 
 proc round*(a: Vec2): Vec2 =
   result.x = a.x.round

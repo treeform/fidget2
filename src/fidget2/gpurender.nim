@@ -137,7 +137,6 @@ proc createWindow*(
   viewPortHeight = frameNode.absoluteBoundingBox.h.int
 
   # Open a window.
-
   if not vSync:
     # Disable V-Sync
     windowHint(DOUBLEBUFFER, false.cint)
@@ -454,7 +453,7 @@ proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
         )
         dataBufferSeq.add pos.x
         dataBufferSeq.add pos.y
-    of pixie.End:
+    of pixie.Close:
       dataBufferSeq.add cmdz.float32
     else:
       quit($command.kind & " not supported command kind.")
@@ -752,14 +751,17 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
   node.computePixelBox()
 
+  var hasBoundsCheck = false
   var jmpOffset = 0
-  dataBufferSeq.add cmdBoundCheck.float32
-  dataBufferSeq.add node.pixelBox.x
-  dataBufferSeq.add node.pixelBox.y
-  dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
-  dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
-  jmpOffset = dataBufferSeq.len
-  dataBufferSeq.add 0
+  if level != 0:
+    hasBoundsCheck = true
+    dataBufferSeq.add cmdBoundCheck.float32
+    dataBufferSeq.add node.pixelBox.x
+    dataBufferSeq.add node.pixelBox.y
+    dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
+    dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
+    jmpOffset = dataBufferSeq.len
+    dataBufferSeq.add 0
 
   for effect in node.effects:
     if effect.kind == ekLayerBlur:
@@ -978,7 +980,8 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
     else:
       echo($node.kind & " not supported")
 
-  dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
+  if hasBoundsCheck:
+    dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
   if node.kind == nkBooleanOperation:
     # Set the child nodes as boolean operations

@@ -11,6 +11,8 @@ var textureAtlasSampler*: Uniform[Sampler2d]
 const
   useAA = true
   useBlends = true
+  useMask = true
+  useBounds = true
 
 const
   ## Command "enums"
@@ -276,59 +278,65 @@ proc finalColor(applyColor: Vec4) =
     maskStack[maskStackTop] += applyColor.w
   else:
     var c = applyColor
-    c.w = c.w * maskStack[maskStackTop]
+    when useMask:
+      c.w = c.w * maskStack[maskStackTop]
+
     when useBlends:
-      case blendMode:
-        of cbmNormal:
-          backdropColor = blendNormalFloats(backdropColor, c)
-        of cbmDarken:
-          backdropColor = blendDarkenFloats(backdropColor, c)
-        of cbmMultiply:
-          backdropColor = blendMultiplyFloats(backdropColor, c)
-        of cbmLinearBurn:
-          backdropColor = blendLinearBurnFloats(backdropColor, c)
-        of cbmColorBurn:
-          backdropColor = blendColorBurnFloats(backdropColor, c)
-        of cbmLighten:
-          backdropColor = blendLightenFloats(backdropColor, c)
-        of cbmScreen:
-          backdropColor = blendScreenFloats(backdropColor, c)
-        of cbmLinearDodge:
-          backdropColor = blendLinearDodgeFloats(backdropColor, c)
-        of cbmColorDodge:
-          backdropColor = blendColorDodgeFloats(backdropColor, c)
-        of cbmOverlay:
-          backdropColor = blendOverlayFloats(backdropColor, c)
-        of cbmSoftLight:
-          backdropColor = blendSoftLightFloats(backdropColor, c)
-        of cbmHardLight:
-          backdropColor = blendHardLightFloats(backdropColor, c)
-        of cbmDifference:
-          backdropColor = blendDifferenceFloats(backdropColor, c)
-        of cbmExclusion:
-          backdropColor = blendExclusionFloats(backdropColor, c)
-        of cbmColor:
-          backdropColor = blendColorFloats(backdropColor, c)
-        of cbmLuminosity:
-          backdropColor = blendLuminosityFloats(backdropColor, c)
-        of cbmHue:
-          backdropColor = blendHueFloats(backdropColor, c)
-        of cbmSaturation:
-          backdropColor = blendSaturationFloats(backdropColor, c)
-        of cbmMask:
-          backdropColor = blendMaskFloats(backdropColor, c)
-        of cbmSubtractMask:
-          backdropColor = blendSubtractMaskFloats(backdropColor, c)
-        of cbmIntersectMask:
-          backdropColor = blendIntersectMaskFloats(backdropColor, c)
-        of cbmExcludeMask:
-          backdropColor = blendExcludeMaskFloats(backdropColor, c)
-        of cbmOverwrite:
-          backdropColor = blendOverwriteFloats(backdropColor, c)
-        else:
-          discard
+      if blendMode == cbmNormal:
+        backdropColor = blendNormalFloats(backdropColor, c)
+      else:
+        case blendMode:
+          of cbmNormal:
+            backdropColor = blendNormalFloats(backdropColor, c)
+          of cbmDarken:
+            backdropColor = blendDarkenFloats(backdropColor, c)
+          of cbmMultiply:
+            backdropColor = blendMultiplyFloats(backdropColor, c)
+          of cbmLinearBurn:
+            backdropColor = blendLinearBurnFloats(backdropColor, c)
+          of cbmColorBurn:
+            backdropColor = blendColorBurnFloats(backdropColor, c)
+          of cbmLighten:
+            backdropColor = blendLightenFloats(backdropColor, c)
+          of cbmScreen:
+            backdropColor = blendScreenFloats(backdropColor, c)
+          of cbmLinearDodge:
+            backdropColor = blendLinearDodgeFloats(backdropColor, c)
+          of cbmColorDodge:
+            backdropColor = blendColorDodgeFloats(backdropColor, c)
+          of cbmOverlay:
+            backdropColor = blendOverlayFloats(backdropColor, c)
+          of cbmSoftLight:
+            backdropColor = blendSoftLightFloats(backdropColor, c)
+          of cbmHardLight:
+            backdropColor = blendHardLightFloats(backdropColor, c)
+          of cbmDifference:
+            backdropColor = blendDifferenceFloats(backdropColor, c)
+          of cbmExclusion:
+            backdropColor = blendExclusionFloats(backdropColor, c)
+          of cbmColor:
+            backdropColor = blendColorFloats(backdropColor, c)
+          of cbmLuminosity:
+            backdropColor = blendLuminosityFloats(backdropColor, c)
+          of cbmHue:
+            backdropColor = blendHueFloats(backdropColor, c)
+          of cbmSaturation:
+            backdropColor = blendSaturationFloats(backdropColor, c)
+          of cbmMask:
+            backdropColor = blendMaskFloats(backdropColor, c)
+          of cbmSubtractMask:
+            backdropColor = blendSubtractMaskFloats(backdropColor, c)
+          of cbmIntersectMask:
+            backdropColor = blendIntersectMaskFloats(backdropColor, c)
+          of cbmExcludeMask:
+            backdropColor = blendExcludeMaskFloats(backdropColor, c)
+          of cbmOverwrite:
+            backdropColor = blendOverwriteFloats(backdropColor, c)
+          else:
+            discard
     else:
       backdropColor = blendNormalFloats(backdropColor, c)
+
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
@@ -704,8 +712,9 @@ proc runCommands() =
       maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x))
       maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y))
 
-      if not overlap(minS, maxS, minP, maxP):
-        i = label - 1
+      when useBounds:
+        if not overlap(minS, maxS, minP, maxP):
+          i = label - 1
 
     of cmdMaskStart:
       maskOn = true

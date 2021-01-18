@@ -59,9 +59,25 @@ proc alphaFix(backdrop, source, mixed: Vec4): Vec4 =
   result.y /= result.w
   result.z /= result.w
 
+proc alphaFix2(backdrop, source: Vec4): Vec4 =
+  result.w = (source.w + backdrop.w * (1.0 - source.w))
+  if result.w == 0:
+    return
+
+  let
+    t01 = source.w
+    t2 = (1 - source.w) * backdrop.w
+
+  result.x = (t01) * source.x + t2 * backdrop.x
+  result.y = (t01) * source.y + t2 * backdrop.y
+  result.z = (t01) * source.z + t2 * backdrop.z
+
+  result.x /= result.w
+  result.y /= result.w
+  result.z /= result.w
+
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 {.inline.} =
-  result = source
-  result = alphaFix(backdrop, source, result)
+  result = alphaFix2(backdrop, source)
 
 proc blendDarkenFloats*(backdrop, source: Vec4): Vec4 {.inline.} =
   result.x = min(backdrop.x, source.x)

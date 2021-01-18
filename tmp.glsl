@@ -50,6 +50,7 @@ float pixelCross(vec2 a0, vec2 b0);
 vec4 blendOverwriteFloats(vec4 backdrop, vec4 source);
 void runCommands();
 vec4 blendIntersectMaskFloats(vec4 backdrop, vec4 source);
+vec4 alphaFix2(vec4 backdrop, vec4 source);
 void ClipColor(inout vec4 C);
 float pixelCover(vec2 a0, vec2 b0);
 vec4 blendDarkenFloats(vec4 backdrop, vec4 source);
@@ -340,7 +341,7 @@ void runCommands(
     switch(int(command)) {
     case 0:{
       return;
-    }; break;
+    };
     case 1:{
       startPath(texelFetch(dataBuffer, i + 1).x);
       i += 1;
@@ -512,6 +513,26 @@ vec4 blendIntersectMaskFloats(
   return result;
 }
 
+vec4 alphaFix2(
+  vec4 backdrop,
+  vec4 source
+) {
+  vec4 result;
+  result.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
+  if (result.w == 0.0) {
+    return result;
+  }
+  float t01 = source.w;
+  float t2 = (1.0 - source.w) * (backdrop.w);
+  result.x = t01 * source.x + t2 * backdrop.x;
+  result.y = t01 * source.y + t2 * backdrop.y;
+  result.z = t01 * source.z + t2 * backdrop.z;
+  result.x /= result.w;
+  result.y /= result.w;
+  result.z /= result.w;
+  return result;
+}
+
 void ClipColor(
   inout vec4 C
 ) {
@@ -670,79 +691,83 @@ void finalColor(
   } else {
     vec4 c = applyColor;
     c.w = c.w * maskStack[maskStackTop];
-    switch(blendMode) {
-    case 0:{
+    if (blendMode == 0) {
       backdropColor = blendNormalFloats(backdropColor, c);
-    }; break;
-    case 1:{
-      backdropColor = blendDarkenFloats(backdropColor, c);
-    }; break;
-    case 2:{
-      backdropColor = blendMultiplyFloats(backdropColor, c);
-    }; break;
-    case 3:{
-      backdropColor = blendLinearBurnFloats(backdropColor, c);
-    }; break;
-    case 4:{
-      backdropColor = blendColorBurnFloats(backdropColor, c);
-    }; break;
-    case 5:{
-      backdropColor = blendLightenFloats(backdropColor, c);
-    }; break;
-    case 6:{
-      backdropColor = blendScreenFloats(backdropColor, c);
-    }; break;
-    case 7:{
-      backdropColor = blendLinearDodgeFloats(backdropColor, c);
-    }; break;
-    case 8:{
-      backdropColor = blendColorDodgeFloats(backdropColor, c);
-    }; break;
-    case 9:{
-      backdropColor = blendOverlayFloats(backdropColor, c);
-    }; break;
-    case 10:{
-      backdropColor = blendSoftLightFloats(backdropColor, c);
-    }; break;
-    case 11:{
-      backdropColor = blendHardLightFloats(backdropColor, c);
-    }; break;
-    case 12:{
-      backdropColor = blendDifferenceFloats(backdropColor, c);
-    }; break;
-    case 13:{
-      backdropColor = blendExclusionFloats(backdropColor, c);
-    }; break;
-    case 16:{
-      backdropColor = blendColorFloats(backdropColor, c);
-    }; break;
-    case 17:{
-      backdropColor = blendLuminosityFloats(backdropColor, c);
-    }; break;
-    case 14:{
-      backdropColor = blendHueFloats(backdropColor, c);
-    }; break;
-    case 15:{
-      backdropColor = blendSaturationFloats(backdropColor, c);
-    }; break;
-    case 18:{
-      backdropColor = blendMaskFloats(backdropColor, c);
-    }; break;
-    case 20:{
-      backdropColor = blendSubtractMaskFloats(backdropColor, c);
-    }; break;
-    case 21:{
-      backdropColor = blendIntersectMaskFloats(backdropColor, c);
-    }; break;
-    case 22:{
-      backdropColor = blendExcludeMaskFloats(backdropColor, c);
-    }; break;
-    case 19:{
-      backdropColor = blendOverwriteFloats(backdropColor, c);
-    }; break;
-    default: {
-      ;
-    }; break;
+    } else {
+      switch(blendMode) {
+      case 0:{
+        backdropColor = blendNormalFloats(backdropColor, c);
+      }; break;
+      case 1:{
+        backdropColor = blendDarkenFloats(backdropColor, c);
+      }; break;
+      case 2:{
+        backdropColor = blendMultiplyFloats(backdropColor, c);
+      }; break;
+      case 3:{
+        backdropColor = blendLinearBurnFloats(backdropColor, c);
+      }; break;
+      case 4:{
+        backdropColor = blendColorBurnFloats(backdropColor, c);
+      }; break;
+      case 5:{
+        backdropColor = blendLightenFloats(backdropColor, c);
+      }; break;
+      case 6:{
+        backdropColor = blendScreenFloats(backdropColor, c);
+      }; break;
+      case 7:{
+        backdropColor = blendLinearDodgeFloats(backdropColor, c);
+      }; break;
+      case 8:{
+        backdropColor = blendColorDodgeFloats(backdropColor, c);
+      }; break;
+      case 9:{
+        backdropColor = blendOverlayFloats(backdropColor, c);
+      }; break;
+      case 10:{
+        backdropColor = blendSoftLightFloats(backdropColor, c);
+      }; break;
+      case 11:{
+        backdropColor = blendHardLightFloats(backdropColor, c);
+      }; break;
+      case 12:{
+        backdropColor = blendDifferenceFloats(backdropColor, c);
+      }; break;
+      case 13:{
+        backdropColor = blendExclusionFloats(backdropColor, c);
+      }; break;
+      case 16:{
+        backdropColor = blendColorFloats(backdropColor, c);
+      }; break;
+      case 17:{
+        backdropColor = blendLuminosityFloats(backdropColor, c);
+      }; break;
+      case 14:{
+        backdropColor = blendHueFloats(backdropColor, c);
+      }; break;
+      case 15:{
+        backdropColor = blendSaturationFloats(backdropColor, c);
+      }; break;
+      case 18:{
+        backdropColor = blendMaskFloats(backdropColor, c);
+      }; break;
+      case 20:{
+        backdropColor = blendSubtractMaskFloats(backdropColor, c);
+      }; break;
+      case 21:{
+        backdropColor = blendIntersectMaskFloats(backdropColor, c);
+      }; break;
+      case 22:{
+        backdropColor = blendExcludeMaskFloats(backdropColor, c);
+      }; break;
+      case 19:{
+        backdropColor = blendOverwriteFloats(backdropColor, c);
+      }; break;
+      default: {
+        ;
+      }; break;
+      }
     }
   }
 }
@@ -873,8 +898,7 @@ vec4 blendNormalFloats(
   vec4 source
 ) {
   vec4 result;
-  result = source;
-  result = alphaFix(backdrop, source, result);
+  result = alphaFix2(backdrop, source);
   return result;
 }
 
