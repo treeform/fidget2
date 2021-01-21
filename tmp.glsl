@@ -17,6 +17,7 @@ float y0;
 vec4 shadowColor;
 float y1;
 vec4 prevGradientColor;
+int boolMode;
 mat3 tMat;
 float gradientK;
 float fillMask = 0.0;
@@ -41,20 +42,15 @@ vec4 blendLinearDodgeFloats(vec4 backdrop, vec4 source);
 void C(float x1, float y1, float x2, float y2, float x, float y);
 vec4 blendLightenFloats(vec4 backdrop, vec4 source);
 vec4 blendHueFloats(vec4 backdrop, vec4 source);
-vec4 blendSubtractMaskFloats(vec4 backdrop, vec4 source);
 float toLineSpace(vec2 at, vec2 to, vec2 point);
 void z();
 void Q(float x1, float y1, float x, float y);
 void quadratic(vec2 p0, vec2 p1, vec2 p2);
 float pixelCross(vec2 a0, vec2 b0);
-vec4 blendOverwriteFloats(vec4 backdrop, vec4 source);
 void runCommands();
-vec4 blendIntersectMaskFloats(vec4 backdrop, vec4 source);
 vec4 alphaFix2(vec4 backdrop, vec4 source);
 void ClipColor(inout vec4 C);
-float pixelCover(vec2 a0, vec2 b0);
 vec4 blendDarkenFloats(vec4 backdrop, vec4 source);
-vec4 blendExcludeMaskFloats(vec4 backdrop, vec4 source);
 vec4 alphaFix(vec4 backdrop, vec4 source, vec4 mixed);
 vec4 runPixel(vec2 xy);
 vec4 blendSoftLightFloats(vec4 backdrop, vec4 source);
@@ -77,11 +73,10 @@ vec4 blendHardLightFloats(vec4 backdrop, vec4 source);
 vec4 SetSat(vec4 C, float s);
 vec4 blendLinearBurnFloats(vec4 backdrop, vec4 source);
 float hardLight(float backdrop, float source);
-vec4 blendMaskFloats(vec4 backdrop, vec4 source);
 void textureFill(mat3 tMat, float tile, vec2 pos, vec2 size);
+bool overlap(vec2 minA, vec2 maxA, vec2 minB, vec2 maxB);
 vec2 interpolate(vec2 G1, vec2 G2, vec2 G3, vec2 G4, float t);
 float lineDir(vec2 a, vec2 b);
-bool overlap(vec2 minA, vec2 maxA, vec2 minB, vec2 maxB);
 vec4 blendSaturationFloats(vec4 backdrop, vec4 source);
 void bezier(vec2 A, vec2 B, vec2 C, vec2 D);
 void M(float x, float y);
@@ -107,20 +102,17 @@ float Sat(
 void draw(
 ) {
   // Apply the winding rule.
+  // NO AA WAY
   if (windingRule == 0) {
-    fillMask = 0.0;
-    int n = 4;
-    for(int x = 0; x < n; x++) {
-      for(int y = 0; y < n; y++) {
-        if (! (float(zmod(crossCountMat[x][y], 2.0)) == 0.0)) {
-          fillMask += 1.0;
-        }
-      }
+    if (! (zmod(crossCountMat[0][0], 2.0) == 0.0)) {
+      fillMask = 1.0;
     }
-    fillMask = fillMask / float(n * n);
   } else {
-    fillMask = clamp(abs(fillMask), 0.0, 1.0);
+    if (! (crossCountMat[0][0] == 0.0)) {
+      fillMask = 1.0;
+    }
   }
+
 }
 
 float colorDodgeBlend(
@@ -226,16 +218,6 @@ vec4 blendHueFloats(
   return result;
 }
 
-vec4 blendSubtractMaskFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = backdrop;
-  result.w = (backdrop.w) * (1.0 - source.w);
-  return result;
-}
-
 float toLineSpace(
   vec2 at,
   vec2 to,
@@ -320,15 +302,6 @@ float pixelCross(
     }
   }
   result = 0.0;
-  return result;
-}
-
-vec4 blendOverwriteFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = source;
   return result;
 }
 
@@ -495,22 +468,19 @@ void runCommands(
       blendMode = int(texelFetch(dataBuffer, i + 1).x);
       i += 1;
     }; break;
+    case 23:{
+      boolMode = int(texelFetch(dataBuffer, i + 1).x);
+      i += 1;
+    }; break;
+    case 24:{
+      fillMask = 1.0;
+    }; break;
     default: {
       ;
     }; break;
     }
     i += 1;
   }
-}
-
-vec4 blendIntersectMaskFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = backdrop;
-  result.w = backdrop.w * source.w;
-  return result;
 }
 
 vec4 alphaFix2(
@@ -547,64 +517,6 @@ void ClipColor(
   }
 }
 
-float pixelCover(
-  vec2 a0,
-  vec2 b0
-) {
-  float result;
-  // Returns the amount of area a given segment sweeps to the right
-  // in a [0,0 to 1,1] box.
-  vec2 a = a0;
-  vec2 b = b0;
-  vec2 aI = vec2(0.0);
-  vec2 bI = vec2(0.0);
-  float area = 0.0;
-  if (b.y < a.y) {
-    vec2 tmp = a;
-    a = b;
-    b = tmp;
-  }
-  if (((b.y < 0.0) || (1.0 < a.y) || 1.0 <= a.x && 1.0 <= b.x) || (a.y == b.y)) {
-    result = 0.0;
-    return result;
-  } else if (((a.x < 0.0) && (b.x < 0.0)) || (a.x == b.x)) {
-    result = (1.0 - clamp(a.x, 0.0, 1.0)) * (min(b.y, 1.0) - max(a.y, 0.0));
-    return result;
-  } else {
-    float mm = (b.y - a.y) / (b.x - a.x);
-    float bb = a.y - mm * a.x;
-    if (((0.0 <= a.x) && (a.x <= 1.0) && 0.0 <= a.y) && (a.y <= 1.0)) {
-      aI = a;
-    } else {
-      aI = vec2((0.0 - bb) / (mm), 0.0);
-      if (aI.x < 0.0) {
-        float y = mm * 0.0 + bb;
-        area += clamp(min(bb, 1.0) - max(a.y, 0.0), 0.0, 1.0);
-        aI = vec2(0.0, clamp(y, 0.0, 1.0));
-      } else if (1.0 < aI.x) {
-        float y = mm * 1.0 + bb;
-        aI = vec2(1.0, clamp(y, 0.0, 1.0));
-      }
-    }
-    if (((0.0 <= b.x) && (b.x <= 1.0) && 0.0 <= b.y) && (b.y <= 1.0)) {
-      bI = b;
-    } else {
-      bI = vec2((1.0 - bb) / (mm), 1.0);
-      if (bI.x < 0.0) {
-        float y = mm * 0.0 + bb;
-        area += clamp(min(b.y, 1.0) - max(bb, 0.0), 0.0, 1.0);
-        bI = vec2(0.0, clamp(y, 0.0, 1.0));
-      } else if (1.0 < bI.x) {
-        float y = mm * 1.0 + bb;
-        bI = vec2(1.0, clamp(y, 0.0, 1.0));
-      }
-    }
-  }
-  area += ((1.0 - aI.x + 1.0 - bI.x) / (2.0)) * (bI.y - aI.y);
-  result = area;
-  return result;
-}
-
 vec4 blendDarkenFloats(
   vec4 backdrop,
   vec4 source
@@ -614,16 +526,6 @@ vec4 blendDarkenFloats(
   result.y = min(backdrop.y, source.y);
   result.z = min(backdrop.z, source.z);
   result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 blendExcludeMaskFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = backdrop;
-  result.w = abs(backdrop.w - source.w);
   return result;
 }
 
@@ -687,7 +589,17 @@ void finalColor(
   vec4 applyColor
 ) {
   if (maskOn) {
-    maskStack[maskStackTop] += applyColor.w;
+    switch(blendMode) {
+    case 0:{
+      maskStack[maskStackTop] += applyColor.w;
+    }; break;
+    case 18:{
+      maskStack[maskStackTop] = 0.0;
+    }; break;
+    default: {
+      ;
+    }; break;
+    }
   } else {
     vec4 c = applyColor;
     c.w = c.w * maskStack[maskStackTop];
@@ -695,9 +607,6 @@ void finalColor(
       backdropColor = blendNormalFloats(backdropColor, c);
     } else {
       switch(blendMode) {
-      case 0:{
-        backdropColor = blendNormalFloats(backdropColor, c);
-      }; break;
       case 1:{
         backdropColor = blendDarkenFloats(backdropColor, c);
       }; break;
@@ -748,21 +657,6 @@ void finalColor(
       }; break;
       case 15:{
         backdropColor = blendSaturationFloats(backdropColor, c);
-      }; break;
-      case 18:{
-        backdropColor = blendMaskFloats(backdropColor, c);
-      }; break;
-      case 20:{
-        backdropColor = blendSubtractMaskFloats(backdropColor, c);
-      }; break;
-      case 21:{
-        backdropColor = blendIntersectMaskFloats(backdropColor, c);
-      }; break;
-      case 22:{
-        backdropColor = blendExcludeMaskFloats(backdropColor, c);
-      }; break;
-      case 19:{
-        backdropColor = blendOverwriteFloats(backdropColor, c);
       }; break;
       default: {
         ;
@@ -970,16 +864,6 @@ float hardLight(
   }
 }
 
-vec4 blendMaskFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = backdrop;
-  result.w = min(backdrop.w, source.w);
-  return result;
-}
-
 void textureFill(
   mat3 tMat,
   float tile,
@@ -1077,6 +961,18 @@ void textureFill(
   }
 }
 
+bool overlap(
+  vec2 minA,
+  vec2 maxA,
+  vec2 minB,
+  vec2 maxB
+) {
+  bool result;
+  // Test overlap: rect vs rect.
+  result = ((minB.x <= maxA.x) && (minA.x <= maxB.x) && minB.y <= maxA.y) && (minA.y <= maxB.y);
+  return result;
+}
+
 vec2 interpolate(
   vec2 G1,
   vec2 G2,
@@ -1107,18 +1003,6 @@ float lineDir(
     result = -1.0;
     return result;
   }
-}
-
-bool overlap(
-  vec2 minA,
-  vec2 maxA,
-  vec2 minB,
-  vec2 maxB
-) {
-  bool result;
-  // Test overlap: rect vs rect.
-  result = ((minB.x <= maxA.x) && (minA.x <= maxB.x) && minB.y <= maxA.y) && (minA.y <= maxB.y);
-  return result;
 }
 
 vec4 blendSaturationFloats(
@@ -1251,29 +1135,7 @@ void line(
   // Draw the lines based on windingRule.
   vec2 a1 = (mat * vec3(a0, 1.0)).xy - screen;
   vec2 b1 = (mat * vec3(b0, 1.0)).xy - screen;
-  if (windingRule == 0) {
-    a1 += vec2(0.125, 0.125);
-    b1 += vec2(0.125, 0.125);
-    crossCountMat[0][0] = crossCountMat[0][0] + pixelCross(a1 + vec2(0.0, 0.0) / 4.0, b1 + vec2(0.0, 0.0) / 4.0);
-    crossCountMat[0][1] = crossCountMat[0][1] + pixelCross(a1 + vec2(0.0, 1.0) / 4.0, b1 + vec2(0.0, 1.0) / 4.0);
-    crossCountMat[0][2] = crossCountMat[0][2] + pixelCross(a1 + vec2(0.0, 2.0) / 4.0, b1 + vec2(0.0, 2.0) / 4.0);
-    crossCountMat[0][3] = crossCountMat[0][3] + pixelCross(a1 + vec2(0.0, 3.0) / 4.0, b1 + vec2(0.0, 3.0) / 4.0);
-    crossCountMat[1][0] = crossCountMat[1][0] + pixelCross(a1 + vec2(1.0, 0.0) / 4.0, b1 + vec2(1.0, 0.0) / 4.0);
-    crossCountMat[1][1] = crossCountMat[1][1] + pixelCross(a1 + vec2(1.0, 1.0) / 4.0, b1 + vec2(1.0, 1.0) / 4.0);
-    crossCountMat[1][2] = crossCountMat[1][2] + pixelCross(a1 + vec2(1.0, 2.0) / 4.0, b1 + vec2(1.0, 2.0) / 4.0);
-    crossCountMat[1][3] = crossCountMat[1][3] + pixelCross(a1 + vec2(1.0, 3.0) / 4.0, b1 + vec2(1.0, 3.0) / 4.0);
-    crossCountMat[2][0] = crossCountMat[2][0] + pixelCross(a1 + vec2(2.0, 0.0) / 4.0, b1 + vec2(2.0, 0.0) / 4.0);
-    crossCountMat[2][1] = crossCountMat[2][1] + pixelCross(a1 + vec2(2.0, 1.0) / 4.0, b1 + vec2(2.0, 1.0) / 4.0);
-    crossCountMat[2][2] = crossCountMat[2][2] + pixelCross(a1 + vec2(2.0, 2.0) / 4.0, b1 + vec2(2.0, 2.0) / 4.0);
-    crossCountMat[2][3] = crossCountMat[2][3] + pixelCross(a1 + vec2(2.0, 3.0) / 4.0, b1 + vec2(2.0, 3.0) / 4.0);
-    crossCountMat[3][0] = crossCountMat[3][0] + pixelCross(a1 + vec2(3.0, 0.0) / 4.0, b1 + vec2(3.0, 0.0) / 4.0);
-    crossCountMat[3][1] = crossCountMat[3][1] + pixelCross(a1 + vec2(3.0, 1.0) / 4.0, b1 + vec2(3.0, 1.0) / 4.0);
-    crossCountMat[3][2] = crossCountMat[3][2] + pixelCross(a1 + vec2(3.0, 2.0) / 4.0, b1 + vec2(3.0, 2.0) / 4.0);
-    crossCountMat[3][3] = crossCountMat[3][3] + pixelCross(a1 + vec2(3.0, 3.0) / 4.0, b1 + vec2(3.0, 3.0) / 4.0);
-  } else {
-    float area = pixelCover(a1, b1);
-    fillMask += area * lineDir(a1, b1);
-  }
+  crossCountMat[0][0] = crossCountMat[0][0] + pixelCross(a1 + vec2(0.0, 0.0) / 4.0, b1 + vec2(0.0, 0.0) / 4.0);
 }
 layout(origin_upper_left) in vec4 gl_FragCoord;
 out vec4 fragColor;

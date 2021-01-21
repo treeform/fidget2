@@ -1,4 +1,5 @@
-import globs, httpclient, json, os, schema, strformat, strutils, tables
+import globs, httpclient, json, jsony, os, schema, strformat, strutils, tables,
+    print
 
 var
   figmaFile*: FigmaFile                ## Main figma file.
@@ -95,7 +96,7 @@ proc download(figmaFileKey: string) =
       return
   let data = figmaClient().getContent(
     "https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
-  let json = parseJson(data)
+  let json = data.fromJson(JsonNode)
   writeFile(modifiedPath, json["lastModified"].getStr())
   writeFile(jsonPath, pretty(json))
 

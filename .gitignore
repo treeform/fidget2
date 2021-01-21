@@ -5,6 +5,7 @@
 
 # normal ignores:
 *.exe
+*.dll
 nimcache
 *.pdb
 *.ilk

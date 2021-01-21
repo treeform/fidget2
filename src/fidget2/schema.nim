@@ -110,10 +110,10 @@ type
     windingRule*: WindingRule
 
   BooleanOperation* = enum
+    boUnion
     boSubtract
     boIntersect
     boExclude
-    boUnion
 
   StrokeAlign* = enum
     saInside

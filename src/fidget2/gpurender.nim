@@ -48,6 +48,7 @@ var
   dataBufferId: GLuint
 
   currentBlendMode: BlendMode
+  currentBoolMode: BooleanOperation
 
   vertShaderSrc = toShader(basic2dVert, "300 es")
   fragShaderSrc = toShader(svgMain, "300 es")
@@ -58,6 +59,8 @@ var
   scissorOn = false
   currentFrameBufferId = 0
   viewPortRect: Rect
+
+proc dumpCommandStream*()
 
 proc updateGpuAtlas() =
   ## Upload the atlas to the GPU (if its dirty).
@@ -781,7 +784,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
       ]
 
   case node.kind
-    of nkGroup, nkBooleanOperation:
+    of nkGroup:
       discard
 
     of nkRectangle, nkFrame, nkInstance, nkComponent:
@@ -865,6 +868,35 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
         drawPathCommands(parsePath(geom.path).commands, geom.windingRule)
         for paint in node.strokes:
           drawPaint(node, paint)
+
+    of nkBooleanOperation:
+      discard
+      # # Set the child nodes as boolean operations
+      # for i, c in node.children:
+      #   c.blendMode =
+      #     if i == 0:
+      #       bmNormal
+      #     else:
+      #       case node.booleanOperation
+      #         of boSubtract: bmSubtractMask
+      #         of boIntersect: bmIntersectMask
+      #         of boExclude: bmExcludeMask
+      #         of boUnion: bmNormal
+
+      # dataBufferSeq.add cmdMaskStart.float32
+      # for c in node.children:
+      #   drawNode(c, level + 1)
+      # dataBufferSeq.add cmdMaskPush.float32
+
+      # if node.blendMode != currentBlendMode:
+      #   currentBlendMode = node.blendMode
+      #   dataBufferSeq.add cmdSetBlendMode.float32
+      #   dataBufferSeq.add ord(node.blendMode).float32
+      # dataBufferSeq.add cmdFullFill.float32
+      # for paint in node.fills:
+      #   drawPaint(node, paint)
+
+      # dataBufferSeq.add cmdMaskPop.float32
 
     of nkText:
 
@@ -983,22 +1015,10 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   if hasBoundsCheck:
     dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
-  if node.kind == nkBooleanOperation:
-    # Set the child nodes as boolean operations
-    for i, c in node.children:
-      c.blendMode =
-        if i == 0:
-          bmNormal
-        else:
-          case node.booleanOperation
-            of boSubtract: bmSubtractMask
-            of boIntersect: bmIntersectMask
-            of boExclude: bmExcludeMask
-            of boUnion: bmNormal
-
-  # Draw the child nodes normally
-  for c in node.children:
-    drawNode(c, level + 1)
+  if node.kind != nkBooleanOperation:
+    # Draw the child nodes normally
+    for c in node.children:
+      drawNode(c, level + 1)
 
   # Pop all of the child mask nodes.
   for c in node.children:
@@ -1101,6 +1121,7 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Read the GPU pixels from screen.
   ## Use for debugging and tests only.
+  # dumpCommandStream()
   var screen = newImage(viewPortWidth, viewPortHeight)
   glReadPixels(
     0, 0,
@@ -1146,16 +1167,16 @@ proc dumpCommandStream*() =
     let command = dataBufferSeq[i].int
 
     if command == cmdExit:
-      print "cmdExit"
+      print i, "cmdExit"
       break
 
     elif command == cmdStartPath:
       let rule = dataBufferSeq[i + 1]
-      print "cmdStartPath", rule
+      print i, "cmdStartPath", rule
       i += 1
 
     elif command == cmdEndPath:
-      print "cmdEndPath"
+      print i, "cmdEndPath"
 
     elif command == cmdSolidFill:
       let c = chroma.color(
@@ -1165,11 +1186,11 @@ proc dumpCommandStream*() =
         dataBufferSeq[i + 4]
       )
       i += 4
-      print "cmdSolidFill", c
+      print i, "cmdSolidFill", c
 
     elif command == cmdApplyOpacity:
       let opacity = dataBufferSeq[i + 1]
-      print "cmdApplyOpacity", opacity
+      print i, "cmdApplyOpacity", opacity
       i += 1
 
     elif command == cmdTextureFill:
@@ -1191,7 +1212,7 @@ proc dumpCommandStream*() =
       size.x = dataBufferSeq[i + 10]
       size.y = dataBufferSeq[i + 11]
       i += 11
-      print "cmdTextureFill", tMat, tile, pos, size
+      print i, "cmdTextureFill", tMat, tile, pos, size
 
     elif command == cmdGradientLinear:
       var at, to: Vec2
@@ -1200,7 +1221,7 @@ proc dumpCommandStream*() =
       to.x = dataBufferSeq[i + 3]
       to.y = dataBufferSeq[i + 4]
       i += 4
-      print "cmdGradientLinear", at, to
+      print i, "cmdGradientLinear", at, to
 
     elif command == cmdGradientRadial:
       var at, to: Vec2
@@ -1209,10 +1230,10 @@ proc dumpCommandStream*() =
       to.x = dataBufferSeq[i + 3]
       to.y = dataBufferSeq[i + 4]
       i += 4
-      print "cmdGradientRadial", at, to
+      print i, "cmdGradientRadial", at, to
 
     elif command == cmdGradientStop:
-      print "cmdGradientStop", (
+      print i, "cmdGradientStop", (
         dataBufferSeq[i + 1],
         dataBufferSeq[i + 2],
         dataBufferSeq[i + 3],
@@ -1233,7 +1254,7 @@ proc dumpCommandStream*() =
       mat[2, 1] = dataBufferSeq[i + 6]
       mat[2, 2] = 1
       i += 6
-      print "cmdSetMat", mat
+      print i, "cmdSetMat", mat
 
     elif command == cmdM:
       let to = vec2(
@@ -1241,7 +1262,7 @@ proc dumpCommandStream*() =
         dataBufferSeq[i + 2]
       )
       i += 2
-      print "cmdM", to
+      print i, "cmdM", to
 
     elif command == cmdL:
       let to = vec2(
@@ -1249,7 +1270,7 @@ proc dumpCommandStream*() =
         dataBufferSeq[i + 2]
       )
       i += 2
-      print "cmdL", to
+      print i, "cmdL", to
 
     elif command == cmdC:
       let args = (
@@ -1261,7 +1282,7 @@ proc dumpCommandStream*() =
         dataBufferSeq[i + 6]
       )
       i += 6
-      print "cmdC", args
+      print i, "cmdC", args
 
     elif command == cmdQ:
       let args = (
@@ -1271,10 +1292,10 @@ proc dumpCommandStream*() =
         dataBufferSeq[i + 4],
       )
       i += 4
-      print "cmdQ", args
+      print i, "cmdQ", args
 
     elif command == cmdz:
-      print "cmdz"
+      print i, "cmdz"
 
     elif command == cmdBoundCheck:
       # Jump over code if screen not in bounds
@@ -1287,26 +1308,26 @@ proc dumpCommandStream*() =
       maxP.y = dataBufferSeq[i + 4]
       let label = dataBufferSeq[i + 5].int
       i += 5
-      print "cmdBoundCheck", minP, maxP, label
+      print i, "cmdBoundCheck", minP, maxP, label
 
     elif command == cmdMaskStart:
-      print "cmdMaskStart"
+      print i, "cmdMaskStart"
 
     elif command == cmdMaskPush:
-      print "cmdMaskPush"
+      print i, "cmdMaskPush"
 
     elif command == cmdMaskPop:
-      print "cmdMaskPop"
+      print i, "cmdMaskPop"
 
     elif command == cmdIndex:
       let index = dataBufferSeq[i + 1]
       i += 1
-      print "cmdIndex", index
+      print i, "cmdIndex", index
 
     elif command == cmdLayerBlur:
       let layerBlur = dataBufferSeq[i + 1]
       i += 1
-      print "cmdLayerBlur", layerBlur
+      print i, "cmdLayerBlur", layerBlur
 
     elif command == cmdDropShadow:
       var shadowColor: Vec4
@@ -1320,11 +1341,22 @@ proc dumpCommandStream*() =
       let shadowRadius = dataBufferSeq[i + 7]
       let shadowSpread = dataBufferSeq[i + 8]
       i += 8
-      print "cmdDropShadow", shadowColor, shadowOffset, shadowRadius, shadowSpread
+      print i, "cmdDropShadow", shadowColor, shadowOffset, shadowRadius, shadowSpread
 
     elif command == cmdSetBlendMode:
       let blendMode = dataBufferSeq[i + 1]
-      print "cmdSetBlendMode", blendMode
+      print i, "cmdSetBlendMode", blendMode
       i += 1
+
+    elif command == cmdSetBoolMode:
+      let boolMode = dataBufferSeq[i + 1]
+      print i, "cmdSetBoolMode", boolMode
+      i += 1
+
+    elif command == cmdFullFill:
+      print i, "cmdFullFill"
+
+    else:
+      quit("Unknown command?")
 
     i += 1

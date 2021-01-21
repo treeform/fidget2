@@ -41,6 +41,8 @@ const
   cmdLayerBlur*: int = 20
   cmdDropShadow*: int = 21
   cmdSetBlendMode*: int = 22
+  cmdSetBoolMode*: int = 23
+  cmdFullFill*: int = 24
 
   cbmNormal*: int = 0
   cbmDarken*: int = 1
@@ -60,11 +62,10 @@ const
   cbmSaturation*: int = 15
   cbmColor*: int = 16
   cbmLuminosity*: int = 17
-  cbmMask*: int = 18
-  cbmOverwrite*: int = 19
-  cbmSubtractMask*: int = 20
-  cbmIntersectMask*: int = 21
-  cbmExcludeMask*: int = 22
+
+  cbmSubtractMask*: int = 18
+  cbmIntersectMask*: int = 19
+  cbmExcludeMask*: int = 20
 
 var
   crossCountMat: Mat4     # Number of line crosses (4x4 AA fill).
@@ -73,6 +74,7 @@ var
   screen: Vec2            # Location of were we are on screen.
   backdropColor: Vec4     # Current backdrop color.
   fillMask: float32 = 0.0 # How much of the fill is visible.
+  boolMode: int           # Boolean mode.
   mat: Mat3               # Current transform matrix.
   tMat: Mat3              # Texture matrix.
 
@@ -275,7 +277,18 @@ proc quadratic(p0, p1, p2: Vec2) =
 
 proc finalColor(applyColor: Vec4) =
   if maskOn:
-    maskStack[maskStackTop] += applyColor.w
+    case blendMode:
+      of cbmNormal:
+        maskStack[maskStackTop] += applyColor.w
+      of cbmSubtractMask:
+        maskStack[maskStackTop] = 0 #maskStack[maskStackTop] * (1 - applyColor.w)
+      # of cbmIntersectMask:
+      #   backdropColor = blendIntersectMaskFloats(backdropColor, c)
+      # of cbmExcludeMask:
+      #   backdropColor = blendExcludeMaskFloats(backdropColor, c)
+      else:
+        discard
+
   else:
     var c = applyColor
     when useMask:
@@ -286,8 +299,8 @@ proc finalColor(applyColor: Vec4) =
         backdropColor = blendNormalFloats(backdropColor, c)
       else:
         case blendMode:
-          of cbmNormal:
-            backdropColor = blendNormalFloats(backdropColor, c)
+          # of cbmNormal:
+          #   backdropColor = blendNormalFloats(backdropColor, c)
           of cbmDarken:
             backdropColor = blendDarkenFloats(backdropColor, c)
           of cbmMultiply:
@@ -322,16 +335,16 @@ proc finalColor(applyColor: Vec4) =
             backdropColor = blendHueFloats(backdropColor, c)
           of cbmSaturation:
             backdropColor = blendSaturationFloats(backdropColor, c)
-          of cbmMask:
-            backdropColor = blendMaskFloats(backdropColor, c)
-          of cbmSubtractMask:
-            backdropColor = blendSubtractMaskFloats(backdropColor, c)
-          of cbmIntersectMask:
-            backdropColor = blendIntersectMaskFloats(backdropColor, c)
-          of cbmExcludeMask:
-            backdropColor = blendExcludeMaskFloats(backdropColor, c)
-          of cbmOverwrite:
-            backdropColor = blendOverwriteFloats(backdropColor, c)
+          # of cbmMask:
+          #   backdropColor = blendMaskFloats(backdropColor, c)
+          # of cbmSubtractMask:
+          #   backdropColor = blendSubtractMaskFloats(backdropColor, c)
+          # of cbmIntersectMask:
+          #   backdropColor = blendIntersectMaskFloats(backdropColor, c)
+          # of cbmExcludeMask:
+          #   backdropColor = blendExcludeMaskFloats(backdropColor, c)
+          # of cbmOverwrite:
+          #   backdropColor = blendOverwriteFloats(backdropColor, c)
           else:
             discard
     else:
@@ -493,7 +506,6 @@ proc startPath(rule: float32) =
 
 proc draw() =
   ## Apply the winding rule.
-
   when useAA:
     if windingRule == 0:
       # Even-Odd winding rule:
@@ -515,7 +527,6 @@ proc draw() =
     else:
       if crossCountMat[0, 0] != 0:
         fillMask = 1
-
 
 proc endPath() =
   ## SVG style end path command.
@@ -752,6 +763,13 @@ proc runCommands() =
     of cmdSetBlendMode:
       blendMode = texelFetch(dataBuffer, i + 1).x.int
       i += 1
+
+    of cmdSetBoolMode:
+      boolMode = texelFetch(dataBuffer, i + 1).x.int
+      i += 1
+
+    of cmdFullFill:
+      fillMask = 1.0
 
     else:
       discard
