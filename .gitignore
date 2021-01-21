@@ -11,6 +11,7 @@ nimcache
 *.ilk
 .*
 *.glsl
+node_modules
 
 # figma tmp files
 figma
