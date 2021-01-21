@@ -1051,7 +1051,6 @@ proc drawGpuFrameToScreen*(node: Node) =
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
   if viewPortRect != rect(0, 0, viewPortWidth.float32, viewPortHeight.float32):
     viewPortRect = rect(0, 0, viewPortWidth.float32, viewPortHeight.float32)
-    echo "set vp"
     glViewport(
       viewPortRect.x.cint,
       viewPortRect.y.cint,
