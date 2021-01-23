@@ -769,10 +769,10 @@ proc drawNodeScreenSimple(node: Node) =
       let extraPx = effect.radius.ceil.int * 2
       var (at, mask) = node.nodeMergedMask()
       var blur = screen.subImage(
-        at.x.int - extraPx,
-        at.y.int - extraPx,
-        mask.width + extraPx * 2,
-        mask.height + extraPx * 2
+        max(0, at.x.int - extraPx),
+        max(0, at.y.int - extraPx),
+        min(screen.width, mask.width + extraPx * 2),
+        min(screen.height, mask.height + extraPx * 2)
       )
       blur.blur(effect.radius)
       mask.sharpOpacity()
