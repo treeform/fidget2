@@ -229,12 +229,8 @@ proc applyPaint(
 
 proc applyDropShadowEffect(effect: Effect, node: Node) =
   ## Draws the drop shadow.
-  var shadow = node.selfAndChildrenMask().subImage(
-    node.pixelBox.x.int,
-    node.pixelBox.y.int,
-    node.pixelBox.w.int,
-    node.pixelBox.h.int
-  )
+  var shadow = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
+  shadow.draw(node.selfAndChildrenMask(), -node.pixelBox.xy, bmOverwrite)
   shadow = shadow.shadow(
     effect.offset, effect.spread, effect.radius, effect.color.rgba)
   shadow.draw(node.pixels)
@@ -768,11 +764,11 @@ proc drawNodeScreenSimple(node: Node) =
     if effect.kind == ekBackgroundBlur:
       let extraPx = effect.radius.ceil.int * 2
       var (at, mask) = node.nodeMergedMask()
-      var blur = screen.subImage(
-        max(0, at.x.int - extraPx),
-        max(0, at.y.int - extraPx),
-        min(screen.width, mask.width + extraPx * 2),
-        min(screen.height, mask.height + extraPx * 2)
+      var blur = newImage(mask.width + extraPx * 2, mask.height + extraPx * 2)
+      blur.draw(
+        screen,
+        -vec2(at.x - extraPx.float32, at.y - extraPx.float32),
+        bmOverwrite
       )
       blur.blur(effect.radius)
       mask.sharpOpacity()
