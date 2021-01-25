@@ -979,7 +979,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           var glyph = font.typeface.glyphs[gpos.character]
           glyph.makeReady(font)
 
-          if glyph.commands.len == 0:
+          if glyph.path.commands.len == 0:
             continue
 
           let cMat = mat * translate(vec2(
@@ -1002,7 +1002,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           let jmpOffset = dataBufferSeq.len
           dataBufferSeq.add 0
 
-          drawPathCommands(glyph.commands, wrNonZero)
+          drawPathCommands(glyph.path.commands, wrNonZero)
 
           for paint in node.fills:
             drawPaint(node, paint)
