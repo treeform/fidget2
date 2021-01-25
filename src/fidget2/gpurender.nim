@@ -84,6 +84,9 @@ proc setupRender*(frameNode: Node) =
   ## Setup the rendering of the frame.
   dataBufferSeq.setLen(0)
 
+  viewPortWidth = frameNode.absoluteBoundingBox.w.int
+  viewPortHeight = frameNode.absoluteBoundingBox.h.int
+
   if textureAtlas == nil:
     textureAtlas = newCpuAtlas(512, 1)
 
@@ -135,9 +138,6 @@ proc createWindow*(
   # Init glfw.
   if init() == 0:
     raise newException(Exception, "Failed to intialize GLFW")
-
-  viewPortWidth = frameNode.absoluteBoundingBox.w.int
-  viewPortHeight = frameNode.absoluteBoundingBox.h.int
 
   # Open a window.
   if not vSync:
@@ -1051,6 +1051,8 @@ proc drawGpuFrameToScreen*(node: Node) =
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
   if viewPortRect != rect(0, 0, viewPortWidth.float32, viewPortHeight.float32):
     viewPortRect = rect(0, 0, viewPortWidth.float32, viewPortHeight.float32)
+    print "setting viewport", viewPortRect
+    window.setWindowSize(viewPortWidth.cint, viewPortHeight.cint)
     glViewport(
       viewPortRect.x.cint,
       viewPortRect.y.cint,
@@ -1121,6 +1123,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Read the GPU pixels from screen.
   ## Use for debugging and tests only.
   # dumpCommandStream()
+  print viewPortWidth, viewPortHeight
   var screen = newImage(viewPortWidth, viewPortHeight)
   glReadPixels(
     0, 0,
