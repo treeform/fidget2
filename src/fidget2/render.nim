@@ -252,7 +252,7 @@ proc applyInnerShadowEffect(effect: Effect, node: Node, fillMask: Image) =
   # Draw it back.
   node.pixels.draw(color)
 
-proc roundRect(path: Path, x, y, w, h, nw, ne, se, sw: float32) =
+proc roundRect(path: var Path, x, y, w, h, nw, ne, se, sw: float32) =
   ## Draw a round rectangle with different radius corners.
   let
     maxRaidus = min(w/2, h/2)
@@ -267,7 +267,7 @@ proc roundRect(path: Path, x, y, w, h, nw, ne, se, sw: float32) =
   path.arcTo(x, y, x+w, y, nw)
   path.closePath()
 
-proc roundRectRev(path: Path, x, y, w, h, nw, ne, se, sw: float32) =
+proc roundRectRev(path: var Path, x, y, w, h, nw, ne, se, sw: float32) =
   ## Same as roundRect but in reverse order so that you can cut out a hole.
   let
     maxRaidus = min(w/2, h/2)
@@ -438,7 +438,7 @@ proc drawNodeInternal*(node: Node) =
   of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
     if node.fills.len > 0:
       fillMask = newImage(w, h)
-      var path = newPath()
+      var path: Path
       if node.cornerRadius > 0:
         # Rectangle with common corners.
         path.roundRect(
@@ -509,7 +509,6 @@ proc drawNodeInternal*(node: Node) =
         # Rectangle with common corners.
         let
           r = node.cornerRadius
-        path = newPath()
         path.roundRect(
           x-outer, y-outer,
           w+outer*2, h+outer*2,
@@ -523,7 +522,6 @@ proc drawNodeInternal*(node: Node) =
 
       elif node.rectangleCornerRadii.len == 4:
         # Rectangle with different corners.
-        path = newPath()
         let
           nw = node.rectangleCornerRadii[0]
           ne = node.rectangleCornerRadii[1]
@@ -541,7 +539,6 @@ proc drawNodeInternal*(node: Node) =
         )
 
       else:
-        path = newPath()
         path.moveTo(x-outer, y-outer)
         path.lineTo(x+w+outer, y-outer, )
         path.lineTo(x+w+outer, y+h+outer, )
