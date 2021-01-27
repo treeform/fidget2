@@ -1,6 +1,6 @@
 import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
     pixie, print, schema, staticglfw, tables, typography, typography/textboxes,
-    vmath, times
+    vmath, times, perf
 
 var
   # Window stuff.
@@ -632,10 +632,10 @@ proc drawPaint(node: Node, paint: Paint) =
       1
     ]
 
-  dataBufferSeq.add @[
-    cmdIndex.float32,
-    node.idNum.float32
-  ]
+  # dataBufferSeq.add @[
+  #   cmdIndex.float32,
+  #   node.idNum.float32
+  # ]
 
 proc computePixelBox*(node: Node) =
   ## Computes pixel bounds.
@@ -789,17 +789,29 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
     of nkRectangle, nkFrame, nkInstance, nkComponent:
       if node.fills.len > 0:
-        dataBufferSeq.add cmdStartPath.float32
-        dataBufferSeq.add kNonZero.float32
-        if node.rectangleCornerRadii.len == 4:
-          let r = node.rectangleCornerRadii
-          drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
-        elif node.cornerRadius > 0:
-          let r = node.cornerRadius
-          drawRect(vec2(0, 0), node.size, r, r, r, r)
+        if level == 0:
+          dataBufferSeq.add cmdFullFill.float32
+          discard
         else:
-          drawRect(vec2(0, 0), node.size)
-        dataBufferSeq.add cmdEndPath.float32
+          if node.rectangleCornerRadii.len == 4:
+            let r = node.rectangleCornerRadii
+            dataBufferSeq.add cmdStartPath.float32
+            dataBufferSeq.add kNonZero.float32
+            drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
+            dataBufferSeq.add cmdEndPath.float32
+          elif node.cornerRadius > 0:
+            let r = node.cornerRadius
+            dataBufferSeq.add cmdStartPath.float32
+            dataBufferSeq.add kNonZero.float32
+            drawRect(vec2(0, 0), node.size, r, r, r, r)
+            dataBufferSeq.add cmdEndPath.float32
+          else:
+            # dataBufferSeq.add cmdStartPath.float32
+            # dataBufferSeq.add kNonZero.float32
+            # drawRect(vec2(0, 0), node.size)
+            # dataBufferSeq.add cmdEndPath.float32
+            dataBufferSeq.add cmdFullFill.float32
+
         for paint in node.fills:
           drawPaint(node, paint)
 
@@ -1037,11 +1049,12 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 proc drawGpuFrameToScreen*(node: Node) =
   ## Draws the GPU frame to screen.
 
-  let start1 = epochTime()
-
   setupRender(node)
+  perfMark "setupRender"
   node.readyImages()
+  perfMark "readyImages"
   updateGpuAtlas()
+  perfMark "updateGpuAtlas"
 
   if scissorOn:
     glDisable(GL_SCISSOR_TEST)
@@ -1051,7 +1064,6 @@ proc drawGpuFrameToScreen*(node: Node) =
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
   if viewPortRect != rect(0, 0, viewPortWidth.float32, viewPortHeight.float32):
     viewPortRect = rect(0, 0, viewPortWidth.float32, viewPortHeight.float32)
-    print "setting viewport", viewPortRect
     window.setWindowSize(viewPortWidth.cint, viewPortHeight.cint)
     glViewport(
       viewPortRect.x.cint,
@@ -1064,17 +1076,17 @@ proc drawGpuFrameToScreen*(node: Node) =
   node.size = node.box.wh
   for c in node.children:
     computeLayout(node, c)
-
-  #echo "setup part ", (epochTime() - start1)*1000, "ms"
-
-  let start = epochTime()
+  perfMark "computeLayout"
 
   drawNode(node, 0)
-  dataBufferSeq.add(cmdExit.float32)
-  #print dataBufferSeq
-  drawBuffers()
+  perfMark "drawNode"
 
-  #echo "draw part ", (epochTime() - start)*1000, "ms"
+  #dataBufferSeq.setLen(0)
+  dataBufferSeq.add(cmdExit.float32)
+  #print dataBufferSeq.len
+  drawBuffers()
+  perfMark "drawBuffers"
+
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
   ## Draws the GPU frame to atlas.
@@ -1122,8 +1134,8 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Read the GPU pixels from screen.
   ## Use for debugging and tests only.
-  # dumpCommandStream()
-  print viewPortWidth, viewPortHeight
+  #dumpCommandStream()
+  let start = epochTime()
   var screen = newImage(viewPortWidth, viewPortHeight)
   glReadPixels(
     0, 0,
@@ -1132,6 +1144,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
     screen.data[0].addr
   )
   screen.flipVertical()
+  echo "readGpuPixelsFromScreen: ", (epochTime() - start)*1000, "ms"
   return screen
 
 proc readGpuPixelsFromAtlas*(name: string, crop = true): pixie.Image =

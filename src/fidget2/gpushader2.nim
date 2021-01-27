@@ -9,9 +9,9 @@ var dataBuffer*: Uniform[SamplerBuffer]
 var textureAtlasSampler*: Uniform[Sampler2d]
 
 const
-  useAA = true
-  useBlends = true
-  useMask = true
+  useAA = false
+  useBlends = false
+  useMask = false
   useBounds = true
 
 const
@@ -579,11 +579,12 @@ proc runCommands() =
       return
 
     of cmdStartPath:
-      startPath(texelFetch(dataBuffer, i + 1).x)
+      #startPath(texelFetch(dataBuffer, i + 1).x)
       i += 1
 
     of cmdEndPath:
-      endPath()
+      #endPath()
+      discard
 
     of cmdSolidFill:
       solidFill(
@@ -595,56 +596,56 @@ proc runCommands() =
       i += 4
 
     of cmdApplyOpacity:
-      let opacity = texelFetch(dataBuffer, i + 1).x
-      backdropColor = backdropColor * opacity
+      # let opacity = texelFetch(dataBuffer, i + 1).x
+      # backdropColor = backdropColor * opacity
       i += 1
 
     of cmdTextureFill:
-      tMat[0, 0] = texelFetch(dataBuffer, i + 1).x
-      tMat[0, 1] = texelFetch(dataBuffer, i + 2).x
-      tMat[0, 2] = 0
-      tMat[1, 0] = texelFetch(dataBuffer, i + 3).x
-      tMat[1, 1] = texelFetch(dataBuffer, i + 4).x
-      tMat[1, 2] = 0
-      tMat[2, 0] = texelFetch(dataBuffer, i + 5).x
-      tMat[2, 1] = texelFetch(dataBuffer, i + 6).x
-      tMat[2, 2] = 1
-      let tile = texelFetch(dataBuffer, i + 7).x
-      var pos: Vec2
-      pos.x = texelFetch(dataBuffer, i + 8).x
-      pos.y = texelFetch(dataBuffer, i + 9).x
-      var size: Vec2
-      size.x = texelFetch(dataBuffer, i + 10).x
-      size.y = texelFetch(dataBuffer, i + 11).x
-      textureFill(tMat, tile, pos, size)
+      # tMat[0, 0] = texelFetch(dataBuffer, i + 1).x
+      # tMat[0, 1] = texelFetch(dataBuffer, i + 2).x
+      # tMat[0, 2] = 0
+      # tMat[1, 0] = texelFetch(dataBuffer, i + 3).x
+      # tMat[1, 1] = texelFetch(dataBuffer, i + 4).x
+      # tMat[1, 2] = 0
+      # tMat[2, 0] = texelFetch(dataBuffer, i + 5).x
+      # tMat[2, 1] = texelFetch(dataBuffer, i + 6).x
+      # tMat[2, 2] = 1
+      # let tile = texelFetch(dataBuffer, i + 7).x
+      # var pos: Vec2
+      # pos.x = texelFetch(dataBuffer, i + 8).x
+      # pos.y = texelFetch(dataBuffer, i + 9).x
+      # var size: Vec2
+      # size.x = texelFetch(dataBuffer, i + 10).x
+      # size.y = texelFetch(dataBuffer, i + 11).x
+      # textureFill(tMat, tile, pos, size)
       i += 11
 
     of cmdGradientLinear:
-      var at, to: Vec2
-      at.x = texelFetch(dataBuffer, i + 1).x
-      at.y = texelFetch(dataBuffer, i + 2).x
-      to.x = texelFetch(dataBuffer, i + 3).x
-      to.y = texelFetch(dataBuffer, i + 4).x
-      gradientLinear(at, to)
+      # var at, to: Vec2
+      # at.x = texelFetch(dataBuffer, i + 1).x
+      # at.y = texelFetch(dataBuffer, i + 2).x
+      # to.x = texelFetch(dataBuffer, i + 3).x
+      # to.y = texelFetch(dataBuffer, i + 4).x
+      # gradientLinear(at, to)
       i += 4
 
     of cmdGradientRadial:
-      var at, to: Vec2
-      at.x = texelFetch(dataBuffer, i + 1).x
-      at.y = texelFetch(dataBuffer, i + 2).x
-      to.x = texelFetch(dataBuffer, i + 3).x
-      to.y = texelFetch(dataBuffer, i + 4).x
-      gradientRadial(at, to)
+      # var at, to: Vec2
+      # at.x = texelFetch(dataBuffer, i + 1).x
+      # at.y = texelFetch(dataBuffer, i + 2).x
+      # to.x = texelFetch(dataBuffer, i + 3).x
+      # to.y = texelFetch(dataBuffer, i + 4).x
+      # gradientRadial(at, to)
       i += 4
 
     of cmdGradientStop:
-      gradientStop(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x,
-        texelFetch(dataBuffer, i + 3).x,
-        texelFetch(dataBuffer, i + 4).x,
-        texelFetch(dataBuffer, i + 5).x
-      )
+      # gradientStop(
+      #   texelFetch(dataBuffer, i + 1).x,
+      #   texelFetch(dataBuffer, i + 2).x,
+      #   texelFetch(dataBuffer, i + 3).x,
+      #   texelFetch(dataBuffer, i + 4).x,
+      #   texelFetch(dataBuffer, i + 5).x
+      # )
       i += 5
 
     of cmdSetMat:
@@ -660,41 +661,42 @@ proc runCommands() =
       i += 6
 
     of cmdM:
-      M(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x
-      )
+      # M(
+      #   texelFetch(dataBuffer, i + 1).x,
+      #   texelFetch(dataBuffer, i + 2).x
+      # )
       i += 2
 
     of cmdL:
-      L(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x
-      )
+      # L(
+      #   texelFetch(dataBuffer, i + 1).x,
+      #   texelFetch(dataBuffer, i + 2).x
+      # )
       i += 2
 
     of cmdC:
-      C(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x,
-        texelFetch(dataBuffer, i + 3).x,
-        texelFetch(dataBuffer, i + 4).x,
-        texelFetch(dataBuffer, i + 5).x,
-        texelFetch(dataBuffer, i + 6).x
-      )
+      # C(
+      #   texelFetch(dataBuffer, i + 1).x,
+      #   texelFetch(dataBuffer, i + 2).x,
+      #   texelFetch(dataBuffer, i + 3).x,
+      #   texelFetch(dataBuffer, i + 4).x,
+      #   texelFetch(dataBuffer, i + 5).x,
+      #   texelFetch(dataBuffer, i + 6).x
+      # )
       i += 6
 
     of cmdQ:
-      Q(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x,
-        texelFetch(dataBuffer, i + 3).x,
-        texelFetch(dataBuffer, i + 4).x,
-      )
+      # Q(
+      #   texelFetch(dataBuffer, i + 1).x,
+      #   texelFetch(dataBuffer, i + 2).x,
+      #   texelFetch(dataBuffer, i + 3).x,
+      #   texelFetch(dataBuffer, i + 4).x,
+      # )
       i += 4
 
     of cmdz:
-      z()
+      # z()
+      discard
 
     of cmdBoundCheck:
       # Jump over code if screen not in bounds
@@ -728,44 +730,47 @@ proc runCommands() =
           i = label - 1
 
     of cmdMaskStart:
-      maskOn = true
-      maskStackTop += 1
-      maskStack[maskStackTop] = 0.0
+      # maskOn = true
+      # maskStackTop += 1
+      # maskStack[maskStackTop] = 0.0
+      discard
 
     of cmdMaskPush:
-      maskOn = false
+      # maskOn = false
+      discard
 
     of cmdMaskPop:
-      maskStackTop -= 1
+      # maskStackTop -= 1
+      discard
 
     of cmdIndex:
-      let index = texelFetch(dataBuffer, i + 1).x
-      if fillMask * mask > 0:
-        topIndex = index
+      # let index = texelFetch(dataBuffer, i + 1).x
+      # if fillMask * mask > 0:
+      #   topIndex = index
       i += 1
 
     of cmdLayerBlur:
-      layerBlur = texelFetch(dataBuffer, i + 1).x
+      # layerBlur = texelFetch(dataBuffer, i + 1).x
       i += 1
 
     of cmdDropShadow:
-      shadowOn = true
-      shadowColor.x = texelFetch(dataBuffer, i + 1).x
-      shadowColor.y = texelFetch(dataBuffer, i + 2).x
-      shadowColor.z = texelFetch(dataBuffer, i + 3).x
-      shadowColor.w = texelFetch(dataBuffer, i + 4).x
-      shadowOffset.x = texelFetch(dataBuffer, i + 5).x
-      shadowOffset.y = texelFetch(dataBuffer, i + 6).x
-      shadowRadius = texelFetch(dataBuffer, i + 7).x
-      shadowSpread = texelFetch(dataBuffer, i + 8).x
+      # shadowOn = true
+      # shadowColor.x = texelFetch(dataBuffer, i + 1).x
+      # shadowColor.y = texelFetch(dataBuffer, i + 2).x
+      # shadowColor.z = texelFetch(dataBuffer, i + 3).x
+      # shadowColor.w = texelFetch(dataBuffer, i + 4).x
+      # shadowOffset.x = texelFetch(dataBuffer, i + 5).x
+      # shadowOffset.y = texelFetch(dataBuffer, i + 6).x
+      # shadowRadius = texelFetch(dataBuffer, i + 7).x
+      # shadowSpread = texelFetch(dataBuffer, i + 8).x
       i += 8
 
     of cmdSetBlendMode:
-      blendMode = texelFetch(dataBuffer, i + 1).x.int
+      #blendMode = texelFetch(dataBuffer, i + 1).x.int
       i += 1
 
     of cmdSetBoolMode:
-      boolMode = texelFetch(dataBuffer, i + 1).x.int
+      #boolMode = texelFetch(dataBuffer, i + 1).x.int
       i += 1
 
     of cmdFullFill:
@@ -817,19 +822,4 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
 
-  # fragColor = blendNormalFloats(fragColor, vec4(1,0,0,topIndex/32))
-
-  # if pixelCrossDelta > 0:
-  #   fragColor = vec4(1,0,0,1)
-  # if pixelCrossDelta < 0:
-  #   fragColor = vec4(0,1,0,1)
-
-  #fragColor.x = debug.x
-  #print fragColor
-
-  #fragColor.x = gl_FragCoord.x - floor(gl_FragCoord.x)
-
-  #fragColor.x = numTrapezoids
-
-  #fragColor.w = 1
-  #dataBuffer
+  #fragColor = vec4(1, 0, 0, 1)

@@ -1,4 +1,4 @@
-import cligen, fidget2, fidget2/gpurender, fidget2/render, fidget2/zpurender,
+import cligen, fidget2, fidget2/gpurender, fidget2/cpurender, fidget2/zpurender,
     imagediff, os, pixie, strformat, strutils, times
 
 proc main(w = "gpu", r = "", e = "", l = 10000) =
@@ -29,25 +29,33 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     let startTime = epochTime()
 
-    var image: Image
-    if w == "gpu":
-      drawGpuFrameToScreen(frame)
-      image = readGpuPixelsFromScreen()
-    elif w == "gpu_atlas":
-      drawGpuFrameToAtlas(frame, "screen")
-      image = readGpuPixelsFromAtlas("screen")
-    elif w == "gpu_atlas_full":
-      drawGpuFrameToAtlas(frame, "screen")
-      image = readGpuPixelsFromAtlas("screen", crop = false)
-    elif w == "cpu":
-      image = drawCompleteCpuFrame(frame)
-    elif w == "zpu":
-      image = drawCompleteZpuFrame(frame)
-    elif w == "vs":
-      drawGpuFrameToScreen(frame)
-      image = readGpuPixelsFromScreen()
+
+    proc drawFrame(frame: Node): Image =
+      if w == "gpu":
+        drawGpuFrameToScreen(frame)
+        result = readGpuPixelsFromScreen()
+      elif w == "gpu_atlas":
+        drawGpuFrameToAtlas(frame, "screen")
+        result = readGpuPixelsFromAtlas("screen")
+      elif w == "gpu_atlas_full":
+        drawGpuFrameToAtlas(frame, "screen")
+        result = readGpuPixelsFromAtlas("screen", crop = false)
+      elif w == "cpu":
+        result = drawCompleteCpuFrame(frame)
+      elif w == "zpu":
+        result = drawCompleteZpuFrame(frame)
+      elif w == "vs":
+        drawGpuFrameToScreen(frame)
+        result = readGpuPixelsFromScreen()
+
+    var image = drawFrame(frame)
 
     let frameTime = epochTime() - startTime
+
+    let startTime2 = epochTime()
+    discard drawFrame(frame)
+    let frameTime2 = epochTime() - startTime2
+
     renderTime += frameTime
     image.writeFile("tests/frames/" & frame.name & ".png")
 
@@ -66,7 +74,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
 
-    echo &"  {w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx"
+    echo &"  {w} {frameTime:0.3f}s {frameTime2:0.3f}s {diffScore:0.3f}% diffpx"
 
     framesHtml.add(&"<h4>{frame.name}</h4>")
     framesHTML.add(&"<p>{w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx</p>")

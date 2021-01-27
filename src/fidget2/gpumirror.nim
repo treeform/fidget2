@@ -1,6 +1,6 @@
 import algorithm, bumpy, globs, gpurender, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, zpurender, times
+    typography/textboxes, unicode, vmath, zpurender, times, perf
 
 export textboxes
 
@@ -435,8 +435,6 @@ proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
 proc display() =
   ## Called every frame by main while loop.
 
-  let start = epochTime()
-
   block:
     var x, y: float64
     window.getCursorPos(addr x, addr y)
@@ -449,6 +447,7 @@ proc display() =
   if windowResizable:
     # Stretch the current frame to fit the window.
     thisFrame.box.wh = windowSize
+    thisFrame.absoluteBoundingBox.wh = windowSize
   else:
     # Stretch the window to fit the current frame.
     if windowSize != thisFrame.box.wh:
@@ -464,16 +463,17 @@ proc display() =
   clearInputs()
 
   drawGpuFrameToScreen(thisFrame)
+  perfMark "drawGpuFrameToScreen"
 
   if vSync:
     swapBuffers(window)
+    perfMark "swapBuffers"
   else:
     glFlush()
+    perfMark "glFlush"
 
-  # if frameNum mod 60 == 0:
-  #   echo "frame ", (epochTime() - start)*1000, "ms"
-  # if frameNum == 1:
-  #   dumpCommandStream()
+  if frameNum == 1:
+    dumpCommandStream()
   inc frameNum
 
 proc startFidget*(
@@ -518,8 +518,12 @@ proc startFidget*(
 
   # Run while window is open.
   while windowShouldClose(window) == 0:
+    perfMark "start ----------- "
     pollEvents()
     display()
+    perfMark "display"
+    perfPixels = viewPortWidth * viewPortHeight
+    perfDumpEverySecond()
 
   # Destroy the window.
   window.destroyWindow()
