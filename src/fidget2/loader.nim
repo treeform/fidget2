@@ -7,6 +7,18 @@ var
   globTree*: GlobTree[Node]            ## Glob tree for faster find access.
   imageRefToUrl: Table[string, string] ## Mapping of image IDs to URLs.
 
+proc newFigmaClient(): HttpClient =
+  result = newHttpClient()
+  result.headers["User-Agent"] = "curl/7.58.0"
+  result.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
+
+proc figmaFilePath(fileKey: string): string =
+  "figma/" & fileKey & ".json"
+
+proc loadFigmaFile(fileKey: string): FigmaFile =
+  let data = readFile(figmaFilePath(fileKey))
+  parseFigmaFile(data)
+
 proc downloadImageRef*(imageRef: string) =
   ## Make sure imageRef is downloaded.
   if not fileExists("figma/images/" & imageRef & ".png"):
@@ -72,33 +84,37 @@ proc downloadFont*(fontPSName: string) =
 
   echo &"Please download figma/fonts/{fontPSName}.ttf"
 
-proc figmaClient(): HttpClient =
-  ## Helper method to get a figma API client.
-  var client = newHttpClient()
-  client.headers = newHttpHeaders({"Accept": "*/*"})
-  client.headers["User-Agent"] = "curl/7.58.0"
-  client.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
-  return client
+proc downloadFigmaFile(fileKey: string) =
+  ## Download and cache the Figma file for this file key.
+  let figmaClient = newFigmaClient()
 
-proc download(figmaFileKey: string) =
-  ## Download a figma file based on the file key.
-  let jsonPath = &"figma/{figmaFileKey}.json"
-  let modifiedPath = &"figma/{figmaFileKey}.lastModified"
-  if fileExists(modifiedPath):
-    ## Check if we really need to download the whole thing.
+  if fileExists(figmaFilePath(fileKey)):
+    # If we have a saved Figma file, is it up to date?
+    try:
+      let
+        url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
+        data = figmaClient.getContent(url)
+        lastModified = parseFigmaFile(data).lastModified
+        savedFigmaFile = loadFigmaFile(fileKey)
+      if savedFigmaFile.lastModified == lastModified:
+        echo "Using cached Figma file"
+        return
+    except:
+      echo "Failed to validate cached Figma file, downloading latest"
+
+  # Download and save the latest Figma file
+  try:
     let
-      data1 = figmaClient().getContent(
-        "https://api.figma.com/v1/files/" & figmaFileKey & "?depth=1")
-      figmaModified = parseJson(data1)["lastModified"].getStr()
-      haveModified = readFile(modifiedPath)
-    if figmaModified == haveModified:
-      echo "Using cached"
-      return
-  let data = figmaClient().getContent(
-    "https://api.figma.com/v1/files/" & figmaFileKey & "?geometry=paths")
-  let json = data.fromJson(JsonNode)
-  writeFile(modifiedPath, json["lastModified"].getStr())
-  writeFile(jsonPath, pretty(json))
+      url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
+      response = figmaClient.getContent(url)
+      json = response.fromJson(JsonNode)
+    writeFile(figmaFilePath(fileKey), pretty(json))
+    echo "Downloaded latest Figma file"
+  except:
+    raise newException(
+      FidgetError,
+      "Error downloading latest Figma file: " & getCurrentExceptionMsg()
+    )
 
 proc rebuildGlobTree() =
   ## Nodes have changed rebuild the glob tree.
@@ -118,8 +134,7 @@ proc use*(figmaUrl: string) =
   if not dirExists("figma"):
     createDir("figma")
   let figmaFileKey = figmaUrl.split("/")[4]
-  download(figmaFileKey)
+  downloadFigmaFile(figmaFileKey)
   getImageRefs(figmaFileKey)
-  var data = readFile(&"figma/{figmaFileKey}.json")
-  figmaFile = parseFigmaFile(data)
+  figmaFile = loadFigmaFile(figmaFileKey)
   rebuildGlobTree()
