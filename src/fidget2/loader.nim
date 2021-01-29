@@ -90,7 +90,6 @@ proc downloadFont*(fontPSName: string) =
 proc downloadFigmaFile(fileKey: string) =
   ## Download and cache the Figma file for this file key.
   let
-    figmaClient = newFigmaClient()
     figmaFilePath = figmaFilePath(fileKey)
     lastModifiedPath = lastModifiedFilePath(fileKey)
 
@@ -99,7 +98,7 @@ proc downloadFigmaFile(fileKey: string) =
     try:
       let
         url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
-        data = figmaClient.getContent(url)
+        data = newFigmaClient().getContent(url)
         currentFile = data.fromJson(FigmaFile)
       if currentFile.lastModified == readFile(lastModifiedPath):
         echo "Using cached Figma file"
@@ -111,7 +110,7 @@ proc downloadFigmaFile(fileKey: string) =
   try:
     let
       url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
-      response = figmaClient.getContent(url)
+      response = newFigmaClient().getContent(url)
       json = response.fromJson(JsonNode)
     writeFile(figmaFilePath, pretty(json))
     writeFile(lastModifiedPath, json["lastModified"].getStr())
