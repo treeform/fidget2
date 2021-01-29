@@ -94,7 +94,7 @@ proc downloadFigmaFile(fileKey: string) =
       let
         url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
         data = figmaClient.getContent(url)
-        lastModified = parseFigmaFile(data).lastModified
+        lastModified = data.fromJson(FigmaFileMetadata).lastModified
         savedFigmaFile = loadFigmaFile(fileKey)
       if savedFigmaFile.lastModified == lastModified:
         echo "Using cached Figma file"

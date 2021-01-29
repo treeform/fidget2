@@ -168,6 +168,9 @@ type
     orgBox*: Rect    ## Original size needed for constraints.
     idNum*: int
 
+  FigmaFileMetadata* = object
+    lastModified*: string
+
   FigmaFile* = ref object
     document*: Node
     components*: Table[string, Component]
