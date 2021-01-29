@@ -4,6 +4,7 @@ import cligen, fidget2, fidget2/gpurender, fidget2/render, fidget2/zpurender,
 proc main(w = "gpu", r = "", e = "", l = 10000) =
 
   var renderTime = 0.0
+  var totalDiff = 0.0
   var firstTime = true
 
   use("https://www.figma.com/file/TQOSRucXGFQpuOpyTkDYj1/")
@@ -68,6 +69,8 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     echo &"  {w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx"
 
+    totalDiff += diffScore
+
     framesHtml.add(&"<h4>{frame.name}</h4>")
     framesHTML.add(&"<p>{w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx</p>")
     framesHTML.add(&"<img src='{frame.name}.png'>")
@@ -78,6 +81,11 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
     framesHTML.add(&"<img src='diffs/{frame.name}.png'><br>")
 
   framesHtml.add(&"<p>Total time: {renderTime}s</p>")
+  framesHtml.add(&"<p>Total diff: {totalDiff}</p>")
+
+  echo &"Total time: {renderTime}"
+  echo &"Total diff: {totalDiff}"
+
   writeFile("tests/frames/index.html", framesHtml)
 
 dispatch(main)
