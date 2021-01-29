@@ -15,6 +15,9 @@ proc newFigmaClient(): HttpClient =
 proc figmaFilePath(fileKey: string): string =
   "figma/" & fileKey & ".json"
 
+proc lastModifiedFilePath(fileKey: string): string =
+  "figma/" & fileKey & ".lastModified"
+
 proc loadFigmaFile(fileKey: string): FigmaFile =
   let data = readFile(figmaFilePath(fileKey))
   parseFigmaFile(data)
@@ -86,17 +89,19 @@ proc downloadFont*(fontPSName: string) =
 
 proc downloadFigmaFile(fileKey: string) =
   ## Download and cache the Figma file for this file key.
-  let figmaClient = newFigmaClient()
+  let
+    figmaClient = newFigmaClient()
+    figmaFilePath = figmaFilePath(fileKey)
+    lastModifiedPath = lastModifiedFilePath(fileKey)
 
-  if fileExists(figmaFilePath(fileKey)):
+  if fileExists(figmaFilePath) and fileExists(lastModifiedPath):
     # If we have a saved Figma file, is it up to date?
     try:
       let
         url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
         data = figmaClient.getContent(url)
-        lastModified = data.fromJson(FigmaFileMetadata).lastModified
-        savedFigmaFile = loadFigmaFile(fileKey)
-      if savedFigmaFile.lastModified == lastModified:
+        currentFile = data.fromJson(FigmaFile)
+      if currentFile.lastModified == readFile(lastModifiedPath):
         echo "Using cached Figma file"
         return
     except:
@@ -108,7 +113,8 @@ proc downloadFigmaFile(fileKey: string) =
       url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
       response = figmaClient.getContent(url)
       json = response.fromJson(JsonNode)
-    writeFile(figmaFilePath(fileKey), pretty(json))
+    writeFile(figmaFilePath, pretty(json))
+    writeFile(lastModifiedPath, json["lastModified"].getStr())
     echo "Downloaded latest Figma file"
   except:
     raise newException(
