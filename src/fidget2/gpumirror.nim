@@ -11,9 +11,7 @@ elif defined(gpu):
   import gpurender
 
 else: #defined(hyb):
-  import context
-  var
-    ctx: Context
+  import context, hybridrender
 
 
 type
