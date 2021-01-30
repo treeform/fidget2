@@ -1,5 +1,5 @@
 import buffers, chroma, pixie, hashes, opengl, os, shaders, strformat,
-    strutils, tables, textures, times, vmath, formatflippy, bumpy
+    strutils, tables, textures, times, vmath, bumpy
 
 const
   quadLimit = 10_921
@@ -262,23 +262,6 @@ proc updateImage*(ctx: Context, path: string | Hash, image: Image) =
     image
   )
 
-proc putFlippy*(ctx: Context, path: string | Hash, flippy: Flippy) =
-  let rect = ctx.findEmptyRect(flippy.width, flippy.height)
-  ctx.entries[path] = rect / float(ctx.atlasSize)
-  var
-    x = int(rect.x)
-    y = int(rect.y)
-  for level, mip in flippy.mipmaps:
-    updateSubImage(
-      ctx.atlasTexture,
-      x,
-      y,
-      mip,
-      level
-    )
-    x = x div 2
-    y = y div 2
-
 proc draw(ctx: Context) =
   ## Flips - draws current buffer and starts a new one.
   if ctx.quadCount == 0:
@@ -413,31 +396,7 @@ proc drawUvRect(ctx: Context, rect, uvRect: Rect, color: Color) =
   )
 
 proc getOrLoadImageRect(ctx: Context, imagePath: string | Hash): Rect =
-  if imagePath is Hash:
-    return ctx.entries[imagePath]
-
-  var filePath = cast[string](imagePath) # We know it is a string
-  if splitFile(filePath).ext == "":
-    filePath.add ".png"
-  if hash(filePath) notin ctx.entries:
-    # Need to load imagePath, check to see if the .flippy file is around
-    echo "[load] ", filePath
-    if not fileExists(filePath):
-      raise newException(Exception, &"Image '{filePath}' not found")
-    let flippyFilePath = filePath.changeFileExt(".flippy")
-    if not fileExists(flippyFilePath):
-      # No Flippy file generate new one
-      pngToFlippy(filePath, flippyFilePath)
-    else:
-      let
-        mtFlippy = getLastModificationTime(flippyFilePath).toUnix
-        mtImage = getLastModificationTime(filePath).toUnix
-      if mtFlippy < mtImage:
-        # Flippy file too old, regenerate
-        pngToFlippy(filePath, flippyFilePath)
-    var flippy = loadFlippy(flippyFilePath)
-    ctx.putFlippy(filePath, flippy)
-  return ctx.entries[filePath]
+  return ctx.entries[imagePath]
 
 proc drawImage*(
   ctx: Context,

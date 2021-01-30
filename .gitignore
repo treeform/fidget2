@@ -12,7 +12,6 @@ nimcache
 .*
 *.glsl
 node_modules
-*.flippy
 
 # figma tmp files
 figma
