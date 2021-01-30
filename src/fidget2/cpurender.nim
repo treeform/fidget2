@@ -906,7 +906,7 @@ import staticglfw, winim
 proc GetWin32Window*(window: Window): pointer {.cdecl,
   importc: "glfwGetWin32Window".}
 
-proc drawCpuFrameToScreen*(node: Node) =
+proc drawToScreen*(node: Node) =
 
   var screen = drawCompleteCpuFrame(node)
 
@@ -930,7 +930,7 @@ proc drawCpuFrameToScreen*(node: Node) =
       int32 h, dataPtr, info, DIB_RGB_COLORS, SRCCOPY)
   discard ReleaseDC(hwnd, dc)
 
-proc createWindow*(
+proc setupWindow*(
   frameNode: Node,
   offscreen = false,
   resizable = true

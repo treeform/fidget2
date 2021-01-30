@@ -1,7 +1,25 @@
-import cligen, fidget2, fidget2/gpurender, fidget2/cpurender, fidget2/zpurender,
-    imagediff, os, pixie, strformat, strutils, times
+import cligen, fidget2, imagediff, os, pixie, strformat, strutils, times
 
-proc main(w = "gpu", r = "", e = "", l = 10000) =
+when defined(gpu):
+  import fidget2/gpurender
+  const w = "gpu"
+elif defined(gpu_atlas):
+  import fidget2/gpurender
+  const w = "gpu_atlas"
+elif defined(gpu_atlas_full):
+  import fidget2/gpurender
+  const w = "gpu_atlas_full"
+elif defined(cpu):
+  import fidget2/cpurender
+  const w = "cpu"
+elif defined(zpu):
+  import fidget2/zpurender
+  const w = "zpu"
+elif defined(gpu_vs_zpu):
+  import fidget2/gpurender, fidget2/zpurender
+  const w = "gpu_vs_zpu"
+
+proc main(r = "", e = "", l = 10000) =
 
   var renderTime = 0.0
   var totalDiff = 0.0
@@ -24,38 +42,33 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     echo frame.name, " --------------------------------- "
 
-    if firstTime and w in ["gpu_atlas", "gpu_atlas_full", "gpu", "vs"]:
-      createWindow(frame, offscreen = true)
+    if firstTime and w in ["gpu_atlas", "gpu_atlas_full", "gpu", "gpu_vs_zpu"]:
+      setupWindow(frame, offscreen = true)
       firstTime = false
 
     let startTime = epochTime()
 
-
     proc drawFrame(frame: Node): Image =
-      if w == "gpu":
-        drawGpuFrameToScreen(frame)
+      when defined(gpu):
+        drawToScreen(frame)
         result = readGpuPixelsFromScreen()
-      elif w == "gpu_atlas":
+      elif defined(gpu_atlas):
         drawGpuFrameToAtlas(frame, "screen")
         result = readGpuPixelsFromAtlas("screen")
-      elif w == "gpu_atlas_full":
+      elif defined(gpu_atlas_full):
         drawGpuFrameToAtlas(frame, "screen")
         result = readGpuPixelsFromAtlas("screen", crop = false)
-      elif w == "cpu":
+      elif defined(cpu):
         result = drawCompleteCpuFrame(frame)
-      elif w == "zpu":
+      elif defined(zpu):
         result = drawCompleteZpuFrame(frame)
-      elif w == "vs":
+      elif defined(gpu_vs_zpu):
         drawGpuFrameToScreen(frame)
         result = readGpuPixelsFromScreen()
 
     var image = drawFrame(frame)
 
     let frameTime = epochTime() - startTime
-
-    let startTime2 = epochTime()
-    discard drawFrame(frame)
-    let frameTime2 = epochTime() - startTime2
 
     renderTime += frameTime
     image.writeFile("tests/frames/" & frame.name & ".png")
@@ -66,7 +79,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
 
     if fileExists(&"tests/frames/masters/{frame.name}.png"):
       var master: Image
-      if w == "vs":
+      when defined(gpu_vs_zpu):
         master = drawCompleteZpuFrame(frame)
         master.writeFile("tests/frames/zpu/" & frame.name & ".png")
       else:
@@ -75,7 +88,7 @@ proc main(w = "gpu", r = "", e = "", l = 10000) =
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
 
-    echo &"  {w} {frameTime:0.3f}s {frameTime2:0.3f}s {diffScore:0.3f}% diffpx"
+    echo &"  {w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx"
 
     totalDiff += diffScore
 

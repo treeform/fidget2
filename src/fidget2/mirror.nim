@@ -471,19 +471,8 @@ proc display() =
 
   clearInputs()
 
-  when defined(cpu):
-    drawCpuFrameToScreen(thisFrame)
-    perfMark "drawCpuFrameToScreen"
-
-  elif defined(gpu):
-    drawGpuFrameToScreen(thisFrame)
-    perfMark "drawGpuFrameToScreen"
-    if frameNum == 1:
-      dumpCommandStream()
-
-  else: #defined(hyb):
-    drawHybridFrameToScreen(thisFrame)
-    perfMark "drawHybridFrameToScreen"
+  drawToScreen(thisFrame)
+  perfMark "drawToScreen"
 
   when not defined(cpu):
     if vSync:
@@ -513,7 +502,7 @@ proc startFidget*(
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
 
-  createWindow(
+  setupWindow(
     thisFrame,
     resizable = resizable
   )

@@ -109,7 +109,7 @@ proc errorWarningCheck(name: string, shaderId: GLuint, compile = true) =
   if isCompiled == 0:
     quit "Shader " & name & " wasn't compiled."
 
-proc createWindow*(
+proc setupWindow*(
   frameNode: Node,
   offscreen = false,
   resizable = true
@@ -791,11 +791,11 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
             drawRect(vec2(0, 0), node.size, r, r, r, r)
             dataBufferSeq.add cmdEndPath.float32
           else:
-            # dataBufferSeq.add cmdStartPath.float32
-            # dataBufferSeq.add kNonZero.float32
-            # drawRect(vec2(0, 0), node.size)
-            # dataBufferSeq.add cmdEndPath.float32
-            dataBufferSeq.add cmdFullFill.float32
+            dataBufferSeq.add cmdStartPath.float32
+            dataBufferSeq.add kNonZero.float32
+            drawRect(vec2(0, 0), node.size)
+            dataBufferSeq.add cmdEndPath.float32
+            #dataBufferSeq.add cmdFullFill.float32
 
         for paint in node.fills:
           drawPaint(node, paint)
@@ -1031,7 +1031,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   mat = prevMat
   opacity = prevOpacity
 
-proc drawGpuFrameToScreen*(node: Node) =
+proc drawToScreen*(node: Node) =
   ## Draws the GPU frame to screen.
 
   setupRender(node)

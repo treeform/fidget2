@@ -6,7 +6,7 @@ import algorithm, bumpy, globs, input, json, loader, math, opengl,
 var
   ctx*: Context
 
-proc drawHybridFrameToScreen*(thisFrame: Node) =
+proc drawToScreen*(thisFrame: Node) =
   glEnable(GL_BLEND)
   #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
   glBlendFuncSeparate(
@@ -36,7 +36,7 @@ proc drawHybridFrameToScreen*(thisFrame: Node) =
   ctx.endFrame()
   perfMark "beginFrame/endFrame"
 
-proc createWindow*(
+proc setupWindow*(
   frameNode: Node,
   offscreen = false,
   resizable = true
