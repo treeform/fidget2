@@ -45,7 +45,7 @@ var
 
   scissorOn = false
   currentFrameBufferId = 0
-  viewPortRect: Rect
+  viewportRect: Rect
 
 proc dumpCommandStream*()
 
@@ -71,8 +71,7 @@ proc setupRender*(frameNode: Node) =
   ## Setup the rendering of the frame.
   dataBufferSeq.setLen(0)
 
-  viewPortWidth = frameNode.absoluteBoundingBox.w.int
-  viewPortHeight = frameNode.absoluteBoundingBox.h.int
+  viewportSize = frameNode.absoluteBoundingBox.wh
 
   if textureAtlas == nil:
     textureAtlas = newCpuAtlas(512, 1)
@@ -135,7 +134,7 @@ proc createWindow*(
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
   window = createWindow(
-    viewPortWidth.cint, viewPortHeight.cint,
+    viewportSize.x.cint, viewportSize.y.cint,
     "run_shaders",
     nil,
     nil)
@@ -1049,14 +1048,14 @@ proc drawGpuFrameToScreen*(node: Node) =
   if currentFrameBufferId != 0:
     currentFrameBufferId = 0
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
-  if viewPortRect != rect(0, 0, viewPortWidth.float32, viewPortHeight.float32):
-    viewPortRect = rect(0, 0, viewPortWidth.float32, viewPortHeight.float32)
-    window.setWindowSize(viewPortWidth.cint, viewPortHeight.cint)
+  if viewportRect != rect(0, 0, viewportSize.x, viewportSize.y):
+    viewportRect = rect(0, 0, viewportSize.x, viewportSize.y)
+    window.setWindowSize(viewportSize.x.cint, viewportSize.y.cint)
     glViewport(
-      viewPortRect.x.cint,
-      viewPortRect.y.cint,
-      viewPortRect.w.cint,
-      viewPortRect.h.cint
+      viewportRect.x.cint,
+      viewportRect.y.cint,
+      viewportRect.w.cint,
+      viewportRect.h.cint
     )
 
   node.box.xy = vec2(0, 0)
@@ -1081,7 +1080,7 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
 
   if name notin textureAtlas.entries:
     # Add a spot for the screen to go
-    var toImage = newImage(viewPortWidth, viewPortHeight)
+    var toImage = newImage(viewportSize.x.int, viewportSize.y.int)
     toImage.fill(rgba(255, 0, 0, 255))
     textureAtlas.put(name, toImage)
 
@@ -1123,7 +1122,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Use for debugging and tests only.
   #dumpCommandStream()
   let start = epochTime()
-  var screen = newImage(viewPortWidth, viewPortHeight)
+  var screen = newImage(viewportSize.x.int, viewportSize.x.int)
   glReadPixels(
     0, 0,
     screen.width.Glint, screen.height.Glint,

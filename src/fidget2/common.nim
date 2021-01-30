@@ -1,11 +1,12 @@
 import vmath, chroma, schema, staticglfw, typography, typography/textboxes,
-    tables
+    tables, print
+
+export print
 
 ## Common vars shared across renderers.
 var
   # Window stuff.
-  viewPortWidth*: int
-  viewPortHeight*: int
+  viewportSize*: Vec2
   window*: Window
   offscreen* = false
   windowResizable*: bool

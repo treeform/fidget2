@@ -1,8 +1,8 @@
-import chroma, glsl, gpurender, gpushader, math, pixie, schema, vmath, common
+import chroma, glsl, gpurender, gpushader, math, pixie, schema, vmath, common,
+    bumpy
 
 proc drawCompleteZpuFrame*(node: Node): pixie.Image =
-  viewPortWidth = node.absoluteBoundingBox.w.int
-  viewPortHeight = node.absoluteBoundingBox.h.int
+  viewportSize = node.absoluteBoundingBox.wh
   setupRender(node)
   node.readyImages()
 
@@ -12,7 +12,7 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
   textureAtlasSampler.image = textureAtlas.image
 
-  var image = newImage(viewPortWidth, viewPortHeight)
+  var image = newImage(viewportSize.x.int, viewportSize.y.int)
   dataBuffer.data = dataBufferSeq
 
   for y in 0 ..< image.height:

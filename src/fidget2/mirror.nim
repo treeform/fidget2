@@ -308,13 +308,10 @@ proc updateWindowSize() =
   windowFrame.x = float32(cwidth)
   windowFrame.y = float32(cheight)
 
-  viewPortWidth = windowFrame.x.int
-  viewPortHeight = windowFrame.y.int
+  viewportSize = windowFrame
 
   minimized = windowSize == vec2(0, 0)
   pixelRatio = if windowSize.x > 0: windowFrame.x / windowSize.x else: 0
-
-  #glViewport(0, 0, cwidth, cheight)
 
   let
     monitor = getPrimaryMonitor()
@@ -511,8 +508,7 @@ proc startFidget*(
   thisFrame = find(entryFrame)
   windowResizable = resizable
 
-  viewPortWidth = thisFrame.absoluteBoundingBox.w.int
-  viewPortHeight = thisFrame.absoluteBoundingBox.h.int
+  viewportSize = thisFrame.absoluteBoundingBox.wh
 
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
@@ -555,7 +551,7 @@ proc startFidget*(
     pollEvents()
     display()
     perfMark "display"
-    perfPixels = viewPortWidth * viewPortHeight
+    perfPixels = (viewportSize.x * viewportSize.y).int
     perfDumpEverySecond()
 
   # Destroy the window.

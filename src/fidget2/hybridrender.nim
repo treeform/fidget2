@@ -18,8 +18,7 @@ proc drawHybridFrameToScreen*(thisFrame: Node) =
   glClearColor(0, 0, 0, 1)
   glClear(GL_COLOR_BUFFER_BIT)
 
-
-  ctx.beginFrame(vec2(viewPortWidth.float32, viewPortHeight.float32))
+  ctx.beginFrame(viewportSize)
   for x in 0 ..< 28:
     for y in 0 ..< 28:
       ctx.saveTransform()
@@ -51,7 +50,7 @@ proc createWindow*(
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
   window = createWindow(
-    viewPortWidth.cint, viewPortHeight.cint,
+    viewportSize.x.cint, viewportSize.y.cint,
     "run_shaders",
     nil,
     nil)
