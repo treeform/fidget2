@@ -1,5 +1,6 @@
 
-import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath
+import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
+    common
 
 const
   white = rgba(255, 255, 255, 255)
@@ -11,7 +12,6 @@ var
   parentNode: Node
   framePos*: Vec2
   imageCache: Table[string, Image]
-  typefaceCache: Table[string, Typeface]
 
 proc drawNodeInternal*(node: Node)
 proc drawNodeScreen*(node: Node)

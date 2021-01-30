@@ -1,22 +1,8 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, times, perf, context
+    typography/textboxes, unicode, vmath, times, perf, context, common
 
 var
-  # Window stuff.
-  viewPortWidth*: int
-  viewPortHeight*: int
-  window*: Window
-  offscreen* = false
-  windowResizable*: bool
-  vSync*: bool
-  framePos*: Vec2
-
-  # Text edit.
-  textBox*: TextBox
-  textBoxFocus*: Node
-  typefaceCache*: Table[string, Typeface]
-
   ctx*: Context
 
 proc drawHybridFrameToScreen*(thisFrame: Node) =

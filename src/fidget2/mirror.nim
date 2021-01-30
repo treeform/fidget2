@@ -1,6 +1,6 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, zpurender, times, perf
+    typography/textboxes, unicode, vmath, zpurender, times, perf, common
 
 export textboxes
 

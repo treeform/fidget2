@@ -1,27 +1,13 @@
 import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
     pixie, print, schema, staticglfw, tables, typography, typography/textboxes,
-    vmath, times, perf
+    vmath, times, perf, common
 
 var
-  # Window stuff.
-  viewPortWidth*: int
-  viewPortHeight*: int
-  window*: Window
-  offscreen* = false
-  windowResizable*: bool
-  vSync*: bool
-
-  # Text edit.
-  textBox*: TextBox
-  textBoxFocus*: Node
-  typefaceCache*: Table[string, Typeface]
-
   # Buffers.
   dataBufferSeq*: seq[float32]
   mat*: Mat3
   opacity*: float32
   framePos*: Vec2
-
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint

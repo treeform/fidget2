@@ -1,4 +1,4 @@
-import chroma, glsl, gpurender, gpushader, math, pixie, schema, vmath
+import chroma, glsl, gpurender, gpushader, math, pixie, schema, vmath, common
 
 proc drawCompleteZpuFrame*(node: Node): pixie.Image =
   viewPortWidth = node.absoluteBoundingBox.w.int
