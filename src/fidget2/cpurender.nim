@@ -900,3 +900,61 @@ proc drawNodeScreen(node: Node) =
         #  print maskStack
 
       screen.setRgbaUnsafe(x, y, rgba)
+
+import staticglfw, winim
+
+proc GetWin32Window*(window: Window): pointer {.cdecl,
+  importc: "glfwGetWin32Window".}
+
+proc drawCpuFrameToScreen*(node: Node) =
+
+  var screen = drawCompleteCpuFrame(node)
+
+  let
+    w = screen.width
+    h = screen.height
+    dataPtr = screen.data[0].addr
+
+  # draw image pixels onto glfw-win32-window without openGL
+  var hwnd = cast[HWND](GetWin32Window(window))
+  var dc = GetDC(hwnd)
+  var info = BITMAPINFO()
+  info.bmiHeader.biBitCount = 32
+  info.bmiHeader.biWidth = int32 w
+  info.bmiHeader.biHeight = int32 h
+  info.bmiHeader.biPlanes = 1
+  info.bmiHeader.biSize = DWORD sizeof(BITMAPINFOHEADER)
+  info.bmiHeader.biSizeImage = int32(w * h * 4)
+  info.bmiHeader.biCompression = BI_RGB
+  discard StretchDIBits(dc, 0, int32 h - 1, int32 w, int32 -h, 0, 0, int32 w,
+      int32 h, dataPtr, info, DIB_RGB_COLORS, SRCCOPY)
+  discard ReleaseDC(hwnd, dc)
+
+proc createWindow*(
+  frameNode: Node,
+  offscreen = false,
+  resizable = true
+) =
+  ## Opens a new glfw window that is ready to draw into.
+  ## Also setups all the shaders and buffers.
+
+  # Init glfw.
+  if init() == 0:
+    raise newException(Exception, "Failed to intialize GLFW")
+
+  # Open a window.
+  if not vSync:
+    # Disable V-Sync
+    windowHint(DOUBLEBUFFER, false.cint)
+
+  windowHint(VISIBLE, (not offscreen).cint)
+  windowHint(RESIZABLE, resizable.cint)
+  windowHint(SAMPLES, 0)
+  window = createWindow(
+    viewportSize.x.cint, viewportSize.y.cint,
+    "run_shaders",
+    nil,
+    nil)
+  if window == nil:
+    raise newException(Exception, "Failed to create GLFW window.")
+  window.makeContextCurrent()
