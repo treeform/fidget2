@@ -10,7 +10,6 @@ var
   maskStack: seq[(Node, Image)]
   nodeStack: seq[Node]
   parentNode: Node
-  framePos*: Vec2
   imageCache: Table[string, Image]
 
 proc drawNodeInternal*(node: Node)

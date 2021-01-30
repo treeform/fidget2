@@ -7,7 +7,6 @@ var
   dataBufferSeq*: seq[float32]
   mat*: Mat3
   opacity*: float32
-  framePos*: Vec2
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
