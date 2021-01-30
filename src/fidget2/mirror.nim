@@ -523,17 +523,6 @@ proc startFidget*(
   # Sort fidget user callbacks.
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
 
-
-  when defined(cpu):
-    discard
-
-  elif defined(gpu):
-    discard
-
-  else: #defined(hyb):
-    ctx = newContext(pixelate = false, pixelScale = 1)
-
-
   # Run while window is open.
   while windowShouldClose(window) == 0:
     perfMark "start ----------- "

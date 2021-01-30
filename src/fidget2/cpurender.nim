@@ -936,25 +936,15 @@ proc setupWindow*(
   resizable = true
 ) =
   ## Opens a new glfw window that is ready to draw into.
-  ## Also setups all the shaders and buffers.
-
-  # Init glfw.
   if init() == 0:
     raise newException(Exception, "Failed to intialize GLFW")
-
-  # Open a window.
-  if not vSync:
-    # Disable V-Sync
-    windowHint(DOUBLEBUFFER, false.cint)
-
   windowHint(VISIBLE, (not offscreen).cint)
   windowHint(RESIZABLE, resizable.cint)
-  windowHint(SAMPLES, 0)
+  windowHint(CLIENT_API, NO_API)
   window = createWindow(
     viewportSize.x.cint, viewportSize.y.cint,
-    "run_shaders",
+    "loading...",
     nil,
     nil)
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
-  window.makeContextCurrent()
