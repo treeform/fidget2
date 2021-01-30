@@ -1,8 +1,20 @@
-import algorithm, bumpy, globs, gpurender, input, json, loader, math, opengl,
+import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
     typography/textboxes, unicode, vmath, zpurender, times, perf
 
 export textboxes
+
+when defined(cpu):
+  import cpurender
+
+elif defined(gpu):
+  import gpurender
+
+else: #defined(hyb):
+  import context
+  var
+    ctx: Context
+
 
 type
   KeyState* = enum
@@ -446,8 +458,10 @@ proc display() =
 
   if windowResizable:
     # Stretch the current frame to fit the window.
-    thisFrame.box.wh = windowSize
-    thisFrame.absoluteBoundingBox.wh = windowSize
+    if windowSize != thisFrame.box.wh:
+      thisFrame.markDirty()
+      thisFrame.box.wh = windowSize
+      thisFrame.absoluteBoundingBox.wh = windowSize
   else:
     # Stretch the window to fit the current frame.
     if windowSize != thisFrame.box.wh:
@@ -462,18 +476,28 @@ proc display() =
 
   clearInputs()
 
-  drawGpuFrameToScreen(thisFrame)
-  perfMark "drawGpuFrameToScreen"
+  when defined(cpu):
+    drawCpuFrameToScreen(thisFrame)
+    perfMark "drawCpuFrameToScreen"
 
-  if vSync:
-    swapBuffers(window)
-    perfMark "swapBuffers"
-  else:
-    glFlush()
-    perfMark "glFlush"
+  elif defined(gpu):
+    drawGpuFrameToScreen(thisFrame)
+    perfMark "drawGpuFrameToScreen"
+    if frameNum == 1:
+      dumpCommandStream()
 
-  if frameNum == 1:
-    dumpCommandStream()
+  else: #defined(hyb):
+    drawHybridFrameToScreen(thisFrame)
+    perfMark "drawHybridFrameToScreen"
+
+  when not defined(cpu):
+    if vSync:
+      swapBuffers(window)
+      perfMark "swapBuffers"
+    else:
+      glFlush()
+      perfMark "glFlush"
+
   inc frameNum
 
 proc startFidget*(
@@ -515,6 +539,17 @@ proc startFidget*(
 
   # Sort fidget user callbacks.
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
+
+
+  when defined(cpu):
+    discard
+
+  elif defined(gpu):
+    discard
+
+  else: #defined(hyb):
+    ctx = newContext(pixelate = false, pixelScale = 1)
+
 
   # Run while window is open.
   while windowShouldClose(window) == 0:

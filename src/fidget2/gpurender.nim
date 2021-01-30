@@ -14,13 +14,14 @@ var
   # Text edit.
   textBox*: TextBox
   textBoxFocus*: Node
+  typefaceCache*: Table[string, Typeface]
 
   # Buffers.
   dataBufferSeq*: seq[float32]
   mat*: Mat3
   opacity*: float32
   framePos*: Vec2
-  typefaceCache*: Table[string, Typeface]
+
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
