@@ -1,6 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, times, perf, context, common
+    typography/textboxes, unicode, vmath, times, perf, context, common,
+    cpurender
 
 var
   ctx*: Context
@@ -18,13 +19,19 @@ proc drawHybridFrameToScreen*(thisFrame: Node) =
   glClearColor(0, 0, 0, 1)
   glClear(GL_COLOR_BUFFER_BIT)
 
+  var screen = drawCompleteCpuFrame(thisFrame)
+  ctx.putImage("screen.png", screen)
+
   ctx.beginFrame(viewportSize)
-  for x in 0 ..< 28:
-    for y in 0 ..< 28:
-      ctx.saveTransform()
-      ctx.translate(vec2(x.float32*32, y.float32*32))
-      ctx.drawImage("test.png", size = vec2(32, 32))
-      ctx.restoreTransform()
+
+  # for x in 0 ..< 28:
+  #   for y in 0 ..< 28:
+  #     ctx.saveTransform()
+  #     ctx.translate(vec2(x.float32*32, y.float32*32))
+  #     ctx.drawImage("test.png", size = vec2(32, 32))
+  #     ctx.restoreTransform()
+
+  ctx.drawImage("screen.png")
 
   ctx.endFrame()
   perfMark "beginFrame/endFrame"
