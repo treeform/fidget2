@@ -1,8 +1,18 @@
-import algorithm, bumpy, globs, gpurender, input, json, loader, math, opengl,
+import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, zpurender, times, perf
+    typography/textboxes, unicode, vmath, zpurender, times, perf, common
 
 export textboxes
+
+when defined(cpu):
+  import cpurender
+
+elif defined(gpu):
+  import gpurender
+
+else: #defined(hyb):
+  import context, hybridrender
+
 
 type
   KeyState* = enum
@@ -298,13 +308,10 @@ proc updateWindowSize() =
   windowFrame.x = float32(cwidth)
   windowFrame.y = float32(cheight)
 
-  viewPortWidth = windowFrame.x.int
-  viewPortHeight = windowFrame.y.int
+  viewportSize = windowFrame
 
   minimized = windowSize == vec2(0, 0)
   pixelRatio = if windowSize.x > 0: windowFrame.x / windowSize.x else: 0
-
-  #glViewport(0, 0, cwidth, cheight)
 
   let
     monitor = getPrimaryMonitor()
@@ -446,8 +453,10 @@ proc display() =
 
   if windowResizable:
     # Stretch the current frame to fit the window.
-    thisFrame.box.wh = windowSize
-    thisFrame.absoluteBoundingBox.wh = windowSize
+    if windowSize != thisFrame.box.wh:
+      thisFrame.markDirty()
+      thisFrame.box.wh = windowSize
+      thisFrame.absoluteBoundingBox.wh = windowSize
   else:
     # Stretch the window to fit the current frame.
     if windowSize != thisFrame.box.wh:
@@ -462,18 +471,17 @@ proc display() =
 
   clearInputs()
 
-  drawGpuFrameToScreen(thisFrame)
-  perfMark "drawGpuFrameToScreen"
+  drawToScreen(thisFrame)
+  perfMark "drawToScreen"
 
-  if vSync:
-    swapBuffers(window)
-    perfMark "swapBuffers"
-  else:
-    glFlush()
-    perfMark "glFlush"
+  when not defined(cpu):
+    if vSync:
+      swapBuffers(window)
+      perfMark "swapBuffers"
+    else:
+      glFlush()
+      perfMark "glFlush"
 
-  if frameNum == 1:
-    dumpCommandStream()
   inc frameNum
 
 proc startFidget*(
@@ -489,13 +497,12 @@ proc startFidget*(
   thisFrame = find(entryFrame)
   windowResizable = resizable
 
-  viewPortWidth = thisFrame.absoluteBoundingBox.w.int
-  viewPortHeight = thisFrame.absoluteBoundingBox.h.int
+  viewportSize = thisFrame.absoluteBoundingBox.wh
 
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
 
-  createWindow(
+  setupWindow(
     thisFrame,
     resizable = resizable
   )
@@ -522,7 +529,7 @@ proc startFidget*(
     pollEvents()
     display()
     perfMark "display"
-    perfPixels = viewPortWidth * viewPortHeight
+    perfPixels = (viewportSize.x * viewportSize.y).int
     perfDumpEverySecond()
 
   # Destroy the window.

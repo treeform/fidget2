@@ -1,5 +1,6 @@
 
-import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath
+import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
+    common
 
 const
   white = rgba(255, 255, 255, 255)
@@ -9,9 +10,7 @@ var
   maskStack: seq[(Node, Image)]
   nodeStack: seq[Node]
   parentNode: Node
-  framePos*: Vec2
   imageCache: Table[string, Image]
-  typefaceCache: Table[string, Typeface]
 
 proc drawNodeInternal*(node: Node)
 proc drawNodeScreen*(node: Node)
@@ -281,33 +280,6 @@ proc roundRectRev(path: var Path, x, y, w, h, nw, ne, se, sw: float32) =
   path.arcTo(x+w, y+h, x+w, y, se)
   path.arcTo(x+w, y, x, y, ne)
   path.closePath()
-
-proc markDirty*(node: Node, value = true) =
-  ## Marks the entire tree dirty or not dirty.
-  node.dirty = value
-  for c in node.children:
-    markDirty(c, value)
-
-proc checkDirty(node: Node) =
-  ## Makes sure if children are dirty, parents are dirty too!
-  for c in node.children:
-    checkDirty(c)
-    if c.dirty == true:
-      node.dirty = true
-
-proc transform(node: Node): Mat3 =
-  ## Returns Mat3 transform of the node.
-  result[0, 0] = node.relativeTransform[0][0]
-  result[0, 1] = node.relativeTransform[1][0]
-  result[0, 2] = 0
-
-  result[1, 0] = node.relativeTransform[0][1]
-  result[1, 1] = node.relativeTransform[1][1]
-  result[1, 2] = 0
-
-  result[2, 0] = node.relativeTransform[0][2]
-  result[2, 1] = node.relativeTransform[1][2]
-  result[2, 2] = 1
 
 const pixelBounds = true
 
@@ -928,3 +900,51 @@ proc drawNodeScreen(node: Node) =
         #  print maskStack
 
       screen.setRgbaUnsafe(x, y, rgba)
+
+import staticglfw, winim
+
+proc GetWin32Window*(window: Window): pointer {.cdecl,
+  importc: "glfwGetWin32Window".}
+
+proc drawToScreen*(node: Node) =
+
+  var screen = drawCompleteCpuFrame(node)
+
+  let
+    w = screen.width
+    h = screen.height
+    dataPtr = screen.data[0].addr
+
+  # draw image pixels onto glfw-win32-window without openGL
+  var hwnd = cast[HWND](GetWin32Window(window))
+  var dc = GetDC(hwnd)
+  var info = BITMAPINFO()
+  info.bmiHeader.biBitCount = 32
+  info.bmiHeader.biWidth = int32 w
+  info.bmiHeader.biHeight = int32 h
+  info.bmiHeader.biPlanes = 1
+  info.bmiHeader.biSize = DWORD sizeof(BITMAPINFOHEADER)
+  info.bmiHeader.biSizeImage = int32(w * h * 4)
+  info.bmiHeader.biCompression = BI_RGB
+  discard StretchDIBits(dc, 0, int32 h - 1, int32 w, int32 -h, 0, 0, int32 w,
+      int32 h, dataPtr, info, DIB_RGB_COLORS, SRCCOPY)
+  discard ReleaseDC(hwnd, dc)
+
+proc setupWindow*(
+  frameNode: Node,
+  offscreen = false,
+  resizable = true
+) =
+  ## Opens a new glfw window that is ready to draw into.
+  if init() == 0:
+    raise newException(Exception, "Failed to intialize GLFW")
+  windowHint(VISIBLE, (not offscreen).cint)
+  windowHint(RESIZABLE, resizable.cint)
+  windowHint(CLIENT_API, NO_API)
+  window = createWindow(
+    viewportSize.x.cint, viewportSize.y.cint,
+    "loading...",
+    nil,
+    nil)
+  if window == nil:
+    raise newException(Exception, "Failed to create GLFW window.")

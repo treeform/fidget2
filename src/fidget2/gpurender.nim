@@ -1,26 +1,12 @@
 import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
     pixie, print, schema, staticglfw, tables, typography, typography/textboxes,
-    vmath, times, perf
+    vmath, times, perf, common
 
 var
-  # Window stuff.
-  viewPortWidth*: int
-  viewPortHeight*: int
-  window*: Window
-  offscreen* = false
-  windowResizable*: bool
-  vSync*: bool
-
-  # Text edit.
-  textBox*: TextBox
-  textBoxFocus*: Node
-
   # Buffers.
   dataBufferSeq*: seq[float32]
   mat*: Mat3
   opacity*: float32
-  framePos*: Vec2
-  typefaceCache*: Table[string, Typeface]
 
   # OpenGL stuff.
   dataBufferTextureId: GLuint
@@ -58,7 +44,7 @@ var
 
   scissorOn = false
   currentFrameBufferId = 0
-  viewPortRect: Rect
+  viewportRect: Rect
 
 proc dumpCommandStream*()
 
@@ -84,8 +70,7 @@ proc setupRender*(frameNode: Node) =
   ## Setup the rendering of the frame.
   dataBufferSeq.setLen(0)
 
-  viewPortWidth = frameNode.absoluteBoundingBox.w.int
-  viewPortHeight = frameNode.absoluteBoundingBox.h.int
+  viewportSize = frameNode.absoluteBoundingBox.wh
 
   if textureAtlas == nil:
     textureAtlas = newCpuAtlas(512, 1)
@@ -124,7 +109,7 @@ proc errorWarningCheck(name: string, shaderId: GLuint, compile = true) =
   if isCompiled == 0:
     quit "Shader " & name & " wasn't compiled."
 
-proc createWindow*(
+proc setupWindow*(
   frameNode: Node,
   offscreen = false,
   resizable = true
@@ -148,7 +133,7 @@ proc createWindow*(
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
   window = createWindow(
-    viewPortWidth.cint, viewPortHeight.cint,
+    viewportSize.x.cint, viewportSize.y.cint,
     "run_shaders",
     nil,
     nil)
@@ -806,11 +791,11 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
             drawRect(vec2(0, 0), node.size, r, r, r, r)
             dataBufferSeq.add cmdEndPath.float32
           else:
-            # dataBufferSeq.add cmdStartPath.float32
-            # dataBufferSeq.add kNonZero.float32
-            # drawRect(vec2(0, 0), node.size)
-            # dataBufferSeq.add cmdEndPath.float32
-            dataBufferSeq.add cmdFullFill.float32
+            dataBufferSeq.add cmdStartPath.float32
+            dataBufferSeq.add kNonZero.float32
+            drawRect(vec2(0, 0), node.size)
+            dataBufferSeq.add cmdEndPath.float32
+            #dataBufferSeq.add cmdFullFill.float32
 
         for paint in node.fills:
           drawPaint(node, paint)
@@ -1046,7 +1031,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   mat = prevMat
   opacity = prevOpacity
 
-proc drawGpuFrameToScreen*(node: Node) =
+proc drawToScreen*(node: Node) =
   ## Draws the GPU frame to screen.
 
   setupRender(node)
@@ -1062,14 +1047,14 @@ proc drawGpuFrameToScreen*(node: Node) =
   if currentFrameBufferId != 0:
     currentFrameBufferId = 0
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
-  if viewPortRect != rect(0, 0, viewPortWidth.float32, viewPortHeight.float32):
-    viewPortRect = rect(0, 0, viewPortWidth.float32, viewPortHeight.float32)
-    window.setWindowSize(viewPortWidth.cint, viewPortHeight.cint)
+  if viewportRect != rect(0, 0, viewportSize.x, viewportSize.y):
+    viewportRect = rect(0, 0, viewportSize.x, viewportSize.y)
+    window.setWindowSize(viewportSize.x.cint, viewportSize.y.cint)
     glViewport(
-      viewPortRect.x.cint,
-      viewPortRect.y.cint,
-      viewPortRect.w.cint,
-      viewPortRect.h.cint
+      viewportRect.x.cint,
+      viewportRect.y.cint,
+      viewportRect.w.cint,
+      viewportRect.h.cint
     )
 
   node.box.xy = vec2(0, 0)
@@ -1094,7 +1079,7 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
 
   if name notin textureAtlas.entries:
     # Add a spot for the screen to go
-    var toImage = newImage(viewPortWidth, viewPortHeight)
+    var toImage = newImage(viewportSize.x.int, viewportSize.y.int)
     toImage.fill(rgba(255, 0, 0, 255))
     textureAtlas.put(name, toImage)
 
@@ -1136,7 +1121,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Use for debugging and tests only.
   #dumpCommandStream()
   let start = epochTime()
-  var screen = newImage(viewPortWidth, viewPortHeight)
+  var screen = newImage(viewportSize.x.int, viewportSize.x.int)
   glReadPixels(
     0, 0,
     screen.width.Glint, screen.height.Glint,
