@@ -358,6 +358,20 @@ proc drawCompleteCpuFrame*(node: Node): Image =
 
   return screen
 
+proc transform*(node: Node): Mat3 =
+  ## Returns Mat3 transform of the node.
+  result[0, 0] = node.relativeTransform[0][0]
+  result[0, 1] = node.relativeTransform[1][0]
+  result[0, 2] = 0
+
+  result[1, 0] = node.relativeTransform[0][1]
+  result[1, 1] = node.relativeTransform[1][1]
+  result[1, 2] = 0
+
+  result[2, 0] = node.relativeTransform[0][2]
+  result[2, 1] = node.relativeTransform[1][2]
+  result[2, 2] = 1
+
 proc drawNodeInternal*(node: Node) =
   ## Draws a node.
   ## Note: Must be called inside drawCompleteFrame.
@@ -441,6 +455,9 @@ proc drawNodeInternal*(node: Node) =
           node.pixelBox.y == 0 and
           node.pixelBox.wh == node.size:
           applyMask = false
+
+        if node.name == "Layout1":
+          print node.name, node.size
 
         if applyMask:
           path.rect(
@@ -641,7 +658,7 @@ proc drawNodeInternal*(node: Node) =
   if node.opacity != 1.0:
     node.pixels.applyOpacity(node.opacity)
 
-  node.dirty = false
+  # node.dirty = false
   assert node.pixels != nil
 
   #node.pixels.writeFile("tmp/" & node.name & ".png")

@@ -361,17 +361,3 @@ proc checkDirty*(node: Node) =
     checkDirty(c)
     if c.dirty == true:
       node.dirty = true
-
-proc transform*(node: Node): Mat3 =
-  ## Returns Mat3 transform of the node.
-  result[0, 0] = node.relativeTransform[0][0]
-  result[0, 1] = node.relativeTransform[1][0]
-  result[0, 2] = 0
-
-  result[1, 0] = node.relativeTransform[0][1]
-  result[1, 1] = node.relativeTransform[1][1]
-  result[1, 2] = 0
-
-  result[2, 0] = node.relativeTransform[0][2]
-  result[2, 1] = node.relativeTransform[1][2]
-  result[2, 2] = 1

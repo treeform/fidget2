@@ -1,12 +1,12 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
     typography/textboxes, unicode, vmath, times, perf, context, common,
-    cpurender
+    cpurender, layout
 
 var
   ctx*: Context
 
-proc drawToScreen*(thisFrame: Node) =
+proc drawToScreen*(node: Node) =
   glEnable(GL_BLEND)
   #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
   glBlendFuncSeparate(
@@ -19,7 +19,17 @@ proc drawToScreen*(thisFrame: Node) =
   glClearColor(0, 0, 0, 1)
   glClear(GL_COLOR_BUFFER_BIT)
 
-  var screen = drawCompleteCpuFrame(thisFrame)
+  viewportSize = node.absoluteBoundingBox.wh
+
+  node.box.xy = vec2(0, 0)
+  node.size = node.box.wh
+  for c in node.children:
+    computeLayout(node, c)
+  perfMark "computeLayout"
+
+  #node.markDirty()
+
+  var screen = drawCompleteCpuFrame(node)
   ctx.putImage("screen.png", screen)
 
   ctx.beginFrame(viewportSize)
