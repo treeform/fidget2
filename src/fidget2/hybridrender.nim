@@ -7,17 +7,17 @@ var
   ctx*: Context
 
 proc drawToScreen*(node: Node) =
-  glEnable(GL_BLEND)
-  #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-  glBlendFuncSeparate(
-    GL_SRC_ALPHA,
-    GL_ONE_MINUS_SRC_ALPHA,
-    GL_ONE,
-    GL_ONE_MINUS_SRC_ALPHA
-  )
+  # glEnable(GL_BLEND)
+  # #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+  # glBlendFuncSeparate(
+  #   GL_SRC_ALPHA,
+  #   GL_ONE_MINUS_SRC_ALPHA,
+  #   GL_ONE,
+  #   GL_ONE_MINUS_SRC_ALPHA
+  # )
 
-  glClearColor(0, 0, 0, 1)
-  glClear(GL_COLOR_BUFFER_BIT)
+  # glClearColor(0, 0, 0, 1)
+  # glClear(GL_COLOR_BUFFER_BIT)
 
   viewportSize = node.absoluteBoundingBox.wh
 
