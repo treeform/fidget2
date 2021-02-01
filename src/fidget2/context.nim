@@ -40,9 +40,9 @@ proc upload(ctx: Context) =
   ctx.colors.buffer.count = ctx.quadCount * 4
   ctx.uvs.buffer.count = ctx.quadCount * 4
   ctx.indices.buffer.count = ctx.quadCount * 6
-  bindBufferData(ctx.positions.buffer.addr, ctx.positions.data[0].addr)
-  bindBufferData(ctx.colors.buffer.addr, ctx.colors.data[0].addr)
-  bindBufferData(ctx.uvs.buffer.addr, ctx.uvs.data[0].addr)
+  bindBufferData(ctx.positions.buffer, ctx.positions.data[0].addr)
+  bindBufferData(ctx.colors.buffer, ctx.colors.data[0].addr)
+  bindBufferData(ctx.uvs.buffer, ctx.uvs.data[0].addr)
 
 proc setUpMaskFramebuffer(ctx: Context) =
   glBindFramebuffer(GL_FRAMEBUFFER, ctx.maskFramebufferId)
@@ -55,6 +55,7 @@ proc setUpMaskFramebuffer(ctx: Context) =
   )
 
 proc createAtlasTexture(ctx: Context, size: int): Texture =
+  result = Texture()
   result.width = size.GLint
   result.height = size.GLint
   result.componentType = GL_UNSIGNED_BYTE
@@ -66,7 +67,7 @@ proc createAtlasTexture(ctx: Context, size: int): Texture =
     result.magFilter = magNearest
   else:
     result.magFilter = magLinear
-  bindTextureData(result.addr, nil)
+  bindTextureData(result, nil)
 
 proc addMaskTexture(ctx: Context, frameSize = vec2(1, 1)) =
   # Must be >0 for framebuffer creation below
@@ -85,7 +86,7 @@ proc addMaskTexture(ctx: Context, frameSize = vec2(1, 1)) =
     maskTexture.magFilter = magNearest
   else:
     maskTexture.magFilter = magLinear
-  bindTextureData(maskTexture.addr, nil)
+  bindTextureData(maskTexture, nil)
   ctx.maskTextures.add(maskTexture)
 
 proc newContext*(
@@ -120,6 +121,7 @@ proc newContext*(
     result.atlasShader = newShaderStatic("glsl/atlas.vert", "glsl/atlas.frag")
     result.maskShader = newShaderStatic("glsl/atlas.vert", "glsl/mask.frag")
 
+  result.positions.buffer = Buffer()
   result.positions.buffer.componentType = cGL_FLOAT
   result.positions.buffer.kind = bkVEC2
   result.positions.buffer.target = GL_ARRAY_BUFFER
@@ -127,6 +129,7 @@ proc newContext*(
     result.positions.buffer.kind.componentCount() * maxQuads * 4
   )
 
+  result.colors.buffer = Buffer()
   result.colors.buffer.componentType = GL_UNSIGNED_BYTE
   result.colors.buffer.kind = bkVEC4
   result.colors.buffer.target = GL_ARRAY_BUFFER
@@ -135,6 +138,7 @@ proc newContext*(
     result.colors.buffer.kind.componentCount() * maxQuads * 4
   )
 
+  result.uvs.buffer = Buffer()
   result.uvs.buffer.componentType = cGL_FLOAT
   result.uvs.buffer.kind = bkVEC2
   result.uvs.buffer.target = GL_ARRAY_BUFFER
@@ -142,6 +146,7 @@ proc newContext*(
     result.uvs.buffer.kind.componentCount() * maxQuads * 4
   )
 
+  result.indices.buffer = Buffer()
   result.indices.buffer.componentType = GL_UNSIGNED_SHORT
   result.indices.buffer.kind = bkSCALAR
   result.indices.buffer.target = GL_ELEMENT_ARRAY_BUFFER
@@ -159,7 +164,7 @@ proc newContext*(
     ])
 
   # Indices are only uploaded once
-  bindBufferData(result.indices.buffer.addr, result.indices.data[0].addr)
+  bindBufferData(result.indices.buffer, result.indices.data[0].addr)
 
   result.upload()
 
@@ -527,7 +532,7 @@ proc beginFrame*(ctx: Context, frameSize: Vec2, proj: Mat4) =
       ctx.maskTextures[i].height = frameSize.y.int32
       if i > 0:
         # Never resize the 0th mask because its just white.
-        bindTextureData(ctx.maskTextures[i].addr, nil)
+        bindTextureData(ctx.maskTextures[i], nil)
 
   glViewport(0, 0, ctx.frameSize.x.GLint, ctx.frameSize.y.GLint)
 

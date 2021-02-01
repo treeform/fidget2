@@ -21,7 +21,7 @@ type
     wClampToEdge = GL_CLAMP_TO_EDGE,
     wMirroredRepeat = GL_MIRRORED_REPEAT
 
-  Texture* = object
+  Texture* = ref object
     width*, height*: int32
     componentType*, format*, internalFormat*: GLenum
     minFilter*: MinFilter
@@ -30,9 +30,7 @@ type
     genMipmap*: bool
     textureId*: GLuint
 
-proc bindTextureBufferData*(
-  texture: ptr Texture, buffer: ptr Buffer, data: pointer
-) =
+proc bindTextureBufferData*(texture: Texture, buffer: Buffer, data: pointer) =
   bindBufferData(buffer, data)
 
   if texture.textureId == 0:
@@ -45,7 +43,7 @@ proc bindTextureBufferData*(
     buffer.bufferId
   )
 
-proc bindTextureData*(texture: ptr Texture, data: pointer) =
+proc bindTextureData*(texture: Texture, data: pointer) =
   if texture.textureId == 0:
     glGenTextures(1, texture.textureId.addr)
 
@@ -81,7 +79,8 @@ proc bindTextureData*(texture: ptr Texture, data: pointer) =
 func getFormat(image: Image): GLenum =
   result = GL_RGBA
 
-proc initTexture*(image: Image): Texture =
+proc newTexture*(image: Image): Texture =
+  result = Texture()
   result.width = image.width.GLint
   result.height = image.height.GLint
   result.componentType = GL_UNSIGNED_BYTE
@@ -90,7 +89,7 @@ proc initTexture*(image: Image): Texture =
   result.genMipmap = true
   result.minFilter = minLinearMipmapLinear
   result.magFilter = magLinear
-  bindTextureData(result.addr, image.data[0].addr)
+  bindTextureData(result, image.data[0].addr)
 
 proc updateSubImage*(texture: Texture, x, y: int, image: Image, level: int) =
   ## Update a small part of a texture image.
