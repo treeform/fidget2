@@ -4,7 +4,7 @@ type
   BufferKind* = enum
     bkSCALAR, bkVEC2, bkVEC3, bkVEC4, bkMAT2, bkMAT3, bkMAT4
 
-  Buffer* = object
+  Buffer* = ref object
     count*: int
     target*, componentType*: GLenum
     kind*: BufferKind
@@ -37,7 +37,7 @@ func componentCount*(bufferKind: BufferKind): Positive =
     of bkMAT4:
       16
 
-proc bindBufferData*(buffer: ptr Buffer, data: pointer) =
+proc bindBufferData*(buffer: Buffer, data: pointer) =
   if buffer.bufferId == 0:
     glGenBuffers(1, buffer.bufferId.addr)
 
