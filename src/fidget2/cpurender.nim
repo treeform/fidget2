@@ -90,9 +90,8 @@ proc applyPaint(
   of pkImage:
     var image: Image
     if paint.imageRef notin imageCache:
-      downloadImageRef(paint.imageRef)
       try:
-        image = readImage("figma/images/" & paint.imageRef & ".png")
+        image = readImage(figmaImagePath(paint.imageRef))
       except PixieError:
         return
 

@@ -482,9 +482,8 @@ proc readyImages*(node: Node) =
     if paint.kind == pkImage:
       if paint.imageRef notin textureAtlas.entries:
         var image: pixie.Image
-        downloadImageRef(paint.imageRef)
         try:
-          image = readImage("figma/images/" & paint.imageRef & ".png")
+          image = readImage(figmaImagePath(paint.imageRef))
         except IOError, PixieError:
           echo "Issue loading image: ", node.name
           image = newImage(1, 1)
