@@ -901,9 +901,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
         if node.style.fontPostScriptName == "":
           node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
 
-        downloadFont(node.style.fontPostScriptName)
-        let fontPath = "figma/fonts/" & node.style.fontPostScriptName & ".ttf"
-        font = readFontTtf(fontPath)
+        font = readFontTtf(figmaFontPath(node.style.fontPostScriptName))
         typefaceCache[node.style.fontPostScriptName] = font.typeface
       else:
         font = Font()

@@ -90,7 +90,7 @@ type
     tarHeight
     tarWidthAndHeight
 
-  TextStyle* = ref object
+  TypeStyle* = ref object
     fontFamily*: string
     fontPostScriptName*: string
     fontWeight*: float32
@@ -138,12 +138,10 @@ type
     constraints*: Constraints
     layoutAlign*: string
     clipsContent*: bool
-    background*: seq[Paint]
     fills*: seq[Paint]
     strokes*: seq[Paint]
     strokeWeight*: float32
     strokeAlign*: StrokeAlign
-    backgroundColor*: Color
     layoutGrids*: seq[Grid]
     layoutMode*: string
     itemSpacing*: float32
@@ -152,7 +150,7 @@ type
     cornerRadius*: float32
     rectangleCornerRadii*: seq[float32]
     characters*: string
-    style*: TextStyle
+    style*: TypeStyle
     #characterStyleOverrides: seq[CharacterStyleOverrides]
     #styleOverrideTable:
     fillGeometry*: seq[Geometry]

@@ -1,4 +1,4 @@
-import globs, httpclient, json, jsony, os, schema, strformat, strutils, tables
+import globs, httpclient, json, jsony, os, schema, strutils, sets
 
 var
   figmaFile*: FigmaFile                ## Main figma file.
@@ -17,6 +17,9 @@ proc lastModifiedFilePath(fileKey: string): string =
 
 proc figmaImagePath*(imageRef: string): string =
   "figma/images/" & imageRef & ".png"
+
+proc figmaFontPath*(fontPostScriptName: string): string =
+  "figma/fonts/" & fontPostScriptName & ".ttf"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
   let data = readFile(figmaFilePath(fileKey))
@@ -37,37 +40,63 @@ proc downloadImages(fileKey: string) =
   for imageRef, url in json["meta"]["images"].pairs:
     downloadImage(imageRef, url.getStr())
 
-proc downloadFont*(fontPSName: string) =
-  ## Try to download the font by name, or ask user to provide it.
-  if fileExists("figma/fonts/" & fontPSName & ".ttf"):
-    return
+proc downloadFont*(fontPostScriptName, url: string) =
+  if not fileExists(figmaFontPath(fontPostScriptName)):
+    echo "Downloading ", url
+    writeFile(
+      figmaFontPath(fontPostScriptName),
+      newHttpClient().getContent(url)
+    )
 
+proc downloadFonts(figmaFile: FigmaFile) =
   if not dirExists("figma/fonts"):
     createDir("figma/fonts")
 
-  if not fileExists("figma/fonts/fonts.csv"):
-    var client = newHttpClient()
-    let data = client.getContent(
+  # Walk the Figma file and find all the fonts used
+
+  var fontsUsed: HashSet[string]
+
+  proc walk(node: Node) =
+    if node.style.fontPostScriptName.len > 0:
+      fontsUsed.incl(node.style.fontPostScriptName)
+    for c in node.children:
+      walk(c)
+
+  walk(figmaFile.document)
+
+  # Check if we need to download any fonts
+
+  var needsDownload: bool
+  for fontPostScriptName in fontsUsed:
+    if not fileExists(fontPostScriptName):
+      needsDownload = true
+      break
+
+  if not needsDownload:
+    return
+
+  # We need to download one or more fonts
+
+  let
+    csv = newHttpClient().getContent(
       "https://raw.githubusercontent.com/treeform/" &
       "freefrontfinder/master/fonts.csv"
     )
-    writeFile("figma/fonts/fonts.csv", data)
+    lines = csv.split("\n")
 
-  for line in readFile("figma/fonts/fonts.csv").split("\n"):
-    var line = line.split(",")
-    if line[0] == fontPSName:
-      let url = line[1]
-      echo "Downloading ", url
-      try:
-        var client = newHttpClient()
-        let data = client.getContent(url)
-        writeFile("figma/fonts/" & fontPSName & ".ttf", data)
-      except HttpRequestError:
-        echo getCurrentExceptionMsg()
-        echo &"Please download figma/fonts/{fontPSName}.ttf"
-      return
+  for fontPostScriptName in fontsUsed:
+    let fontFilePath = figmaFontPath(fontPostScriptName)
 
-  echo &"Please download figma/fonts/{fontPSName}.ttf"
+    var found: bool
+    for line in lines:
+      var parts = line.split(",")
+      if parts[0] == fontPostScriptName:
+        found = true
+        downloadFont(fontPostScriptName, parts[1])
+        break
+
+    if not found:
+      echo "Missing font ", fontFilePath
 
 proc downloadFigmaFile(fileKey: string) =
   ## Download and cache the Figma file for this file key.
@@ -105,15 +134,17 @@ proc downloadFigmaFile(fileKey: string) =
   try:
     let
       url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
-      response = newFigmaClient().getContent(url)
-      json = response.fromJson(JsonNode)
-    # Download images before writing the cached Figma file. This way we
-    # either do or do not have a complete valid cache if we have a
+      data = newFigmaClient().getContent(url)
+      liveFile = parseFigmaFile(data)
+      json = data.fromJson(JsonNode)
+    # Download images and fonts before writing the cached Figma file.
+    # This way we either do or do not have a complete valid cache if we have a
     # lastModified file. This is important for falling back to cached data
     # in the event the API returns an error.
     downloadImages(fileKey)
+    downloadFonts(liveFile)
     writeFile(figmaFilePath, pretty(json))
-    writeFile(lastModifiedPath, json["lastModified"].getStr())
+    writeFile(lastModifiedPath, liveFile.lastModified)
     echo "Downloaded latest Figma file"
   except:
     raise newException(
