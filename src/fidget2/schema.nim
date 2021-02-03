@@ -52,6 +52,11 @@ type
     smStretch
     smTile
 
+  Transform* = ref array[2, array[3, float32]]
+    ## A 2D affine transformation matrix that can be used to calculate the
+    ## affine transforms applied to a layer, including scaling,
+    ## rotation, shearing, and translation.
+
   Paint* = ref object
     blendMode*: BlendMode
     kind*: PaintKind
@@ -60,7 +65,7 @@ type
     color*: Color
     scaleMode*: ScaleMode
     imageRef*: string
-    imageTransform*: seq[seq[float32]]
+    imageTransform*: Transform
     scalingFactor*: float32
     rotation*: float32
     gradientHandlePositions*: seq[Vec2]
@@ -161,7 +166,7 @@ type
     prototypeStartNodeID*: string
     absoluteBoundingBox*: Rect
     size*: Vec2
-    relativeTransform*: seq[seq[float32]]
+    relativeTransform*: Transform
     clipsContent*: bool
     fills*: seq[Paint]
     strokes*: seq[Paint]
@@ -211,7 +216,7 @@ proc newHook(v: var Node) =
   v.opacity = 1.0
 
 proc postHook(v: var Node) =
-  if v.relativeTransform.len > 0:
+  if v.relativeTransform != nil:
     v.box.xy = vec2(v.relativeTransform[0][2], v.relativeTransform[1][2])
   v.box.wh = v.size
   v.orgBox = v.box
