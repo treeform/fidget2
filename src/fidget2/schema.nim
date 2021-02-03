@@ -16,22 +16,25 @@ type
     name*: string
     description*: string
 
-  Device* = ref object
-    `type`*: string
-    rotation*: string
-
-  ConstraintsKind* = enum
+  ConstraintKind* = enum
     cMin
     cMax
     cScale
     cStretch
     cCenter
 
-  Constraints* = ref object
-    vertical*: ConstraintsKind
-    horizontal*: ConstraintsKind
+  LayoutConstraint* = ref object
+    vertical*: ConstraintKind
+    horizontal*: ConstraintKind
 
-  GradientStops* = ref object
+  LayoutAlign* = enum
+    laInherit
+    laStretch
+    laMin,
+    laCenter
+    laMax
+
+  ColorStop* = object
     color*: Color
     position*: float32
 
@@ -59,8 +62,9 @@ type
     imageRef*: string
     imageTransform*: seq[seq[float32]]
     scalingFactor*: float32
+    rotation*: float32
     gradientHandlePositions*: seq[Vec2]
-    gradientStops*: seq[GradientStops]
+    gradientStops*: seq[ColorStop]
 
   EffectKind* = enum
     ekDropShadow
@@ -77,32 +81,56 @@ type
     radius*: float32
     spread*: float32
 
-  Grid* = ref object
-    `type`*: string
+  LayoutMode* = enum
+    lmNone
+    lmHorizontal
+    lmVertical
 
-  CharacterStyleOverrides* = ref object
-    `type`*: string
+  LayoutPattern* = enum
+    lpColumns
+    lpRows
+    lpGrid
 
-  OpenTypeFlags* = ref object
+  LayoutGrid* = object
+    pattern*: LayoutPattern
+    sectionSize*: float32
+    visible*: bool
+    color*: Color
+    alignment*: LayoutAlign ## Only min, stretch and center
+    gutterSize*: float32
+    offset*: float32
+    count*: int
+
+  OpenTypeFlags* = object
     KERN*: int
 
   TextAutoResize* = enum
     tarHeight
     tarWidthAndHeight
 
+  TextDecoration* = enum
+    tdStrikethrough
+    tdUnderline
+
   TypeStyle* = ref object
     fontFamily*: string
     fontPostScriptName*: string
+    paragraphSpacing*: float32
+    paragraphIndent*: float32
+    italic*: bool
     fontWeight*: float32
-    textAutoResize*: TextAutoResize
     fontSize*: float32
+    textCase*: TextCase
+    textDecoration*: TextDecoration
+    textAutoResize*: TextAutoResize
     textAlignHorizontal*: HAlignMode
     textAlignVertical*: VAlignMode
     letterSpacing*: float32
+    fills: seq[Paint]
     lineHeightPx*: float32
     lineHeightPercent*: float32
+    lineHeightPercentFontSizeNumber*: float32
     lineHeightUnit*: string
-    textCase*: TextCase
     opentypeFlags*: OpenTypeFlags
 
   Geometry* = ref object
@@ -125,34 +153,32 @@ type
     name*: string   ## The name given to the node by the user in the tool.
     kind*: NodeKind ## The type of the node, refer to table below for details.
     opacity*: float32
-    visible*: bool  ## default true, Whether or not the node is visible on the canvas.
+    visible*: bool  ## Whether or not the node is visible on the canvas.
     #pluginData: JsonNode ## Data written by plugins that is visible only to the plugin that wrote it. Requires the `pluginData` to include the ID of the plugin.
     #sharedPluginData: JsonNode ##  Data written by plugins that is visible to all plugins. Requires the `pluginData` parameter to include the string "shared".
     blendMode*: BlendMode
     children*: seq[Node]
     prototypeStartNodeID*: string
-    prototypeDevice*: Device
     absoluteBoundingBox*: Rect
     size*: Vec2
     relativeTransform*: seq[seq[float32]]
-    constraints*: Constraints
-    layoutAlign*: string
     clipsContent*: bool
     fills*: seq[Paint]
     strokes*: seq[Paint]
     strokeWeight*: float32
     strokeAlign*: StrokeAlign
-    layoutGrids*: seq[Grid]
-    layoutMode*: string
+    constraints*: LayoutConstraint
+    layoutAlign*: LayoutAlign
+    layoutGrids*: seq[LayoutGrid]
+    layoutMode*: LayoutMode
     itemSpacing*: float32
     effects*: seq[Effect]
     isMask*: bool
+    isMaskOutline*: bool
     cornerRadius*: float32
-    rectangleCornerRadii*: seq[float32]
+    rectangleCornerRadii*: array[4, float32]
     characters*: string
     style*: TypeStyle
-    #characterStyleOverrides: seq[CharacterStyleOverrides]
-    #styleOverrideTable:
     fillGeometry*: seq[Geometry]
     strokeGeometry*: seq[Geometry]
     booleanOperation*: BooleanOperation
@@ -198,6 +224,21 @@ proc newHook(v: var Paint) =
   v = Paint()
   v.visible = true
   v.opacity = 1.0
+
+proc newHook(v: var TypeStyle) =
+  v = TypeStyle()
+  v.lineHeightPercent = 100
+  v.opentypeFlags.KERN = 1
+
+proc newHook(v: var LayoutGrid) =
+  v.visible = true
+
+proc postHook(v: var LayoutGrid) =
+  if v.alignment notin {laMin, laStretch, laCenter}:
+    raise newException(
+      FidgetError,
+      "Invalid layout grid alignment: " & $v.alignment
+    )
 
 proc renameHook(v: var Paint, fieldName: var string) =
   if fieldName == "type":
@@ -263,7 +304,7 @@ proc enumHook(s: string, v: var NodeKind) =
     of "TEXT": nkText
     of "BOOLEAN_OPERATION": nkBooleanOperation
     of "COMPONENT_SET": nkComponentSet
-    else: raise newException(ValueError, "Invalid node type:" & s)
+    else: raise newException(FidgetError, "Invalid node type:" & s)
 
 proc enumHook(s: string, v: var PaintKind) =
   v = case s:
@@ -273,7 +314,7 @@ proc enumHook(s: string, v: var PaintKind) =
     of "GRADIENT_RADIAL": pkGradientRadial
     of "GRADIENT_ANGULAR": pkGradientAngular
     of "GRADIENT_DIAMOND": pkGradientDiamond
-    else: raise newException(ValueError, "Invalid paint type:" & s)
+    else: raise newException(FidgetError, "Invalid paint type:" & s)
 
 proc enumHook(s: string, v: var EffectKind) =
   v = case s:
@@ -281,7 +322,7 @@ proc enumHook(s: string, v: var EffectKind) =
     of "INNER_SHADOW": ekInnerShadow
     of "LAYER_BLUR": ekLayerBlur
     of "BACKGROUND_BLUR": ekBackgroundBlur
-    else: raise newException(ValueError, "Invalid effect type:" & s)
+    else: raise newException(FidgetError, "Invalid effect type:" & s)
 
 proc enumHook(s: string, v: var BooleanOperation) =
   v = case s:
@@ -289,7 +330,7 @@ proc enumHook(s: string, v: var BooleanOperation) =
     of "INTERSECT": boIntersect
     of "EXCLUDE": boExclude
     of "UNION": boUnion
-    else: raise newException(ValueError, "Invalid effect type:" & s)
+    else: raise newException(FidgetError, "Invalid boolean operation:" & s)
 
 proc enumHook(s: string, v: var ScaleMode) =
   v = case s:
@@ -297,42 +338,48 @@ proc enumHook(s: string, v: var ScaleMode) =
     of "FIT": smFit
     of "STRETCH": smStretch
     of "TILE": smTile
-    else: raise newException(ValueError, "Invalid effect type:" & s)
+    else: raise newException(FidgetError, "Invalid scale mode:" & s)
 
 proc enumHook(s: string, v: var TextAutoResize) =
   v = case s:
     of "HEIGHT": tarHeight
     of "WIDTH_AND_HEIGHT": tarWidthAndHeight
-    else: raise newException(ValueError, "Invalid text auto resize:" & s)
+    else: raise newException(FidgetError, "Invalid text auto resize:" & s)
+
+proc enumHook(s: string, v: var TextDecoration) =
+  v = case s:
+    of "STRIKETHROUGH": tdStrikethrough
+    of "UNDERLINE": tdUnderline
+    else: raise newException(FidgetError, "Invalid text decoration:" & s)
 
 proc enumHook(s: string, v: var StrokeAlign) =
   v = case s:
     of "INSIDE": saInside
     of "OUTSIDE": saOutside
     of "CENTER": saCenter
-    else: raise newException(ValueError, "Invalid stroke align:" & s)
+    else: raise newException(FidgetError, "Invalid stroke align:" & s)
 
 proc enumHook(s: string, v: var HAlignMode) =
   v = case s:
     of "CENTER": Center
     of "LEFT": Left
     of "RIGHT": Right
-    else: raise newException(ValueError, "Invalid text align mode:" & s)
+    else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var VAlignMode) =
   v = case s:
     of "CENTER": Middle
     of "TOP": Top
     of "BOTTOM": Bottom
-    else: raise newException(ValueError, "Invalid text align mode:" & s)
+    else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var WindingRule) =
   v = case s:
     of "EVENODD": wrEvenOdd
     of "NONZERO": wrNonZero
-    else: raise newException(ValueError, "Invalid text align mode:" & s)
+    else: raise newException(FidgetError, "Invalid winding rule:" & s)
 
-proc enumHook(s: string, v: var ConstraintsKind) =
+proc enumHook(s: string, v: var ConstraintKind) =
   v = case s:
     of "TOP": cMin
     of "BOTTOM": cMax
@@ -342,7 +389,30 @@ proc enumHook(s: string, v: var ConstraintsKind) =
     of "LEFT": cMin
     of "RIGHT": cMax
     of "LEFT_RIGHT": cStretch
-    else: raise newException(ValueError, "Invalid text align mode:" & s)
+    else: raise newException(FidgetError, "Invalid constraint kind:" & s)
+
+proc enumHook(s: string, v: var LayoutAlign) =
+  v = case s:
+    of "INHERIT": laInherit
+    of "STRETCH": laStretch
+    of "MIN": laMin
+    of "CENTER": laCenter
+    of "MAX": laMax
+    else: raise newException(FidgetError, "Invalid layout align:" & s)
+
+proc enumHook(s: string, v: var LayoutPattern) =
+  v = case s:
+    of "COLUMNS": lpColumns
+    of "ROWS": lpRows
+    of "GRID": lpGrid
+    else: raise newException(FidgetError, "Invalid layout pattern:" & s)
+
+proc enumHook(s: string, v: var LayoutMode) =
+  v = case s:
+    of "NONE": lmNone
+    of "HORIZONTAL": lmHorizontal
+    of "VERTICAL": lmVertical
+    else: raise newException(FidgetError, "Invalid layout mode:" & s)
 
 proc parseFigmaFile*(data: string): FigmaFile =
   data.fromJson(FigmaFile)

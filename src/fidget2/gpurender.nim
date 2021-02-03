@@ -913,10 +913,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
       if node.style.textAutoResize == tarHeight:
         wrap = true
 
-      var kern = true
-      if node.style.opentypeFlags != nil:
-        if node.style.opentypeFlags.KERN == 0:
-          kern = false
+      let kern = node.style.opentypeFlags.KERN != 0
 
       let layout = font.typeset(
         text = if textBoxFocus == node:

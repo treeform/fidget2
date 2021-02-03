@@ -589,10 +589,7 @@ proc drawNodeInternal*(node: Node) =
     if node.style.textAutoResize == tarHeight:
       wrap = true
 
-    var kern = true
-    if node.style.opentypeFlags != nil:
-      if node.style.opentypeFlags.KERN == 0:
-        kern = false
+    let kern = node.style.opentypeFlags.KERN != 0
 
     let layout = font.typeset(
       text = node.characters,
