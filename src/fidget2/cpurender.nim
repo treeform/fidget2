@@ -90,9 +90,8 @@ proc applyPaint(
   of pkImage:
     var image: Image
     if paint.imageRef notin imageCache:
-      downloadImageRef(paint.imageRef)
       try:
-        image = readImage("figma/images/" & paint.imageRef & ".png")
+        image = readImage(figmaImagePath(paint.imageRef))
       except PixieError:
         return
 
@@ -578,8 +577,7 @@ proc drawNodeInternal*(node: Node) =
       if node.style.fontPostScriptName == "":
         node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
 
-      downloadFont(node.style.fontPostScriptName)
-      font = readFontTtf("figma/fonts/" & node.style.fontPostScriptName & ".ttf")
+      font = readFontTtf(figmaFontPath(node.style.fontPostScriptName))
       typefaceCache[node.style.fontPostScriptName] = font.typeface
     else:
       font = Font()
