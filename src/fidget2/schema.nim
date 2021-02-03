@@ -77,7 +77,7 @@ type
     ekLayerBlur
     ekBackgroundBlur
 
-  Effect* = ref object
+  Effect* = object
     kind*: EffectKind
     visible*: bool
     color*: Color
@@ -138,7 +138,7 @@ type
     lineHeightUnit*: string
     opentypeFlags*: OpenTypeFlags
 
-  Geometry* = ref object
+  Geometry* = object
     path*: string
     windingRule*: WindingRule
 
