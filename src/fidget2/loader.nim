@@ -27,18 +27,47 @@ proc loadFigmaFile(fileKey: string): FigmaFile =
 
 proc downloadImage(imageRef, url: string) =
   if not fileExists(figmaImagePath(imageRef)):
-    if not dirExists("figma/images"):
-      createDir("figma/images")
     echo "Downloading ", url
     writeFile(figmaImagePath(imageRef), newHttpClient().getContent(url))
 
-proc downloadImages(fileKey: string) =
+proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
+  if not dirExists("figma/images"):
+    createDir("figma/images")
+
+  # Walk the Figma file and find all the images used
+
+  var imagesUsed: HashSet[string]
+
+  proc walk(node: Node) =
+    for fill in node.fills:
+      if fill.imageRef.len > 0:
+        imagesUsed.incl(fill.imageRef)
+    for stroke in node.strokes:
+      if stroke.imageRef.len > 0:
+        imagesUsed.incl(stroke.imageRef)
+    for c in node.children:
+      walk(c)
+
+  walk(figmaFile.document)
+
+  # Check if we need to download any images
+
+  var needsDownload: bool
+  for imageRef in imagesUsed:
+    if not fileExists(figmaImagePath(imageRef)):
+      needsDownload = true
+      break
+
+  if not needsDownload:
+    return
+
   let
     url = "https://api.figma.com/v1/files/" & fileKey & "/images"
     data = newFigmaClient().getContent(url)
     json = parseJson(data)
-  for imageRef, url in json["meta"]["images"].pairs:
-    downloadImage(imageRef, url.getStr())
+  for imageRef in imagesUsed:
+    let url = json["meta"]["images"][imageRef].getStr()
+    downloadImage(imageRef, url)
 
 proc downloadFont*(fontPostScriptName, url: string) =
   if not fileExists(figmaFontPath(fontPostScriptName)):
@@ -57,7 +86,7 @@ proc downloadFonts(figmaFile: FigmaFile) =
   var fontsUsed: HashSet[string]
 
   proc walk(node: Node) =
-    if node.style.fontPostScriptName.len > 0:
+    if node.style != nil and node.style.fontPostScriptName.len > 0:
       fontsUsed.incl(node.style.fontPostScriptName)
     for c in node.children:
       walk(c)
@@ -68,7 +97,7 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   var needsDownload: bool
   for fontPostScriptName in fontsUsed:
-    if not fileExists(fontPostScriptName):
+    if not fileExists(figmaFontPath(fontPostScriptName)):
       needsDownload = true
       break
 
@@ -141,7 +170,7 @@ proc downloadFigmaFile(fileKey: string) =
     # This way we either do or do not have a complete valid cache if we have a
     # lastModified file. This is important for falling back to cached data
     # in the event the API returns an error.
-    downloadImages(fileKey)
+    downloadImages(fileKey, liveFile)
     downloadFonts(liveFile)
     writeFile(figmaFilePath, pretty(json))
     writeFile(lastModifiedPath, liveFile.lastModified)
