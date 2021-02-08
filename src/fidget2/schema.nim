@@ -430,16 +430,6 @@ proc parseHook(s: string, i: var int, v: var Path) =
 proc parseFigmaFile*(data: string): FigmaFile =
   data.fromJson(FigmaFile)
 
-proc mat3*(transform: Transform): Mat3 =
-  result = mat3()
-  if transform != nil:
-    result[0, 0] = transform[0][0]
-    result[0, 1] = transform[1][0]
-    result[1, 0] = transform[0][1]
-    result[1, 1] = transform[1][1]
-    result[2, 0] = transform[0][2]
-    result[2, 1] = transform[1][2]
-
 proc markDirty*(node: Node, value = true) =
   ## Marks the entire tree dirty or not dirty.
   node.dirty = value

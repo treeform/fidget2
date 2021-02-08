@@ -357,6 +357,20 @@ proc drawCompleteCpuFrame*(node: Node): Image =
 
   return screen
 
+proc transform*(node: Node): Mat3 =
+  ## Returns Mat3 transform of the node.
+  result[0, 0] = node.relativeTransform[0][0]
+  result[0, 1] = node.relativeTransform[1][0]
+  result[0, 2] = 0
+
+  result[1, 0] = node.relativeTransform[0][1]
+  result[1, 1] = node.relativeTransform[1][1]
+  result[1, 2] = 0
+
+  result[2, 0] = node.relativeTransform[0][2]
+  result[2, 1] = node.relativeTransform[1][2]
+  result[2, 2] = 1
+
 proc drawNodeInternal*(node: Node) =
   ## Draws a node.
   ## Note: Must be called inside drawCompleteFrame.
@@ -383,14 +397,14 @@ proc drawNodeInternal*(node: Node) =
 
   var mat = mat3()
   for i, node in nodeStack:
-    var transform = node.relativeTransform.mat3()
+    var transform = node.transform()
     if i == 0:
       # root node
       transform = mat3()
     mat = mat * transform
 
   if nodeStack.len != 0:
-    mat = mat * node.relativeTransform.mat3()
+    mat = mat * node.transform()
 
   mat[2, 0] = mat[2, 0] - node.pixelBox.x
   mat[2, 1] = mat[2, 1] - node.pixelBox.y
