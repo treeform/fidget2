@@ -420,6 +420,9 @@ proc enumHook(s: string, v: var LayoutMode) =
     else: raise newException(FidgetError, "Invalid layout mode:" & s)
 
 proc parseHook(s: string, i: var int, v: var Path) =
+  # Note: we parse more paths here than we use, keep this in mind
+  # Also, Figma files can reference other files which may have tons of unused
+  # paths in them
   var pathString: string
   parseHook(s, i, pathString)
   v = parsePath(pathString)

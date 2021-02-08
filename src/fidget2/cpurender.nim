@@ -541,7 +541,7 @@ proc drawNodeInternal*(node: Node) =
           geom.path,
           white,
           mat,
-          windingRule = geom.windingRule
+          geom.windingRule
         )
 
     if node.strokes.len > 0:
@@ -551,7 +551,7 @@ proc drawNodeInternal*(node: Node) =
           geom.path,
           white,
           mat,
-          windingRule = geom.windingRule
+          geom.windingRule
         )
 
   of nkText:
