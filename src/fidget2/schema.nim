@@ -181,7 +181,7 @@ type
     isMask*: bool
     isMaskOutline*: bool
     cornerRadius*: float32
-    rectangleCornerRadii*: array[4, float32]
+    rectangleCornerRadii*: ref array[4, float32]
     characters*: string
     style*: TypeStyle
     fillGeometry*: seq[Geometry]

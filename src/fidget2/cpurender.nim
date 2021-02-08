@@ -436,7 +436,7 @@ proc drawNodeInternal*(node: Node) =
           se = node.cornerRadius,
           sw = node.cornerRadius
         )
-      elif node.rectangleCornerRadii.len == 4:
+      elif node.rectangleCornerRadii != nil:
         # Rectangle with different corners.
         path.roundRect(
           x = 0,
@@ -508,7 +508,7 @@ proc drawNodeInternal*(node: Node) =
           r-inner, r-inner, r-inner, r-inner
         )
 
-      elif node.rectangleCornerRadii.len == 4:
+      elif node.rectangleCornerRadii != nil:
         # Rectangle with different corners.
         let
           nw = node.rectangleCornerRadii[0]

@@ -711,7 +711,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
     dataBufferSeq.add cmdStartPath.float32
     dataBufferSeq.add kNonZero.float32
-    if node.rectangleCornerRadii.len == 4:
+    if node.rectangleCornerRadii != nil:
       let r = node.rectangleCornerRadii
       drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
     elif node.cornerRadius > 0:
@@ -777,7 +777,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           dataBufferSeq.add cmdFullFill.float32
           discard
         else:
-          if node.rectangleCornerRadii.len == 4:
+          if node.rectangleCornerRadii != nil:
             let r = node.rectangleCornerRadii
             dataBufferSeq.add cmdStartPath.float32
             dataBufferSeq.add kNonZero.float32
@@ -804,7 +804,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
         dataBufferSeq.add cmdStartPath.float32
         dataBufferSeq.add kEvenOdd.float32
-        if node.rectangleCornerRadii.len == 4:
+        if node.rectangleCornerRadii != nil:
           let r = node.rectangleCornerRadii
           drawRect(
             vec2(-outer, -outer),
