@@ -69,7 +69,7 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
     let url = json["meta"]["images"][imageRef].getStr()
     downloadImage(imageRef, url)
 
-proc downloadFont*(fontPostScriptName, url: string) =
+proc downloadFont(fontPostScriptName, url: string) =
   if not fileExists(figmaFontPath(fontPostScriptName)):
     echo "Downloading ", url
     writeFile(
@@ -198,7 +198,15 @@ proc use*(figmaUrl: string) =
   ## Will download the full file if it needs to.
   if not dirExists("figma"):
     createDir("figma")
-  let figmaFileKey = figmaUrl.split("/")[4]
+  let
+    parts = figmaUrl.split("/")
+    figmaFileKey =
+      if parts.len == 1:
+        parts[0]
+      elif parts.len >= 5 and parts[4].len > 0:
+        parts[4]
+      else:
+        raise newException(FidgetError, "Invalid Figma URL: '" & figmaUrl & "'")
   downloadFigmaFile(figmaFileKey)
   figmaFile = loadFigmaFile(figmaFileKey)
   rebuildGlobTree()
