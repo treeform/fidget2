@@ -139,7 +139,7 @@ type
     opentypeFlags*: OpenTypeFlags
 
   Geometry* = object
-    path*: string
+    path*: Path
     windingRule*: WindingRule
 
   BooleanOperation* = enum
@@ -418,6 +418,11 @@ proc enumHook(s: string, v: var LayoutMode) =
     of "HORIZONTAL": lmHorizontal
     of "VERTICAL": lmVertical
     else: raise newException(FidgetError, "Invalid layout mode:" & s)
+
+proc parseHook(s: string, i: var int, v: var Path) =
+  var pathString: string
+  parseHook(s, i, pathString)
+  v = parsePath(pathString)
 
 proc parseFigmaFile*(data: string): FigmaFile =
   data.fromJson(FigmaFile)

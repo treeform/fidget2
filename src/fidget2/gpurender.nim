@@ -856,12 +856,12 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
 
     of nkRegularPolygon, nkVector, nkStar, nkLine:
       for geom in node.fillGeometry:
-        drawPathCommands(parsePath(geom.path).commands, geom.windingRule)
+        drawPathCommands(geom.path.commands, geom.windingRule)
         for paint in node.fills:
           drawPaint(node, paint)
 
       for geom in node.strokeGeometry:
-        drawPathCommands(parsePath(geom.path).commands, geom.windingRule)
+        drawPathCommands(geom.path.commands, geom.windingRule)
         for paint in node.strokes:
           drawPaint(node, paint)
 
