@@ -53,7 +53,7 @@ proc gradientPut(effects: Image, x, y: int, a: float32, paint: Paint) =
       gs2.color,
       (a - gs1.position) / (gs2.position - gs1.position)
     )
-  effects.setRgbaUnsafe(x, y, color.rgba)
+  effects.setRgbaUnsafe(x, y, color.rgba.toPremultipliedAlpha())
 
 proc applyPaint(
   mask: Image,
@@ -92,6 +92,7 @@ proc applyPaint(
     if paint.imageRef notin imageCache:
       try:
         image = readImage(figmaImagePath(paint.imageRef))
+        image.toPremultipliedAlpha()
       except PixieError:
         return
 
@@ -204,13 +205,11 @@ proc applyPaint(
 
   of pkSolid:
     var color = paint.color
-    effects.fill(color.rgba)
+    effects.fill(color.rgba.toPremultipliedAlpha())
 
   ## Apply opacity
   if paint.opacity != 1.0:
-    var opacity = newImage(effects.width, effects.height)
-    opacity.fill(color(0, 0, 0, paint.opacity).rgba)
-    effects.draw(opacity, blendMode = bmMask)
+    effects.applyOpacity(paint.opacity)
 
   # Optimization: if mask it simple, skip mask!
   if applyMask:
@@ -230,20 +229,20 @@ proc applyDropShadowEffect(effect: Effect, node: Node) =
   var shadow = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
   shadow.draw(node.selfAndChildrenMask(), -node.pixelBox.xy, bmOverwrite)
   shadow = shadow.shadow(
-    effect.offset, effect.spread, effect.radius, effect.color.rgba)
+    effect.offset, effect.spread, effect.radius, effect.color.rgba.toPremultipliedAlpha())
   shadow.draw(node.pixels)
   node.pixels = shadow
 
 proc applyInnerShadowEffect(effect: Effect, node: Node, fillMask: Image) =
   ## Draws the inner shadow.
-  var shadow = fillMask.copy()
+  var shadow = fillMask.newMask()
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
-  shadow.blurAlpha(effect.radius)
+  shadow.blur(effect.radius)
   # Color the inverted blurred fill.
   var color = newImage(shadow.width, shadow.height)
-  color.fill(effect.color.rgba)
+  color.fill(effect.color.rgba.toPremultipliedAlpha())
   color.draw(shadow, blendMode = bmMask)
   # Only have the shadow be on the fill.
   color.draw(fillMask, blendMode = bmMask)
