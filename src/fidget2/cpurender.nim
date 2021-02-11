@@ -719,7 +719,7 @@ proc drawNodeScreenSimple(node: Node) =
         bmOverwrite
       )
       blur.blur(effect.radius)
-      mask.sharpen()
+      mask.ceil()
       blur.draw(
         mask,
         vec2(extraPx.float32, extraPx.float32),
