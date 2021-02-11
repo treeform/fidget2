@@ -265,11 +265,11 @@ proc enumHook(s: string, v: var BlendMode) =
     of "NORMAL": bmNormal
     of "DARKEN": bmDarken
     of "MULTIPLY": bmMultiply
-    of "LINEAR_BURN": bmLinearBurn
+    # of "LINEAR_BURN": bmLinearBurn
     of "COLOR_BURN": bmColorBurn
     of "LIGHTEN": bmLighten
     of "SCREEN": bmScreen
-    of "LINEAR_DODGE": bmLinearDodge
+    # of "LINEAR_DODGE": bmLinearDodge
     of "COLOR_DODGE": bmColorDodge
     of "OVERLAY": bmOverlay
     of "SOFT_LIGHT": bmSoftLight
@@ -280,7 +280,7 @@ proc enumHook(s: string, v: var BlendMode) =
     of "SATURATION": bmSaturation
     of "COLOR": bmColor
     of "LUMINOSITY": bmLuminosity
-    else: bmNormal
+    else: raise newException(PixieError, "Unsupported blend mode: " & s)
 
 proc enumHook(s: string, v: var TextCase) =
   v = case s:
