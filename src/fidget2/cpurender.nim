@@ -249,36 +249,6 @@ proc applyInnerShadowEffect(effect: Effect, node: Node, fillMask: Image) =
   # Draw it back.
   node.pixels.draw(color)
 
-proc roundRect(path: var Path, x, y, w, h, nw, ne, se, sw: float32) =
-  ## Draw a round rectangle with different radius corners.
-  let
-    maxRaidus = min(w/2, h/2)
-    nw = min(nw, maxRaidus)
-    ne = min(ne, maxRaidus)
-    se = min(se, maxRaidus)
-    sw = min(sw, maxRaidus)
-  path.moveTo(x+nw, y)
-  path.arcTo(x+w, y, x+w, y+h, ne)
-  path.arcTo(x+w, y+h, x, y+h, se)
-  path.arcTo(x, y+h, x, y, sw)
-  path.arcTo(x, y, x+w, y, nw)
-  path.closePath()
-
-proc roundRectRev(path: var Path, x, y, w, h, nw, ne, se, sw: float32) =
-  ## Same as roundRect but in reverse order so that you can cut out a hole.
-  let
-    maxRaidus = min(w/2, h/2)
-    nw = min(nw, maxRaidus)
-    ne = min(ne, maxRaidus)
-    se = min(se, maxRaidus)
-    sw = min(sw, maxRaidus)
-  path.moveTo(x+w+ne, y)
-  path.arcTo(x, y, x, y+h, nw)
-  path.arcTo(x, y+h, x+w, y+h, sw)
-  path.arcTo(x+w, y+h, x+w, y, se)
-  path.arcTo(x+w, y, x, y, ne)
-  path.closePath()
-
 const pixelBounds = true
 
 proc computePixelBox*(node: Node) =
@@ -425,11 +395,9 @@ proc drawNodeInternal*(node: Node) =
       var path: Path
       if node.cornerRadius > 0:
         # Rectangle with common corners.
-        path.roundRect(
-          x = 0,
-          y = 0,
-          w = node.size.x,
-          h = node.size.y,
+        path.roundedRect(
+          vec2(0, 0),
+          node.size,
           nw = node.cornerRadius,
           ne = node.cornerRadius,
           se = node.cornerRadius,
@@ -437,11 +405,9 @@ proc drawNodeInternal*(node: Node) =
         )
       elif node.rectangleCornerRadii != nil:
         # Rectangle with different corners.
-        path.roundRect(
-          x = 0,
-          y = 0,
-          w = node.size.x,
-          h = node.size.y,
+        path.roundedRect(
+          vec2(0, 0),
+          node.size,
           nw = node.rectangleCornerRadii[0],
           ne = node.rectangleCornerRadii[1],
           se = node.rectangleCornerRadii[2],
@@ -496,15 +462,16 @@ proc drawNodeInternal*(node: Node) =
         # Rectangle with common corners.
         let
           r = node.cornerRadius
-        path.roundRect(
-          x-outer, y-outer,
-          w+outer*2, h+outer*2,
+        path.roundedRect(
+          vec2(x-outer, y-outer),
+          vec2(w+outer*2, h+outer*2),
           r+outer, r+outer, r+outer, r+outer
         )
-        path.roundRectRev(
-          x+inner, y+inner,
-          w-inner*2, h-inner*2,
-          r-inner, r-inner, r-inner, r-inner
+        path.roundedRect(
+          vec2(x+inner, y+inner),
+          vec2(w-inner*2, h-inner*2),
+          r-inner, r-inner, r-inner, r-inner,
+          clockwise = false
         )
 
       elif node.rectangleCornerRadii != nil:
@@ -514,15 +481,16 @@ proc drawNodeInternal*(node: Node) =
           ne = node.rectangleCornerRadii[1]
           se = node.rectangleCornerRadii[2]
           sw = node.rectangleCornerRadii[3]
-        path.roundRect(
-          x-outer, y-outer,
-          w+outer*2, h+outer*2,
+        path.roundedRect(
+          vec2(x-outer, y-outer),
+          vec2(w+outer*2, h+outer*2),
           nw+outer, ne+outer, se+outer, sw+outer
         )
-        path.roundRectRev(
-          x+inner, y+inner,
-          w-inner*2, h-inner*2,
-          nw-inner, ne-inner, se-inner, sw-inner
+        path.roundedRect(
+          vec2(x+inner, y+inner),
+          vec2(w-inner*2, h-inner*2),
+          nw-inner, ne-inner, se-inner, sw-inner,
+          clockwise = false
         )
 
       else:
@@ -673,7 +641,7 @@ proc selfAndChildrenMask(node: Node): Image =
         blendMode = bmNormal
       )
 
-proc nodeMergedMask(node: Node): (Vec2, Image) =
+proc nodeMergedMask(node: Node): (Vec2, Mask) =
   ## Returns a mask of current node and its children.
   ## Used for shadows and background blurs.
   ## TODO return mask
@@ -686,10 +654,10 @@ proc nodeMergedMask(node: Node): (Vec2, Image) =
         visitBounds(c)
   visitBounds(node)
 
-  var image = newImage(boundingBox.w.int, boundingBox.h.int)
+  var mask = newMask(boundingBox.w.int, boundingBox.h.int)
   proc drawInner(node: Node) =
     if node.pixels != nil:
-      image.draw(
+      mask.draw(
         node.pixels,
         node.pixelBox.xy - boundingBox.xy,
         blendMode = bmNormal
@@ -699,7 +667,7 @@ proc nodeMergedMask(node: Node): (Vec2, Image) =
         drawInner(c)
   drawInner(node)
 
-  return (boundingBox.xy, image)
+  return (boundingBox.xy, mask)
 
 proc nodeMerged(node: Node): (Vec2, Image) =
   ## Returns node and children merged.
@@ -751,7 +719,7 @@ proc drawNodeScreenSimple(node: Node) =
         bmOverwrite
       )
       blur.blur(effect.radius)
-      mask.sharpOpacity()
+      mask.ceil()
       blur.draw(
         mask,
         vec2(extraPx.float32, extraPx.float32),
