@@ -641,7 +641,7 @@ proc selfAndChildrenMask(node: Node): Image =
         blendMode = bmNormal
       )
 
-proc nodeMergedMask(node: Node): (Vec2, Image) =
+proc nodeMergedMask(node: Node): (Vec2, Mask) =
   ## Returns a mask of current node and its children.
   ## Used for shadows and background blurs.
   ## TODO return mask
@@ -654,10 +654,10 @@ proc nodeMergedMask(node: Node): (Vec2, Image) =
         visitBounds(c)
   visitBounds(node)
 
-  var image = newImage(boundingBox.w.int, boundingBox.h.int)
+  var mask = newMask(boundingBox.w.int, boundingBox.h.int)
   proc drawInner(node: Node) =
     if node.pixels != nil:
-      image.draw(
+      mask.draw(
         node.pixels,
         node.pixelBox.xy - boundingBox.xy,
         blendMode = bmNormal
@@ -667,7 +667,7 @@ proc nodeMergedMask(node: Node): (Vec2, Image) =
         drawInner(c)
   drawInner(node)
 
-  return (boundingBox.xy, image)
+  return (boundingBox.xy, mask)
 
 proc nodeMerged(node: Node): (Vec2, Image) =
   ## Returns node and children merged.
@@ -719,7 +719,7 @@ proc drawNodeScreenSimple(node: Node) =
         bmOverwrite
       )
       blur.blur(effect.radius)
-      mask.sharpOpacity()
+      mask.sharpen()
       blur.draw(
         mask,
         vec2(extraPx.float32, extraPx.float32),
