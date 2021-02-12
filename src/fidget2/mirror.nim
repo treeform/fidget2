@@ -10,6 +10,9 @@ when defined(cpu):
 elif defined(gpu):
   import gpurender
 
+elif defined(nanovg):
+  import nanovgrender
+
 else: #defined(hyb):
   import context, hybridrender
 
