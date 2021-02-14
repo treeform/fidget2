@@ -27,16 +27,6 @@ proc drawGeometry(geometry: Geometry) =
         command.numbers[2], command.numbers[3],
         command.numbers[4], command.numbers[5]
       )
-    # of pixie.Quad:
-    #   assert command.numbers.len == 4
-    #   dataBufferSeq.add cmdQ.float32
-    #   for i in 0 ..< 2:
-    #     var pos = vec2(
-    #       command.numbers[i*2+0],
-    #       command.numbers[i*2+1]
-    #     )
-    #     dataBufferSeq.add pos.x
-    #     dataBufferSeq.add pos.y
     of pixie.Close:
       vg.lineTo(start.x, start.y)
     else:
