@@ -1,11 +1,16 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, zpurender, times, perf, common
+    typography/textboxes, unicode, vmath, times, perf, common
+    # zpurender
+
 
 export textboxes
 
 when defined(cpu):
   import cpurender
+
+when defined(cpu2):
+  import cpu2render
 
 elif defined(gpu):
   import gpurender

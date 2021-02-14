@@ -1,4 +1,5 @@
-import cligen, fidget2, imagediff, os, pixie, strformat, strutils, times
+import cligen, imagediff, os, pixie, strformat, strutils, times
+import fidget2/loader, fidget2/schema
 
 when defined(gpu):
   import fidget2/gpurender
@@ -12,6 +13,9 @@ elif defined(gpu_atlas_full):
 elif defined(cpu):
   import fidget2/cpurender
   const w = "cpu"
+elif defined(cpu2):
+  import fidget2/cpu2render
+  const w = "cpu2"
 elif defined(zpu):
   import fidget2/zpurender
   const w = "zpu"
@@ -21,6 +25,12 @@ elif defined(gpu_vs_zpu):
 elif defined(nanovg):
   const w = "nanovg"
   import fidget2/nanovgrender
+elif defined(cairo):
+  const w = "cairo"
+  import fidget2/cairorender
+elif defined(skia):
+  const w = "skia"
+  import fidget2/skiarender
 
 proc main(r = "", e = "", l = 10000) =
 
@@ -45,7 +55,7 @@ proc main(r = "", e = "", l = 10000) =
 
     echo frame.name, " --------------------------------- "
 
-    if firstTime and w in ["nanovg", "gpu_atlas", "gpu_atlas_full", "gpu", "gpu_vs_zpu"]:
+    if firstTime and w in ["skia", "nanovg", "gpu_atlas", "gpu_atlas_full", "gpu", "gpu_vs_zpu"]:
       setupWindow(frame, offscreen = true)
       firstTime = false
 
@@ -72,6 +82,14 @@ proc main(r = "", e = "", l = 10000) =
       elif defined(nanovg):
         drawToScreen(frame)
         result = readGpuPixelsFromScreen()
+      elif defined(cairo):
+        result = drawCompleteFrame(frame)
+      elif defined(skia):
+        drawToScreen(frame)
+        result = readGpuPixelsFromScreen()
+      elif defined(cpu2):
+        result = drawCompleteFrame(frame)
+        result.toStraightAlpha()
 
     var image = drawFrame(frame)
 
