@@ -142,6 +142,8 @@ type
     path*: Path
     windingRule*: WindingRule
 
+    mat*: Mat3 # NOT FROM FIGMA
+
   BooleanOperation* = enum
     boUnion
     boSubtract
@@ -237,6 +239,9 @@ proc newHook(v: var TypeStyle) =
 
 proc newHook(v: var LayoutGrid) =
   v.visible = true
+
+proc newHook(v: var Geometry) =
+  v.mat = mat3()
 
 proc postHook(v: var LayoutGrid) =
   if v.alignment notin {laMin, laStretch, laCenter}:
