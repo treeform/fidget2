@@ -113,12 +113,12 @@ proc main(r = "", e = "", l = 10000) =
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
 
-    echo &"  {w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx"
+    echo &"  {w} {frameTime*1000:0.3f}ms {diffScore:0.3f}% diffpx"
 
     totalDiff += diffScore
 
     framesHtml.add(&"<h4>{frame.name}</h4>")
-    framesHTML.add(&"<p>{w} {frameTime:0.3f}s {diffScore:0.3f}% diffpx</p>")
+    framesHTML.add(&"<p>{w} {frameTime*1000:0.3f}ms {diffScore:0.3f}% diffpx</p>")
     framesHTML.add(&"<img src='{frame.name}.png'>")
     if w == "vs":
       framesHTML.add(&"<img src='zpu/{frame.name}.png'>")
@@ -126,10 +126,10 @@ proc main(r = "", e = "", l = 10000) =
       framesHTML.add(&"<img src='masters/{frame.name}.png'>")
     framesHTML.add(&"<img src='diffs/{frame.name}.png'><br>")
 
-  framesHtml.add(&"<p>Total time: {renderTime}s</p>")
+  framesHtml.add(&"<p>Total time: {renderTime*1000:0.3f}ms</p>")
   framesHtml.add(&"<p>Total diff: {totalDiff}</p>")
 
-  echo &"Total time: {renderTime}"
+  echo &"Total time: {renderTime*1000:0.3f}ms"
   echo &"Total diff: {totalDiff}"
 
   writeFile("tests/frames/index.html", framesHtml)
