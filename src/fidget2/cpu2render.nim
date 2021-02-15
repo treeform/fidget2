@@ -215,6 +215,11 @@ proc drawFill(node: Node, paint: Paint): Image =
       handle.y * node.absoluteBoundingBox.h + node.box.y,
     )
 
+  proc gradientAdjust(stops: seq[ColorStop], alpha: float32): seq[ColorStop] =
+    result = stops
+    for stop in result.mitems:
+      stop.color.a *= alpha
+
   result = newImage(layer.width, layer.height)
   case paint.kind
   of pkSolid:
@@ -297,7 +302,7 @@ proc drawFill(node: Node, paint: Paint): Image =
     result.fillLinearGradient(
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientStops
+      paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
   of pkGradientRadial:
@@ -305,7 +310,7 @@ proc drawFill(node: Node, paint: Paint): Image =
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
       paint.gradientHandlePositions[2].toImageSpace(),
-      stops = paint.gradientStops
+      paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
   of pkGradientAngular:
@@ -313,7 +318,7 @@ proc drawFill(node: Node, paint: Paint): Image =
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
       paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops
+      paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
   of pkGradientDiamond:
@@ -321,7 +326,7 @@ proc drawFill(node: Node, paint: Paint): Image =
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
       paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops
+      paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
 proc drawPaint(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
