@@ -206,32 +206,6 @@ proc getStrokeGeometry(node: Node): seq[Geometry] =
   else:
     node.strokeGeometry
 
-proc gradientPut(effects: Image, x, y: int, a: float32, paint: Paint) =
-  var
-    index = -1
-  for i, stop in paint.gradientStops:
-    if stop.position < a:
-      index = i
-    if stop.position > a:
-      break
-  var color: Color
-  if index == -1:
-    # first stop solid
-    color = paint.gradientStops[0].color
-  elif index + 1 >= paint.gradientStops.len:
-    # last stop solid
-    color = paint.gradientStops[index].color
-  else:
-    let
-      gs1 = paint.gradientStops[index]
-      gs2 = paint.gradientStops[index+1]
-    color = mix(
-      gs1.color,
-      gs2.color,
-      (a - gs1.position) / (gs2.position - gs1.position)
-    )
-  effects.setRgbaUnsafe(x, y, color.rgba.toPremultipliedAlpha())
-
 proc drawFill(node: Node, paint: Paint): Image =
   ## Creates a fill image based on the paint.
 
@@ -240,13 +214,6 @@ proc drawFill(node: Node, paint: Paint): Image =
       handle.x * node.absoluteBoundingBox.w + node.box.x,
       handle.y * node.absoluteBoundingBox.h + node.box.y,
     )
-
-  proc toLineSpace(at, to, point: Vec2): float32 =
-    let
-      d = to - at
-      det = d.x*d.x + d.y*d.y
-    return (d.y*(point.y-at.y)+d.x*(point.x-at.x))/det
-
 
   result = newImage(layer.width, layer.height)
   case paint.kind
@@ -327,50 +294,35 @@ proc drawFill(node: Node, paint: Paint): Image =
         x += image.width.float32
 
   of pkGradientLinear:
-    let
-      at = paint.gradientHandlePositions[0].toImageSpace()
-      to = paint.gradientHandlePositions[1].toImageSpace()
-    for y in 0 ..< result.height:
-      for x in 0 ..< result.width:
-        let xy = vec2(x.float32, y.float32)
-        let a = toLineSpace(at, to, xy)
-        result.gradientPut(x, y, a, paint)
+    result.fillLinearGradient(
+      paint.gradientHandlePositions[0].toImageSpace(),
+      paint.gradientHandlePositions[1].toImageSpace(),
+      paint.gradientStops
+    )
 
   of pkGradientRadial:
-    let
-      at = paint.gradientHandlePositions[0].toImageSpace()
-      to = paint.gradientHandlePositions[1].toImageSpace()
-      distance = dist(at, to)
-    for y in 0 ..< result.height:
-      for x in 0 ..< result.width:
-        let xy = vec2(x.float32, y.float32)
-        let a = (at - xy).length() / distance
-        result.gradientPut(x, y, a, paint)
+    result.fillRadialGradient(
+      paint.gradientHandlePositions[0].toImageSpace(),
+      paint.gradientHandlePositions[1].toImageSpace(),
+      paint.gradientHandlePositions[2].toImageSpace(),
+      stops = paint.gradientStops
+    )
 
   of pkGradientAngular:
-    let
-      at = paint.gradientHandlePositions[0].toImageSpace()
-      to = paint.gradientHandlePositions[1].toImageSpace()
-      gradientAngle = normalize(to - at).angle().fixAngle()
-    for y in 0 ..< result.height:
-      for x in 0 ..< result.width:
-        let
-          xy = vec2(x.float32, y.float32)
-          angle = normalize(xy - at).angle()
-          a = (angle + gradientAngle + PI/2).fixAngle() / 2 / PI + 0.5
-        result.gradientPut(x, y, a, paint)
+    result.fillAngularGradient(
+      paint.gradientHandlePositions[0].toImageSpace(),
+      paint.gradientHandlePositions[1].toImageSpace(),
+      paint.gradientHandlePositions[2].toImageSpace(),
+      paint.gradientStops
+    )
 
   of pkGradientDiamond:
-    # TODO: implement GRADIENT_DIAMOND, now will just do GRADIENT_RADIAL
-    let
-      at = paint.gradientHandlePositions[0].toImageSpace()
-      to = paint.gradientHandlePositions[1].toImageSpace()
-      distance = dist(at, to)
-    for y in 0 ..< result.height:
-      for x in 0 ..< result.width:
-        let xy = vec2(x.float32, y.float32)
-        let a = (at - xy).length() / distance
-        result.gradientPut(x, y, a, paint)
+    result.fillDiamondGradient(
+      paint.gradientHandlePositions[0].toImageSpace(),
+      paint.gradientHandlePositions[1].toImageSpace(),
+      paint.gradientHandlePositions[2].toImageSpace(),
+      paint.gradientStops
+    )
 
 proc drawPaint(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
   if paints.len == 0 or geometries.len == 0:

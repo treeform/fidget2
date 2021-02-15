@@ -34,10 +34,6 @@ type
     laCenter
     laMax
 
-  ColorStop* = object
-    color*: Color
-    position*: float32
-
   PaintKind* = enum
     pkSolid
     pkImage
