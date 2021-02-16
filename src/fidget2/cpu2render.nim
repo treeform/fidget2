@@ -372,7 +372,7 @@ proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
-  shadow.blur(effect.radius)
+  shadow.blur(effect.radius, offBounds = 255)
   # Color the inverted blurred fill.
   var color = newImage(shadow.width, shadow.height)
   color.fill(effect.color.rgba.toPremultipliedAlpha())
