@@ -366,6 +366,30 @@ proc drawPaint(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
       fillImage.draw(mask, blendMode = bmMask)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
+proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
+  ## Draws the inner shadow.
+  var shadow = fillMask.copy()
+  # Invert colors of the fill mask.
+  shadow.invert()
+  # Blur the inverted fill.
+  shadow.blur(effect.radius)
+  # Color the inverted blurred fill.
+  var color = newImage(shadow.width, shadow.height)
+  color.fill(effect.color.rgba.toPremultipliedAlpha())
+  color.draw(shadow, blendMode = bmMask)
+  # Only have the shadow be on the fill.
+  color.draw(fillMask, blendMode = bmMask)
+  # Draw it back.
+  layer.draw(color)
+
+proc drawDropShadowEffect(lowerLayer: Image, layer: Image, effect: Effect, node: Node) =
+  ## Draws the drop shadow.
+  var shadow = newImage(layer.width, layer.height)
+  shadow.draw(layer, blendMode = bmOverwrite)
+  shadow = shadow.shadow(
+    effect.offset, effect.spread, effect.radius, effect.color.rgba.toPremultipliedAlpha())
+  lowerLayer.draw(shadow)
+
 proc maskSelfImage(node: Node): Mask =
   ## Returns a self mask (used for clips content).
   var mask = newMask(layer.width, layer.height)
@@ -391,6 +415,8 @@ proc drawNode(node: Node) =
     needsLayer = true
   if node.clipsContent:
     needsLayer = true
+  if node.effects.len > 0:
+    needsLayer = true
 
   if needsLayer:
     layers.add(layer)
@@ -398,6 +424,11 @@ proc drawNode(node: Node) =
 
   node.drawPaint(node.fills, node.getFillGeometry())
   node.drawPaint(node.strokes, node.getStrokeGeometry())
+
+  for effect in node.effects:
+    if effect.kind == ekInnerShadow:
+      drawInnerShadowEffect(effect, node, node.maskSelfImage())
+
 
   for child in node.children:
     drawNode(child)
@@ -410,6 +441,9 @@ proc drawNode(node: Node) =
     var lowerLayer = layers.pop()
     if node.opacity != 1.0:
       layer.applyOpacity(node.opacity)
+    for effect in node.effects:
+      if effect.kind == ekDropShadow:
+        lowerLayer.drawDropShadowEffect(layer, effect, node)
     lowerLayer.draw(layer, blendMode = node.blendMode)
     layer = lowerLayer
 
