@@ -6,6 +6,7 @@ var
   # Buffers.
   dataBufferSeq*: seq[float32]
   mat*: Mat3
+  tileBounds*: Rect
   opacity*: float32
 
   # OpenGL stuff.
@@ -255,8 +256,6 @@ proc drawBuffers() =
   glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
 
   # Clear and setup drawing.
-  glClearColor(0, 1, 0, 1)
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glUseProgram(shaderProgram)
 
   # Do the drawing.
@@ -399,54 +398,96 @@ proc drawRect(pos, size: Vec2) =
     cmdz.float32,
   ]
 
-proc drawPathCommands(commands: seq[PathCommand], windingRule: WindingRule) =
+
+proc computeBounds(shapes: seq[seq[Vec2]]): Rect =
+  var
+    xMin = float32.high
+    xMax = float32.low
+    yMin = float32.high
+    yMax = float32.low
+  for shape in shapes:
+    for pos in shape:
+      xMin = min(xMin, pos.x)
+      xMax = max(xMax, pos.x)
+      yMin = min(yMin, pos.y)
+      yMax = max(yMax, pos.y)
+
+  xMin = floor(xMin)
+  xMax = ceil(xMax)
+  yMin = floor(yMin)
+  yMax = ceil(yMax)
+
+  result.x = xMin
+  result.y = yMin
+  result.w = xMax - xMin
+  result.h = yMax - yMin
+
+proc drawGeometry(geometry: var Geometry): bool =
   ## Takes a path and turn it into commands.
   ## Including the windingRule.
   ## Inserts cmdStartPath/cmdEndPath.
-  dataBufferSeq.add cmdStartPath.float32
-  case windingRule
-  of wrEvenOdd:
-    dataBufferSeq.add 0
-  of wrNonZero:
-    dataBufferSeq.add 1
 
-  for command in commands:
-    case command.kind
-    of pixie.Move:
-      dataBufferSeq.add cmdM.float32
-      var pos = vec2(command.numbers[0], command.numbers[1])
-      dataBufferSeq.add pos.x
-      dataBufferSeq.add pos.y
-    of pixie.Line:
-      dataBufferSeq.add cmdL.float32
-      var pos = vec2(command.numbers[0], command.numbers[1])
-      dataBufferSeq.add pos.x
-      dataBufferSeq.add pos.y
-    of pixie.Cubic:
-      dataBufferSeq.add cmdC.float32
-      for i in 0 ..< 3:
-        var pos = vec2(
-          command.numbers[i*2+0],
-          command.numbers[i*2+1]
-        )
-        dataBufferSeq.add pos.x
-        dataBufferSeq.add pos.y
-    of pixie.Quad:
-      assert command.numbers.len == 4
-      dataBufferSeq.add cmdQ.float32
-      for i in 0 ..< 2:
-        var pos = vec2(
-          command.numbers[i*2+0],
-          command.numbers[i*2+1]
-        )
-        dataBufferSeq.add pos.x
-        dataBufferSeq.add pos.y
-    of pixie.Close:
-      dataBufferSeq.add cmdz.float32
-    else:
-      quit($command.kind & " not supported command kind.")
+  let path = geometry.path
+  let windingRule = geometry.windingRule
 
-  dataBufferSeq.add cmdEndPath.float32
+  if not geometry.cached:
+    geometry.shapes = path.commandsToShapes()
+    for shape in geometry.shapes.mitems:
+      for pos in shape.mitems:
+        pos = mat * pos
+    geometry.shapesBounds = geometry.shapes.computeBounds()
+    geometry.cached = true
+
+  if geometry.shapesBounds.overlaps(tileBounds):
+
+    dataBufferSeq.add cmdStartPath.float32
+    case windingRule
+    of wrEvenOdd:
+      dataBufferSeq.add 0
+    of wrNonZero:
+      dataBufferSeq.add 1
+
+    var clipBounds = tileBounds
+    clipBounds.x -= 1000
+    clipBounds.w += 1000
+
+    for shape in geometry.shapes:
+      var prevStart = vec2(0, 0)
+      for segment in shape.segments:
+
+        if segment.at.y == segment.to.y:
+          # Filter horizontals
+          continue
+
+        if max(segment.at.y, segment.to.y) < tileBounds.y:
+          # Fully above the tile
+          continue
+
+        if min(segment.at.y, segment.to.y) > tileBounds.y + tileBounds.h:
+          # Fully bellow the tile
+          continue
+
+        if min(segment.at.x, segment.to.x) > tileBounds.x + tileBounds.w:
+          # Fully to the right of the tile
+          continue
+
+        if prevStart != segment.at:
+          dataBufferSeq.add @[
+            cmdM.float32,
+            segment.at.x,
+            segment.at.y
+          ]
+        dataBufferSeq.add @[
+          cmdL.float32,
+          segment.to.x,
+          segment.to.y
+        ]
+        prevStart = segment.to
+
+    dataBufferSeq.add cmdEndPath.float32
+    return true
+
+  return false
 
 proc drawGradientStops(paint: Paint) =
   # Add Gradient stops.
@@ -695,77 +736,77 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   if node.isMask:
     dataBufferSeq.add cmdMaskStart.float32
 
-  dataBufferSeq.add cmdSetMat.float32
-  dataBufferSeq.add mat[0, 0]
-  dataBufferSeq.add mat[0, 1]
-  dataBufferSeq.add mat[1, 0]
-  dataBufferSeq.add mat[1, 1]
-  dataBufferSeq.add mat[2, 0]
-  dataBufferSeq.add mat[2, 1]
+  # dataBufferSeq.add cmdSetMat.float32
+  # dataBufferSeq.add mat[0, 0]
+  # dataBufferSeq.add mat[0, 1]
+  # dataBufferSeq.add mat[1, 0]
+  # dataBufferSeq.add mat[1, 1]
+  # dataBufferSeq.add mat[2, 0]
+  # dataBufferSeq.add mat[2, 1]
 
-  if node.clipsContent and level != 0:
-    # Node frame needs to clip its children.
-    # Create a mask.
-    # All frames are rounded rectangles of some sort.
-    dataBufferSeq.add cmdMaskStart.float32
+  # if node.clipsContent and level != 0:
+  #   # Node frame needs to clip its children.
+  #   # Create a mask.
+  #   # All frames are rounded rectangles of some sort.
+  #   dataBufferSeq.add cmdMaskStart.float32
 
-    dataBufferSeq.add cmdStartPath.float32
-    dataBufferSeq.add kNonZero.float32
-    if node.rectangleCornerRadii != nil:
-      let r = node.rectangleCornerRadii
-      drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
-    elif node.cornerRadius > 0:
-      let r = node.cornerRadius
-      drawRect(vec2(0, 0), node.size, r, r, r, r)
-    else:
-      drawRect(vec2(0, 0), node.size)
-    dataBufferSeq.add cmdEndPath.float32
+  #   dataBufferSeq.add cmdStartPath.float32
+  #   dataBufferSeq.add kNonZero.float32
+  #   if node.rectangleCornerRadii != nil:
+  #     let r = node.rectangleCornerRadii
+  #     drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
+  #   elif node.cornerRadius > 0:
+  #     let r = node.cornerRadius
+  #     drawRect(vec2(0, 0), node.size, r, r, r, r)
+  #   else:
+  #     drawRect(vec2(0, 0), node.size)
+  #   dataBufferSeq.add cmdEndPath.float32
 
-    dataBufferSeq.add @[
-      cmdSolidFill.float32,
-      1,
-      0.5,
-      0.5,
-      1
-    ]
+  #   dataBufferSeq.add @[
+  #     cmdSolidFill.float32,
+  #     1,
+  #     0.5,
+  #     0.5,
+  #     1
+  #   ]
 
-    dataBufferSeq.add cmdMaskPush.float32
+  #   dataBufferSeq.add cmdMaskPush.float32
 
-  if node.blendMode != currentBlendMode:
-    currentBlendMode = node.blendMode
-    dataBufferSeq.add cmdSetBlendMode.float32
-    dataBufferSeq.add ord(node.blendMode).float32
+  # if node.blendMode != currentBlendMode:
+  #   currentBlendMode = node.blendMode
+  #   dataBufferSeq.add cmdSetBlendMode.float32
+  #   dataBufferSeq.add ord(node.blendMode).float32
 
   node.computePixelBox()
 
-  var hasBoundsCheck = false
-  var jmpOffset = 0
-  if level != 0:
-    hasBoundsCheck = true
-    dataBufferSeq.add cmdBoundCheck.float32
-    dataBufferSeq.add node.pixelBox.x
-    dataBufferSeq.add node.pixelBox.y
-    dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
-    dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
-    jmpOffset = dataBufferSeq.len
-    dataBufferSeq.add 0
+  # var hasBoundsCheck = false
+  # var jmpOffset = 0
+  # if level != 0:
+  #   hasBoundsCheck = true
+  #   dataBufferSeq.add cmdBoundCheck.float32
+  #   dataBufferSeq.add node.pixelBox.x
+  #   dataBufferSeq.add node.pixelBox.y
+  #   dataBufferSeq.add node.pixelBox.x + node.pixelBox.w
+  #   dataBufferSeq.add node.pixelBox.y + node.pixelBox.h
+  #   jmpOffset = dataBufferSeq.len
+  #   dataBufferSeq.add 0
 
-  for effect in node.effects:
-    if effect.kind == ekLayerBlur:
-      dataBufferSeq.add cmdLayerBlur.float32
-      dataBufferSeq.add effect.radius
-    if effect.kind == ekDropShadow:
-      dataBufferSeq.add @[
-        cmdDropShadow.float32,
-        effect.color.r,
-        effect.color.g,
-        effect.color.b,
-        effect.color.a,
-        effect.offset.x,
-        effect.offset.y,
-        effect.radius,
-        effect.spread
-      ]
+  # for effect in node.effects:
+  #   if effect.kind == ekLayerBlur:
+  #     dataBufferSeq.add cmdLayerBlur.float32
+  #     dataBufferSeq.add effect.radius
+  #   if effect.kind == ekDropShadow:
+  #     dataBufferSeq.add @[
+  #       cmdDropShadow.float32,
+  #       effect.color.r,
+  #       effect.color.g,
+  #       effect.color.b,
+  #       effect.color.a,
+  #       effect.offset.x,
+  #       effect.offset.y,
+  #       effect.radius,
+  #       effect.spread
+  #     ]
 
   case node.kind
     of nkGroup:
@@ -855,15 +896,15 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           drawPaint(node, paint)
 
     of nkRegularPolygon, nkVector, nkStar, nkLine:
-      for geom in node.fillGeometry:
-        drawPathCommands(geom.path.commands, geom.windingRule)
-        for paint in node.fills:
-          drawPaint(node, paint)
+      for geom in node.fillGeometry.mitems:
+        if drawGeometry(geom):
+          for paint in node.fills:
+            drawPaint(node, paint)
 
-      for geom in node.strokeGeometry:
-        drawPathCommands(geom.path.commands, geom.windingRule)
-        for paint in node.strokes:
-          drawPaint(node, paint)
+      for geom in node.strokeGeometry.mitems:
+        if drawGeometry(geom):
+          for paint in node.strokes:
+            drawPaint(node, paint)
 
     of nkBooleanOperation:
       discard
@@ -993,18 +1034,17 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           let jmpOffset = dataBufferSeq.len
           dataBufferSeq.add 0
 
-          drawPathCommands(glyph.path.commands, wrNonZero)
-
-          for paint in node.fills:
-            drawPaint(node, paint)
+          # if drawPathCommands(glyph.path, wrNonZero):
+          #   for paint in node.fills:
+          #     drawPaint(node, paint)
 
           dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
     else:
       echo($node.kind & " not supported")
 
-  if hasBoundsCheck:
-    dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
+  # if hasBoundsCheck:
+  #   dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
   if node.kind != nkBooleanOperation:
     # Draw the child nodes normally
@@ -1057,14 +1097,65 @@ proc drawToScreen*(node: Node) =
     computeLayout(node, c)
   perfMark "computeLayout"
 
-  drawNode(node, 0)
-  perfMark "drawNode"
 
-  #dataBufferSeq.setLen(0)
-  dataBufferSeq.add(cmdExit.float32)
-  #print dataBufferSeq.len
-  drawBuffers()
-  perfMark "drawBuffers"
+  glClearColor(0, 1, 0, 1)
+  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+
+  # draw tiles
+  let tileSize = 64
+
+  for x in 0 ..< ceil(viewportSize.x / tileSize.float32).int:
+    for y in 0 ..< ceil(viewportSize.y / tileSize.float32).int:
+
+      # tiles are in the -1 .. 1 coordinate system.
+      let
+        tx = ((x*tileSize).float32) / (viewportSize.x / 2) - 1
+        ty = (((y*tileSize).float32) / (viewportSize.y / 2) - 1) * -1
+        tw = (tileSize.float32) / (viewportSize.x / 2)
+        th = (tileSize.float32) / (viewportSize.y / 2) * -1
+      vertices = [
+        tx, ty,
+        tx, ty + th,
+        tx + tw, ty + th,
+        tx + tw, ty,
+      ]
+      # TODO: cut edge of tiles if they go over screen
+
+      #print x, y, tx, ty, tw, th
+      glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
+      glBufferData(
+        GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
+
+      tileBounds = rect(
+        (x*tileSize).float32,
+        (y*tileSize).float32,
+        (tileSize.float32),
+        (tileSize.float32),
+      )
+
+      dataBufferSeq.setLen(0)
+      # dataBufferSeq.add cmdFullFill.float32
+      # dataBufferSeq.add @[
+      #   cmdSolidFill.float32,
+      #   x.float32/20,
+      #   y.float32/20,
+      #   0,
+      #   1
+      # ]
+
+      drawNode(node, 0)
+      #perfMark "drawNode"
+
+      dataBufferSeq.add(cmdExit.float32)
+
+      drawBuffers()
+      perfMark "drawBuffers"
+
+
+
+
+  #dumpCommandStream()
+
 
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =

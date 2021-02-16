@@ -139,6 +139,9 @@ type
     windingRule*: WindingRule
 
     mat*: Mat3 # NOT FROM FIGMA
+    cached*: bool
+    shapes*: seq[seq[Vec2]]
+    shapesBounds*: Rect
 
   BooleanOperation* = enum
     boUnion

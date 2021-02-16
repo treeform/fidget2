@@ -10,9 +10,9 @@ var textureAtlasSampler*: Uniform[Sampler2d]
 
 const
   useAA = true
-  useBlends = true
-  useMask = true
-  useBounds = true
+  useBlends = false
+  useMask = false
+  useBounds = false
 
 const
   ## Command "enums"
@@ -43,6 +43,7 @@ const
   cmdSetBlendMode*: int = 22
   cmdSetBoolMode*: int = 23
   cmdFullFill*: int = 24
+
 
   cbmNormal*: int = 0
   cbmDarken*: int = 1
@@ -798,7 +799,11 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
 
   crossCountMat = mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-  mat = mat3(0, 0, 0, 0, 0, 0, 0, 0, 0)
+  mat = mat3(
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+  )
 
   gradientK = 0
   prevGradientK = 0
@@ -816,6 +821,13 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
+
+
+  # fragColor = vec4(1,0,0,1)
+
+  # if gl_FragCoord.x > 100 and gl_FragCoord.x < 200 and
+  #   gl_FragCoord.y > 100 and gl_FragCoord.y < 200:
+  #     fragColor = vec4(0,1,0,1)
 
   # fragColor = blendNormalFloats(fragColor, vec4(1,0,0,topIndex/32))
 

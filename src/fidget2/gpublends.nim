@@ -77,6 +77,8 @@ proc alphaFix2(backdrop, source: Vec4): Vec4 =
   result.z /= result.w
 
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 {.inline.} =
+  if source.w == 1.0:
+    return source
   result = alphaFix2(backdrop, source)
 
 proc blendDarkenFloats*(backdrop, source: Vec4): Vec4 {.inline.} =
