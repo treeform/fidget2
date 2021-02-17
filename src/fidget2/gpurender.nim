@@ -15,7 +15,7 @@ var
   textureAtlasId: GLuint
   backBufferId: GLuint
 
-  flatGeoms*: seq[Geometry]
+  reverseNodes*: seq[Node]
 
   # Vertex data
   vertices: array[8, GLfloat] = [
@@ -420,6 +420,16 @@ proc computeBounds(shapes: seq[seq[Vec2]]): Rect =
   result.w = xMax - xMin
   result.h = yMax - yMin
 
+proc flattenGeometry(geometry: var Geometry) =
+  if not geometry.cached:
+    geometry.shapes = geometry.path.commandsToShapes()
+    for shape in geometry.shapes.mitems:
+      for pos in shape.mitems:
+        pos = mat * pos
+    geometry.shapesBounds = geometry.shapes.computeBounds()
+    geometry.cached = true
+
+
 proc drawGeometry(geometry: var Geometry): bool =
   ## Takes a path and turn it into commands.
   ## Including the windingRule.
@@ -427,14 +437,6 @@ proc drawGeometry(geometry: var Geometry): bool =
 
   let path = geometry.path
   let windingRule = geometry.windingRule
-
-  if not geometry.cached:
-    geometry.shapes = path.commandsToShapes()
-    for shape in geometry.shapes.mitems:
-      for pos in shape.mitems:
-        pos = mat * pos
-    geometry.shapesBounds = geometry.shapes.computeBounds()
-    geometry.cached = true
 
   if geometry.shapesBounds.overlaps(tileBounds):
 
@@ -894,15 +896,16 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
           drawPaint(node, paint)
 
     of nkRegularPolygon, nkVector, nkStar, nkLine:
+      reverseNodes.add(node)
       for geom in node.fillGeometry.mitems:
-        if drawGeometry(geom):
-          for paint in node.fills:
-            drawPaint(node, paint)
+        flattenGeometry(geom)
+          # for paint in node.fills:
+          #   drawPaint(node, paint)
 
       for geom in node.strokeGeometry.mitems:
-        if drawGeometry(geom):
-          for paint in node.strokes:
-            drawPaint(node, paint)
+        flattenGeometry(geom)
+          # for paint in node.strokes:
+          #   drawPaint(node, paint)
 
     of nkBooleanOperation:
       discard
@@ -1142,6 +1145,9 @@ proc drawToScreen*(node: Node) =
       #   1
       # ]
       drawNode(node, 0)
+
+      print reverseNodes.len
+
       #perfMark "drawNode"
       dataBufferSeq.add(cmdExit.float32)
 
