@@ -15,6 +15,8 @@ var
   textureAtlasId: GLuint
   backBufferId: GLuint
 
+  flatGeoms*: seq[Geometry]
+
   # Vertex data
   vertices: array[8, GLfloat] = [
     -1.float32, -1,
@@ -251,15 +253,11 @@ proc setupWindow*(
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
 proc drawBuffers() =
-  # Send commands to the CPU.
+  # update command buffer on the GPU.
   glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
-  glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_STATIC_DRAW)
-
-  # Clear and setup drawing.
-  glUseProgram(shaderProgram)
+  glBufferData(GL_TEXTURE_BUFFER, dataBufferSeq.len * 4, dataBufferSeq[0].addr, GL_DYNAMIC_DRAW)
 
   # Do the drawing.
-  glBindVertexArray(vao)
   glDrawElements(GL_TRIANGLE_FAN, indices.len.GLsizei, GL_UNSIGNED_BYTE, indices.addr)
 
 proc transform(node: Node): Mat3 =
@@ -1097,9 +1095,10 @@ proc drawToScreen*(node: Node) =
     computeLayout(node, c)
   perfMark "computeLayout"
 
-
-  glClearColor(0, 1, 0, 1)
-  glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  #glClearColor(0, 1, 0, 1)
+  #glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  glUseProgram(shaderProgram)
+  glBindVertexArray(vao)
 
   # draw tiles
   let tileSize = 64
@@ -1142,21 +1141,12 @@ proc drawToScreen*(node: Node) =
       #   0,
       #   1
       # ]
-
       drawNode(node, 0)
       #perfMark "drawNode"
-
       dataBufferSeq.add(cmdExit.float32)
 
       drawBuffers()
       perfMark "drawBuffers"
-
-
-
-
-  #dumpCommandStream()
-
-
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
   ## Draws the GPU frame to atlas.

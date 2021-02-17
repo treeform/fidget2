@@ -90,8 +90,8 @@ void gradientRadial(
 ) {
   // Setup color for radial gradient.
   if (0.0 < fillMask) {
-    vec2 at = (mat * vec3(at0, 1.0)).xy;
-    vec2 to = (mat * vec3(to0, 1.0)).xy;
+    vec2 at = (vec3(at0, 1.0)).xy;
+    vec2 to = (vec3(to0, 1.0)).xy;
     float distance = length(at - to);
     gradientK = clamp(length(at - screen) / distance, 0.0, 1.0);
   }
@@ -167,8 +167,8 @@ void gradientLinear(
 ) {
   // Setup color for linear gradient.
   if (0.0 < fillMask) {
-    vec2 at = (mat * vec3(at0, 1.0)).xy;
-    vec2 to = (mat * vec3(to0, 1.0)).xy;
+    vec2 at = (vec3(at0, 1.0)).xy;
+    vec2 to = (vec3(to0, 1.0)).xy;
     gradientK = clamp(toLineSpace(at, to, screen), 0.0, 1.0);
   }
 }
@@ -233,9 +233,10 @@ vec4 blendNormalFloats(
   if (float(source.w) == 1.0) {
     result = source;
     return result;
+  } else {
+    result = alphaFix2(backdrop, source);
+    return result;
   }
-  result = alphaFix2(backdrop, source);
-  return result;
 }
 
 void quadratic(
@@ -373,18 +374,6 @@ void runCommands(
       gradientStop(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x, texelFetch(dataBuffer, i + 5).x);
       i += 5;
     }; break;
-    case 3:{
-      mat[0][0] = texelFetch(dataBuffer, i + 1).x;
-      mat[0][1] = texelFetch(dataBuffer, i + 2).x;
-      mat[0][2] = 0.0;
-      mat[1][0] = texelFetch(dataBuffer, i + 3).x;
-      mat[1][1] = texelFetch(dataBuffer, i + 4).x;
-      mat[1][2] = 0.0;
-      mat[2][0] = texelFetch(dataBuffer, i + 5).x;
-      mat[2][1] = texelFetch(dataBuffer, i + 6).x;
-      mat[2][2] = 1.0;
-      i += 6;
-    }; break;
     case 10:{
       M(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
       i += 2;
@@ -403,28 +392,6 @@ void runCommands(
     }; break;
     case 14:{
       z();
-    }; break;
-    case 15:{
-      vec2 minP = vec2(0.0);
-      vec2 maxP = vec2(0.0);
-      minP.x = texelFetch(dataBuffer, i + 1).x;
-      minP.y = texelFetch(dataBuffer, i + 2).x;
-      maxP.x = texelFetch(dataBuffer, i + 3).x;
-      maxP.y = texelFetch(dataBuffer, i + 4).x;
-      int label = int(texelFetch(dataBuffer, i + 5).x);
-      i += 5;
-      mat3 matInv = inverse(mat);
-      vec2 screenInvA = (matInv * vec3(screen + vec2(0.0, 0.0), 1.0)).xy;
-      vec2 screenInvB = (matInv * vec3(screen + vec2(1.0, 0.0), 1.0)).xy;
-      vec2 screenInvC = (matInv * vec3(screen + vec2(1.0, 0.0), 1.0)).xy;
-      vec2 screenInvD = (matInv * vec3(screen + vec2(0.0, 1.0), 1.0)).xy;
-      vec2 minS = vec2(0.0);
-      vec2 maxS = vec2(0.0);
-      minS.x = min(min(screenInvA.x, screenInvB.x), min(screenInvC.x, screenInvD.x));
-      minS.y = min(min(screenInvA.y, screenInvB.y), min(screenInvC.y, screenInvD.y));
-      maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x));
-      maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y));
-
     }; break;
     case 16:{
       maskOn = true;
@@ -725,8 +692,8 @@ void line(
   vec2 b0
 ) {
   // Draw the lines based on windingRule.
-  vec2 a1 = (mat * vec3(a0, 1.0)).xy - screen;
-  vec2 b1 = (mat * vec3(b0, 1.0)).xy - screen;
+  vec2 a1 = (vec3(a0, 1.0)).xy - screen;
+  vec2 b1 = (vec3(b0, 1.0)).xy - screen;
   if (windingRule == 0) {
     a1 += vec2(0.125, 0.125);
     b1 += vec2(0.125, 0.125);
