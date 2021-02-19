@@ -1,6 +1,9 @@
 import cligen, imagediff, os, pixie, strformat, strutils, times
 import fidget2/loader, fidget2/schema
 
+when defined(benchy):
+  import benchy
+
 when defined(gpu):
   import fidget2/gpurender
   const w = "gpu"
@@ -53,7 +56,8 @@ proc main(r = "", e = "", l = 10000) =
     if r != "" and not frame.name.startsWith(r): continue
     if e != "" and frame.name != e: continue
 
-    echo frame.name, " --------------------------------- "
+    when not defined(benchy):
+      echo frame.name, " --------------------------------- "
 
     if firstTime and w in ["skia", "nanovg", "gpu_atlas", "gpu_atlas_full", "gpu", "gpu_vs_zpu"]:
       setupWindow(frame, offscreen = true)
@@ -90,6 +94,11 @@ proc main(r = "", e = "", l = 10000) =
       elif defined(cpu2):
         result = drawCompleteFrame(frame)
         result.toStraightAlpha()
+
+    when defined(benchy):
+      var mainFrame = frame
+      timeIt mainFrame.name, 100:
+        keep drawFrame(mainFrame)
 
     var image = drawFrame(frame)
 

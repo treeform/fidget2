@@ -421,13 +421,13 @@ proc computeBounds(shapes: seq[seq[Vec2]]): Rect =
   result.h = yMax - yMin
 
 proc flattenGeometry(geometry: var Geometry) =
-  if not geometry.cached:
-    geometry.shapes = geometry.path.commandsToShapes()
-    for shape in geometry.shapes.mitems:
-      for pos in shape.mitems:
-        pos = mat * pos
-    geometry.shapesBounds = geometry.shapes.computeBounds()
-    geometry.cached = true
+  #if not geometry.cached:
+  geometry.shapes = geometry.path.commandsToShapes()
+  for shape in geometry.shapes.mitems:
+    for pos in shape.mitems:
+      pos = mat * pos
+  geometry.shapesBounds = geometry.shapes.computeBounds()
+  #geometry.cached = true
 
 
 proc drawGeometry(geometry: var Geometry): bool =
@@ -435,13 +435,10 @@ proc drawGeometry(geometry: var Geometry): bool =
   ## Including the windingRule.
   ## Inserts cmdStartPath/cmdEndPath.
 
-  let path = geometry.path
-  let windingRule = geometry.windingRule
-
   if geometry.shapesBounds.overlaps(tileBounds):
 
     dataBufferSeq.add cmdStartPath.float32
-    case windingRule
+    case geometry.windingRule
     of wrEvenOdd:
       dataBufferSeq.add 0
     of wrNonZero:
@@ -616,12 +613,13 @@ proc drawPaint(node: Node, paint: Paint) =
     dataBufferSeq.add rect.h * s
 
   of pkSolid:
+    var solidColor = paint.color.toPremultipliedAlpha()
     dataBufferSeq.add @[
       cmdSolidFill.float32,
-      paint.color.r,
-      paint.color.g,
-      paint.color.b,
-      paint.color.a * paint.opacity * opacity
+      solidColor.r,
+      solidColor.g,
+      solidColor.b,
+      solidColor.a #* paint.opacity * opacity
     ]
   of pkGradientLinear:
     let
@@ -714,7 +712,7 @@ proc computePixelBox*(node: Node) =
   # if node.pixelBox.h.fractional > 0:
   #   node.pixelBox.h = node.pixelBox.h.ceil
 
-proc drawNode*(node: Node, level: int, rootMat = mat3()) =
+proc collectNode*(node: Node, level: int, rootMat = mat3()) =
 
   if not node.visible or node.opacity == 0:
     return
@@ -1050,7 +1048,7 @@ proc drawNode*(node: Node, level: int, rootMat = mat3()) =
   if node.kind != nkBooleanOperation:
     # Draw the child nodes normally
     for c in node.children:
-      drawNode(c, level + 1)
+      collectNode(c, level + 1)
 
   # Pop all of the child mask nodes.
   for c in node.children:
@@ -1106,6 +1104,10 @@ proc drawToScreen*(node: Node) =
   # draw tiles
   let tileSize = 64
 
+  reverseNodes.setLen(0)
+  collectNode(node, 0)
+  #print reverseNodes.len
+
   for x in 0 ..< ceil(viewportSize.x / tileSize.float32).int:
     for y in 0 ..< ceil(viewportSize.y / tileSize.float32).int:
 
@@ -1136,20 +1138,35 @@ proc drawToScreen*(node: Node) =
       )
 
       dataBufferSeq.setLen(0)
-      # dataBufferSeq.add cmdFullFill.float32
-      # dataBufferSeq.add @[
-      #   cmdSolidFill.float32,
-      #   x.float32/20,
-      #   y.float32/20,
-      #   0,
-      #   1
-      # ]
-      drawNode(node, 0)
 
-      print reverseNodes.len
+      #print x, y
+      for i in countDown(reverseNodes.len - 1, 0):
+        var node = reverseNodes[i]
+        for geom in node.fillGeometry.mitems:
+          if drawGeometry(geom):
+            for paint in node.fills:
+              #print "fill", i
+              drawPaint(node, paint)
+
+        for geom in node.strokeGeometry.mitems:
+          if drawGeometry(geom):
+            for paint in node.strokes:
+              drawPaint(node, paint)
+
+      dataBufferSeq.add cmdFullFill.float32
+      dataBufferSeq.add @[
+        cmdSolidFill.float32,
+        x.float32/20,
+        y.float32/20,
+        0,
+        1
+      ]
 
       #perfMark "drawNode"
       dataBufferSeq.add(cmdExit.float32)
+
+      # if x == 12 and y == 2:
+      #   dumpCommandStream()
 
       drawBuffers()
       perfMark "drawBuffers"
@@ -1158,50 +1175,50 @@ proc drawGpuFrameToAtlas*(node: Node, name: string) =
   ## Draws the GPU frame to atlas.
   setupRender(node)
 
-  if name notin textureAtlas.entries:
-    # Add a spot for the screen to go
-    var toImage = newImage(viewportSize.x.int, viewportSize.y.int)
-    toImage.fill(rgba(255, 0, 0, 255))
-    textureAtlas.put(name, toImage)
+  # if name notin textureAtlas.entries:
+  #   # Add a spot for the screen to go
+  #   var toImage = newImage(viewportSize.x.int, viewportSize.y.int)
+  #   toImage.fill(rgba(255, 0, 0, 255))
+  #   textureAtlas.put(name, toImage)
 
-  node.readyImages()
-  updateGpuAtlas()
+  # node.readyImages()
+  # updateGpuAtlas()
 
-  glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
-  glEnable(GL_SCISSOR_TEST)
+  # glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
+  # glEnable(GL_SCISSOR_TEST)
 
-  let entry = textureAtlas.entries[name]
-  let rootMat = translate(vec2(
-    entry.x,
-    textureAtlas.image.height.float32 - entry.y
-  )) * scale(vec2(1, -1))
-  glScissor(
-    entry.x.cint,
-    entry.y.cint,
-    entry.w.cint,
-    entry.h.cint,
-  )
-  glViewport(
-    0,
-    0,
-    textureAtlas.image.width.cint,
-    textureAtlas.image.width.cint
-  )
+  # let entry = textureAtlas.entries[name]
+  # let rootMat = translate(vec2(
+  #   entry.x,
+  #   textureAtlas.image.height.float32 - entry.y
+  # )) * scale(vec2(1, -1))
+  # glScissor(
+  #   entry.x.cint,
+  #   entry.y.cint,
+  #   entry.w.cint,
+  #   entry.h.cint,
+  # )
+  # glViewport(
+  #   0,
+  #   0,
+  #   textureAtlas.image.width.cint,
+  #   textureAtlas.image.width.cint
+  # )
 
-  node.box.xy = vec2(0, 0)
-  node.size = node.box.wh
-  for c in node.children:
-    computeLayout(node, c)
+  # node.box.xy = vec2(0, 0)
+  # node.size = node.box.wh
+  # for c in node.children:
+  #   computeLayout(node, c)
 
-  drawNode(node, 0, rootMat)
-  dataBufferSeq.add(cmdExit.float32)
-  drawBuffers()
+  # drawNode(node, 0, rootMat)
+  # dataBufferSeq.add(cmdExit.float32)
+  # drawBuffers()
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Read the GPU pixels from screen.
   ## Use for debugging and tests only.
   #dumpCommandStream()
-  let start = epochTime()
+  #let start = epochTime()
   var screen = newImage(viewportSize.x.int, viewportSize.x.int)
   glReadPixels(
     0, 0,
@@ -1210,7 +1227,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
     screen.data[0].addr
   )
   screen.flipVertical()
-  echo "readGpuPixelsFromScreen: ", (epochTime() - start)*1000, "ms"
+  #echo "readGpuPixelsFromScreen: ", (epochTime() - start)*1000, "ms"
   return screen
 
 proc readGpuPixelsFromAtlas*(name: string, crop = true): pixie.Image =

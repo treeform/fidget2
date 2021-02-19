@@ -55,7 +55,7 @@ const glslGlobals = [
 
 ## List of function that GLSL provides, don't include their NIM src.
 const glslFunctions = [
-  "rgb=", "rgb", "xyz", "xy", "xy=",
+  "rgb=", "rgb", "xyz", "xyz=", "xy", "xy=",
   "bool", "array",
   "vec2", "vec3", "vec4", "mat3", "mat4", "color",
   "Vec2", "Vec3", "Vec4", "Mat3", "Mat4", "Color",
@@ -781,6 +781,14 @@ proc `xy=`*(a: var Vec4, b: Vec2) =
 
 proc `xy`*(a: Vec4): Vec2 =
   vec2(a.x, a.y)
+
+proc `xyz=`*(a: var Vec4, b: Vec3) =
+  a.x = b.x
+  a.y = b.y
+  a.z = b.z
+
+proc `xyz`*(a: Vec4): Vec3 =
+  vec3(a.x, a.y, a.z)
 
 proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): Vec4 =
   vec4(buffer.data[index], 0, 0, 0)
