@@ -12,7 +12,6 @@ const
   useAA = true
   useBlends = false
   useMask = false
-  useBounds = false
 
 const
   ## Command "enums"
@@ -675,28 +674,28 @@ proc runCommands() =
       )
       i += 2
 
-    of cmdC:
-      C(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x,
-        texelFetch(dataBuffer, i + 3).x,
-        texelFetch(dataBuffer, i + 4).x,
-        texelFetch(dataBuffer, i + 5).x,
-        texelFetch(dataBuffer, i + 6).x
-      )
-      i += 6
+    # of cmdC:
+    #   C(
+    #     texelFetch(dataBuffer, i + 1).x,
+    #     texelFetch(dataBuffer, i + 2).x,
+    #     texelFetch(dataBuffer, i + 3).x,
+    #     texelFetch(dataBuffer, i + 4).x,
+    #     texelFetch(dataBuffer, i + 5).x,
+    #     texelFetch(dataBuffer, i + 6).x
+    #   )
+    #   i += 6
 
-    of cmdQ:
-      Q(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x,
-        texelFetch(dataBuffer, i + 3).x,
-        texelFetch(dataBuffer, i + 4).x,
-      )
-      i += 4
+    # of cmdQ:
+    #   Q(
+    #     texelFetch(dataBuffer, i + 1).x,
+    #     texelFetch(dataBuffer, i + 2).x,
+    #     texelFetch(dataBuffer, i + 3).x,
+    #     texelFetch(dataBuffer, i + 4).x,
+    #   )
+    #   i += 4
 
-    of cmdz:
-      z()
+    # of cmdz:
+    #   z()
 
     # of cmdBoundCheck:
     #   # Jump over code if screen not in bounds

@@ -38,21 +38,15 @@ void draw();
 float normPdf(float x, float sigma);
 void solidFill(float r, float g, float b, float a);
 float zmod(float a, float b);
-void C(float x1, float y1, float x2, float y2, float x, float y);
 void gradientLinear(vec2 at0, vec2 to0);
 float toLineSpace(vec2 at, vec2 to, vec2 point);
 void gradientStop(float k, float r, float g, float b, float a);
-void z();
-void Q(float x1, float y1, float x, float y);
 vec4 blendNormalFloats(vec4 backdrop, vec4 source);
-void quadratic(vec2 p0, vec2 p1, vec2 p2);
 void startPath(float rule);
 float pixelCross(vec2 a0, vec2 b0);
 void runCommands();
 void textureFill(mat3 tMat, float tile, vec2 pos, vec2 size);
-vec2 interpolate(vec2 G1, vec2 G2, vec2 G3, vec2 G4, float t);
 float lineDir(vec2 a, vec2 b);
-void bezier(vec2 A, vec2 B, vec2 C, vec2 D);
 void M(float x, float y);
 vec4 alphaFix2(vec4 backdrop, vec4 source);
 float pixelCover(vec2 a0, vec2 b0);
@@ -147,20 +141,6 @@ float zmod(
   return result;
 }
 
-void C(
-  float x1,
-  float y1,
-  float x2,
-  float y2,
-  float x,
-  float y
-) {
-  // SVG cubic Curve command.
-  bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
-  x0 = x;
-  y0 = y;
-}
-
 void gradientLinear(
   vec2 at0,
   vec2 to0
@@ -207,24 +187,6 @@ void gradientStop(
   }
 }
 
-void z(
-) {
-  // SVG style end of shape command.
-  line(vec2(x0, y0), vec2(x1, y1));
-}
-
-void Q(
-  float x1,
-  float y1,
-  float x,
-  float y
-) {
-  // SVG Quadratic curve command.
-  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
-  x0 = x;
-  y0 = y;
-}
-
 vec4 blendNormalFloats(
   vec4 backdrop,
   vec4 source
@@ -236,32 +198,6 @@ vec4 blendNormalFloats(
   } else {
     result = alphaFix2(backdrop, source);
     return result;
-  }
-}
-
-void quadratic(
-  vec2 p0,
-  vec2 p1,
-  vec2 p2
-) {
-  // Turn a cubic curve into N lines.
-  float devx = float(p0.x) - 2.0 * float(p1.x) + float(p2.x);
-  float devy = float(p0.y) - 2.0 * float(p1.y) + float(p2.y);
-  float devsq = devx * devx + devy * devy;
-  if (devsq < 0.333) {
-    line(p0, p2);
-    return;
-  }
-  float tol = 3.0;
-  float n = 1.0 + floor(sqrt(sqrt(tol * devsq)));
-  vec2 p = p0;
-  float nrecip = 1.0 / n;
-  float t = 0.0;
-  for(int i = 0; i < int(n); i++) {
-    t += nrecip;
-    vec2 pn = mix(mix(p0, p1, float(t)), mix(p1, p2, float(t)), float(t));
-    line(p, pn);
-    p = pn;
   }
 }
 
@@ -381,17 +317,6 @@ void runCommands(
     case 11:{
       L(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
       i += 2;
-    }; break;
-    case 12:{
-      C(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x, texelFetch(dataBuffer, i + 5).x, texelFetch(dataBuffer, i + 6).x);
-      i += 6;
-    }; break;
-    case 13:{
-      Q(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x);
-      i += 4;
-    }; break;
-    case 14:{
-      z();
     }; break;
     case 16:{
       maskOn = true;
@@ -543,23 +468,6 @@ void textureFill(
   }
 }
 
-vec2 interpolate(
-  vec2 G1,
-  vec2 G2,
-  vec2 G3,
-  vec2 G4,
-  float t
-) {
-  vec2 result;
-  // Solve the cubic bezier interpolation with 4 points.
-  vec2 A = G4 - G1 + (3.0) * (G2 - G3);
-  vec2 B = (3.0) * (G1 - 2.0 * G2 + G3);
-  vec2 C = (3.0) * (G2 - G1);
-  vec2 D = G1;
-  result = (t) * ((t) * (t * A + B) + C) + D;
-  return result;
-}
-
 float lineDir(
   vec2 a,
   vec2 b
@@ -572,23 +480,6 @@ float lineDir(
   } else {
     result = -1.0;
     return result;
-  }
-}
-
-void bezier(
-  vec2 A,
-  vec2 B,
-  vec2 C,
-  vec2 D
-) {
-  // Turn a cubic curve into N lines.
-  vec2 p = A;
-  float dist = length(A - B) + length(B - C) + length(C - D);
-  int discretization = clamp(int(float(dist) * 0.5), 1, 20);
-  for(int t = 1; t <= discretization; t++) {
-    vec2 q = interpolate(A, B, C, D, float(t) / float(discretization));
-    line(p, q);
-    p = q;
   }
 }
 
