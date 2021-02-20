@@ -12,7 +12,6 @@ bool shadowOn;
 float shadowRadius;
 uniform samplerBuffer dataBuffer;
 vec2 screen;
-int colorStackTop;
 float[99] maskStack;
 float y0;
 vec4 shadowColor;
@@ -31,7 +30,7 @@ float prevGradientK;
 mat4 crossCountMat;
 float layerBlur;
 float x0;
-vec4[24] colorStack;
+vec4 backdropColor;
 
 void finalColor(vec4 applyColor);
 void gradientRadial(vec2 at0, vec2 to0);
@@ -39,20 +38,26 @@ void draw();
 float normPdf(float x, float sigma);
 void solidFill(float r, float g, float b, float a);
 float zmod(float a, float b);
+void C(float x1, float y1, float x2, float y2, float x, float y);
 void gradientLinear(vec2 at0, vec2 to0);
 float toLineSpace(vec2 at, vec2 to, vec2 point);
 void gradientStop(float k, float r, float g, float b, float a);
+void z();
+void Q(float x1, float y1, float x, float y);
+vec4 blendNormalFloats(vec4 backdrop, vec4 source);
+void quadratic(vec2 p0, vec2 p1, vec2 p2);
 void startPath(float rule);
 float pixelCross(vec2 a0, vec2 b0);
 void runCommands();
 void textureFill(mat3 tMat, float tile, vec2 pos, vec2 size);
+vec2 interpolate(vec2 G1, vec2 G2, vec2 G3, vec2 G4, float t);
 float lineDir(vec2 a, vec2 b);
+void bezier(vec2 A, vec2 B, vec2 C, vec2 D);
 void M(float x, float y);
+vec4 alphaFix2(vec4 backdrop, vec4 source);
 float pixelCover(vec2 a0, vec2 b0);
-float blendAlphaPremul(float backdrop, float source);
 void endPath();
 void line(vec2 a0, vec2 b0);
-vec4 blendNormalPremul(vec4 backdrop, vec4 source);
 vec4 runPixel(vec2 xy);
 void L(float x, float y);
 
@@ -60,8 +65,23 @@ void L(float x, float y);
 void finalColor(
   vec4 applyColor
 ) {
-  colorStack[colorStackTop] = applyColor;
-  colorStackTop += 1;
+  if (maskOn) {
+    switch(blendMode) {
+    case 0:{
+      maskStack[maskStackTop] += applyColor.w;
+    }; break;
+    case 18:{
+      maskStack[maskStackTop] = 0.0;
+    }; break;
+    default: {
+      ;
+    }; break;
+    }
+  } else {
+    vec4 c = applyColor;
+
+    backdropColor = blendNormalFloats(backdropColor, c);
+  }
 }
 
 void gradientRadial(
@@ -114,7 +134,7 @@ void solidFill(
 ) {
   // Set the source color.
   if (0.0 < fillMask) {
-    finalColor(vec4(r, g, b, a) * fillMask);
+    finalColor(vec4(r, g, b, a * fillMask));
   }
 }
 
@@ -125,6 +145,20 @@ float zmod(
   float result;
   result = a - b * floor(a / b);
   return result;
+}
+
+void C(
+  float x1,
+  float y1,
+  float x2,
+  float y2,
+  float x,
+  float y
+) {
+  // SVG cubic Curve command.
+  bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
+  x0 = x;
+  y0 = y;
 }
 
 void gradientLinear(
@@ -173,6 +207,64 @@ void gradientStop(
   }
 }
 
+void z(
+) {
+  // SVG style end of shape command.
+  line(vec2(x0, y0), vec2(x1, y1));
+}
+
+void Q(
+  float x1,
+  float y1,
+  float x,
+  float y
+) {
+  // SVG Quadratic curve command.
+  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
+  x0 = x;
+  y0 = y;
+}
+
+vec4 blendNormalFloats(
+  vec4 backdrop,
+  vec4 source
+) {
+  vec4 result;
+  if (float(source.w) == 1.0) {
+    result = source;
+    return result;
+  } else {
+    result = alphaFix2(backdrop, source);
+    return result;
+  }
+}
+
+void quadratic(
+  vec2 p0,
+  vec2 p1,
+  vec2 p2
+) {
+  // Turn a cubic curve into N lines.
+  float devx = float(p0.x) - 2.0 * float(p1.x) + float(p2.x);
+  float devy = float(p0.y) - 2.0 * float(p1.y) + float(p2.y);
+  float devsq = devx * devx + devy * devy;
+  if (devsq < 0.333) {
+    line(p0, p2);
+    return;
+  }
+  float tol = 3.0;
+  float n = 1.0 + floor(sqrt(sqrt(tol * devsq)));
+  vec2 p = p0;
+  float nrecip = 1.0 / n;
+  float t = 0.0;
+  for(int i = 0; i < int(n); i++) {
+    t += nrecip;
+    vec2 pn = mix(mix(p0, p1, float(t)), mix(p1, p2, float(t)), float(t));
+    line(p, pn);
+    p = pn;
+  }
+}
+
 void startPath(
   float rule
 ) {
@@ -217,9 +309,6 @@ void runCommands(
   // Runs a little command interpreter.
   int i = 0;
   while(true) {
-    if ((0 < colorStackTop) && (float(colorStack[colorStackTop - 1].w) == 1.0)) {
-      return;
-    }
     float command = texelFetch(dataBuffer, i).x;
     switch(int(command)) {
     case 0:{
@@ -235,6 +324,11 @@ void runCommands(
     case 4:{
       solidFill(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x);
       i += 4;
+    }; break;
+    case 5:{
+      float opacity = texelFetch(dataBuffer, i + 1).x;
+      backdropColor = backdropColor * opacity;
+      i += 1;
     }; break;
     case 6:{
       tMat[0][0] = texelFetch(dataBuffer, i + 1).x;
@@ -287,6 +381,17 @@ void runCommands(
     case 11:{
       L(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
       i += 2;
+    }; break;
+    case 12:{
+      C(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x, texelFetch(dataBuffer, i + 5).x, texelFetch(dataBuffer, i + 6).x);
+      i += 6;
+    }; break;
+    case 13:{
+      Q(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x);
+      i += 4;
+    }; break;
+    case 14:{
+      z();
     }; break;
     case 16:{
       maskOn = true;
@@ -438,6 +543,23 @@ void textureFill(
   }
 }
 
+vec2 interpolate(
+  vec2 G1,
+  vec2 G2,
+  vec2 G3,
+  vec2 G4,
+  float t
+) {
+  vec2 result;
+  // Solve the cubic bezier interpolation with 4 points.
+  vec2 A = G4 - G1 + (3.0) * (G2 - G3);
+  vec2 B = (3.0) * (G1 - 2.0 * G2 + G3);
+  vec2 C = (3.0) * (G2 - G1);
+  vec2 D = G1;
+  result = (t) * ((t) * (t * A + B) + C) + D;
+  return result;
+}
+
 float lineDir(
   vec2 a,
   vec2 b
@@ -453,6 +575,23 @@ float lineDir(
   }
 }
 
+void bezier(
+  vec2 A,
+  vec2 B,
+  vec2 C,
+  vec2 D
+) {
+  // Turn a cubic curve into N lines.
+  vec2 p = A;
+  float dist = length(A - B) + length(B - C) + length(C - D);
+  int discretization = clamp(int(float(dist) * 0.5), 1, 20);
+  for(int t = 1; t <= discretization; t++) {
+    vec2 q = interpolate(A, B, C, D, float(t) / float(discretization));
+    line(p, q);
+    p = q;
+  }
+}
+
 void M(
   float x,
   float y
@@ -462,6 +601,26 @@ void M(
   x0 = x;
   y1 = y;
   y0 = y;
+}
+
+vec4 alphaFix2(
+  vec4 backdrop,
+  vec4 source
+) {
+  vec4 result;
+  result.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
+  if (result.w == 0.0) {
+    return result;
+  }
+  float t01 = source.w;
+  float t2 = (1.0 - source.w) * (backdrop.w);
+  result.x = t01 * source.x + t2 * backdrop.x;
+  result.y = t01 * source.y + t2 * backdrop.y;
+  result.z = t01 * source.z + t2 * backdrop.z;
+  result.x /= result.w;
+  result.y /= result.w;
+  result.z /= result.w;
+  return result;
 }
 
 float pixelCover(
@@ -522,15 +681,6 @@ float pixelCover(
   return result;
 }
 
-float blendAlphaPremul(
-  float backdrop,
-  float source
-) {
-  float result;
-  result = float(float(source) + (float(backdrop)) * (1.0 - float(source)));
-  return result;
-}
-
 void endPath(
 ) {
   // SVG style end path command.
@@ -569,39 +719,16 @@ void line(
   }
 }
 
-vec4 blendNormalPremul(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  float k = 1.0 - float(source.w);
-  result.x = float(float(source.x) + float(backdrop.x) * k);
-  result.y = float(float(source.y) + float(backdrop.y) * k);
-  result.z = float(float(source.z) + float(backdrop.z) * k);
-  result.w = blendAlphaPremul(backdrop.w, source.w);
-  return result;
-}
-
 vec4 runPixel(
   vec2 xy
 ) {
   vec4 result;
   // Runs commands for a single pixel.
   screen = xy;
+  backdropColor = vec4(0.0, 0.0, 0.0, 0.0);
   runCommands();
-  if (colorStackTop == 0) {
-    result = vec4(0.0, 0.0, 0.0, 0.0);
-    return result;
-  } else {
-    colorStackTop -= 1;
-    vec4 bg = colorStack[colorStackTop];
-    while(0 < colorStackTop) {
-      colorStackTop -= 1;
-      bg = blendNormalPremul(bg, colorStack[colorStackTop]);
-    }
-    result = bg;
-    return result;
-  }
+  result = backdropColor;
+  return result;
 }
 
 void L(
@@ -638,8 +765,6 @@ void main() {
   shadowRadius = 0.0;
   shadowSpread = 0.0;
   blendMode = 0;
-  colorStackTop = 0;
-  colorStack[colorStackTop] = vec4(0.0, 0.0, 0.0, 0.0);
   float bias = 0.0001;
   vec2 offset = vec2(float(bias - 0.5), float(bias - 0.5));
   fragColor = runPixel(gl_FragCoord.xy + offset);

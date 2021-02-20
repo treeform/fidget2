@@ -1,5 +1,5 @@
 import cligen, imagediff, os, pixie, strformat, strutils, times
-import fidget2/loader, fidget2/schema
+import fidget2/loader, fidget2/schema, fidget2/perf
 
 when defined(benchy):
   import benchy
@@ -63,8 +63,6 @@ proc main(r = "", e = "", l = 10000) =
       setupWindow(frame, offscreen = true)
       firstTime = false
 
-    let startTime = epochTime()
-
     proc drawFrame(frame: Node): Image =
       when defined(gpu):
         drawToScreen(frame)
@@ -100,7 +98,12 @@ proc main(r = "", e = "", l = 10000) =
       timeIt mainFrame.name, 100:
         keep drawFrame(mainFrame)
 
+    let startTime = epochTime()
+    defaultBuffer.setLen(0)
+
     var image = drawFrame(frame)
+    perfMark "drawFrame"
+    #perfDump()
 
     let frameTime = epochTime() - startTime
 

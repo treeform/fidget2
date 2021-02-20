@@ -1,11 +1,10 @@
 import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
     pixie, print, schema, staticglfw, tables, typography, typography/textboxes,
-    vmath, times, perf, common
+    vmath, times, perf, common, spacy, random
 
 var
   # Buffers.
   dataBufferSeq*: seq[float32]
-  mat*: Mat3
   tileBounds*: Rect
   opacity*: float32
 
@@ -15,7 +14,7 @@ var
   textureAtlasId: GLuint
   backBufferId: GLuint
 
-  reverseNodes*: seq[Node]
+  nodeStack*: seq[Node]
 
   # Vertex data
   vertices: array[8, GLfloat] = [
@@ -423,14 +422,15 @@ proc computeBounds(shapes: seq[seq[Vec2]]): Rect =
 proc flattenGeometry(geometry: var Geometry) =
   #if not geometry.cached:
   geometry.shapes = geometry.path.commandsToShapes()
+  let gmat = mat * geometry.mat
   for shape in geometry.shapes.mitems:
     for pos in shape.mitems:
-      pos = mat * pos
+      pos = gmat * pos
   geometry.shapesBounds = geometry.shapes.computeBounds()
   #geometry.cached = true
 
 
-proc drawGeometry(geometry: var Geometry): bool =
+proc drawGeometry(geometry: Geometry): bool =
   ## Takes a path and turn it into commands.
   ## Including the windingRule.
   ## Inserts cmdStartPath/cmdEndPath.
@@ -806,241 +806,13 @@ proc collectNode*(node: Node, level: int, rootMat = mat3()) =
   #       effect.spread
   #     ]
 
-  case node.kind
-    of nkGroup:
-      discard
-
-    of nkRectangle, nkFrame, nkInstance, nkComponent:
-      if node.fills.len > 0:
-        if level == 0:
-          dataBufferSeq.add cmdFullFill.float32
-          discard
-        else:
-          if node.rectangleCornerRadii != nil:
-            let r = node.rectangleCornerRadii
-            dataBufferSeq.add cmdStartPath.float32
-            dataBufferSeq.add kNonZero.float32
-            drawRect(vec2(0, 0), node.size, r[0], r[1], r[2], r[3])
-            dataBufferSeq.add cmdEndPath.float32
-          elif node.cornerRadius > 0:
-            let r = node.cornerRadius
-            dataBufferSeq.add cmdStartPath.float32
-            dataBufferSeq.add kNonZero.float32
-            drawRect(vec2(0, 0), node.size, r, r, r, r)
-            dataBufferSeq.add cmdEndPath.float32
-          else:
-            dataBufferSeq.add cmdStartPath.float32
-            dataBufferSeq.add kNonZero.float32
-            drawRect(vec2(0, 0), node.size)
-            dataBufferSeq.add cmdEndPath.float32
-            #dataBufferSeq.add cmdFullFill.float32
-
-        for paint in node.fills:
-          drawPaint(node, paint)
-
-      if node.strokes.len > 0:
-        let (inner, outer) = node.strokeInnerOuter()
-
-        dataBufferSeq.add cmdStartPath.float32
-        dataBufferSeq.add kEvenOdd.float32
-        if node.rectangleCornerRadii != nil:
-          let r = node.rectangleCornerRadii
-          drawRect(
-            vec2(-outer, -outer),
-            node.size + vec2(outer*2, outer*2),
-            r[0] + outer, r[1] + outer, r[2] + outer, r[3] + outer
-          )
-          drawRect(
-            vec2(+inner, +inner),
-            node.size - vec2(inner*2, inner*2),
-            r[0] - inner, r[1] - inner, r[2] - inner, r[3] - inner
-          )
-        elif node.cornerRadius > 0:
-          let r = node.cornerRadius
-          drawRect(
-            vec2(-outer, -outer),
-            node.size + vec2(outer*2, outer*2),
-            r + outer, r + outer, r + outer, r + outer
-          )
-          drawRect(
-            vec2(+inner, +inner),
-            node.size - vec2(inner*2, inner*2),
-            r - inner, r - inner, r - inner, r - inner
-          )
-        else:
-          drawRect(vec2(-outer, -outer), node.size + vec2(outer*2, outer*2))
-          drawRect(vec2(+inner, +inner), node.size - vec2(inner*2, inner*2))
-        dataBufferSeq.add cmdEndPath.float32
-
-        for paint in node.strokes:
-          drawPaint(node, paint)
-
-    of nkEllipse:
-      dataBufferSeq.add cmdStartPath.float32
-      dataBufferSeq.add kNonZero.float32
-      drawEllipse(node.size/2, node.size/2)
-      dataBufferSeq.add cmdEndPath.float32
-      for paint in node.fills:
-        drawPaint(node, paint)
-
-      if node.strokes.len > 0:
-        let (inner, outer) = node.strokeInnerOuter()
-        dataBufferSeq.add kEvenOdd.float32
-        dataBufferSeq.add kNonZero.float32
-        drawEllipse(node.size/2, node.size/2 + vec2(outer))
-        drawEllipse(node.size/2, node.size/2 - vec2(inner))
-        dataBufferSeq.add cmdEndPath.float32
-        for paint in node.strokes:
-          drawPaint(node, paint)
-
-    of nkRegularPolygon, nkVector, nkStar, nkLine:
-      reverseNodes.add(node)
-      for geom in node.fillGeometry.mitems:
-        flattenGeometry(geom)
-          # for paint in node.fills:
-          #   drawPaint(node, paint)
-
-      for geom in node.strokeGeometry.mitems:
-        flattenGeometry(geom)
-          # for paint in node.strokes:
-          #   drawPaint(node, paint)
-
-    of nkBooleanOperation:
-      discard
-      # # Set the child nodes as boolean operations
-      # for i, c in node.children:
-      #   c.blendMode =
-      #     if i == 0:
-      #       bmNormal
-      #     else:
-      #       case node.booleanOperation
-      #         of boSubtract: bmSubtractMask
-      #         of boIntersect: bmIntersectMask
-      #         of boExclude: bmExcludeMask
-      #         of boUnion: bmNormal
-
-      # dataBufferSeq.add cmdMaskStart.float32
-      # for c in node.children:
-      #   drawNode(c, level + 1)
-      # dataBufferSeq.add cmdMaskPush.float32
-
-      # if node.blendMode != currentBlendMode:
-      #   currentBlendMode = node.blendMode
-      #   dataBufferSeq.add cmdSetBlendMode.float32
-      #   dataBufferSeq.add ord(node.blendMode).float32
-      # dataBufferSeq.add cmdFullFill.float32
-      # for paint in node.fills:
-      #   drawPaint(node, paint)
-
-      # dataBufferSeq.add cmdMaskPop.float32
-
-    of nkText:
-
-      var font: Font
-      if node.style.fontPostScriptName notin typefaceCache:
-        if node.style.fontPostScriptName == "":
-          node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
-
-        font = readFontTtf(figmaFontPath(node.style.fontPostScriptName))
-        typefaceCache[node.style.fontPostScriptName] = font.typeface
-      else:
-        font = Font()
-        font.typeface = typefaceCache[node.style.fontPostScriptName]
-      font.size = node.style.fontSize
-      font.lineHeight = node.style.lineHeightPx
-
-      var wrap = false
-      if node.style.textAutoResize == tarHeight:
-        wrap = true
-
-      let kern = node.style.opentypeFlags.KERN != 0
-
-      let layout = font.typeset(
-        text = if textBoxFocus == node:
-            textBox.text
-          else:
-            node.characters,
-        pos = vec2(0, 0),
-        size = node.size,
-        hAlign = node.style.textAlignHorizontal,
-        vAlign = node.style.textAlignVertical,
-        clip = false,
-        wrap = wrap,
-        kern = kern,
-        textCase = node.style.textCase,
-      )
-
-      if node == textBoxFocus:
-        for i, gpos in layout:
-          # Draw text cursor and selection.
-          proc drawCursor(rect: Rect) =
-            dataBufferSeq.add cmdStartPath.float32
-            dataBufferSeq.add kNonZero.float32
-            drawRect(
-              rect.xy,
-              rect.wh
-            )
-            dataBufferSeq.add cmdEndPath.float32
-            dataBufferSeq.add @[
-              cmdSolidFill.float32,
-              0,
-              0,
-              0,
-              1
-            ]
-          if textBox.cursor == 0 and i == 0:
-            drawCursor(rect(
-              gpos.selectRect.x - 1,
-              gpos.selectRect.y,
-              1,
-              gpos.selectRect.h
-            ))
-          elif textBox.cursor == i + 1:
-            drawCursor(rect(
-              gpos.selectRect.x + gpos.selectRect.w,
-              gpos.selectRect.y,
-              1,
-              gpos.selectRect.h
-            ))
-
-      for i, gpos in layout:
-        var font = gpos.font
-
-        if gpos.character in font.typeface.glyphs:
-          var glyph = font.typeface.glyphs[gpos.character]
-          glyph.makeReady(font)
-
-          if glyph.path.commands.len == 0:
-            continue
-
-          let cMat = mat * translate(vec2(
-            gpos.rect.x + gpos.subPixelShift,
-            gpos.rect.y
-          )) * scale(vec2(font.scale, -font.scale))
-          dataBufferSeq.add cmdSetMat.float32
-          dataBufferSeq.add cMat[0, 0]
-          dataBufferSeq.add cMat[0, 1]
-          dataBufferSeq.add cMat[1, 0]
-          dataBufferSeq.add cMat[1, 1]
-          dataBufferSeq.add cMat[2, 0]
-          dataBufferSeq.add cMat[2, 1]
-
-          dataBufferSeq.add cmdBoundCheck.float32
-          dataBufferSeq.add glyph.bboxMin.x
-          dataBufferSeq.add glyph.bboxMin.y
-          dataBufferSeq.add glyph.bboxMax.x
-          dataBufferSeq.add glyph.bboxMax.y
-          let jmpOffset = dataBufferSeq.len
-          dataBufferSeq.add 0
-
-          # if drawPathCommands(glyph.path, wrNonZero):
-          #   for paint in node.fills:
-          #     drawPaint(node, paint)
-
-          dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
-
-    else:
-      echo($node.kind & " not supported")
+  nodeStack.add(node)
+  node.genFillGeometry()
+  for geom in node.fillGeometry.mitems:
+    flattenGeometry(geom)
+  node.genStrokeGeometry()
+  for geom in node.strokeGeometry.mitems:
+    flattenGeometry(geom)
 
   # if hasBoundsCheck:
   #   dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
@@ -1096,27 +868,64 @@ proc drawToScreen*(node: Node) =
     computeLayout(node, c)
   perfMark "computeLayout"
 
-  #glClearColor(0, 1, 0, 1)
-  #glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+  nodeStack.setLen(0)
+  collectNode(node, 0)
+  perfMark "collectNode"
+
+  # glClearColor(0, 1, 0, 1)
+  # glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
   glUseProgram(shaderProgram)
   glBindVertexArray(vao)
 
-  # draw tiles
-  let tileSize = 64
+  let
+    tileSizeW = 128
+    tileSizeH = 32
+  for x in 0 ..< ceil(viewportSize.x / tileSizeW.float32).int:
+    for y in 0 ..< ceil(viewportSize.y / tileSizeH.float32).int:
+      tileBounds = rect(
+        (x*tileSizeW).float32,
+        (y*tileSizeH).float32,
+        (tileSizeW.float32),
+        (tileSizeH.float32),
+      )
 
-  reverseNodes.setLen(0)
-  collectNode(node, 0)
-  #print reverseNodes.len
+  # let m = 8.0
 
-  for x in 0 ..< ceil(viewportSize.x / tileSize.float32).int:
-    for y in 0 ..< ceil(viewportSize.y / tileSize.float32).int:
+  # var qs = newQuadSpace(rect(0, 0, 1024*2*m, 1024*2*m), maxThings = 100, maxLevels = 20)
+  # for node in nodeStack:
+  #   for geom in node.fillGeometry:
+  #     for shape in geom.shapes:
+  #       for v in shape:
+  #         qs.insert(Entry(pos:vec2(v.x, v.y * m)))
+  #   for geom in node.strokeGeometry:
+  #     for shape in geom.shapes:
+  #       for v in shape:
+  #         qs.insert(Entry(pos:vec2(v.x, v.y * m)))
+
+  # var tiles: seq[Rect]
+  # var nodes = @[qs.root]
+  # while nodes.len > 0:
+  #   var qn = nodes.pop()
+  #   if qn.nodes.len == 4:
+  #     for node in qn.nodes:
+  #       nodes.add(node)
+  #   else:
+  #     var bounds = qn.bounds
+  #     bounds.y = bounds.y / m
+  #     bounds.h = bounds.h / m
+  #     if bounds.overlaps(rect(0, 0, viewportSize.x, viewportSize.y)):
+  #       tiles.add(bounds)
+
+  # for tile in tiles:
+  #   block:
+  #     tileBounds = tile
 
       # tiles are in the -1 .. 1 coordinate system.
       let
-        tx = ((x*tileSize).float32) / (viewportSize.x / 2) - 1
-        ty = (((y*tileSize).float32) / (viewportSize.y / 2) - 1) * -1
-        tw = (tileSize.float32) / (viewportSize.x / 2)
-        th = (tileSize.float32) / (viewportSize.y / 2) * -1
+        tx = tileBounds.x / (viewportSize.x / 2) - 1
+        ty = (tileBounds.y / (viewportSize.y / 2) - 1) * -1
+        tw = (tileBounds.w) / (viewportSize.x / 2)
+        th = (tileBounds.h) / (viewportSize.y / 2) * -1
       vertices = [
         tx, ty,
         tx, ty + th,
@@ -1125,51 +934,40 @@ proc drawToScreen*(node: Node) =
       ]
       # TODO: cut edge of tiles if they go over screen
 
-      #print x, y, tx, ty, tw, th
       glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
       glBufferData(
         GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
 
-      tileBounds = rect(
-        (x*tileSize).float32,
-        (y*tileSize).float32,
-        (tileSize.float32),
-        (tileSize.float32),
-      )
-
       dataBufferSeq.setLen(0)
 
-      #print x, y
-      for i in countDown(reverseNodes.len - 1, 0):
-        var node = reverseNodes[i]
-        for geom in node.fillGeometry.mitems:
+      for node in nodeStack:
+        for geom in node.fillGeometry:
           if drawGeometry(geom):
             for paint in node.fills:
-              #print "fill", i
               drawPaint(node, paint)
 
-        for geom in node.strokeGeometry.mitems:
+        for geom in node.strokeGeometry:
           if drawGeometry(geom):
             for paint in node.strokes:
               drawPaint(node, paint)
 
-      dataBufferSeq.add cmdFullFill.float32
-      dataBufferSeq.add @[
-        cmdSolidFill.float32,
-        x.float32/20,
-        y.float32/20,
-        0,
-        1
-      ]
+      # dataBufferSeq.add cmdFullFill.float32
+      # dataBufferSeq.add @[
+      #   cmdSolidFill.float32,
+      #   rand(0.0 .. 1.0),
+      #   rand(0.0 .. 1.0),
+      #   rand(0.0 .. 1.0),
+      #   0.5
+      # ]
 
-      #perfMark "drawNode"
       dataBufferSeq.add(cmdExit.float32)
 
       # if x == 12 and y == 2:
       #   dumpCommandStream()
 
       drawBuffers()
-      perfMark "drawBuffers"
+
+  perfMark "draw tiles"
 
 proc drawGpuFrameToAtlas*(node: Node, name: string) =
   ## Draws the GPU frame to atlas.

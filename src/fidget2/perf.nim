@@ -11,7 +11,7 @@ type
 var
   perfEnabled* = true
   perfPixels*: int
-  defaultBuffer: seq[PerfEntry]
+  defaultBuffer*: seq[PerfEntry]
 
 proc getTicks*(): int64 =
   getMonoTime().ticks

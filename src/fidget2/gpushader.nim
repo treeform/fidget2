@@ -73,7 +73,7 @@ var
   windingRule: int = 0    # 0 for EvenOdd and 1 for NonZero
   x0, y0, x1, y1: float32 # Control points of lines and curves.
   screen: Vec2            # Location of were we are on screen.
-  #backdropColor: Vec4     # Current backdrop color.
+  backdropColor: Vec4     # Current backdrop color.
   fillMask: float32 = 0.0 # How much of the fill is visible.
   boolMode: int           # Boolean mode.
   mat: Mat3               # Current transform matrix.
@@ -99,9 +99,6 @@ var
   shadowSpread: float32
 
   blendMode: int          # Current blend mode.
-
-  colorStack: array[25, Vec4]
-  colorStackTop: int
 
 proc lineDir(a, b: Vec2): float32 =
   ## Return the direction of the line (up or down).
@@ -280,88 +277,85 @@ proc quadratic(p0, p1, p2: Vec2) =
     p = pn
 
 proc finalColor(applyColor: Vec4) =
-  colorStack[colorStackTop] = applyColor
-  colorStackTop += 1
+  if maskOn:
+    case blendMode:
+      of cbmNormal:
+        maskStack[maskStackTop] += applyColor.w
+      of cbmSubtractMask:
+        maskStack[maskStackTop] = 0 #maskStack[maskStackTop] * (1 - applyColor.w)
+      # of cbmIntersectMask:
+      #   backdropColor = blendIntersectMaskFloats(backdropColor, c)
+      # of cbmExcludeMask:
+      #   backdropColor = blendExcludeMaskFloats(backdropColor, c)
+      else:
+        discard
 
-  # if maskOn:
-  #   case blendMode:
-  #     of cbmNormal:
-  #       maskStack[maskStackTop] += applyColor.w
-  #     of cbmSubtractMask:
-  #       maskStack[maskStackTop] = 0 #maskStack[maskStackTop] * (1 - applyColor.w)
-  #     # of cbmIntersectMask:
-  #     #   backdropColor = blendIntersectMaskFloats(backdropColor, c)
-  #     # of cbmExcludeMask:
-  #     #   backdropColor = blendExcludeMaskFloats(backdropColor, c)
-  #     else:
-  #       discard
+  else:
+    var c = applyColor
+    when useMask:
+      c.w = c.w * maskStack[maskStackTop]
 
-  # else:
-  #   var c = applyColor
-  #   when useMask:
-  #     c.w = c.w * maskStack[maskStackTop]
-
-  #   when useBlends:
-  #     if blendMode == cbmNormal:
-  #       backdropColor = blendNormalFloats(backdropColor, c)
-  #     else:
-  #       case blendMode:
-  #         # of cbmNormal:
-  #         #   backdropColor = blendNormalFloats(backdropColor, c)
-  #         of cbmDarken:
-  #           backdropColor = blendDarkenFloats(backdropColor, c)
-  #         of cbmMultiply:
-  #           backdropColor = blendMultiplyFloats(backdropColor, c)
-  #         of cbmLinearBurn:
-  #           backdropColor = blendLinearBurnFloats(backdropColor, c)
-  #         of cbmColorBurn:
-  #           backdropColor = blendColorBurnFloats(backdropColor, c)
-  #         of cbmLighten:
-  #           backdropColor = blendLightenFloats(backdropColor, c)
-  #         of cbmScreen:
-  #           backdropColor = blendScreenFloats(backdropColor, c)
-  #         of cbmLinearDodge:
-  #           backdropColor = blendLinearDodgeFloats(backdropColor, c)
-  #         of cbmColorDodge:
-  #           backdropColor = blendColorDodgeFloats(backdropColor, c)
-  #         of cbmOverlay:
-  #           backdropColor = blendOverlayFloats(backdropColor, c)
-  #         of cbmSoftLight:
-  #           backdropColor = blendSoftLightFloats(backdropColor, c)
-  #         of cbmHardLight:
-  #           backdropColor = blendHardLightFloats(backdropColor, c)
-  #         of cbmDifference:
-  #           backdropColor = blendDifferenceFloats(backdropColor, c)
-  #         of cbmExclusion:
-  #           backdropColor = blendExclusionFloats(backdropColor, c)
-  #         of cbmColor:
-  #           backdropColor = blendColorFloats(backdropColor, c)
-  #         of cbmLuminosity:
-  #           backdropColor = blendLuminosityFloats(backdropColor, c)
-  #         of cbmHue:
-  #           backdropColor = blendHueFloats(backdropColor, c)
-  #         of cbmSaturation:
-  #           backdropColor = blendSaturationFloats(backdropColor, c)
-  #         # of cbmMask:
-  #         #   backdropColor = blendMaskFloats(backdropColor, c)
-  #         # of cbmSubtractMask:
-  #         #   backdropColor = blendSubtractMaskFloats(backdropColor, c)
-  #         # of cbmIntersectMask:
-  #         #   backdropColor = blendIntersectMaskFloats(backdropColor, c)
-  #         # of cbmExcludeMask:
-  #         #   backdropColor = blendExcludeMaskFloats(backdropColor, c)
-  #         # of cbmOverwrite:
-  #         #   backdropColor = blendOverwriteFloats(backdropColor, c)
-  #         else:
-  #           discard
-  #   else:
-  #     backdropColor = blendNormalFloats(backdropColor, c)
+    when useBlends:
+      if blendMode == cbmNormal:
+        backdropColor = blendNormalFloats(backdropColor, c)
+      else:
+        case blendMode:
+          # of cbmNormal:
+          #   backdropColor = blendNormalFloats(backdropColor, c)
+          of cbmDarken:
+            backdropColor = blendDarkenFloats(backdropColor, c)
+          of cbmMultiply:
+            backdropColor = blendMultiplyFloats(backdropColor, c)
+          of cbmLinearBurn:
+            backdropColor = blendLinearBurnFloats(backdropColor, c)
+          of cbmColorBurn:
+            backdropColor = blendColorBurnFloats(backdropColor, c)
+          of cbmLighten:
+            backdropColor = blendLightenFloats(backdropColor, c)
+          of cbmScreen:
+            backdropColor = blendScreenFloats(backdropColor, c)
+          of cbmLinearDodge:
+            backdropColor = blendLinearDodgeFloats(backdropColor, c)
+          of cbmColorDodge:
+            backdropColor = blendColorDodgeFloats(backdropColor, c)
+          of cbmOverlay:
+            backdropColor = blendOverlayFloats(backdropColor, c)
+          of cbmSoftLight:
+            backdropColor = blendSoftLightFloats(backdropColor, c)
+          of cbmHardLight:
+            backdropColor = blendHardLightFloats(backdropColor, c)
+          of cbmDifference:
+            backdropColor = blendDifferenceFloats(backdropColor, c)
+          of cbmExclusion:
+            backdropColor = blendExclusionFloats(backdropColor, c)
+          of cbmColor:
+            backdropColor = blendColorFloats(backdropColor, c)
+          of cbmLuminosity:
+            backdropColor = blendLuminosityFloats(backdropColor, c)
+          of cbmHue:
+            backdropColor = blendHueFloats(backdropColor, c)
+          of cbmSaturation:
+            backdropColor = blendSaturationFloats(backdropColor, c)
+          # of cbmMask:
+          #   backdropColor = blendMaskFloats(backdropColor, c)
+          # of cbmSubtractMask:
+          #   backdropColor = blendSubtractMaskFloats(backdropColor, c)
+          # of cbmIntersectMask:
+          #   backdropColor = blendIntersectMaskFloats(backdropColor, c)
+          # of cbmExcludeMask:
+          #   backdropColor = blendExcludeMaskFloats(backdropColor, c)
+          # of cbmOverwrite:
+          #   backdropColor = blendOverwriteFloats(backdropColor, c)
+          else:
+            discard
+    else:
+      backdropColor = blendNormalFloats(backdropColor, c)
 
 
 proc solidFill(r, g, b, a: float32) =
   ## Set the source color.
   if fillMask > 0:
-    finalColor(vec4(r, g, b, a) * fillMask)
+    finalColor(vec4(r, g, b, a * fillMask))
 
 proc normPdf(x: float, sigma: float32): float32 =
   ## Normal Probability Density Function (used for shadow and blurs)
@@ -581,9 +575,6 @@ proc runCommands() =
   var i = 0
   while true:
 
-    if colorStackTop > 0 and colorStack[colorStackTop - 1].w == 1.0:
-      return
-
     let command = texelFetch(dataBuffer, i).x
     case command.int:
     of cmdExit:
@@ -605,10 +596,10 @@ proc runCommands() =
       )
       i += 4
 
-    # of cmdApplyOpacity:
-    #   let opacity = texelFetch(dataBuffer, i + 1).x
-    #   backdropColor = backdropColor * opacity
-    #   i += 1
+    of cmdApplyOpacity:
+      let opacity = texelFetch(dataBuffer, i + 1).x
+      backdropColor = backdropColor * opacity
+      i += 1
 
     of cmdTextureFill:
       tMat[0, 0] = texelFetch(dataBuffer, i + 1).x
@@ -684,28 +675,28 @@ proc runCommands() =
       )
       i += 2
 
-    # of cmdC:
-    #   C(
-    #     texelFetch(dataBuffer, i + 1).x,
-    #     texelFetch(dataBuffer, i + 2).x,
-    #     texelFetch(dataBuffer, i + 3).x,
-    #     texelFetch(dataBuffer, i + 4).x,
-    #     texelFetch(dataBuffer, i + 5).x,
-    #     texelFetch(dataBuffer, i + 6).x
-    #   )
-    #   i += 6
+    of cmdC:
+      C(
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x,
+        texelFetch(dataBuffer, i + 3).x,
+        texelFetch(dataBuffer, i + 4).x,
+        texelFetch(dataBuffer, i + 5).x,
+        texelFetch(dataBuffer, i + 6).x
+      )
+      i += 6
 
-    # of cmdQ:
-    #   Q(
-    #     texelFetch(dataBuffer, i + 1).x,
-    #     texelFetch(dataBuffer, i + 2).x,
-    #     texelFetch(dataBuffer, i + 3).x,
-    #     texelFetch(dataBuffer, i + 4).x,
-    #   )
-    #   i += 4
+    of cmdQ:
+      Q(
+        texelFetch(dataBuffer, i + 1).x,
+        texelFetch(dataBuffer, i + 2).x,
+        texelFetch(dataBuffer, i + 3).x,
+        texelFetch(dataBuffer, i + 4).x,
+      )
+      i += 4
 
-    # of cmdz:
-    #   z()
+    of cmdz:
+      z()
 
     # of cmdBoundCheck:
     #   # Jump over code if screen not in bounds
@@ -790,23 +781,9 @@ proc runCommands() =
 proc runPixel(xy: Vec2): Vec4 =
   ## Runs commands for a single pixel.
   screen = xy
-  #backdropColor = vec4(0, 0, 0, 0)
-
+  backdropColor = vec4(0, 0, 0, 0)
   runCommands()
-
-  if colorStackTop == 0:
-    return vec4(0, 0, 0, 0)
-  else:
-    colorStackTop -= 1
-    var bg = colorStack[colorStackTop]
-
-    while colorStackTop > 0:
-      colorStackTop -= 1
-      bg = blendNormalPremul(bg, colorStack[colorStackTop])
-
-    return bg
-
-  #return backdropColor
+  return backdropColor
 
 proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   ## Main entry point to this huge shader.
@@ -841,9 +818,6 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   shadowSpread = 0.0
 
   blendMode = 0
-
-  colorStackTop = 0
-  colorStack[colorStackTop] = vec4(0, 0, 0, 0)
 
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
