@@ -29,7 +29,7 @@ proc drawChildren(node: Node) =
   if nodeStack.len > 0:
     parentNode = nodeStack[^1]
 
-proc gradientPut(effects: Image, x, y: int, a: float32, paint: Paint) =
+proc gradientPut(effects: Image, x, y: int, a: float32, paint: schema.Paint) =
   var
     index = -1
   for i, stop in paint.gradientStops:
@@ -57,7 +57,7 @@ proc gradientPut(effects: Image, x, y: int, a: float32, paint: Paint) =
 
 proc applyPaint(
   mask: Image,
-  paint: Paint,
+  paint: schema.Paint,
   node: Node,
   mat: Mat3,
   paintNum: int,
@@ -87,12 +87,11 @@ proc applyPaint(
   var effects = newImage(mask.width, mask.height)
 
   case paint.kind
-  of pkImage:
+  of schema.PaintKind.pkImage:
     var image: Image
     if paint.imageRef notin imageCache:
       try:
         image = readImage(figmaImagePath(paint.imageRef))
-        image.toPremultipliedAlpha()
       except PixieError:
         return
 
@@ -157,7 +156,7 @@ proc applyPaint(
           y += image.height.float32
         x += image.width.float32
 
-  of pkGradientLinear:
+  of schema.PaintKind.pkGradientLinear:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -167,7 +166,7 @@ proc applyPaint(
         let a = toLineSpace(at, to, xy)
         effects.gradientPut(x, y, a, paint)
 
-  of pkGradientRadial:
+  of schema.PaintKind.pkGradientRadial:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -178,7 +177,7 @@ proc applyPaint(
         let a = (at - xy).length() / distance
         effects.gradientPut(x, y, a, paint)
 
-  of pkGradientAngular:
+  of schema.PaintKind.pkGradientAngular:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -191,7 +190,7 @@ proc applyPaint(
           a = (angle + gradientAngle + PI/2).fixAngle() / 2 / PI + 0.5
         effects.gradientPut(x, y, a, paint)
 
-  of pkGradientDiamond:
+  of schema.PaintKind.pkGradientDiamond:
     # TODO: implement GRADIENT_DIAMOND, now will just do GRADIENT_RADIAL
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
@@ -203,7 +202,7 @@ proc applyPaint(
         let a = (at - xy).length() / distance
         effects.gradientPut(x, y, a, paint)
 
-  of pkSolid:
+  of schema.PaintKind.pkSolid:
     var color = paint.color
     effects.fill(color.rgba.toPremultipliedAlpha())
 
