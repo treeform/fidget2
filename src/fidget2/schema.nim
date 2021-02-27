@@ -53,6 +53,11 @@ type
     ## affine transforms applied to a layer, including scaling,
     ## rotation, shearing, and translation.
 
+  ColorStop* = object
+    ## Color stop on a gradient curve.
+    color*: Color  ## Color of the stop
+    position*: float32 ## Gradient Stop position 0..1.
+
   Paint* = ref object
     blendMode*: BlendMode
     kind*: PaintKind

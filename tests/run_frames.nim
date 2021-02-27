@@ -75,7 +75,6 @@ proc main(r = "", e = "", l = 10000) =
         result = readGpuPixelsFromAtlas("screen", crop = false)
       elif defined(cpu):
         result = drawCompleteCpuFrame(frame)
-        result.toStraightAlpha()
       elif defined(zpu):
         result = drawCompleteZpuFrame(frame)
       elif defined(gpu_vs_zpu):
@@ -91,7 +90,6 @@ proc main(r = "", e = "", l = 10000) =
         result = readGpuPixelsFromScreen()
       elif defined(cpu2):
         result = drawCompleteFrame(frame)
-        result.toStraightAlpha()
 
     when defined(benchy):
       var mainFrame = frame

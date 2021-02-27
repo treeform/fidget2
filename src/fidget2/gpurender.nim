@@ -877,48 +877,49 @@ proc drawToScreen*(node: Node) =
   glUseProgram(shaderProgram)
   glBindVertexArray(vao)
 
-  let
-    tileSizeW = 128
-    tileSizeH = 32
-  for x in 0 ..< ceil(viewportSize.x / tileSizeW.float32).int:
-    for y in 0 ..< ceil(viewportSize.y / tileSizeH.float32).int:
-      tileBounds = rect(
-        (x*tileSizeW).float32,
-        (y*tileSizeH).float32,
-        (tileSizeW.float32),
-        (tileSizeH.float32),
-      )
+  # let
+  #   tileSizeW = 128
+  #   tileSizeH = 32
+  # for x in 0 ..< ceil(viewportSize.x / tileSizeW.float32).int:
+  #   for y in 0 ..< ceil(viewportSize.y / tileSizeH.float32).int:
+  #     tileBounds = rect(
+  #       (x*tileSizeW).float32,
+  #       (y*tileSizeH).float32,
+  #       (tileSizeW.float32),
+  #       (tileSizeH.float32),
+  #     )
 
-  # let m = 8.0
+  let m = 1.0
+  var qs = newQuadSpace(rect(0, 0, 1024*2*m, 1024*2*m), maxThings = 400, maxLevels = 20)
+  for node in nodeStack:
+    for geom in node.fillGeometry:
+      for shape in geom.shapes:
+        for v in shape:
+          qs.insert(Entry(pos:vec2(v.x, v.y * m)))
+    for geom in node.strokeGeometry:
+      for shape in geom.shapes:
+        for v in shape:
+          qs.insert(Entry(pos:vec2(v.x, v.y * m)))
 
-  # var qs = newQuadSpace(rect(0, 0, 1024*2*m, 1024*2*m), maxThings = 100, maxLevels = 20)
-  # for node in nodeStack:
-  #   for geom in node.fillGeometry:
-  #     for shape in geom.shapes:
-  #       for v in shape:
-  #         qs.insert(Entry(pos:vec2(v.x, v.y * m)))
-  #   for geom in node.strokeGeometry:
-  #     for shape in geom.shapes:
-  #       for v in shape:
-  #         qs.insert(Entry(pos:vec2(v.x, v.y * m)))
+  var tiles: seq[Rect]
+  var nodes = @[qs.root]
+  while nodes.len > 0:
+    var qn = nodes.pop()
+    if qn.nodes.len == 4:
+      for node in qn.nodes:
+        nodes.add(node)
+    else:
+      var bounds = qn.bounds
+      bounds.y = bounds.y / m
+      bounds.h = bounds.h / m
+      if bounds.overlaps(rect(0, 0, viewportSize.x, viewportSize.y)):
+        tiles.add(bounds)
 
-  # var tiles: seq[Rect]
-  # var nodes = @[qs.root]
-  # while nodes.len > 0:
-  #   var qn = nodes.pop()
-  #   if qn.nodes.len == 4:
-  #     for node in qn.nodes:
-  #       nodes.add(node)
-  #   else:
-  #     var bounds = qn.bounds
-  #     bounds.y = bounds.y / m
-  #     bounds.h = bounds.h / m
-  #     if bounds.overlaps(rect(0, 0, viewportSize.x, viewportSize.y)):
-  #       tiles.add(bounds)
+  #print tiles.len
 
-  # for tile in tiles:
-  #   block:
-  #     tileBounds = tile
+  for tile in tiles:
+    block:
+      tileBounds = tile
 
       # tiles are in the -1 .. 1 coordinate system.
       let

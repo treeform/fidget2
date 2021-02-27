@@ -2,6 +2,7 @@ import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
     common, staticglfw, pixie, typography, typography/textboxes
 
 type Image = pixie.Image
+type Paint = schema.Paint
 
 var
   layer: Image
@@ -16,26 +17,26 @@ proc drawFill(node: Node, paint: Paint): Image =
       handle.y * node.absoluteBoundingBox.h + node.box.y,
     )
 
-  proc gradientAdjust(stops: seq[ColorStop], alpha: float32): seq[ColorStop] =
-    result = stops
-    for stop in result.mitems:
-      stop.color.a *= alpha
+  proc gradientAdjust(stops: seq[schema.ColorStop], alpha: float32): seq[pixie.ColorStop] =
+    for stop in stops:
+      var color = stop.color
+      color.a = color.a * alpha
+      result.add(pixie.ColorStop(color: color.rgbx, position: stop.position))
 
   result = newImage(layer.width, layer.height)
   case paint.kind
-  of pkSolid:
+  of schema.PaintKind.pkSolid:
     var color = paint.color
     color.a = color.a * paint.opacity
     if color.a == 0:
       return
     result.fill(color.rgba.toPremultipliedAlpha())
 
-  of pkImage:
+  of schema.PaintKind.pkImage:
     var image: Image
     if paint.imageRef notin imageCache:
       try:
         image = readImage(figmaImagePath(paint.imageRef))
-        image.toPremultipliedAlpha()
       except PixieError:
         return
       imageCache[paint.imageRef] = image
@@ -99,14 +100,14 @@ proc drawFill(node: Node, paint: Paint): Image =
           y += image.height.float32
         x += image.width.float32
 
-  of pkGradientLinear:
+  of schema.PaintKind.pkGradientLinear:
     result.fillLinearGradient(
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
       paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
-  of pkGradientRadial:
+  of schema.PaintKind.pkGradientRadial:
     result.fillRadialGradient(
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
@@ -114,7 +115,7 @@ proc drawFill(node: Node, paint: Paint): Image =
       paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
-  of pkGradientAngular:
+  of schema.PaintKind.pkGradientAngular:
     result.fillAngularGradient(
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
@@ -122,8 +123,8 @@ proc drawFill(node: Node, paint: Paint): Image =
       paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
-  of pkGradientDiamond:
-    result.fillDiamondGradient(
+  of schema.PaintKind.pkGradientDiamond:
+    result.fillRadialGradient(
       paint.gradientHandlePositions[0].toImageSpace(),
       paint.gradientHandlePositions[1].toImageSpace(),
       paint.gradientHandlePositions[2].toImageSpace(),
@@ -134,7 +135,7 @@ proc drawPaint(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
   if paints.len == 0 or geometries.len == 0:
     return
 
-  if paints.len == 1 and paints[0].kind == pkSolid:
+  if paints.len == 1 and paints[0].kind == schema.PaintKind.pkSolid:
     # Fast path for 1 solid paint (most common).
     let paint = paints[0]
     if not paint.visible or paint.opacity == 0:
@@ -173,7 +174,7 @@ proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
-  shadow.blur(effect.radius, offBounds = 255)
+  shadow.blur(effect.radius, outOfBounds = 255)
   # Color the inverted blurred fill.
   var color = newImage(shadow.width, shadow.height)
   color.fill(effect.color.rgba.toPremultipliedAlpha())
