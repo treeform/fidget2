@@ -26,3 +26,5 @@ tests/frames/zpu/*.png
 tests/files/gpu/*.png
 tests/frames/diffs/*.png
 tests/files/diffs/*.png
+
+cacert.pem

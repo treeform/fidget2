@@ -1,13 +1,11 @@
-import globs, httpclient, json, jsony, os, schema, strutils, sets
+import globs, json, jsony, os, schema, strutils, sets, puppy
 
 var
   figmaFile*: FigmaFile                ## Main figma file.
   globTree*: GlobTree[Node]            ## Glob tree for faster find access.
 
-proc newFigmaClient(): HttpClient =
-  result = newHttpClient()
-  result.headers["User-Agent"] = "curl/7.58.0"
-  result.headers["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
+proc figmaHeaders(): seq[(string, string)] =
+  result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
 
 proc figmaFilePath(fileKey: string): string =
   "figma/" & fileKey & ".json"
@@ -28,7 +26,7 @@ proc loadFigmaFile(fileKey: string): FigmaFile =
 proc downloadImage(imageRef, url: string) =
   if not fileExists(figmaImagePath(imageRef)):
     echo "Downloading ", url
-    writeFile(figmaImagePath(imageRef), newHttpClient().getContent(url))
+    writeFile(figmaImagePath(imageRef), fetch(url))
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
   if not dirExists("figma/images"):
@@ -63,7 +61,7 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
 
   let
     url = "https://api.figma.com/v1/files/" & fileKey & "/images"
-    data = newFigmaClient().getContent(url)
+    data = fetch(url, figmaHeaders()) #newFigmaClient().getContent(url)
     json = parseJson(data)
   for imageRef in imagesUsed:
     let url = json["meta"]["images"][imageRef].getStr()
@@ -74,7 +72,7 @@ proc downloadFont(fontPostScriptName, url: string) =
     echo "Downloading ", url
     writeFile(
       figmaFontPath(fontPostScriptName),
-      newHttpClient().getContent(url)
+      fetch(url)
     )
 
 proc downloadFonts(figmaFile: FigmaFile) =
@@ -107,7 +105,7 @@ proc downloadFonts(figmaFile: FigmaFile) =
   # We need to download one or more fonts
 
   let
-    csv = newHttpClient().getContent(
+    csv = fetch(
       "https://raw.githubusercontent.com/treeform/" &
       "freefrontfinder/master/fonts.csv"
     )
@@ -139,7 +137,7 @@ proc downloadFigmaFile(fileKey: string) =
     var data: string
     try:
       let url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
-      data = newFigmaClient().getContent(url)
+      data = fetch(url, figmaHeaders())
     except:
       echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
       useCached = true
@@ -163,7 +161,7 @@ proc downloadFigmaFile(fileKey: string) =
   try:
     let
       url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
-      data = newFigmaClient().getContent(url)
+      data = fetch(url, figmaHeaders())
       liveFile = parseFigmaFile(data)
       json = data.fromJson(JsonNode)
     # Download images and fonts before writing the cached Figma file.
