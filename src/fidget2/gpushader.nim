@@ -10,9 +10,8 @@ var textureAtlasSampler*: Uniform[Sampler2d]
 
 const
   useAA = true
-  useBlends = true
-  useMask = true
-  useBounds = true
+  useBlends = false
+  useMask = false
 
 const
   ## Command "enums"
@@ -43,6 +42,7 @@ const
   cmdSetBlendMode*: int = 22
   cmdSetBoolMode*: int = 23
   cmdFullFill*: int = 24
+
 
   cbmNormal*: int = 0
   cbmDarken*: int = 1
@@ -199,8 +199,8 @@ proc pixelCross(a0, b0: Vec2): float32 =
 proc line(a0, b0: Vec2) =
   ## Draw the lines based on windingRule.
   var
-    a1 = (mat * vec3(a0, 1)).xy - screen
-    b1 = (mat * vec3(b0, 1)).xy - screen
+    a1 = (vec3(a0, 1)).xy - screen
+    b1 = (vec3(b0, 1)).xy - screen
 
   when useAA:
     if windingRule == 0:
@@ -469,16 +469,16 @@ proc gradientLinear(at0, to0: Vec2) =
   ## Setup color for linear gradient.
   if fillMask > 0:
     let
-      at = (mat * vec3(at0, 1)).xy
-      to = (mat * vec3(to0, 1)).xy
+      at = (vec3(at0, 1)).xy
+      to = (vec3(to0, 1)).xy
     gradientK = toLineSpace(at, to, screen).clamp(0, 1)
 
 proc gradientRadial(at0, to0: Vec2) =
   ## Setup color for radial gradient.
   if fillMask > 0:
     let
-      at = (mat * vec3(at0, 1)).xy
-      to = (mat * vec3(to0, 1)).xy
+      at = (vec3(at0, 1)).xy
+      to = (vec3(to0, 1)).xy
       distance = (at - to).length()
     gradientK = ((at - screen).length() / distance).clamp(0, 1)
 
@@ -573,6 +573,7 @@ proc runCommands() =
   ## Runs a little command interpreter.
   var i = 0
   while true:
+
     let command = texelFetch(dataBuffer, i).x
     case command.int:
     of cmdExit:
@@ -647,17 +648,17 @@ proc runCommands() =
       )
       i += 5
 
-    of cmdSetMat:
-      mat[0, 0] = texelFetch(dataBuffer, i + 1).x
-      mat[0, 1] = texelFetch(dataBuffer, i + 2).x
-      mat[0, 2] = 0
-      mat[1, 0] = texelFetch(dataBuffer, i + 3).x
-      mat[1, 1] = texelFetch(dataBuffer, i + 4).x
-      mat[1, 2] = 0
-      mat[2, 0] = texelFetch(dataBuffer, i + 5).x
-      mat[2, 1] = texelFetch(dataBuffer, i + 6).x
-      mat[2, 2] = 1
-      i += 6
+    # of cmdSetMat:
+    #   mat[0, 0] = texelFetch(dataBuffer, i + 1).x
+    #   mat[0, 1] = texelFetch(dataBuffer, i + 2).x
+    #   mat[0, 2] = 0
+    #   mat[1, 0] = texelFetch(dataBuffer, i + 3).x
+    #   mat[1, 1] = texelFetch(dataBuffer, i + 4).x
+    #   mat[1, 2] = 0
+    #   mat[2, 0] = texelFetch(dataBuffer, i + 5).x
+    #   mat[2, 1] = texelFetch(dataBuffer, i + 6).x
+    #   mat[2, 2] = 1
+    #   i += 6
 
     of cmdM:
       M(
@@ -673,59 +674,59 @@ proc runCommands() =
       )
       i += 2
 
-    of cmdC:
-      C(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x,
-        texelFetch(dataBuffer, i + 3).x,
-        texelFetch(dataBuffer, i + 4).x,
-        texelFetch(dataBuffer, i + 5).x,
-        texelFetch(dataBuffer, i + 6).x
-      )
-      i += 6
+    # of cmdC:
+    #   C(
+    #     texelFetch(dataBuffer, i + 1).x,
+    #     texelFetch(dataBuffer, i + 2).x,
+    #     texelFetch(dataBuffer, i + 3).x,
+    #     texelFetch(dataBuffer, i + 4).x,
+    #     texelFetch(dataBuffer, i + 5).x,
+    #     texelFetch(dataBuffer, i + 6).x
+    #   )
+    #   i += 6
 
-    of cmdQ:
-      Q(
-        texelFetch(dataBuffer, i + 1).x,
-        texelFetch(dataBuffer, i + 2).x,
-        texelFetch(dataBuffer, i + 3).x,
-        texelFetch(dataBuffer, i + 4).x,
-      )
-      i += 4
+    # of cmdQ:
+    #   Q(
+    #     texelFetch(dataBuffer, i + 1).x,
+    #     texelFetch(dataBuffer, i + 2).x,
+    #     texelFetch(dataBuffer, i + 3).x,
+    #     texelFetch(dataBuffer, i + 4).x,
+    #   )
+    #   i += 4
 
-    of cmdz:
-      z()
+    # of cmdz:
+    #   z()
 
-    of cmdBoundCheck:
-      # Jump over code if screen not in bounds
-      var
-        minP: Vec2
-        maxP: Vec2
-      minP.x = texelFetch(dataBuffer, i + 1).x
-      minP.y = texelFetch(dataBuffer, i + 2).x
-      maxP.x = texelFetch(dataBuffer, i + 3).x
-      maxP.y = texelFetch(dataBuffer, i + 4).x
-      let label = texelFetch(dataBuffer, i + 5).x.int
-      i += 5
+    # of cmdBoundCheck:
+    #   # Jump over code if screen not in bounds
+    #   var
+    #     minP: Vec2
+    #     maxP: Vec2
+    #   minP.x = texelFetch(dataBuffer, i + 1).x
+    #   minP.y = texelFetch(dataBuffer, i + 2).x
+    #   maxP.x = texelFetch(dataBuffer, i + 3).x
+    #   maxP.y = texelFetch(dataBuffer, i + 4).x
+    #   let label = texelFetch(dataBuffer, i + 5).x.int
+    #   i += 5
 
-      # Compute pixel bounds.
-      let
-        matInv = mat.inverse()
-        screenInvA = (matInv * vec3(screen + vec2(0, 0), 1)).xy
-        screenInvB = (matInv * vec3(screen + vec2(1, 0), 1)).xy
-        screenInvC = (matInv * vec3(screen + vec2(1, 0), 1)).xy
-        screenInvD = (matInv * vec3(screen + vec2(0, 1), 1)).xy
-      var
-        minS: Vec2
-        maxS: Vec2
-      minS.x = min(min(screenInvA.x, screenInvB.x), min(screenInvC.x, screenInvD.x))
-      minS.y = min(min(screenInvA.y, screenInvB.y), min(screenInvC.y, screenInvD.y))
-      maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x))
-      maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y))
+    #   # Compute pixel bounds.
+    #   let
+    #     matInv = mat.inverse()
+    #     screenInvA = (matInv * vec3(screen + vec2(0, 0), 1)).xy
+    #     screenInvB = (matInv * vec3(screen + vec2(1, 0), 1)).xy
+    #     screenInvC = (matInv * vec3(screen + vec2(1, 0), 1)).xy
+    #     screenInvD = (matInv * vec3(screen + vec2(0, 1), 1)).xy
+    #   var
+    #     minS: Vec2
+    #     maxS: Vec2
+    #   minS.x = min(min(screenInvA.x, screenInvB.x), min(screenInvC.x, screenInvD.x))
+    #   minS.y = min(min(screenInvA.y, screenInvB.y), min(screenInvC.y, screenInvD.y))
+    #   maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x))
+    #   maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y))
 
-      when useBounds:
-        if not overlap(minS, maxS, minP, maxP):
-          i = label - 1
+    #   when useBounds:
+    #     if not overlap(minS, maxS, minP, maxP):
+    #       i = label - 1
 
     of cmdMaskStart:
       maskOn = true
@@ -798,7 +799,11 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
 
   crossCountMat = mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-  mat = mat3(0, 0, 0, 0, 0, 0, 0, 0, 0)
+  mat = mat3(
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+  )
 
   gradientK = 0
   prevGradientK = 0
@@ -816,6 +821,13 @@ proc svgMain*(gl_FragCoord: Vec4, fragColor: var Vec4) =
   let bias = 1E-4
   let offset = vec2(bias - 0.5, bias - 0.5)
   fragColor = runPixel(gl_FragCoord.xy + offset)
+
+
+  # fragColor = vec4(1,0,0,1)
+
+  # if gl_FragCoord.x > 100 and gl_FragCoord.x < 200 and
+  #   gl_FragCoord.y > 100 and gl_FragCoord.y < 200:
+  #     fragColor = vec4(0,1,0,1)
 
   # fragColor = blendNormalFloats(fragColor, vec4(1,0,0,topIndex/32))
 

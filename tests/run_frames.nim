@@ -1,5 +1,8 @@
 import cligen, imagediff, os, pixie, strformat, strutils, times
-import fidget2/loader, fidget2/schema
+import fidget2/loader, fidget2/schema, fidget2/perf
+
+when defined(benchy):
+  import benchy
 
 when defined(gpu):
   import fidget2/gpurender
@@ -53,13 +56,12 @@ proc main(r = "", e = "", l = 10000) =
     if r != "" and not frame.name.startsWith(r): continue
     if e != "" and frame.name != e: continue
 
-    echo frame.name, " --------------------------------- "
+    when not defined(benchy):
+      echo frame.name, " --------------------------------- "
 
     if firstTime and w in ["skia", "nanovg", "gpu_atlas", "gpu_atlas_full", "gpu", "gpu_vs_zpu"]:
       setupWindow(frame, offscreen = true)
       firstTime = false
-
-    let startTime = epochTime()
 
     proc drawFrame(frame: Node): Image =
       when defined(gpu):
@@ -73,7 +75,6 @@ proc main(r = "", e = "", l = 10000) =
         result = readGpuPixelsFromAtlas("screen", crop = false)
       elif defined(cpu):
         result = drawCompleteCpuFrame(frame)
-        result.toStraightAlpha()
       elif defined(zpu):
         result = drawCompleteZpuFrame(frame)
       elif defined(gpu_vs_zpu):
@@ -89,9 +90,18 @@ proc main(r = "", e = "", l = 10000) =
         result = readGpuPixelsFromScreen()
       elif defined(cpu2):
         result = drawCompleteFrame(frame)
-        result.toStraightAlpha()
+
+    when defined(benchy):
+      var mainFrame = frame
+      timeIt mainFrame.name, 100:
+        keep drawFrame(mainFrame)
+
+    let startTime = epochTime()
+    defaultBuffer.setLen(0)
 
     var image = drawFrame(frame)
+    perfMark "drawFrame"
+    #perfDump()
 
     let frameTime = epochTime() - startTime
 

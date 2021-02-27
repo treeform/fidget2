@@ -1,5 +1,22 @@
 import vmath
 
+
+proc blendAlphaPremul*(backdrop, source: float32): float32 =
+  source + (backdrop * (1.0 - source))
+
+proc blendNormalPremul*(backdrop, source: Vec4): Vec4 =
+  # if backdrop.w == 0:
+  #   return source
+  # if source.w == 1.0:
+  #   return source
+  # if source.w == 0:
+  #   return backdrop
+  let k = (1.0 - source.w)
+  result.x = source.x + (backdrop.x * k)
+  result.y = source.y + (backdrop.y * k)
+  result.z = source.z + (backdrop.z * k)
+  result.w = blendAlphaPremul(backdrop.w, source.w)
+
 proc screenBlend(backdrop, source: float32): float32 {.inline.} =
   1 - (1 - backdrop) * (1 - source)
 
@@ -77,7 +94,10 @@ proc alphaFix2(backdrop, source: Vec4): Vec4 =
   result.z /= result.w
 
 proc blendNormalFloats*(backdrop, source: Vec4): Vec4 {.inline.} =
-  result = alphaFix2(backdrop, source)
+  if source.w == 1.0:
+    return source
+  else:
+    return alphaFix2(backdrop, source)
 
 proc blendDarkenFloats*(backdrop, source: Vec4): Vec4 {.inline.} =
   result.x = min(backdrop.x, source.x)

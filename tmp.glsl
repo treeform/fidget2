@@ -32,72 +32,63 @@ float layerBlur;
 float x0;
 vec4 backdropColor;
 
-float Sat(vec4 C);
-void draw();
-float colorDodgeBlend(float backdrop, float source);
-vec4 blendColorDodgeFloats(vec4 backdrop, vec4 source);
-float zmod(float a, float b);
-float colorBurnBlend(float backdrop, float source);
-vec4 blendLinearDodgeFloats(vec4 backdrop, vec4 source);
-void C(float x1, float y1, float x2, float y2, float x, float y);
-vec4 blendLightenFloats(vec4 backdrop, vec4 source);
-vec4 blendHueFloats(vec4 backdrop, vec4 source);
-float toLineSpace(vec2 at, vec2 to, vec2 point);
-void z();
-void Q(float x1, float y1, float x, float y);
-void quadratic(vec2 p0, vec2 p1, vec2 p2);
-float pixelCross(vec2 a0, vec2 b0);
-void runCommands();
-vec4 alphaFix2(vec4 backdrop, vec4 source);
-void ClipColor(inout vec4 C);
-float pixelCover(vec2 a0, vec2 b0);
-vec4 blendDarkenFloats(vec4 backdrop, vec4 source);
-vec4 alphaFix(vec4 backdrop, vec4 source, vec4 mixed);
-vec4 runPixel(vec2 xy);
-vec4 blendSoftLightFloats(vec4 backdrop, vec4 source);
-void L(float x, float y);
 void finalColor(vec4 applyColor);
-vec4 blendMultiplyFloats(vec4 backdrop, vec4 source);
-vec4 blendLuminosityFloats(vec4 backdrop, vec4 source);
+void gradientRadial(vec2 at0, vec2 to0);
+void draw();
 float normPdf(float x, float sigma);
 void solidFill(float r, float g, float b, float a);
-void gradientRadial(vec2 at0, vec2 to0);
-float softLight(float backdrop, float source);
+float zmod(float a, float b);
 void gradientLinear(vec2 at0, vec2 to0);
-vec4 blendExclusionFloats(vec4 backdrop, vec4 source);
+float toLineSpace(vec2 at, vec2 to, vec2 point);
 void gradientStop(float k, float r, float g, float b, float a);
-float exclusionBlend(float backdrop, float source);
 vec4 blendNormalFloats(vec4 backdrop, vec4 source);
-float screenBlend(float backdrop, float source);
 void startPath(float rule);
-vec4 blendHardLightFloats(vec4 backdrop, vec4 source);
-vec4 SetSat(vec4 C, float s);
-vec4 blendLinearBurnFloats(vec4 backdrop, vec4 source);
-float hardLight(float backdrop, float source);
+float pixelCross(vec2 a0, vec2 b0);
+void runCommands();
 void textureFill(mat3 tMat, float tile, vec2 pos, vec2 size);
-bool overlap(vec2 minA, vec2 maxA, vec2 minB, vec2 maxB);
-vec2 interpolate(vec2 G1, vec2 G2, vec2 G3, vec2 G4, float t);
 float lineDir(vec2 a, vec2 b);
-vec4 blendSaturationFloats(vec4 backdrop, vec4 source);
-void bezier(vec2 A, vec2 B, vec2 C, vec2 D);
 void M(float x, float y);
+vec4 alphaFix2(vec4 backdrop, vec4 source);
+float pixelCover(vec2 a0, vec2 b0);
 void endPath();
-vec4 blendScreenFloats(vec4 backdrop, vec4 source);
-vec4 blendOverlayFloats(vec4 backdrop, vec4 source);
-vec4 blendDifferenceFloats(vec4 backdrop, vec4 source);
-float Lum(vec4 C);
-vec4 SetLum(vec4 C, float l);
-vec4 blendColorBurnFloats(vec4 backdrop, vec4 source);
-vec4 blendColorFloats(vec4 backdrop, vec4 source);
 void line(vec2 a0, vec2 b0);
+vec4 runPixel(vec2 xy);
+void L(float x, float y);
 
 
-float Sat(
-  vec4 C
+void finalColor(
+  vec4 applyColor
 ) {
-  float result;
-  result = max(max(C.x, C.y), C.z) - min(min(C.x, C.y), C.z);
-  return result;
+  if (maskOn) {
+    switch(blendMode) {
+    case 0:{
+      maskStack[maskStackTop] += applyColor.w;
+    }; break;
+    case 18:{
+      maskStack[maskStackTop] = 0.0;
+    }; break;
+    default: {
+      ;
+    }; break;
+    }
+  } else {
+    vec4 c = applyColor;
+
+    backdropColor = blendNormalFloats(backdropColor, c);
+  }
+}
+
+void gradientRadial(
+  vec2 at0,
+  vec2 to0
+) {
+  // Setup color for radial gradient.
+  if (0.0 < fillMask) {
+    vec2 at = (vec3(at0, 1.0)).xy;
+    vec2 to = (vec3(to0, 1.0)).xy;
+    float distance = length(at - to);
+    gradientK = clamp(length(at - screen) / distance, 0.0, 1.0);
+  }
 }
 
 void draw(
@@ -119,33 +110,26 @@ void draw(
   }
 }
 
-float colorDodgeBlend(
-  float backdrop,
-  float source
+float normPdf(
+  float x,
+  float sigma
 ) {
   float result;
-  if (backdrop == 0.0) {
-    result = 0.0;
-    return result;
-  } else if (source == 1.0) {
-    result = 1.0;
-    return result;
-  } else {
-    result = min(1.0, (backdrop) / (1.0 - source));
-    return result;
-  }
+  // Normal Probability Density Function (used for shadow and blurs)
+  result = float(0.39894 * exp(-0.5 * x * x / float(sigma * sigma)) / float(sigma));
+  return result;
 }
 
-vec4 blendColorDodgeFloats(
-  vec4 backdrop,
-  vec4 source
+void solidFill(
+  float r,
+  float g,
+  float b,
+  float a
 ) {
-  vec4 result;
-  result.x = colorDodgeBlend(backdrop.x, source.x);
-  result.y = colorDodgeBlend(backdrop.y, source.y);
-  result.z = colorDodgeBlend(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
+  // Set the source color.
+  if (0.0 < fillMask) {
+    finalColor(vec4(r, g, b, a * fillMask));
+  }
 }
 
 float zmod(
@@ -157,69 +141,16 @@ float zmod(
   return result;
 }
 
-float colorBurnBlend(
-  float backdrop,
-  float source
+void gradientLinear(
+  vec2 at0,
+  vec2 to0
 ) {
-  float result;
-  if (backdrop == 1.0) {
-    result = 1.0;
-    return result;
-  } else if (source == 0.0) {
-    result = 0.0;
-    return result;
-  } else {
-    result = float(1.0 - float(min(1.0, (1.0 - backdrop) / (source))));
-    return result;
+  // Setup color for linear gradient.
+  if (0.0 < fillMask) {
+    vec2 at = (vec3(at0, 1.0)).xy;
+    vec2 to = (vec3(to0, 1.0)).xy;
+    gradientK = clamp(toLineSpace(at, to, screen), 0.0, 1.0);
   }
-}
-
-vec4 blendLinearDodgeFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = backdrop.x + source.x;
-  result.y = backdrop.y + source.y;
-  result.z = backdrop.z + source.z;
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-void C(
-  float x1,
-  float y1,
-  float x2,
-  float y2,
-  float x,
-  float y
-) {
-  // SVG cubic Curve command.
-  bezier(vec2(x0, y0), vec2(x1, y1), vec2(x2, y2), vec2(x, y));
-  x0 = x;
-  y0 = y;
-}
-
-vec4 blendLightenFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = max(backdrop.x, source.x);
-  result.y = max(backdrop.y, source.y);
-  result.z = max(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 blendHueFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = SetLum(SetSat(source, Sat(backdrop)), Lum(backdrop));
-  result = alphaFix(backdrop, source, result);
-  return result;
 }
 
 float toLineSpace(
@@ -235,48 +166,48 @@ float toLineSpace(
   return result;
 }
 
-void z(
+void gradientStop(
+  float k,
+  float r,
+  float g,
+  float b,
+  float a
 ) {
-  // SVG style end of shape command.
-  line(vec2(x0, y0), vec2(x1, y1));
+  // Compute a gradient stop.
+  if (0.0 < fillMask) {
+    vec4 gradientColor = vec4(r, g, b, a);
+    if ((prevGradientK < gradientK) && (gradientK <= k)) {
+      float betweenColors = (gradientK - prevGradientK) / (k - prevGradientK);
+      vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
+      colorG.w *= fillMask;
+      finalColor(colorG);
+    }
+    prevGradientK = k;
+    prevGradientColor = gradientColor;
+  }
 }
 
-void Q(
-  float x1,
-  float y1,
-  float x,
-  float y
+vec4 blendNormalFloats(
+  vec4 backdrop,
+  vec4 source
 ) {
-  // SVG Quadratic curve command.
-  quadratic(vec2(x0, y0), vec2(x1, y1), vec2(x, y));
-  x0 = x;
-  y0 = y;
+  vec4 result;
+  if (float(source.w) == 1.0) {
+    result = source;
+    return result;
+  } else {
+    result = alphaFix2(backdrop, source);
+    return result;
+  }
 }
 
-void quadratic(
-  vec2 p0,
-  vec2 p1,
-  vec2 p2
+void startPath(
+  float rule
 ) {
-  // Turn a cubic curve into N lines.
-  float devx = float(p0.x) - 2.0 * float(p1.x) + float(p2.x);
-  float devy = float(p0.y) - 2.0 * float(p1.y) + float(p2.y);
-  float devsq = devx * devx + devy * devy;
-  if (devsq < 0.333) {
-    line(p0, p2);
-    return;
-  }
-  float tol = 3.0;
-  float n = 1.0 + floor(sqrt(sqrt(tol * devsq)));
-  vec2 p = p0;
-  float nrecip = 1.0 / n;
-  float t = 0.0;
-  for(int i = 0; i < int(n); i++) {
-    t += nrecip;
-    vec2 pn = mix(mix(p0, p1, float(t)), mix(p1, p2, float(t)), float(t));
-    line(p, pn);
-    p = pn;
-  }
+  // Clear the status of things and start a new path.
+  crossCountMat = mat4(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  fillMask = 0.0;
+  windingRule = int(rule);
 }
 
 float pixelCross(
@@ -379,18 +310,6 @@ void runCommands(
       gradientStop(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x, texelFetch(dataBuffer, i + 5).x);
       i += 5;
     }; break;
-    case 3:{
-      mat[0][0] = texelFetch(dataBuffer, i + 1).x;
-      mat[0][1] = texelFetch(dataBuffer, i + 2).x;
-      mat[0][2] = 0.0;
-      mat[1][0] = texelFetch(dataBuffer, i + 3).x;
-      mat[1][1] = texelFetch(dataBuffer, i + 4).x;
-      mat[1][2] = 0.0;
-      mat[2][0] = texelFetch(dataBuffer, i + 5).x;
-      mat[2][1] = texelFetch(dataBuffer, i + 6).x;
-      mat[2][2] = 1.0;
-      i += 6;
-    }; break;
     case 10:{
       M(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
       i += 2;
@@ -398,41 +317,6 @@ void runCommands(
     case 11:{
       L(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x);
       i += 2;
-    }; break;
-    case 12:{
-      C(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x, texelFetch(dataBuffer, i + 5).x, texelFetch(dataBuffer, i + 6).x);
-      i += 6;
-    }; break;
-    case 13:{
-      Q(texelFetch(dataBuffer, i + 1).x, texelFetch(dataBuffer, i + 2).x, texelFetch(dataBuffer, i + 3).x, texelFetch(dataBuffer, i + 4).x);
-      i += 4;
-    }; break;
-    case 14:{
-      z();
-    }; break;
-    case 15:{
-      vec2 minP = vec2(0.0);
-      vec2 maxP = vec2(0.0);
-      minP.x = texelFetch(dataBuffer, i + 1).x;
-      minP.y = texelFetch(dataBuffer, i + 2).x;
-      maxP.x = texelFetch(dataBuffer, i + 3).x;
-      maxP.y = texelFetch(dataBuffer, i + 4).x;
-      int label = int(texelFetch(dataBuffer, i + 5).x);
-      i += 5;
-      mat3 matInv = inverse(mat);
-      vec2 screenInvA = (matInv * vec3(screen + vec2(0.0, 0.0), 1.0)).xy;
-      vec2 screenInvB = (matInv * vec3(screen + vec2(1.0, 0.0), 1.0)).xy;
-      vec2 screenInvC = (matInv * vec3(screen + vec2(1.0, 0.0), 1.0)).xy;
-      vec2 screenInvD = (matInv * vec3(screen + vec2(0.0, 1.0), 1.0)).xy;
-      vec2 minS = vec2(0.0);
-      vec2 maxS = vec2(0.0);
-      minS.x = min(min(screenInvA.x, screenInvB.x), min(screenInvC.x, screenInvD.x));
-      minS.y = min(min(screenInvA.y, screenInvB.y), min(screenInvC.y, screenInvD.y));
-      maxS.x = max(max(screenInvA.x, screenInvB.x), max(screenInvC.x, screenInvD.x));
-      maxS.y = max(max(screenInvA.y, screenInvB.y), max(screenInvC.y, screenInvD.y));
-      if (! (overlap(minS, maxS, minP, maxP))) {
-        i = label - 1;
-      }
     }; break;
     case 16:{
       maskOn = true;
@@ -484,445 +368,6 @@ void runCommands(
     }; break;
     }
     i += 1;
-  }
-}
-
-vec4 alphaFix2(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
-  if (result.w == 0.0) {
-    return result;
-  }
-  float t01 = source.w;
-  float t2 = (1.0 - source.w) * (backdrop.w);
-  result.x = t01 * source.x + t2 * backdrop.x;
-  result.y = t01 * source.y + t2 * backdrop.y;
-  result.z = t01 * source.z + t2 * backdrop.z;
-  result.x /= result.w;
-  result.y /= result.w;
-  result.z /= result.w;
-  return result;
-}
-
-void ClipColor(
-  inout vec4 C
-) {
-  float L = Lum(C);
-  float n = min(min(C.x, C.y), C.z);
-  float x = max(max(C.x, C.y), C.z);
-  if (n < 0.0) {
-    C = vec4(L) + ((C - vec4(L)) * (L)) / (L - n);
-  }
-  if (1.0 < x) {
-    C = vec4(L) + ((C - vec4(L)) * (1.0 - L)) / (x - L);
-  }
-}
-
-float pixelCover(
-  vec2 a0,
-  vec2 b0
-) {
-  float result;
-  // Returns the amount of area a given segment sweeps to the right
-  // in a [0,0 to 1,1] box.
-  vec2 a = a0;
-  vec2 b = b0;
-  vec2 aI = vec2(0.0);
-  vec2 bI = vec2(0.0);
-  float area = 0.0;
-  if (b.y < a.y) {
-    vec2 tmp = a;
-    a = b;
-    b = tmp;
-  }
-  if (((b.y < 0.0) || (1.0 < a.y) || 1.0 <= a.x && 1.0 <= b.x) || (a.y == b.y)) {
-    result = 0.0;
-    return result;
-  } else if (((a.x < 0.0) && (b.x < 0.0)) || (a.x == b.x)) {
-    result = (1.0 - clamp(a.x, 0.0, 1.0)) * (min(b.y, 1.0) - max(a.y, 0.0));
-    return result;
-  } else {
-    float mm = (b.y - a.y) / (b.x - a.x);
-    float bb = a.y - mm * a.x;
-    if (((0.0 <= a.x) && (a.x <= 1.0) && 0.0 <= a.y) && (a.y <= 1.0)) {
-      aI = a;
-    } else {
-      aI = vec2((0.0 - bb) / (mm), 0.0);
-      if (aI.x < 0.0) {
-        float y = mm * 0.0 + bb;
-        area += clamp(min(bb, 1.0) - max(a.y, 0.0), 0.0, 1.0);
-        aI = vec2(0.0, clamp(y, 0.0, 1.0));
-      } else if (1.0 < aI.x) {
-        float y = mm * 1.0 + bb;
-        aI = vec2(1.0, clamp(y, 0.0, 1.0));
-      }
-    }
-    if (((0.0 <= b.x) && (b.x <= 1.0) && 0.0 <= b.y) && (b.y <= 1.0)) {
-      bI = b;
-    } else {
-      bI = vec2((1.0 - bb) / (mm), 1.0);
-      if (bI.x < 0.0) {
-        float y = mm * 0.0 + bb;
-        area += clamp(min(b.y, 1.0) - max(bb, 0.0), 0.0, 1.0);
-        bI = vec2(0.0, clamp(y, 0.0, 1.0));
-      } else if (1.0 < bI.x) {
-        float y = mm * 1.0 + bb;
-        bI = vec2(1.0, clamp(y, 0.0, 1.0));
-      }
-    }
-  }
-  area += ((1.0 - aI.x + 1.0 - bI.x) / (2.0)) * (bI.y - aI.y);
-  result = area;
-  return result;
-}
-
-vec4 blendDarkenFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = min(backdrop.x, source.x);
-  result.y = min(backdrop.y, source.y);
-  result.z = min(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 alphaFix(
-  vec4 backdrop,
-  vec4 source,
-  vec4 mixed
-) {
-  vec4 result;
-  result.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
-  if (result.w == 0.0) {
-    return result;
-  }
-  float t0 = (source.w) * (1.0 - backdrop.w);
-  float t1 = source.w * backdrop.w;
-  float t2 = (1.0 - source.w) * (backdrop.w);
-  result.x = t0 * source.x + t1 * mixed.x + t2 * backdrop.x;
-  result.y = t0 * source.y + t1 * mixed.y + t2 * backdrop.y;
-  result.z = t0 * source.z + t1 * mixed.z + t2 * backdrop.z;
-  result.x /= result.w;
-  result.y /= result.w;
-  result.z /= result.w;
-  return result;
-}
-
-vec4 runPixel(
-  vec2 xy
-) {
-  vec4 result;
-  // Runs commands for a single pixel.
-  screen = xy;
-  backdropColor = vec4(0.0, 0.0, 0.0, 0.0);
-  runCommands();
-  result = backdropColor;
-  return result;
-}
-
-vec4 blendSoftLightFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = softLight(backdrop.x, source.x);
-  result.y = softLight(backdrop.y, source.y);
-  result.z = softLight(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-void L(
-  float x,
-  float y
-) {
-  // SVG style Line command.
-  line(vec2(x0, y0), vec2(x, y));
-  x0 = x;
-  y0 = y;
-}
-
-void finalColor(
-  vec4 applyColor
-) {
-  if (maskOn) {
-    switch(blendMode) {
-    case 0:{
-      maskStack[maskStackTop] += applyColor.w;
-    }; break;
-    case 18:{
-      maskStack[maskStackTop] = 0.0;
-    }; break;
-    default: {
-      ;
-    }; break;
-    }
-  } else {
-    vec4 c = applyColor;
-    c.w = c.w * maskStack[maskStackTop];
-    if (blendMode == 0) {
-      backdropColor = blendNormalFloats(backdropColor, c);
-    } else {
-      switch(blendMode) {
-      case 1:{
-        backdropColor = blendDarkenFloats(backdropColor, c);
-      }; break;
-      case 2:{
-        backdropColor = blendMultiplyFloats(backdropColor, c);
-      }; break;
-      case 3:{
-        backdropColor = blendLinearBurnFloats(backdropColor, c);
-      }; break;
-      case 4:{
-        backdropColor = blendColorBurnFloats(backdropColor, c);
-      }; break;
-      case 5:{
-        backdropColor = blendLightenFloats(backdropColor, c);
-      }; break;
-      case 6:{
-        backdropColor = blendScreenFloats(backdropColor, c);
-      }; break;
-      case 7:{
-        backdropColor = blendLinearDodgeFloats(backdropColor, c);
-      }; break;
-      case 8:{
-        backdropColor = blendColorDodgeFloats(backdropColor, c);
-      }; break;
-      case 9:{
-        backdropColor = blendOverlayFloats(backdropColor, c);
-      }; break;
-      case 10:{
-        backdropColor = blendSoftLightFloats(backdropColor, c);
-      }; break;
-      case 11:{
-        backdropColor = blendHardLightFloats(backdropColor, c);
-      }; break;
-      case 12:{
-        backdropColor = blendDifferenceFloats(backdropColor, c);
-      }; break;
-      case 13:{
-        backdropColor = blendExclusionFloats(backdropColor, c);
-      }; break;
-      case 16:{
-        backdropColor = blendColorFloats(backdropColor, c);
-      }; break;
-      case 17:{
-        backdropColor = blendLuminosityFloats(backdropColor, c);
-      }; break;
-      case 14:{
-        backdropColor = blendHueFloats(backdropColor, c);
-      }; break;
-      case 15:{
-        backdropColor = blendSaturationFloats(backdropColor, c);
-      }; break;
-      default: {
-        ;
-      }; break;
-      }
-    }
-  }
-}
-
-vec4 blendMultiplyFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = backdrop.x * source.x;
-  result.y = backdrop.y * source.y;
-  result.z = backdrop.z * source.z;
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 blendLuminosityFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = SetLum(backdrop, Lum(source));
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-float normPdf(
-  float x,
-  float sigma
-) {
-  float result;
-  // Normal Probability Density Function (used for shadow and blurs)
-  result = float(0.39894 * exp(-0.5 * x * x / float(sigma * sigma)) / float(sigma));
-  return result;
-}
-
-void solidFill(
-  float r,
-  float g,
-  float b,
-  float a
-) {
-  // Set the source color.
-  if (0.0 < fillMask) {
-    finalColor(vec4(r, g, b, a * fillMask));
-  }
-}
-
-void gradientRadial(
-  vec2 at0,
-  vec2 to0
-) {
-  // Setup color for radial gradient.
-  if (0.0 < fillMask) {
-    vec2 at = (mat * vec3(at0, 1.0)).xy;
-    vec2 to = (mat * vec3(to0, 1.0)).xy;
-    float distance = length(at - to);
-    gradientK = clamp(length(at - screen) / distance, 0.0, 1.0);
-  }
-}
-
-float softLight(
-  float backdrop,
-  float source
-) {
-  float result;
-  result = // Pegtop
-(1.0 - 2.0 * source) * (backdrop) * backdrop + 2.0 * source * backdrop;
-  return result;
-}
-
-void gradientLinear(
-  vec2 at0,
-  vec2 to0
-) {
-  // Setup color for linear gradient.
-  if (0.0 < fillMask) {
-    vec2 at = (mat * vec3(at0, 1.0)).xy;
-    vec2 to = (mat * vec3(to0, 1.0)).xy;
-    gradientK = clamp(toLineSpace(at, to, screen), 0.0, 1.0);
-  }
-}
-
-vec4 blendExclusionFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = exclusionBlend(backdrop.x, source.x);
-  result.y = exclusionBlend(backdrop.y, source.y);
-  result.z = exclusionBlend(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-void gradientStop(
-  float k,
-  float r,
-  float g,
-  float b,
-  float a
-) {
-  // Compute a gradient stop.
-  if (0.0 < fillMask) {
-    vec4 gradientColor = vec4(r, g, b, a);
-    if ((prevGradientK < gradientK) && (gradientK <= k)) {
-      float betweenColors = (gradientK - prevGradientK) / (k - prevGradientK);
-      vec4 colorG = mix(prevGradientColor, gradientColor, betweenColors);
-      colorG.w *= fillMask;
-      finalColor(colorG);
-    }
-    prevGradientK = k;
-    prevGradientColor = gradientColor;
-  }
-}
-
-float exclusionBlend(
-  float backdrop,
-  float source
-) {
-  float result;
-  result = backdrop + source - 2.0 * backdrop * source;
-  return result;
-}
-
-vec4 blendNormalFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = alphaFix2(backdrop, source);
-  return result;
-}
-
-float screenBlend(
-  float backdrop,
-  float source
-) {
-  float result;
-  result = 1.0 - (1.0 - backdrop) * (1.0 - source);
-  return result;
-}
-
-void startPath(
-  float rule
-) {
-  // Clear the status of things and start a new path.
-  crossCountMat = mat4(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  fillMask = 0.0;
-  windingRule = int(rule);
-}
-
-vec4 blendHardLightFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = hardLight(backdrop.x, source.x);
-  result.y = hardLight(backdrop.y, source.y);
-  result.z = hardLight(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 SetSat(
-  vec4 C,
-  float s
-) {
-  vec4 result;
-  float satC = Sat(C);
-  if (0.0 < satC) {
-    result = (C - vec4(min(min(C.x, C.y), C.z))) * (s) / satC;
-    return result;
-  }
-}
-
-vec4 blendLinearBurnFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = backdrop.x + source.x - 1.0;
-  result.y = backdrop.y + source.y - 1.0;
-  result.z = backdrop.z + source.z - 1.0;
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-float hardLight(
-  float backdrop,
-  float source
-) {
-  float result;
-  if (float(source) <= 0.5) {
-    result = backdrop * 2.0 * source;
-    return result;
-  } else {
-    result = screenBlend(backdrop, 2.0 * source - 1.0);
-    return result;
   }
 }
 
@@ -1023,35 +468,6 @@ void textureFill(
   }
 }
 
-bool overlap(
-  vec2 minA,
-  vec2 maxA,
-  vec2 minB,
-  vec2 maxB
-) {
-  bool result;
-  // Test overlap: rect vs rect.
-  result = ((minB.x <= maxA.x) && (minA.x <= maxB.x) && minB.y <= maxA.y) && (minA.y <= maxB.y);
-  return result;
-}
-
-vec2 interpolate(
-  vec2 G1,
-  vec2 G2,
-  vec2 G3,
-  vec2 G4,
-  float t
-) {
-  vec2 result;
-  // Solve the cubic bezier interpolation with 4 points.
-  vec2 A = G4 - G1 + (3.0) * (G2 - G3);
-  vec2 B = (3.0) * (G1 - 2.0 * G2 + G3);
-  vec2 C = (3.0) * (G2 - G1);
-  vec2 D = G1;
-  result = (t) * ((t) * (t * A + B) + C) + D;
-  return result;
-}
-
 float lineDir(
   vec2 a,
   vec2 b
@@ -1067,33 +483,6 @@ float lineDir(
   }
 }
 
-vec4 blendSaturationFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = SetLum(SetSat(backdrop, Sat(source)), Lum(backdrop));
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-void bezier(
-  vec2 A,
-  vec2 B,
-  vec2 C,
-  vec2 D
-) {
-  // Turn a cubic curve into N lines.
-  vec2 p = A;
-  float dist = length(A - B) + length(B - C) + length(C - D);
-  int discretization = clamp(int(float(dist) * 0.5), 1, 20);
-  for(int t = 1; t <= discretization; t++) {
-    vec2 q = interpolate(A, B, C, D, float(t) / float(discretization));
-    line(p, q);
-    p = q;
-  }
-}
-
 void M(
   float x,
   float y
@@ -1105,89 +494,88 @@ void M(
   y0 = y;
 }
 
+vec4 alphaFix2(
+  vec4 backdrop,
+  vec4 source
+) {
+  vec4 result;
+  result.w = float(float(source.w) + (float(backdrop.w)) * (1.0 - float(source.w)));
+  if (result.w == 0.0) {
+    return result;
+  }
+  float t01 = source.w;
+  float t2 = (1.0 - source.w) * (backdrop.w);
+  result.x = t01 * source.x + t2 * backdrop.x;
+  result.y = t01 * source.y + t2 * backdrop.y;
+  result.z = t01 * source.z + t2 * backdrop.z;
+  result.x /= result.w;
+  result.y /= result.w;
+  result.z /= result.w;
+  return result;
+}
+
+float pixelCover(
+  vec2 a0,
+  vec2 b0
+) {
+  float result;
+  // Returns the amount of area a given segment sweeps to the right
+  // in a [0,0 to 1,1] box.
+  vec2 a = a0;
+  vec2 b = b0;
+  vec2 aI = vec2(0.0);
+  vec2 bI = vec2(0.0);
+  float area = 0.0;
+  if (b.y < a.y) {
+    vec2 tmp = a;
+    a = b;
+    b = tmp;
+  }
+  if (((b.y < 0.0) || (1.0 < a.y) || 1.0 <= a.x && 1.0 <= b.x) || (a.y == b.y)) {
+    result = 0.0;
+    return result;
+  } else if (((a.x < 0.0) && (b.x < 0.0)) || (a.x == b.x)) {
+    result = (1.0 - clamp(a.x, 0.0, 1.0)) * (min(b.y, 1.0) - max(a.y, 0.0));
+    return result;
+  } else {
+    float mm = (b.y - a.y) / (b.x - a.x);
+    float bb = a.y - mm * a.x;
+    if (((0.0 <= a.x) && (a.x <= 1.0) && 0.0 <= a.y) && (a.y <= 1.0)) {
+      aI = a;
+    } else {
+      aI = vec2((0.0 - bb) / (mm), 0.0);
+      if (aI.x < 0.0) {
+        float y = mm * 0.0 + bb;
+        area += clamp(min(bb, 1.0) - max(a.y, 0.0), 0.0, 1.0);
+        aI = vec2(0.0, clamp(y, 0.0, 1.0));
+      } else if (1.0 < aI.x) {
+        float y = mm * 1.0 + bb;
+        aI = vec2(1.0, clamp(y, 0.0, 1.0));
+      }
+    }
+    if (((0.0 <= b.x) && (b.x <= 1.0) && 0.0 <= b.y) && (b.y <= 1.0)) {
+      bI = b;
+    } else {
+      bI = vec2((1.0 - bb) / (mm), 1.0);
+      if (bI.x < 0.0) {
+        float y = mm * 0.0 + bb;
+        area += clamp(min(b.y, 1.0) - max(bb, 0.0), 0.0, 1.0);
+        bI = vec2(0.0, clamp(y, 0.0, 1.0));
+      } else if (1.0 < bI.x) {
+        float y = mm * 1.0 + bb;
+        bI = vec2(1.0, clamp(y, 0.0, 1.0));
+      }
+    }
+  }
+  area += ((1.0 - aI.x + 1.0 - bI.x) / (2.0)) * (bI.y - aI.y);
+  result = area;
+  return result;
+}
+
 void endPath(
 ) {
   // SVG style end path command.
   draw();
-}
-
-vec4 blendScreenFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = screenBlend(backdrop.x, source.x);
-  result.y = screenBlend(backdrop.y, source.y);
-  result.z = screenBlend(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 blendOverlayFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = hardLight(source.x, backdrop.x);
-  result.y = hardLight(source.y, backdrop.y);
-  result.z = hardLight(source.z, backdrop.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 blendDifferenceFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = abs(backdrop.x - source.x);
-  result.y = abs(backdrop.y - source.y);
-  result.z = abs(backdrop.z - source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-float Lum(
-  vec4 C
-) {
-  float result;
-  result = float(0.3 * float(C.x) + 0.59 * float(C.y) + 0.11 * float(C.z));
-  return result;
-}
-
-vec4 SetLum(
-  vec4 C,
-  float l
-) {
-  vec4 result;
-  float d = l - Lum(C);
-  result.x = C.x + d;
-  result.y = C.y + d;
-  result.z = C.z + d;
-  ClipColor(result);
-  return result;
-}
-
-vec4 blendColorBurnFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result.x = colorBurnBlend(backdrop.x, source.x);
-  result.y = colorBurnBlend(backdrop.y, source.y);
-  result.z = colorBurnBlend(backdrop.z, source.z);
-  result = alphaFix(backdrop, source, result);
-  return result;
-}
-
-vec4 blendColorFloats(
-  vec4 backdrop,
-  vec4 source
-) {
-  vec4 result;
-  result = SetLum(source, Lum(backdrop));
-  result = alphaFix(backdrop, source, result);
-  return result;
 }
 
 void line(
@@ -1195,8 +583,8 @@ void line(
   vec2 b0
 ) {
   // Draw the lines based on windingRule.
-  vec2 a1 = (mat * vec3(a0, 1.0)).xy - screen;
-  vec2 b1 = (mat * vec3(b0, 1.0)).xy - screen;
+  vec2 a1 = (vec3(a0, 1.0)).xy - screen;
+  vec2 b1 = (vec3(b0, 1.0)).xy - screen;
   if (windingRule == 0) {
     a1 += vec2(0.125, 0.125);
     b1 += vec2(0.125, 0.125);
@@ -1221,6 +609,28 @@ void line(
     fillMask += area * lineDir(a1, b1);
   }
 }
+
+vec4 runPixel(
+  vec2 xy
+) {
+  vec4 result;
+  // Runs commands for a single pixel.
+  screen = xy;
+  backdropColor = vec4(0.0, 0.0, 0.0, 0.0);
+  runCommands();
+  result = backdropColor;
+  return result;
+}
+
+void L(
+  float x,
+  float y
+) {
+  // SVG style Line command.
+  line(vec2(x0, y0), vec2(x, y));
+  x0 = x;
+  y0 = y;
+}
 layout(origin_upper_left) in vec4 gl_FragCoord;
 out vec4 fragColor;
 
@@ -1235,7 +645,7 @@ void main() {
   y1 = 0.0;
   topIndex = 0.0;
   crossCountMat = mat4(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-  mat = mat3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+  mat = mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
   gradientK = 0.0;
   prevGradientK = 0.0;
   prevGradientColor = vec4(0.0, 0.0, 0.0, 0.0);
