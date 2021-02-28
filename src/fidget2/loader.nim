@@ -61,7 +61,7 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
 
   let
     url = "https://api.figma.com/v1/files/" & fileKey & "/images"
-    data = fetch(url, figmaHeaders()) #newFigmaClient().getContent(url)
+    data = fetch(url, figmaHeaders())
     json = parseJson(data)
   for imageRef in imagesUsed:
     let url = json["meta"]["images"][imageRef].getStr()
