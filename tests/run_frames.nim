@@ -1,4 +1,4 @@
-import cligen, imagediff, os, pixie, strformat, strutils, times
+import cligen, os, pixie, strformat, strutils, times
 import fidget2/loader, fidget2/schema, fidget2/perf
 
 when defined(benchy):
@@ -119,7 +119,7 @@ proc main(r = "", e = "", l = 10000) =
         master.writeFile("tests/frames/zpu/" & frame.name & ".png")
       else:
         master = readImage(&"tests/frames/masters/{frame.name}.png")
-      (diffScore, diffImage) = imageDiff(master, image)
+      (diffScore, diffImage) = diff(master, image)
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
 
