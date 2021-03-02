@@ -61,7 +61,7 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
 
   let
     url = "https://api.figma.com/v1/files/" & fileKey & "/images"
-    data = fetch(url, figmaHeaders())
+    data = fetch(url, headers = figmaHeaders())
     json = parseJson(data)
   for imageRef in imagesUsed:
     let url = json["meta"]["images"][imageRef].getStr()
@@ -137,7 +137,7 @@ proc downloadFigmaFile(fileKey: string) =
     var data: string
     try:
       let url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
-      data = fetch(url, figmaHeaders())
+      data = fetch(url, headers = figmaHeaders())
     except:
       echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
       useCached = true
@@ -161,7 +161,7 @@ proc downloadFigmaFile(fileKey: string) =
   try:
     let
       url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
-      data = fetch(url, figmaHeaders())
+      data = fetch(url, headers = figmaHeaders())
       liveFile = parseFigmaFile(data)
       json = data.fromJson(JsonNode)
     # Download images and fonts before writing the cached Figma file.
