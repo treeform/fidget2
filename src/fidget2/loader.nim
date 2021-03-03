@@ -4,7 +4,7 @@ var
   figmaFile*: FigmaFile                ## Main figma file.
   globTree*: GlobTree[Node]            ## Glob tree for faster find access.
 
-proc figmaHeaders(): seq[(string, string)] =
+proc figmaHeaders(): seq[Header] =
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
 
 proc figmaFilePath(fileKey: string): string =
