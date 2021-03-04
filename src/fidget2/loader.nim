@@ -26,7 +26,10 @@ proc loadFigmaFile(fileKey: string): FigmaFile =
 proc downloadImage(imageRef, url: string) =
   if not fileExists(figmaImagePath(imageRef)):
     echo "Downloading ", url
-    writeFile(figmaImagePath(imageRef), fetch(url))
+    let data = fetch(url)
+    if data == "":
+      raise newException(FidgetError, "Downloading " & url & " failed")
+    writeFile(figmaImagePath(imageRef), data)
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
   if not dirExists("figma/images"):
@@ -62,7 +65,9 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
   let
     url = "https://api.figma.com/v1/files/" & fileKey & "/images"
     data = fetch(url, headers = figmaHeaders())
-    json = parseJson(data)
+  if data == "":
+    raise newException(FidgetError, "Downloading Figma file image list failed")
+  let json = parseJson(data)
   for imageRef in imagesUsed:
     let url = json["meta"]["images"][imageRef].getStr()
     downloadImage(imageRef, url)
@@ -70,10 +75,10 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
 proc downloadFont(fontPostScriptName, url: string) =
   if not fileExists(figmaFontPath(fontPostScriptName)):
     echo "Downloading ", url
-    writeFile(
-      figmaFontPath(fontPostScriptName),
-      fetch(url)
-    )
+    let data = fetch(url)
+    if data == "":
+      raise newException(FidgetError, "Downloading " & url & " failed")
+    writeFile(figmaFontPath(fontPostScriptName), data)
 
 proc downloadFonts(figmaFile: FigmaFile) =
   if not dirExists("figma/fonts"):
@@ -104,13 +109,14 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   # We need to download one or more fonts
 
-  let
-    csv = fetch(
-      "https://raw.githubusercontent.com/treeform/" &
-      "freefrontfinder/master/fonts.csv"
-    )
-    lines = csv.split("\n")
+  let csv = fetch(
+    "https://raw.githubusercontent.com/treeform/" &
+    "freefrontfinder/master/fonts.csv"
+  )
+  if csv == "":
+    raise newException(PuppyError, "Downloading font finder failed")
 
+  let lines = csv.split("\n")
   for fontPostScriptName in fontsUsed:
     let fontFilePath = figmaFontPath(fontPostScriptName)
 
@@ -134,15 +140,14 @@ proc downloadFigmaFile(fileKey: string) =
   var useCached: bool
   if fileExists(figmaFilePath) and fileExists(lastModifiedPath):
     # If we have a saved Figma file, is it up to date?
-    var data: string
-    try:
-      let url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
+    let
+      url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
       data = fetch(url, headers = figmaHeaders())
-    except:
+    if data == "":
       echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
       useCached = true
 
-    if data.len > 0:
+    if data != ""
       try:
         let liveFile = parseFigmaFile(data)
         if liveFile.lastModified == readFile(lastModifiedPath):
@@ -158,10 +163,11 @@ proc downloadFigmaFile(fileKey: string) =
     return
 
   # Download and save the latest Figma file
-  try:
+  let
+    url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
+    data = fetch(url, headers = figmaHeaders())
+  if data != "":
     let
-      url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
-      data = fetch(url, headers = figmaHeaders())
       liveFile = parseFigmaFile(data)
       json = data.fromJson(JsonNode)
     # Download images and fonts before writing the cached Figma file.
@@ -173,10 +179,10 @@ proc downloadFigmaFile(fileKey: string) =
     writeFile(figmaFilePath, pretty(json))
     writeFile(lastModifiedPath, liveFile.lastModified)
     echo "Downloaded latest Figma file"
-  except:
+  else:
     raise newException(
       FidgetError,
-      "Error updating to latest Figma file: " & getCurrentExceptionMsg()
+      "Error downloading Figma file: " & getCurrentExceptionMsg()
     )
 
 proc rebuildGlobTree() =

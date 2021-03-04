@@ -53,7 +53,7 @@ proc gradientPut(effects: Image, x, y: int, a: float32, paint: schema.Paint) =
       gs2.color,
       (a - gs1.position) / (gs2.position - gs1.position)
     )
-  effects.setRgbaUnsafe(x, y, color.rgba.toPremultipliedAlpha())
+  effects.setRgbaUnsafe(x, y, color.rgbx)
 
 proc applyPaint(
   mask: Image,
@@ -204,7 +204,7 @@ proc applyPaint(
 
   of schema.PaintKind.pkSolid:
     var color = paint.color
-    effects.fill(color.rgba.toPremultipliedAlpha())
+    effects.fill(color.rgbx)
 
   ## Apply opacity
   if paint.opacity != 1.0:
@@ -228,7 +228,7 @@ proc applyDropShadowEffect(effect: Effect, node: Node) =
   var shadow = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
   shadow.draw(node.selfAndChildrenMask(), -node.pixelBox.xy, bmOverwrite)
   shadow = shadow.shadow(
-    effect.offset, effect.spread, effect.radius, effect.color.rgba.toPremultipliedAlpha())
+    effect.offset, effect.spread, effect.radius, effect.color.rgbx)
   shadow.draw(node.pixels)
   node.pixels = shadow
 
@@ -241,7 +241,7 @@ proc applyInnerShadowEffect(effect: Effect, node: Node, fillMask: Image) =
   shadow.blur(effect.radius)
   # Color the inverted blurred fill.
   var color = newImage(shadow.width, shadow.height)
-  color.fill(effect.color.rgba.toPremultipliedAlpha())
+  color.fill(effect.color.rgbx)
   color.draw(shadow, blendMode = bmMask)
   # Only have the shadow be on the fill.
   color.draw(fillMask, blendMode = bmMask)
