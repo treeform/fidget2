@@ -147,7 +147,7 @@ proc downloadFigmaFile(fileKey: string) =
       echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
       useCached = true
 
-    if data != ""
+    if data != "":
       try:
         let liveFile = parseFigmaFile(data)
         if liveFile.lastModified == readFile(lastModifiedPath):

@@ -1,12 +1,10 @@
 import fidget2
 
-use("https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa/")
+# use("https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa/")
 
-mainFrame = "Counter"
+# var frame = figma.document.find("Counter")
 
-var frame = figma.document.find(mainFrame)
-
-frame.find("MainArea").name == "MainArea"
+# frame.find("MainArea").name == "MainArea"
 
 # frame.findAll("Input").len > 2
 # frame.find("Booking").findAll("Input").len == 2
