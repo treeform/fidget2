@@ -207,7 +207,7 @@ template onClick*(body: untyped) =
     proc() =
       if mouse.click:
         for node in globTree.findAll(thisSelector):
-          if node.rect.overlaps(mousePos):
+          if node.box.overlaps(mousePos):
             thisNode = node
             body
             thisNode = nil
@@ -247,7 +247,7 @@ template onEdit*(body: untyped) =
     proc() =
       if mouse.click:
         for node in globTree.findAll(thisSelector):
-          if node.rect.overlap(mousePos):
+          if node.box.overlaps(mousePos):
             setupTextBox(node)
   )
   addCb(
