@@ -207,7 +207,7 @@ template onClick*(body: untyped) =
     proc() =
       if mouse.click:
         for node in globTree.findAll(thisSelector):
-          if node.box.overlaps(mousePos):
+          if node.pixelBox.overlaps(mousePos):
             thisNode = node
             body
             thisNode = nil
@@ -247,7 +247,7 @@ template onEdit*(body: untyped) =
     proc() =
       if mouse.click:
         for node in globTree.findAll(thisSelector):
-          if node.box.overlaps(mousePos):
+          if node.pixelBox.overlaps(mousePos):
             setupTextBox(node)
   )
   addCb(
@@ -538,7 +538,7 @@ proc startFidget*(
     display()
     perfMark "display"
     perfPixels = (viewportSize.x * viewportSize.y).int
-    perfDumpEverySecond()
+    #perfDumpEverySecond()
 
   # Destroy the window.
   window.destroyWindow()

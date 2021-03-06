@@ -210,6 +210,9 @@ proc drawNode(node: Node) =
   let prevMat = mat
   mat = mat * node.transform()
 
+  node.pixelBox.xy = mat * vec2(0, 0)
+  node.pixelBox.wh = node.box.wh
+
   var needsLayer = false
   if node.opacity != 1.0:
     needsLayer = true
@@ -224,6 +227,18 @@ proc drawNode(node: Node) =
     layers.add(layer)
     layer = newImage(layer.width, layer.height)
 
+  if textBoxFocus == node:
+    #layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
+    for selectionRegion in textBox.selectionRegions():
+      var s = selectionRegion
+      s.x += node.pixelBox.x
+      s.y += node.pixelBox.y
+      layer.fillRect(s, rgbx(255, 0, 0, 255))
+    var s = textBox.cursorRect()
+    s.x += node.pixelBox.x
+    s.y += node.pixelBox.y
+    layer.fillRect(s, rgbx(0, 0, 0, 255))
+
   node.genFillGeometry()
   node.drawPaint(node.fills, node.fillGeometry)
   node.genStrokeGeometry()
@@ -232,7 +247,6 @@ proc drawNode(node: Node) =
   for effect in node.effects:
     if effect.kind == ekInnerShadow:
       drawInnerShadowEffect(effect, node, node.maskSelfImage())
-
 
   for child in node.children:
     drawNode(child)
@@ -303,18 +317,18 @@ proc drawToScreen*(node: Node) =
     hwnd = cast[HWND](GetWin32Window(window))
     dc = GetDC(hwnd)
   var info = BITMAPINFO()
-  info.bmiHeader.biBitCount = 24
+  info.bmiHeader.biBitCount = 32
   info.bmiHeader.biWidth = w
   info.bmiHeader.biHeight = h
   info.bmiHeader.biPlanes = 1
   info.bmiHeader.biSize = DWORD sizeof(BITMAPINFOHEADER)
   info.bmiHeader.biSizeImage = w * h * 4
   info.bmiHeader.biCompression = BI_RGB
-  var bgrBuffer = newSeq[uint8](screen.data.len * 3)
+  var bgrBuffer = newSeq[uint8](screen.data.len * 4)
   for i, c in screen.data:
-    bgrBuffer[i*3+0] = c.b
-    bgrBuffer[i*3+1] = c.g
-    bgrBuffer[i*3+2] = c.r
+    bgrBuffer[i*4+0] = c.b
+    bgrBuffer[i*4+1] = c.g
+    bgrBuffer[i*4+2] = c.r
   discard StretchDIBits(
     dc,
     0,
