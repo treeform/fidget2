@@ -207,7 +207,7 @@ template onClick*(body: untyped) =
     proc() =
       if mouse.click:
         for node in globTree.findAll(thisSelector):
-          if node.rect.overlap(mousePos):
+          if node.rect.overlaps(mousePos):
             thisNode = node
             body
             thisNode = nil
@@ -482,7 +482,7 @@ proc display() =
   drawToScreen(thisFrame)
   perfMark "drawToScreen"
 
-  when not defined(cpu):
+  when not defined(cpu) and not defined(cpu2):
     if vSync:
       swapBuffers(window)
       perfMark "swapBuffers"

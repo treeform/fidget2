@@ -286,3 +286,48 @@ proc setupWindow*(
     nil)
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
+
+import staticglfw, winim
+
+proc GetWin32Window*(window: Window): pointer {.cdecl,
+  importc: "glfwGetWin32Window".}
+
+proc drawToScreen*(node: Node) =
+
+  var screen = drawCompleteFrame(node)
+
+  # Draw image pixels onto glfw-win32-window without openGL
+  let
+    w = screen.width.int32
+    h = screen.height.int32
+    hwnd = cast[HWND](GetWin32Window(window))
+    dc = GetDC(hwnd)
+  var info = BITMAPINFO()
+  info.bmiHeader.biBitCount = 24
+  info.bmiHeader.biWidth = w
+  info.bmiHeader.biHeight = h
+  info.bmiHeader.biPlanes = 1
+  info.bmiHeader.biSize = DWORD sizeof(BITMAPINFOHEADER)
+  info.bmiHeader.biSizeImage = w * h * 4
+  info.bmiHeader.biCompression = BI_RGB
+  var bgrBuffer = newSeq[uint8](screen.data.len * 3)
+  for i, c in screen.data:
+    bgrBuffer[i*3+0] = c.b
+    bgrBuffer[i*3+1] = c.g
+    bgrBuffer[i*3+2] = c.r
+  discard StretchDIBits(
+    dc,
+    0,
+    h - 1,
+    w,
+    -h,
+    0,
+    0,
+    w,
+    h,
+    bgrBuffer[0].addr,
+    info,
+    DIB_RGB_COLORS,
+    SRCCOPY
+  )
+  discard ReleaseDC(hwnd, dc)
