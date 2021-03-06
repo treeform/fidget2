@@ -23,6 +23,8 @@ var
   mat*: Mat3
   imageCache*: Table[string, Image]
 
+  defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
+
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
   result[0, 0] = node.relativeTransform[0][0]

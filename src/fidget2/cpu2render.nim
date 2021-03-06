@@ -30,7 +30,7 @@ proc drawFill(node: Node, paint: Paint): Image =
     color.a = color.a * paint.opacity
     if color.a == 0:
       return
-    result.fill(color.rgba.toPremultipliedAlpha())
+    result.fill(color.rgbx)
 
   of schema.PaintKind.pkImage:
     var image: Image
@@ -147,7 +147,7 @@ proc drawPaint(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
     for geometry in geometries:
       layer.fillPath(
         geometry.path,
-        color.rgba.toPremultipliedAlpha(),
+        color.rgbx,
         mat * geometry.mat,
         geometry.windingRule,
         blendMode = paint.blendMode
@@ -177,7 +177,7 @@ proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
   shadow.blur(effect.radius, outOfBounds = 255)
   # Color the inverted blurred fill.
   var color = newImage(shadow.width, shadow.height)
-  color.fill(effect.color.rgba.toPremultipliedAlpha())
+  color.fill(effect.color.rgbx)
   color.draw(shadow, blendMode = bmMask)
   # Only have the shadow be on the fill.
   color.draw(fillMask, blendMode = bmMask)
@@ -189,7 +189,7 @@ proc drawDropShadowEffect(lowerLayer: Image, layer: Image, effect: Effect, node:
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = bmOverwrite)
   shadow = shadow.shadow(
-    effect.offset, effect.spread, effect.radius, effect.color.rgba.toPremultipliedAlpha())
+    effect.offset, effect.spread, effect.radius, effect.color.rgbx)
   lowerLayer.draw(shadow)
 
 proc maskSelfImage(node: Node): Mask =
@@ -233,11 +233,11 @@ proc drawNode(node: Node) =
       var s = selectionRegion
       s.x += node.pixelBox.x
       s.y += node.pixelBox.y
-      layer.fillRect(s, rgbx(255, 0, 0, 255))
+      layer.fillRect(s, defaultTextHighlightColor)
     var s = textBox.cursorRect()
     s.x += node.pixelBox.x
     s.y += node.pixelBox.y
-    layer.fillRect(s, rgbx(0, 0, 0, 255))
+    layer.fillRect(s, node.fills[0].color.rgbx)
 
   node.genFillGeometry()
   node.drawPaint(node.fills, node.fillGeometry)
@@ -301,10 +301,14 @@ proc setupWindow*(
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
 
+
+
+
 import staticglfw, winim
 
 proc GetWin32Window*(window: Window): pointer {.cdecl,
   importc: "glfwGetWin32Window".}
+
 
 proc drawToScreen*(node: Node) =
 
