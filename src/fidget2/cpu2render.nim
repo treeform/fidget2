@@ -301,14 +301,10 @@ proc setupWindow*(
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
 
-
-
-
 import staticglfw, winim
 
 proc GetWin32Window*(window: Window): pointer {.cdecl,
   importc: "glfwGetWin32Window".}
-
 
 proc drawToScreen*(node: Node) =
 
