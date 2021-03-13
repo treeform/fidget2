@@ -18,6 +18,7 @@ var
   # Text edit.
   textBox*: TextBox
   textBoxFocus*: Node
+  textBoxMat*: Mat3
   typefaceCache*: Table[string, Typeface]
 
   mat*: Mat3

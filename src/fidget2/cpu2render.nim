@@ -203,6 +203,98 @@ proc maskSelfImage(node: Node): Mask =
     )
   return mask
 
+proc drawText(node: Node) =
+  ## Draws the text (including editing of text).
+
+  # Get the proper font.
+  var font: Font
+  if node.style.fontPostScriptName notin typefaceCache:
+    if node.style.fontPostScriptName == "":
+      node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
+    font = readFontTtf(figmaFontPath(node.style.fontPostScriptName))
+    typefaceCache[node.style.fontPostScriptName] = font.typeface
+  else:
+    font = Font()
+    font.typeface = typefaceCache[node.style.fontPostScriptName]
+  font.size = node.style.fontSize
+  font.lineHeight = node.style.lineHeightPx
+
+  # Set text params.
+  var wrap = false
+  if node.style.textAutoResize == tarHeight:
+    wrap = true
+  let kern = node.style.opentypeFlags.KERN != 0
+
+  # Generate the layout.
+  let layout = font.typeset(
+    text = if textBoxFocus == node:
+        textBox.text
+      else:
+        node.characters,
+    pos = vec2(0, 0),
+    size = node.size,
+    hAlign = node.style.textAlignHorizontal,
+    vAlign = node.style.textAlignVertical,
+    clip = false,
+    wrap = wrap,
+    kern = kern,
+    textCase = node.style.textCase,
+  )
+
+  if textBoxFocus == node:
+    # Set the text box mat for mouse picking.
+    textBoxMat = mat.inverse()
+
+    # TODO: Draw selection outline by using a parent focus variant?
+    # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
+
+    # Draw the selection ranges.
+    for selectionRegion in textBox.selectionRegions():
+      var s = selectionRegion
+      s.x += node.pixelBox.x
+      s.y += node.pixelBox.y
+      layer.fillRect(s, defaultTextHighlightColor)
+
+    # Draw the typing cursor
+    var s = textBox.cursorRect()
+    s.x += node.pixelBox.x
+    s.y += node.pixelBox.y
+    layer.fillRect(s, node.fills[0].color.rgbx)
+
+  for i, gpos in layout:
+    # For every character in the layout draw it.
+    var font = gpos.font
+
+    if gpos.character in font.typeface.glyphs:
+      var glyph = font.typeface.glyphs[gpos.character]
+      glyph.makeReady(font)
+
+      if glyph.path.commands.len == 0:
+        continue
+
+      let characterMat = translate(vec2(
+        gpos.rect.x + gpos.subPixelShift,
+        gpos.rect.y
+      )) * scale(vec2(font.scale, -font.scale))
+
+      # TODO: Better fill system?
+      var color = node.fills[0].color
+
+      if textBoxFocus == node:
+        # If editing text and character is in selection range,
+        # draw it white.
+        let s = textBox.selection()
+        if i >= s.a and i < s.b:
+          color = color(1, 1, 1, 1)
+
+      layer.fillPath(
+        glyph.path,
+        color.rgbx,
+        mat * characterMat,
+        wrNonZero,
+        bmNormal
+      )
+
 proc drawNode(node: Node) =
   if not node.visible or node.opacity == 0:
     return
@@ -210,6 +302,7 @@ proc drawNode(node: Node) =
   let prevMat = mat
   mat = mat * node.transform()
 
+  node.mat = mat
   node.pixelBox.xy = mat * vec2(0, 0)
   node.pixelBox.wh = node.box.wh
 
@@ -227,22 +320,13 @@ proc drawNode(node: Node) =
     layers.add(layer)
     layer = newImage(layer.width, layer.height)
 
-  if textBoxFocus == node:
-    #layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
-    for selectionRegion in textBox.selectionRegions():
-      var s = selectionRegion
-      s.x += node.pixelBox.x
-      s.y += node.pixelBox.y
-      layer.fillRect(s, defaultTextHighlightColor)
-    var s = textBox.cursorRect()
-    s.x += node.pixelBox.x
-    s.y += node.pixelBox.y
-    layer.fillRect(s, node.fills[0].color.rgbx)
-
-  node.genFillGeometry()
-  node.drawPaint(node.fills, node.fillGeometry)
-  node.genStrokeGeometry()
-  node.drawPaint(node.strokes, node.strokeGeometry)
+  if node.kind == nkText:
+    node.drawText()
+  else:
+    node.genFillGeometry()
+    node.drawPaint(node.fills, node.fillGeometry)
+    node.genStrokeGeometry()
+    node.drawPaint(node.strokes, node.strokeGeometry)
 
   for effect in node.effects:
     if effect.kind == ekInnerShadow:

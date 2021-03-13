@@ -238,6 +238,15 @@ proc setupTextBox(node: Node) =
   #textBox.editable = node.editableText
   #textBox.scrollable = true
 
+proc textBoxMouseAction() =
+  ## Performs mouse stuff on the text box.
+  if textBoxFocus != nil:
+    textBox.mouseAction(
+      textBoxMat * mouse.pos,
+      mouse.click,
+      keyboard.shiftKey
+    )
+
 template onEdit*(body: untyped) =
   ## When text node is display or edited.
   addCb(
@@ -248,7 +257,10 @@ template onEdit*(body: untyped) =
       if mouse.click:
         for node in globTree.findAll(thisSelector):
           if node.pixelBox.overlaps(mousePos):
-            setupTextBox(node)
+            if textBoxFocus != node:
+              setupTextBox(node)
+              textBoxMat = node.mat.inverse()
+              textBoxMouseAction()
   )
   addCb(
     eOnEdit,
@@ -443,9 +455,16 @@ proc onMouseButton(
   if buttonDown[button] == false and setKey == false:
     buttonRelease[button] = true
 
+  textBoxMouseAction()
+
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   ## Mouse moved glfw callback.
   requestedFrame = true
+  mouse.pos.x = x
+  mouse.pos.y = y
+
+  if buttonDown[MOUSE_LEFT]:
+    textBoxMouseAction()
 
 proc display() =
   ## Called every frame by main while loop.

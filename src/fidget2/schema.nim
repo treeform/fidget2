@@ -202,6 +202,7 @@ type
     box*: Rect       ## xy/size of the node.
     orgBox*: Rect    ## Original size needed for constraints.
     idNum*: int
+    mat*: Mat3       ## Useful to get back to the node.
 
   FigmaFile* = ref object
     document*: Node
