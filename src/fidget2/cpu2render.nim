@@ -251,15 +251,15 @@ proc drawText(node: Node) =
     # Draw the selection ranges.
     for selectionRegion in textBox.selectionRegions():
       var s = selectionRegion
-      s.x += node.pixelBox.x
-      s.y += node.pixelBox.y
-      layer.fillRect(s, defaultTextHighlightColor)
+      var path: Path
+      path.rect(s)
+      layer.fillPath(path, defaultTextHighlightColor, mat)
 
     # Draw the typing cursor
     var s = textBox.cursorRect()
-    s.x += node.pixelBox.x
-    s.y += node.pixelBox.y
-    layer.fillRect(s, node.fills[0].color.rgbx)
+    var path: Path
+    path.rect(s)
+    layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
   for i, gpos in layout:
     # For every character in the layout draw it.
