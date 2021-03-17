@@ -9,7 +9,7 @@ export textboxes
 when defined(cpu):
   import cpurender
 
-when defined(cpu2):
+elif defined(cpu2):
   import cpu2render
 
 elif defined(gpu):
@@ -18,9 +18,12 @@ elif defined(gpu):
 elif defined(nanovg):
   import nanovgrender
 
-else: #defined(hyb):
+elif defined(hyb):
   import context, hybridrender
 
+else:
+  # CPU 2 is default for now
+  {.fatal: "You need to define a renderer. -d:cpu2 recommended.".}
 
 type
   KeyState* = enum

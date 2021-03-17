@@ -2,6 +2,10 @@ import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
     pixie, print, schema, staticglfw, tables, typography, typography/textboxes,
     vmath, times, perf, common, spacy, random
 
+type
+  PaintKind = schema.PaintKind
+  Paint = schema.Paint
+
 var
   # Buffers.
   dataBufferSeq*: seq[float32]
@@ -73,6 +77,7 @@ proc setupRender*(frameNode: Node) =
   dataBufferSeq.setLen(0)
 
   viewportSize = frameNode.absoluteBoundingBox.wh
+  viewportRect = rect(0, 0, viewportSize.x, viewportSize.y)
 
   if textureAtlas == nil:
     textureAtlas = newCpuAtlas(512, 1)
@@ -517,7 +522,7 @@ proc drawGradientStops(paint: Paint) =
 proc readyImages*(node: Node) =
   ## Walks the node tree making sure all images are in the atlas.
   proc readyImage(paint: Paint) =
-    if paint.kind == pkImage:
+    if paint.kind == PaintKind.pkImage:
       if paint.imageRef notin textureAtlas.entries:
         var image: pixie.Image
         try:
@@ -546,7 +551,7 @@ proc drawPaint(node: Node, paint: Paint) =
     )
 
   case paint.kind
-  of pkImage:
+  of PaintKind.pkImage:
 
     assert paint.imageRef in textureAtlas.entries, "Run readyImages first."
     let rect = textureAtlas.entries[paint.imageRef]
@@ -612,16 +617,16 @@ proc drawPaint(node: Node, paint: Paint) =
     dataBufferSeq.add rect.w * s
     dataBufferSeq.add rect.h * s
 
-  of pkSolid:
-    var solidColor = paint.color.toPremultipliedAlpha()
+  of PaintKind.pkSolid:
+    var solidColor = paint.color
     dataBufferSeq.add @[
       cmdSolidFill.float32,
       solidColor.r,
       solidColor.g,
       solidColor.b,
-      solidColor.a #* paint.opacity * opacity
+      solidColor.a * paint.opacity #* opacity
     ]
-  of pkGradientLinear:
+  of PaintKind.pkGradientLinear:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -633,7 +638,7 @@ proc drawPaint(node: Node, paint: Paint) =
     ]
     drawGradientStops(paint)
 
-  of pkGradientRadial:
+  of PaintKind.pkGradientRadial:
     let
       at = paint.gradientHandlePositions[0].toImageSpace()
       to = paint.gradientHandlePositions[1].toImageSpace()
@@ -1018,7 +1023,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Use for debugging and tests only.
   #dumpCommandStream()
   #let start = epochTime()
-  var screen = newImage(viewportSize.x.int, viewportSize.x.int)
+  var screen = newImage(viewportSize.x.int, viewportSize.y.int)
   glReadPixels(
     0, 0,
     screen.width.Glint, screen.height.Glint,
