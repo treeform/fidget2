@@ -1,0 +1,24 @@
+import chroma, chrono, fidget2
+
+find "CirclesFrame":
+
+  find "Circles/Circle":
+    onClick:
+      echo "click circle"
+
+  find "Buttons":
+
+      find "Undo":
+        onClick:
+          echo "undo"
+
+      find "Redo":
+        onClick:
+          echo "redo"
+
+startFidget(
+  figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
+  windowTitle = "Circles",
+  entryFrame = "CirclesFrame",
+  resizable = false
+)

@@ -1,4 +1,4 @@
-import chroma, chrono, fidget2
+import chroma, chrono, fidget2, print
 
 type
   FlightType = enum
@@ -17,6 +17,8 @@ proc setVariant(node: Node, name, value: string) =
       node.fills[0].color = parseHtmlColor("#FFFFFF")
     elif value == "Error":
       node.fills[0].color = parseHtmlColor("#FFDAC5")
+    elif value == "Disabled":
+      node.fills[0].color = parseHtmlColor("#B7B7B7")
 
 find "BookingFrame":
 
@@ -26,11 +28,18 @@ find "BookingFrame":
         if find("/BookingFrame/Picker").visible:
           flightType = ftReturn
           find("..").visible = false
+
+          var n = find("/BookingFrame/Inner/ReturnInput/bg")
+          n.setVariant("State", "Default")
+
     find "OneWay":
       onClick:
         if find("/BookingFrame/Picker").visible:
           flightType = ftOneWay
           find("..").visible = false
+
+          var n = find("/BookingFrame/Inner/ReturnInput/bg")
+          n.setVariant("State", "Disabled")
 
   find "Inner":
     find "FlightType":
