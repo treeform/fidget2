@@ -30,11 +30,23 @@ proc typeRename(t: string): string =
   of "Vec4": "vec4"
   of "Vec3": "vec3"
   of "Vec2": "vec2"
+
+  of "UVec3": "uvec3"
+  of "IVec3": "ivec3"
+  of "UVec4": "uvec4"
+  of "IVec4": "ivec4"
+
+  of "int32": "int"
+  of "uint32": "uint"
+
   of "float32": "float"
   of "float64": "float"
   of "Uniform": "uniform"
+  of "UniformWriteOnly": "writeonly uniform"
+
   of "SamplerBuffer": "samplerBuffer"
   of "Sampler2d": "sampler2D"
+  of "UImageBuffer": "uimageBuffer"
   else: t
 
 ## Default constructor for different GLSL types.
@@ -45,12 +57,20 @@ proc typeDefault(t: string): string =
   of "vec4": "vec4(0.0)"
   of "vec3": "vec4(0.0)"
   of "vec2": "vec2(0.0)"
+
+  of "uvec2": "uvec2(0)"
+  of "uvec3": "uvec3(0)"
+  of "uvec4": "uvec4(0)"
+  of "ivec2": "ivec2(0)"
+  of "ivec3": "ivec3(0)"
+  of "ivec4": "ivec4(0)"
+
   of "float": "0.0"
   of "int": "0"
   else: quit("no typeDefault " & t)
 
 const glslGlobals = [
-  "gl_Position", "gl_FragCoord",
+  "gl_Position", "gl_FragCoord", "gl_GlobalInvocationID",
 ]
 
 ## List of function that GLSL provides, don't include their NIM src.
@@ -59,8 +79,13 @@ const glslFunctions = [
   "bool", "array",
   "vec2", "vec3", "vec4", "mat3", "mat4", "color",
   "Vec2", "Vec3", "Vec4", "Mat3", "Mat4", "Color",
+  "uvec2", "uvec3", "uvec4",
+  "UVec2", "UVec3", "UVec4",
+  "ivec2", "ivec3", "ivec4",
+  "IVec2", "IVec3", "IVec4",
+
   "abs", "clamp", "min", "max", "dot", "sqrt", "mix", "length",
-  "texelFetch", "texture",
+  "texelFetch", "imageStore", "texture",
   "normalize",
   "floor", "ceil", "round", "exp",
   "[]", "[]=",
@@ -608,7 +633,7 @@ proc gatherFunction(
             let typeInst = n.getTypeInst
             if typeInst.kind == nnkBracketExpr:
               # might be a uniform
-              if typeInst[0].repr == "Uniform":
+              if typeInst[0].repr in ["Uniform", "UniformWriteOnly"]:
                 defStr.add typeRename(typeInst[0].repr)
                 defStr.add " "
                 defStr.add typeRename(typeInst[1].repr)
@@ -641,13 +666,13 @@ proc gatherFunction(
 
     gatherFunction(n, functions, globals)
 
-macro toShader*(s: typed, version = "410", precision = "highp float"): string =
+macro toShader*(s: typed, version = "410", extra = "precision highp float;\n"): string =
   ## Converts proc to a glsl string.
   var code: string
 
   # Add GLS header stuff.
   code.add "#version " & version.strVal & "\n"
-  code.add "precision " & precision.strVal & ";\n"
+  code.add extra.strVal
   code.add "// from " & s.strVal & "\n\n"
 
   var n = getImpl(s)
@@ -690,8 +715,13 @@ macro toShader*(s: typed, version = "410", precision = "highp float"): string =
 
 type
   Uniform*[T] = T
+  UniformWriteOnly*[T] = T
+
   SamplerBuffer* = object
     data*: seq[float32]
+
+  UImageBuffer* = object
+    data*: seq[uint8]
 
   Sampler2d* = object
     image*: Image
@@ -702,8 +732,43 @@ type
     b*: float32
     a*: float32
 
+  IVec4* = object
+    x*: int32
+    y*: int32
+    z*: int32
+    w*: int32
+
+  IVec3* = object
+    x*: int32
+    y*: int32
+    z*: int32
+    w*: int32
+
+  UVec4* = object
+    x*: uint32
+    y*: uint32
+    z*: uint32
+    w*: uint32
+
+  UVec3* = object
+    x*: uint32
+    y*: uint32
+    z*: uint32
+
 proc color*(r, g, b: float32, a: float32 = 1.0): Color {.inline.} =
   Color(r: r, g: g, b: b, a: a)
+
+proc ivec4*(x, y, z, w: int32): IVec4 =
+  IVec4(x:x, y:y, z:z, w:w)
+
+proc ivec3*(x, y, z: int32): IVec3 =
+  IVec3(x:x, y:y, z:z)
+
+proc uvec4*(x, y, z, w: uint32): UVec4 =
+  UVec4(x:x, y:y, z:z, w:w)
+
+proc uvec3*(x, y, z: uint32): UVec3 =
+  UVec3(x:x, y:y, z:z)
 
 proc rgb*(c: Color): Vec3 =
   vec3(c.r, c.g, c.b)
@@ -792,6 +857,12 @@ proc `xyz`*(a: Vec4): Vec3 =
 
 proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int): Vec4 =
   vec4(buffer.data[index], 0, 0, 0)
+
+proc texelFetch*(buffer: Uniform[SamplerBuffer], index: int32): Vec4 =
+  vec4(buffer.data[index], 0, 0, 0)
+
+proc imageStore*(buffer: var UniformWriteOnly[UImageBuffer], index: int32, color: UVec4) =
+  buffer.data[index.int] = color.x.uint8
 
 proc texture*(buffer: Uniform[Sampler2D], pos: Vec2): Vec4 =
   let pos = pos - vec2(0.5 / buffer.image.width.float32, 0.5 /
