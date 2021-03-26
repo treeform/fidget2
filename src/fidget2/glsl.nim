@@ -481,6 +481,9 @@ proc toCode(n: NimNode, res: var string, level = 0) =
     res.addIndent level
     res.add "}"
 
+  of nnkBracket:
+    echo "here?"
+
   else:
     echo n.treeRepr
     quit "^ can't compile"

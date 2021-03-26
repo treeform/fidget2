@@ -39,8 +39,8 @@ proc transform*(node: Node): Mat3 =
   result[2, 2] = 1
 
 proc pos(mat: Mat3): Vec2 =
-  result.x = mat[2*3+0]
-  result.y = mat[2*3+1]
+  result.x = mat[2, 0]
+  result.y = mat[2, 1]
 
 proc textFillGeometries(node: Node): seq[Geometry] =
 

@@ -392,7 +392,7 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
           let
             offset = vec2(x.float32, y.float32) - shadowOffset
             kValue = kernel[kSize + x] * kernel[kSize + y]
-            uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5) + offset, 1)).xy
+            uv = (tMat * vec2(screen.floor + vec2(0.5, 0.5) + offset)).xy
           if uv.x > pos.x and uv.x < pos.x + size.x and
             uv.y > pos.y and uv.y < pos.y + size.y:
             let textureColor = texture(textureAtlasSampler, uv).w
@@ -428,7 +428,7 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
           let
             offset = vec2(x.float32, y.float32)
             kValue = kernel[kSize + x] * kernel[kSize + y]
-            uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5) + offset, 1)).xy
+            uv = (tMat * vec2(screen.floor + vec2(0.5, 0.5) + offset)).xy
           if uv.x > pos.x and uv.x < pos.x + size.x and
             uv.y > pos.y and uv.y < pos.y + size.y:
             let textureColor = texture(textureAtlasSampler, uv)
@@ -445,7 +445,7 @@ proc textureFill(tMat: Mat3, tile: float32, pos, size: Vec2) =
     else:
 
       # Normal texture operation.
-      var uv = (tMat * vec3(screen.floor + vec2(0.5, 0.5), 1)).xy
+      var uv = (tMat * vec2(screen.floor + vec2(0.5, 0.5))).xy
       if tile == 0:
         if uv.x > pos.x and uv.x < pos.x + size.x and
           uv.y > pos.y and uv.y < pos.y + size.y:
