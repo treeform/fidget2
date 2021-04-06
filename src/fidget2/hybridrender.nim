@@ -1,50 +1,84 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
     typography/textboxes, unicode, vmath, times, perf, context, common,
-    cpurender, layout
+    cpu2render, layout
 
 var
   ctx*: Context
 
-proc drawToScreen*(node: Node) =
-  # glEnable(GL_BLEND)
-  # #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-  # glBlendFuncSeparate(
-  #   GL_SRC_ALPHA,
-  #   GL_ONE_MINUS_SRC_ALPHA,
-  #   GL_ONE,
-  #   GL_ONE_MINUS_SRC_ALPHA
-  # )
+proc drawToAtlas(node: Node) =
+  if not node.visible or node.opacity == 0:
+    return
 
-  # glClearColor(0, 0, 0, 1)
-  # glClear(GL_COLOR_BUFFER_BIT)
+  # let prevMat = mat
+  # mat = mat * node.transform()
 
-  viewportSize = node.absoluteBoundingBox.wh
+  # node.mat = mat
+  # node.pixelBox.xy = mat * vec2(0, 0)
+  # node.pixelBox.wh = node.box.wh
+  # print node.name, node.mat, node.pixelBox.xy
 
-  node.box.xy = vec2(0, 0)
-  node.size = node.box.wh
-  for c in node.children:
-    computeLayout(node, c)
-  perfMark "computeLayout"
+  layer = newImage(node.box.w.int, node.box.h.int)
+  mat = mat3()
+  node.drawNodeInternal(withChildren=false)
 
-  #node.markDirty()
+  ctx.putImage(node.id, layer)
 
-  var screen = drawCompleteCpuFrame(node)
-  ctx.putImage("screen.png", screen)
+  for child in node.children:
+    drawToAtlas(child)
+
+  # mat = prevMat
+
+proc drawWithAtlas(node: Node) =
+
+  let prevMat = mat
+  mat = mat * node.transform()
+
+  node.mat = mat
+  node.pixelBox.xy = mat * vec2(0, 0)
+  node.pixelBox.wh = node.box.wh
+  #print node.name, node.pixelBox
+  ctx.drawImage(node.id, pos=node.pixelBox.xy)
+
+  for child in node.children:
+    drawWithAtlas(child)
+
+  mat = prevMat
+
+proc drawToScreen*(screenNode: Node) =
+
+  viewportSize = screenNode.absoluteBoundingBox.wh
+
+  # node.box.xy = vec2(0, 0)
+  # node.size = node.box.wh
+  # for c in node.children:
+  #   computeLayout(node, c)
+  # perfMark "computeLayout"
+
+  mat = mat3()
+  # transform viewport to current node
+
+  # print screenNode.transform()
+
+
+
+  drawToAtlas(screenNode)
+
+  #var nodeImage = drawCompleteFrame(node)
+  #ctx.putImage(node.id, nodeImage)
 
   ctx.beginFrame(viewportSize)
 
-  # for x in 0 ..< 28:
-  #   for y in 0 ..< 28:
-  #     ctx.saveTransform()
-  #     ctx.translate(vec2(x.float32*32, y.float32*32))
-  #     ctx.drawImage("test.png", size = vec2(32, 32))
-  #     ctx.restoreTransform()
+  #print "---"
 
-  ctx.drawImage("screen.png")
+  mat = mat * screenNode.transform().inverse()
+  drawWithAtlas(screenNode)
 
   ctx.endFrame()
-  perfMark "beginFrame/endFrame"
+
+  #ctx.writeAtlas("atlas.png")
+
+
 
 proc setupWindow*(
   frameNode: Node,

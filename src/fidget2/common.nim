@@ -34,8 +34,10 @@ proc transform*(node: Node): Mat3 =
   result[1, 0] = node.relativeTransform[0][1]
   result[1, 1] = node.relativeTransform[1][1]
   result[1, 2] = 0
-  result[2, 0] = node.box.x #node.relativeTransform[0][2]
-  result[2, 1] = node.box.y #node.relativeTransform[1][2]
+  # result[2, 0] = node.box.x
+  # result[2, 1] = node.box.y
+  result[2, 0] = node.relativeTransform[0][2]
+  result[2, 1] = node.relativeTransform[1][2]
   result[2, 2] = 1
 
 proc pos(mat: Mat3): Vec2 =

@@ -8,6 +8,7 @@ find "CounterFrame":
   find "Count1Up":
     onClick:
       inc count
+      echo count
 
   # When text is displayed it grabs the value from the count variable.
   find "CounterDisplay/text":

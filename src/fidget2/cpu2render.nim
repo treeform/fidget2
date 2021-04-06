@@ -5,7 +5,7 @@ type Image = pixie.Image
 type Paint = schema.Paint
 
 var
-  layer: Image
+  layer*: Image
   layers: seq[Image]
 
 proc drawFill(node: Node, paint: Paint): Image =
@@ -295,16 +295,13 @@ proc drawText(node: Node) =
         bmNormal
       )
 
-proc drawNode(node: Node) =
+
+proc drawNode*(node: Node, withChildren=true)
+
+proc drawNodeInternal*(node: Node, withChildren=true) =
+
   if not node.visible or node.opacity == 0:
     return
-
-  let prevMat = mat
-  mat = mat * node.transform()
-
-  node.mat = mat
-  node.pixelBox.xy = mat * vec2(0, 0)
-  node.pixelBox.wh = node.box.wh
 
   var needsLayer = false
   if node.opacity != 1.0:
@@ -332,8 +329,9 @@ proc drawNode(node: Node) =
     if effect.kind == ekInnerShadow:
       drawInnerShadowEffect(effect, node, node.maskSelfImage())
 
-  for child in node.children:
-    drawNode(child)
+  if withChildren:
+    for child in node.children:
+      drawNode(child)
 
   if node.clipsContent:
     var mask = node.maskSelfImage()
@@ -348,6 +346,17 @@ proc drawNode(node: Node) =
         lowerLayer.drawDropShadowEffect(layer, effect, node)
     lowerLayer.draw(layer, blendMode = node.blendMode)
     layer = lowerLayer
+
+proc drawNode*(node: Node, withChildren=true) =
+
+  let prevMat = mat
+  mat = mat * node.transform()
+
+  node.mat = mat
+  node.pixelBox.xy = mat * vec2(0, 0)
+  node.pixelBox.wh = node.box.wh
+
+  node.drawNodeInternal(withChildren)
 
   mat = prevMat
 

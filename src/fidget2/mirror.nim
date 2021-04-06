@@ -23,7 +23,7 @@ elif defined(hyb):
 
 else:
   # CPU 2 is default for now
-  {.fatal: "You need to define a renderer. -d:cpu2 recommended.".}
+  {.fatal: "You need to define a renderer. -d:hyb recommended.".}
 
 type
   KeyState* = enum

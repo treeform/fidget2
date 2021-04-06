@@ -17,7 +17,7 @@ type
     maxQuads: int               ## Max quads to draw before issuing an OpenGL call
     mat*: Mat4                  ## Current matrix
     mats: seq[Mat4]             ## Matrix stack
-    entries*: Table[Hash, Rect] ## Mapping of image name to atlas UV position
+    entries*: Table[string, Rect] ## Mapping of image name to atlas UV position
     heights: seq[uint16]        ## Height map of the free space in the atlas
     proj*: Mat4
     frameSize: Vec2             ## Dimensions of the window frame
@@ -187,6 +187,10 @@ proc newContext*(
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
+  # Enable premultiplied alpha blending
+  glEnable(GL_BLEND)
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+
 func `[]=`(t: var Table[Hash, Rect], key: string, rect: Rect) =
   t[hash(key)] = rect
 
@@ -241,18 +245,34 @@ proc findEmptyRect(ctx: Context, width, height: int): Rect =
 
   return rect
 
-proc putImage*(ctx: Context, path: string | Hash, image: Image) =
+proc putImage*(ctx: Context, imagePath: string, image: Image) =
   # Reminder: This does not set mipmaps (used for text, should it?)
+  if imagePath in ctx.entries:
+    var rect = ctx.entries[imagePath] * float(ctx.atlasSize)
+    if rect.wh == image.wh:
+      updateSubImage(
+        ctx.atlasTexture,
+        int(rect.x),
+        int(rect.y),
+        image
+      )
+      return
+    else:
+      echo rect.wh, image.wh
+      echo "size of spot changed:", imagePath
+      ctx.entries.del(imagePath)
+
   let rect = ctx.findEmptyRect(image.width, image.height)
-  ctx.entries[path] = rect / float(ctx.atlasSize)
+  ctx.entries[imagePath] = rect / float(ctx.atlasSize)
   updateSubImage(
     ctx.atlasTexture,
     int(rect.x),
     int(rect.y),
     image
   )
+  echo "new: ", imagePath
 
-proc updateImage*(ctx: Context, path: string | Hash, image: Image) =
+proc updateImage*(ctx: Context, path: string, image: Image) =
   ## Updates an image that was put there with putImage.
   ## Useful for things like video.
   ## * Must be the same size.
@@ -324,7 +344,7 @@ proc setVertColor(buf: var seq[uint8], i: int, color: ColorRGBA) =
   buf[i * 4 + 3] = color.a
 
 func `*`*(m: Mat4, v: Vec2): Vec2 =
-  (m * vec3(v, 0.0)).xy
+  (m * vec3(v.x, v.y, 0.0)).xy
 
 proc drawQuad*(
   ctx: Context,
@@ -400,12 +420,12 @@ proc drawUvRect(ctx: Context, rect, uvRect: Rect, color: Color) =
     color
   )
 
-proc getOrLoadImageRect(ctx: Context, imagePath: string | Hash): Rect =
+proc getOrLoadImageRect(ctx: Context, imagePath: string): Rect =
   return ctx.entries[imagePath]
 
 proc drawImage*(
   ctx: Context,
-  imagePath: string | Hash,
+  imagePath: string,
   pos: Vec2 = vec2(0, 0),
   color = color(1, 1, 1, 1),
   scale = 1.0
@@ -418,7 +438,7 @@ proc drawImage*(
 
 proc drawImage*(
   ctx: Context,
-  imagePath: string | Hash,
+  imagePath: string,
   pos: Vec2 = vec2(0, 0),
   color = color(1, 1, 1, 1),
   size: Vec2
@@ -429,7 +449,7 @@ proc drawImage*(
 
 proc drawSprite*(
   ctx: Context,
-  imagePath: string | Hash,
+  imagePath: string,
   pos: Vec2 = vec2(0, 0),
   color = color(1, 1, 1, 1),
   scale = 1.0
@@ -448,7 +468,7 @@ proc drawSprite*(
 
 proc drawSprite*(
   ctx: Context,
-  imagePath: string | Hash,
+  imagePath: string,
   pos: Vec2 = vec2(0, 0),
   color = color(1, 1, 1, 1),
   size: Vec2
@@ -542,7 +562,7 @@ proc beginFrame*(ctx: Context, frameSize: Vec2) =
   beginFrame(
     ctx,
     frameSize,
-    ortho(0, frameSize.x, frameSize.y, 0, -1000, 1000)
+    ortho(0.float32, frameSize.x, frameSize.y, 0, -1000, 1000)
   )
 
 proc endFrame*(ctx: Context) =
@@ -558,17 +578,17 @@ proc translate*(ctx: Context, v: Vec2) =
   ## Translate the internal transform.
   ctx.mat = ctx.mat * translate(vec3(v))
 
-proc rotate*(ctx: Context, angle: float) =
+proc rotate*(ctx: Context, angle: float32) =
   ## Rotates the internal transform.
-  ctx.mat = ctx.mat * rotateZ(angle).mat4()
+  ctx.mat = ctx.mat * rotateZ(angle)
 
-proc scale*(ctx: Context, scale: float) =
+proc scale*(ctx: Context, scale: float32) =
   ## Scales the internal transform.
-  ctx.mat = ctx.mat * scaleMat(scale)
+  ctx.mat = ctx.mat * scale(vec3(scale))
 
 proc scale*(ctx: Context, scale: Vec2) =
   ## Scales the internal transform.
-  ctx.mat = ctx.mat * scaleMat(vec3(scale, 1))
+  ctx.mat = ctx.mat * scale(vec3(scale.x, scale.y, 1))
 
 proc saveTransform*(ctx: Context) =
   ## Pushes a transform onto the stack.
@@ -589,5 +609,23 @@ proc fromScreen*(ctx: Context, windowFrame: Vec2, v: Vec2): Vec2 =
 
 proc toScreen*(ctx: Context, windowFrame: Vec2, v: Vec2): Vec2 =
   ## Takes a point from current transform and translates it to screen.
-  result = (ctx.mat * vec3(v, 1)).xy
+  result = (ctx.mat * vec3(v.x, v.y, 1)).xy
   result.y = -result.y + windowFrame.y
+
+proc writeAtlas*(ctx: Context, filePath: string) =
+  ## Writes the current atlas to a file, used for debugging.
+
+  var atlas = newImage(
+    ctx.atlasTexture.width.GLsizei,
+    ctx.atlasTexture.height.GLsizei,
+  )
+  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
+  glGetTexImage(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    atlas.data[0].addr
+  )
+
+  atlas.writeFile(filePath)
