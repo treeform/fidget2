@@ -35,6 +35,11 @@ elif defined(skia):
   const w = "skia"
   import fidget2/skiarender
 
+elif defined(hyb):
+  const w = "hyb"
+  import fidget2/hybridrender, fidget2/context
+
+
 proc main(r = "", e = "", l = 10000) =
 
   var renderTime = 0.0
@@ -59,7 +64,10 @@ proc main(r = "", e = "", l = 10000) =
     when not defined(benchy):
       echo frame.name, " --------------------------------- "
 
-    if firstTime and w in ["skia", "nanovg", "gpu_atlas", "gpu_atlas_full", "gpu", "gpu_vs_zpu"]:
+    if firstTime and w in [
+        "skia", "nanovg", "gpu_atlas", "gpu_atlas_full", "gpu",
+        "gpu_vs_zpu", "hyb"
+      ]:
       setupWindow(frame, offscreen = true)
       firstTime = false
 
@@ -90,6 +98,10 @@ proc main(r = "", e = "", l = 10000) =
         result = readGpuPixelsFromScreen()
       elif defined(cpu2):
         result = drawCompleteFrame(frame)
+      elif defined(hyb):
+        ctx.clearAtlas()
+        drawToScreen(frame)
+        result = readGpuPixelsFromScreen()
 
     when defined(benchy):
       var mainFrame = frame
@@ -137,10 +149,10 @@ proc main(r = "", e = "", l = 10000) =
     framesHTML.add(&"<img src='diffs/{frame.name}.png'><br>")
 
   framesHtml.add(&"<p>Total time: {renderTime*1000:0.3f}ms</p>")
-  framesHtml.add(&"<p>Total diff: {totalDiff}</p>")
+  framesHtml.add(&"<p>Total diff: {totalDiff/count.float32:0.3f}%</p>")
 
   echo &"Total time: {renderTime*1000:0.3f}ms"
-  echo &"Total diff: {totalDiff}"
+  echo &"Total diff: {totalDiff/count.float32:0.3f}%"
 
   writeFile("tests/frames/index.html", framesHtml)
 
