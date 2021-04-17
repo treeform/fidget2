@@ -25,7 +25,7 @@ macro genDirtyGettersAndSetter*(v: typed) =
       result.add quote do:
         proc `nameEq`*(x: var `sym`, v: `fieldType`) =
           # Setters should mark the dirty flag.
-          if x.`fieldName` != v:
+          #if x.`fieldName` != v:
             x.dirty = true
             x.`fieldName` = v
 
