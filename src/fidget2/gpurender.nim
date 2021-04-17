@@ -42,15 +42,18 @@ var
   currentBlendMode: BlendMode
   currentBoolMode: BooleanOperation
 
-  vertShaderSrc = toShader(basic2dVert, "300 es")
-  fragShaderSrc = toShader(svgMain, "300 es")
-
-  vertShaderArray = allocCStringArray([vertShaderSrc]) # dealloc'd at the end
-  fragShaderArray = allocCStringArray([fragShaderSrc]) # dealloc'd at the end
-
   scissorOn = false
   currentFrameBufferId = 0
   viewportRect: Rect
+
+when defined(gpu):
+  let
+    vertShaderSrc = toShader(basic2dVert, "300 es")
+    fragShaderSrc = toShader(svgMain, "300 es")
+
+    vertShaderArray = allocCStringArray([vertShaderSrc]) # dealloc'd at the end
+    fragShaderArray = allocCStringArray([fragShaderSrc]) # dealloc'd at the end
+
 
 proc dumpCommandStream*()
 
@@ -151,110 +154,113 @@ proc setupWindow*(
   # Load opengl.
   loadExtensions()
 
-  ## Write shader file for debugging (very useful).
-  writeFile("tmp.glsl", fragShaderSrc)
+  when defined(gpu):
 
-  glDisable(GL_MULTISAMPLE)
+    ## Write shader file for debugging (very useful).
+    writeFile("tmp.glsl", fragShaderSrc)
 
-  # Bind the vertices.
-  glGenBuffers(1, vertexVBO.addr)
-  glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
-  glBufferData(
-    GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
+    glDisable(GL_MULTISAMPLE)
 
-  # The array to draw a single quad.
-  glGenVertexArrays(1, vao.addr)
-  glBindVertexArray(vao)
-  glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
-  glVertexAttribPointer(0, 2, cGL_FLOAT, GL_FALSE, 0, nil)
-  glEnableVertexAttribArray(0)
+    # Bind the vertices.
+    glGenBuffers(1, vertexVBO.addr)
+    glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
+    glBufferData(
+      GL_ARRAY_BUFFER, vertices.sizeof, vertices.addr, GL_STATIC_DRAW)
 
-  # Command buffer object and its "texture".
-  glGenBuffers(1, dataBufferId.addr)
-  glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
-  glBufferData(
-    GL_TEXTURE_BUFFER,
-    dataBufferSeq.len * 4,
-    dataBufferSeq[0].addr,
-    GL_STATIC_DRAW
-  )
-  glActiveTexture(GL_TEXTURE0)
-  glGenTextures(1, dataBufferTextureId.addr)
-  glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
-  glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, dataBufferId)
+    # The array to draw a single quad.
+    glGenVertexArrays(1, vao.addr)
+    glBindVertexArray(vao)
+    glBindBuffer(GL_ARRAY_BUFFER, vertexVBO)
+    glVertexAttribPointer(0, 2, cGL_FLOAT, GL_FALSE, 0, nil)
+    glEnableVertexAttribArray(0)
 
-  # Atlas texture.
-  glActiveTexture(GL_TEXTURE1)
-  glGenTextures(1, textureAtlasId.addr)
-  glBindTexture(GL_TEXTURE_2D, textureAtlasId)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-  glTexImage2D(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA.GLint,
-    textureAtlas.image.width.GLsizei,
-    textureAtlas.image.height.GLsizei,
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    textureAtlas.image.data[0].addr
-  )
+    # Command buffer object and its "texture".
+    glGenBuffers(1, dataBufferId.addr)
+    glBindBuffer(GL_TEXTURE_BUFFER, dataBufferId)
+    glBufferData(
+      GL_TEXTURE_BUFFER,
+      dataBufferSeq.len * 4,
+      dataBufferSeq[0].addr,
+      GL_STATIC_DRAW
+    )
+    glActiveTexture(GL_TEXTURE0)
+    glGenTextures(1, dataBufferTextureId.addr)
+    glBindTexture(GL_TEXTURE_BUFFER, dataBufferTextureId)
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_R32F, dataBufferId)
 
-  # Compile Vertex.
-  vertShader = glCreateShader(GL_VERTEX_SHADER)
-  glShaderSource(vertShader, 1, vertShaderArray, nil)
-  glCompileShader(vertShader)
-  errorWarningCheck("vertex", vertShader)
+    # Atlas texture.
+    glActiveTexture(GL_TEXTURE1)
+    glGenTextures(1, textureAtlasId.addr)
+    glBindTexture(GL_TEXTURE_2D, textureAtlasId)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexImage2D(
+      GL_TEXTURE_2D,
+      0,
+      GL_RGBA.GLint,
+      textureAtlas.image.width.GLsizei,
+      textureAtlas.image.height.GLsizei,
+      0,
+      GL_RGBA,
+      GL_UNSIGNED_BYTE,
+      textureAtlas.image.data[0].addr
+    )
 
-  # Compile Fragment.
-  fragShader = glCreateShader(GL_FRAGMENT_SHADER)
-  glShaderSource(fragShader, 1, fragShaderArray, nil)
-  glCompileShader(fragShader)
-  errorWarningCheck("fragment", fragShader)
+  when defined(gpu):
+    # Compile Vertex.
+    vertShader = glCreateShader(GL_VERTEX_SHADER)
+    glShaderSource(vertShader, 1, vertShaderArray, nil)
+    glCompileShader(vertShader)
+    errorWarningCheck("vertex", vertShader)
 
-  # Attach to a GL program.
-  shaderProgram = glCreateProgram()
-  glAttachShader(shaderProgram, vertShader)
-  glAttachShader(shaderProgram, fragShader)
+    # Compile Fragment.
+    fragShader = glCreateShader(GL_FRAGMENT_SHADER)
+    glShaderSource(fragShader, 1, fragShaderArray, nil)
+    glCompileShader(fragShader)
+    errorWarningCheck("fragment", fragShader)
 
-  # Insert locations.
-  glBindAttribLocation(shaderProgram, 0, "vertexPos")
+    # Attach to a GL program.
+    shaderProgram = glCreateProgram()
+    glAttachShader(shaderProgram, vertShader)
+    glAttachShader(shaderProgram, fragShader)
 
-  # Link shader.
-  glLinkProgram(shaderProgram)
-  errorWarningCheck("linking", shaderProgram, compile = false)
+    # Insert locations.
+    glBindAttribLocation(shaderProgram, 0, "vertexPos")
 
-  # Use the program.
-  glUseProgram(shaderProgram)
+    # Link shader.
+    glLinkProgram(shaderProgram)
+    errorWarningCheck("linking", shaderProgram, compile = false)
 
-  # Set dataBuffer to 0th texture.
-  var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
-  glUniform1i(dataBufferLoc, 0)
+    # Use the program.
+    glUseProgram(shaderProgram)
 
-  # Set textureAtlas to 1th texture.
-  var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
-  glUniform1i(textureAtlasLoc, 1)
+    # Set dataBuffer to 0th texture.
+    var dataBufferLoc = glGetUniformLocation(shaderProgram, "dataBuffer")
+    glUniform1i(dataBufferLoc, 0)
 
-  # Generate background frame buffer.
-  glGenFramebuffers(1, backBufferId.addr)
-  glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
+    # Set textureAtlas to 1th texture.
+    var textureAtlasLoc = glGetUniformLocation(shaderProgram, "textureAtlasSampler")
+    glUniform1i(textureAtlasLoc, 1)
 
-  # Set "backBufferTextureId" as our colour attachement #0
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureAtlasId, 0)
+    # Generate background frame buffer.
+    glGenFramebuffers(1, backBufferId.addr)
+    glBindFramebuffer(GL_FRAMEBUFFER, backBufferId)
 
-  # Set the list of draw buffers.
-  var drawBuffers = [GL_COLOR_ATTACHMENT0]
-  glDrawBuffers(drawBuffers.len.GLsizei, drawBuffers[0].addr)
+    # Set "backBufferTextureId" as our colour attachement #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, textureAtlasId, 0)
 
-  # Always check that our framebuffer is ok
-  if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
-    quit("some thing is wrong with frame buffer")
+    # Set the list of draw buffers.
+    var drawBuffers = [GL_COLOR_ATTACHMENT0]
+    glDrawBuffers(drawBuffers.len.GLsizei, drawBuffers[0].addr)
 
-  # Bind back default frame buffer of the screen.
-  glBindFramebuffer(GL_FRAMEBUFFER, 0)
+    # Always check that our framebuffer is ok
+    if glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE:
+      quit("some thing is wrong with frame buffer")
+
+    # Bind back default frame buffer of the screen.
+    glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
 proc drawBuffers() =
   # update command buffer on the GPU.

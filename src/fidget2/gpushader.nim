@@ -199,8 +199,8 @@ proc pixelCross(a0, b0: Vec2): float32 =
 proc line(a0, b0: Vec2) =
   ## Draw the lines based on windingRule.
   var
-    a1 = (vec3(a0, 1)).xy - screen
-    b1 = (vec3(b0, 1)).xy - screen
+    a1 = (vec3(a0.x, a0.y, 1)).xy - screen
+    b1 = (vec3(b0.x, b0.y, 1)).xy - screen
 
   when useAA:
     if windingRule == 0:
@@ -235,9 +235,9 @@ proc line(a0, b0: Vec2) =
 proc interpolate(G1, G2, G3, G4: Vec2, t: float32): Vec2 =
   ## Solve the cubic bezier interpolation with 4 points.
   let
-    A = G4 - G1 + 3 * (G2 - G3)
-    B = 3 * (G1 - 2 * G2 + G3)
-    C = 3 * (G2 - G1)
+    A = G4 - G1 + 3.float32 * (G2 - G3)
+    B = 3.float32 * (G1 - 2.float32 * G2 + G3)
+    C = 3.float32 * (G2 - G1)
     D = G1
   return t * (t * (t * A + B) + C) + D
 
@@ -469,16 +469,16 @@ proc gradientLinear(at0, to0: Vec2) =
   ## Setup color for linear gradient.
   if fillMask > 0:
     let
-      at = (vec3(at0, 1)).xy
-      to = (vec3(to0, 1)).xy
+      at = at0
+      to = to0
     gradientK = toLineSpace(at, to, screen).clamp(0, 1)
 
 proc gradientRadial(at0, to0: Vec2) =
   ## Setup color for radial gradient.
   if fillMask > 0:
     let
-      at = (vec3(at0, 1)).xy
-      to = (vec3(to0, 1)).xy
+      at = at0
+      to = to0
       distance = (at - to).length()
     gradientK = ((at - screen).length() / distance).clamp(0, 1)
 

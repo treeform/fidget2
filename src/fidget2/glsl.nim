@@ -581,6 +581,7 @@ proc procDef(topLevelNode: NimNode): string =
             let paramType = param.getTypeInst()
             if paramType.kind == nnkVarTy:
               # Process `x: var float`
+              echo paramType.treeRepr
               if paramType[0].strVal == "int":
                 paramsStr.add "flat "
               paramsStr.add "inout "

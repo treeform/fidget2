@@ -6,7 +6,7 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
   setupRender(node)
   node.readyImages()
 
-  drawNode(node, 0)
+  collectNode(node, 0)
 
   dataBufferSeq.add(cmdExit.float32)
 
@@ -32,7 +32,7 @@ proc drawCompleteZpuFrame*(node: Node): pixie.Image =
 
 proc getIndexAt*(node: Node, mousePos: Vec2): int =
   setupRender(node)
-  drawNode(node, 0)
+  collectNode(node, 0)
 
   dataBufferSeq.add(cmdExit.float32)
 
@@ -44,3 +44,10 @@ proc getIndexAt*(node: Node, mousePos: Vec2): int =
   svgMain(vec4(mousePos.x, mousePos.y, 0, 1), color)
 
   return topIndex.int
+
+proc setupWindow*(
+  frameNode: Node,
+  offscreen = false,
+  resizable = true
+) =
+  discard
