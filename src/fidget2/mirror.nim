@@ -22,8 +22,8 @@ elif defined(hyb):
   import context, hybridrender
 
 else:
-  # CPU 2 is default for now
-  {.fatal: "You need to define a renderer. -d:hyb recommended.".}
+  # hybrid is default for now
+  import context, hybridrender
 
 type
   KeyState* = enum
@@ -237,6 +237,7 @@ proc setupTextBox(node: Node) =
     false, #TODO: node.multiline,
     worldWrap = true,
   )
+  textBox.glyphs = layoutCache[node.id]
   # TODO: add these:
   #textBox.editable = node.editableText
   #textBox.scrollable = true
@@ -244,8 +245,9 @@ proc setupTextBox(node: Node) =
 proc textBoxMouseAction() =
   ## Performs mouse stuff on the text box.
   if textBoxFocus != nil:
+    textBoxFocus.dirty = true
     textBox.mouseAction(
-      textBoxMat * mouse.pos,
+      textBoxFocus.mat.inverse() * mouse.pos,
       mouse.click,
       keyboard.shiftKey
     )
@@ -262,8 +264,7 @@ template onEdit*(body: untyped) =
           if node.pixelBox.overlaps(mousePos):
             if textBoxFocus != node:
               setupTextBox(node)
-              textBoxMat = node.mat.inverse()
-              textBoxMouseAction()
+            textBoxMouseAction()
   )
   addCb(
     eOnEdit,
@@ -367,6 +368,7 @@ proc onSetKey(
 
   # Do the text box commands.
   if textBox != nil and setKey:
+    textBoxFocus.dirty = true
     keyboard.state = ksPress
     let
       ctrl = keyboard.ctrlKey

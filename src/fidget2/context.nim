@@ -197,17 +197,43 @@ func `[]=`(t: var Table[Hash, Rect], key: string, rect: Rect) =
 func `[]`(t: var Table[Hash, Rect], key: string): Rect =
   t[hash(key)]
 
+proc clearAtlas*(ctx: Context) =
+  ctx.entries.clear()
+  for i in 0 ..< ctx.atlasSize:
+    ctx.heights[i] = 0
+
 proc grow(ctx: Context) =
   ctx.draw()
+
+  # read old atlas content
+  var atlasOld = newImage(
+    ctx.atlasTexture.width.GLsizei,
+    ctx.atlasTexture.height.GLsizei,
+  )
+  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
+  glGetTexImage(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    atlasOld.data[0].addr
+  )
+
   ctx.atlasSize = ctx.atlasSize * 2
   echo "grow atlasSize ", ctx.atlasSize
   ctx.heights.setLen(ctx.atlasSize)
   ctx.atlasTexture = ctx.createAtlasTexture(ctx.atlasSize)
-  ctx.entries.clear()
+
+  updateSubImage(
+    ctx.atlasTexture,
+    0,
+    0,
+    atlasOld
+  )
 
 proc findEmptyRect(ctx: Context, width, height: int): Rect =
-  var imgWidth = width + ctx.atlasMargin * 2
-  var imgHeight = height + ctx.atlasMargin * 2
+  var slabWidth = width + ctx.atlasMargin
+  var slabHeight = height + ctx.atlasMargin
 
   var lowest = ctx.atlasSize
   var at = 0
@@ -216,7 +242,7 @@ proc findEmptyRect(ctx: Context, width, height: int): Rect =
     if v < lowest:
       # found low point, is it consecutive?
       var fit = true
-      for j in 0 .. imgWidth:
+      for j in 0 .. slabWidth:
         if i + j >= ctx.atlasSize:
           fit = false
           break
@@ -228,17 +254,17 @@ proc findEmptyRect(ctx: Context, width, height: int): Rect =
         lowest = v
         at = i
 
-  if lowest + imgHeight > ctx.atlasSize:
+  if lowest + slabHeight > ctx.atlasSize:
     #raise newException(Exception, "Context Atlas is full")
     ctx.grow()
     return ctx.findEmptyRect(width, height)
 
-  for j in at..at + imgWidth - 1:
-    ctx.heights[j] = uint16(lowest + imgHeight + ctx.atlasMargin * 2)
+  for j in at..at + slabWidth - 1:
+    ctx.heights[j] = uint16(lowest + slabHeight)
 
   var rect = rect(
-    float32(at + ctx.atlasMargin),
-    float32(lowest + ctx.atlasMargin),
+    float32(at),
+    float32(lowest),
     float32(width),
     float32(height),
   )
@@ -248,7 +274,7 @@ proc findEmptyRect(ctx: Context, width, height: int): Rect =
 proc putImage*(ctx: Context, imagePath: string, image: Image) =
   # Reminder: This does not set mipmaps (used for text, should it?)
   if imagePath in ctx.entries:
-    var rect = ctx.entries[imagePath] * float(ctx.atlasSize)
+    var rect = ctx.entries[imagePath]
     if rect.wh == image.wh:
       updateSubImage(
         ctx.atlasTexture,
@@ -256,6 +282,7 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
         int(rect.y),
         image
       )
+      #echo "update ", imagePath
       return
     else:
       echo rect.wh, image.wh
@@ -263,14 +290,15 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
       ctx.entries.del(imagePath)
 
   let rect = ctx.findEmptyRect(image.width, image.height)
-  ctx.entries[imagePath] = rect / float(ctx.atlasSize)
+  ctx.entries[imagePath] = rect
   updateSubImage(
     ctx.atlasTexture,
     int(rect.x),
     int(rect.y),
     image
   )
-  echo "new: ", imagePath
+  #echo "new: ", imagePath, rect
+
 
 proc updateImage*(ctx: Context, path: string, image: Image) =
   ## Updates an image that was put there with putImage.
@@ -278,12 +306,12 @@ proc updateImage*(ctx: Context, path: string, image: Image) =
   ## * Must be the same size.
   ## * This does not set mipmaps.
   let rect = ctx.entries[path]
-  assert rect.w == image.width.float / float(ctx.atlasSize)
-  assert rect.h == image.height.float / float(ctx.atlasSize)
+  assert rect.w == image.width.float
+  assert rect.h == image.height.float
   updateSubImage(
     ctx.atlasTexture,
-    int(rect.x * ctx.atlasSize.float),
-    int(rect.y * ctx.atlasSize.float),
+    int(rect.x),
+    int(rect.y),
     image
   )
 
@@ -379,12 +407,19 @@ proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
   assert ctx.quadCount < ctx.maxQuads
 
   let
+    at = ctx.mat * at
+    to = ctx.mat * to
+
     posQuad = [
-      ctx.mat * vec2(at.x, to.y),
-      ctx.mat * vec2(to.x, to.y),
-      ctx.mat * vec2(to.x, at.y),
-      ctx.mat * vec2(at.x, at.y),
+      vec2(at.x, to.y),
+      vec2(to.x, to.y),
+      vec2(to.x, at.y),
+      vec2(at.x, at.y),
     ]
+
+    uvAt = (uvAt + vec2(0.0, 0.0)) / ctx.atlasSize.float32
+    uvTo = (uvTo + vec2(0.0, 0.0)) / ctx.atlasSize.float32
+
     uvQuad = [
       vec2(uvAt.x, uvTo.y),
       vec2(uvTo.x, uvTo.y),
@@ -433,7 +468,7 @@ proc drawImage*(
   ## Draws image the UI way - pos at top-left.
   let
     rect = ctx.getOrLoadImageRect(imagePath)
-    wh = rect.wh * ctx.atlasSize.float32 * scale
+    wh = rect.wh * scale
   ctx.drawUvRect(pos, pos + wh, rect.xy, rect.xy + rect.wh, color)
 
 proc drawImage*(
@@ -457,7 +492,7 @@ proc drawSprite*(
   ## Draws image the game way - pos at center.
   let
     rect = ctx.getOrLoadImageRect(imagePath)
-    wh = rect.wh * ctx.atlasSize.float32 * scale
+    wh = rect.wh * scale
   ctx.drawUvRect(
     pos - wh / 2,
     pos + wh / 2,

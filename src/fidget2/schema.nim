@@ -1,4 +1,4 @@
-import bumpy, chroma, jsony, pixie, strutils, tables, typography, vmath
+import bumpy, chroma, jsony, pixie, strutils, tables, typography, vmath, dirty
 
 type
   FidgetError* = object of ValueError ## Raised if an operation fails.
@@ -195,6 +195,7 @@ type
     booleanOperation*: BooleanOperation
 
     # Non figma parameters:
+    hash*: uint32
     dirty*: bool     ## Do the pixels need redrawing?
     pixels*: Image   ## Pixel image cache.
     pixelBox*: Rect  ## Pixel position and size.
@@ -203,6 +204,7 @@ type
     orgBox*: Rect    ## Original size needed for constraints.
     idNum*: int
     mat*: Mat3       ## Useful to get back to the node.
+    collapse*: bool
 
   FigmaFile* = ref object
     document*: Node
@@ -213,6 +215,8 @@ type
     thumbnailUrl*: string
     version*: string
     role*: string
+
+#genDirtyGettersAndSetter(Node)
 
 proc `$`*(node: Node): string =
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
@@ -227,6 +231,7 @@ proc postHook(v: var Node) =
     v.box.xy = vec2(v.relativeTransform[0][2], v.relativeTransform[1][2])
   v.box.wh = v.size
   v.orgBox = v.box
+  v.dirty = true
 
 proc renameHook(v: var Node, fieldName: var string) =
   if fieldName == "type":

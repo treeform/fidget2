@@ -131,7 +131,7 @@ proc drawFill(node: Node, paint: Paint): Image =
       paint.gradientStops.gradientAdjust(paint.opacity)
     )
 
-proc drawPaint(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
+proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
   if paints.len == 0 or geometries.len == 0:
     return
 
@@ -203,7 +203,7 @@ proc maskSelfImage(node: Node): Mask =
     )
   return mask
 
-proc drawText(node: Node) =
+proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
 
   # Get the proper font.
@@ -226,7 +226,7 @@ proc drawText(node: Node) =
   let kern = node.style.opentypeFlags.KERN != 0
 
   # Generate the layout.
-  let layout = font.typeset(
+  var layout = font.typeset(
     text = if textBoxFocus == node:
         textBox.text
       else:
@@ -240,10 +240,12 @@ proc drawText(node: Node) =
     kern = kern,
     textCase = node.style.textCase,
   )
+  layoutCache[node.id] = layout
 
   if textBoxFocus == node:
-    # Set the text box mat for mouse picking.
-    textBoxMat = mat.inverse()
+    # Don't recompute the layout twice,
+    # Set the text layout to textBox layout.
+    textBox.glyphs = layout
 
     # TODO: Draw selection outline by using a parent focus variant?
     # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
@@ -294,7 +296,6 @@ proc drawText(node: Node) =
         wrNonZero,
         bmNormal
       )
-
 
 proc drawNode*(node: Node, withChildren=true)
 

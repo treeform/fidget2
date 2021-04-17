@@ -18,11 +18,12 @@ var
   # Text edit.
   textBox*: TextBox
   textBoxFocus*: Node
-  textBoxMat*: Mat3
   typefaceCache*: Table[string, Typeface]
 
   mat*: Mat3
   imageCache*: Table[string, Image]
+
+  layoutCache*: Table[string, seq[GlyphPosition]]
 
   defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
 
@@ -224,3 +225,20 @@ proc genStrokeGeometry*(node: Node) =
     node.strokeGeometry = @[node.rectangleStrokeGeometry()]
   else:
     discard
+
+proc genHitRectGeometry*(node: Node) =
+  ## Generates geometry thats a simple rect over the node,
+  ## no matter what kind of node it is.
+  ## Used for simple mouse hit prediction
+  ##
+  var geom = Geometry()
+  geom.mat = mat3()
+  geom.windingRule = wrNonZero
+  # Basic rectangle.
+  geom.path.rect(
+    x = 0,
+    y = 0,
+    w = node.size.x,
+    h = node.size.y,
+  )
+  node.fillGeometry = @[geom]

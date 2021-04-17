@@ -1,84 +1,130 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables, typography,
     typography/textboxes, unicode, vmath, times, perf, context, common,
-    cpu2render, layout
+    cpu2render, layout, flatty/hashy2
 
 var
   ctx*: Context
+  viewportRect: Rect
+
+proc computeIntBounds(node: Node, mat: Mat3): Rect =
+  ## Compute self bounds of a given node.
+  var
+    minV: Vec2
+    maxV: Vec2
+    first = true
+  for geoms in [node.fillGeometry, node.strokeGeometry]:
+    for geom in geoms:
+      for shape in geom.path.commandsToShapes():
+        for vec in shape:
+          let v = mat * vec
+          if first:
+            minV = v
+            maxV = v
+            first = false
+          else:
+            minV.x = min(minV.x, v.x)
+            minV.y = min(minV.y, v.y)
+            maxV.x = max(maxV.x, v.x)
+            maxV.y = max(maxV.y, v.y)
+  minV = minV.floor
+  maxV = maxV.ceil
+  rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
 
 proc drawToAtlas(node: Node) =
+  # Draw the nodes into the atlas (and setup pixel box).
+
   if not node.visible or node.opacity == 0:
     return
-
-  # let prevMat = mat
-  # mat = mat * node.transform()
-
-  # node.mat = mat
-  # node.pixelBox.xy = mat * vec2(0, 0)
-  # node.pixelBox.wh = node.box.wh
-  # print node.name, node.mat, node.pixelBox.xy
-
-  layer = newImage(node.box.w.int, node.box.h.int)
-  mat = mat3()
-  node.drawNodeInternal(withChildren=false)
-
-  ctx.putImage(node.id, layer)
-
-  for child in node.children:
-    drawToAtlas(child)
-
-  # mat = prevMat
-
-proc drawWithAtlas(node: Node) =
 
   let prevMat = mat
   mat = mat * node.transform()
 
-  node.mat = mat
-  node.pixelBox.xy = mat * vec2(0, 0)
-  node.pixelBox.wh = node.box.wh
-  #print node.name, node.pixelBox
-  ctx.drawImage(node.id, pos=node.pixelBox.xy)
+  let hash = hashy(node)
+  if node.hash != hash:
+    node.hash = hash
+  #if node.dirty:
+    #node.dirty = false
 
+    node.mat = mat
+
+    # compute bounds
+    var bounds: Rect
+    if node.kind == nkText:
+      node.genHitRectGeometry()
+      #bounds = rect(0, 0, viewportSize.x, viewportSize.y)
+    else:
+      node.genFillGeometry()
+      node.genStrokeGeometry()
+    bounds = computeIntBounds(node, mat)
+    node.pixelBox = bounds
+
+    #print node.name, node.pixelBox
+
+    if bounds.w.int > 0 and bounds.h.int > 0:
+
+      layer = newImage(bounds.w.int, bounds.h.int)
+      let prevBoundsMat = mat
+      mat = translate(-bounds.xy) * mat
+
+      if node.kind == nkText:
+        node.drawText()
+      else:
+        # geometry compute when doing bounds.
+        node.drawPaint(node.fills, node.fillGeometry)
+        node.drawPaint(node.strokes, node.strokeGeometry)
+
+      ctx.putImage(node.id, layer)
+      mat = prevBoundsMat
+
+  #if not node.collapse:
   for child in node.children:
-    drawWithAtlas(child)
+    drawToAtlas(child)
 
   mat = prevMat
 
+proc drawWithAtlas(node: Node) =
+  # Draw the nodes using atlas.
+
+  if node.id in ctx.entries:
+    doAssert node.pixelBox.x.fractional == 0
+    doAssert node.pixelBox.y.fractional == 0
+    ctx.drawImage(node.id, pos=node.pixelBox.xy)
+
+  #if not node.collapse:
+  for child in node.children:
+    drawWithAtlas(child)
+
 proc drawToScreen*(screenNode: Node) =
+  ## Draw the current node onto the screen.
 
-  viewportSize = screenNode.absoluteBoundingBox.wh
+  viewportSize = screenNode.absoluteBoundingBox.wh.ceil
 
-  # node.box.xy = vec2(0, 0)
-  # node.size = node.box.wh
-  # for c in node.children:
-  #   computeLayout(node, c)
-  # perfMark "computeLayout"
+  # Resize the window if needed.
+  if viewportRect != rect(0, 0, viewportSize.x, viewportSize.y):
+    viewportRect = rect(0, 0, viewportSize.x, viewportSize.y)
+    window.setWindowSize(viewportSize.x.cint, viewportSize.y.cint)
+    glViewport(
+      viewportRect.x.cint,
+      viewportRect.y.cint,
+      viewportRect.w.cint,
+      viewportRect.h.cint
+    )
 
+  # Setup proper matrix for drawing.
   mat = mat3()
-  # transform viewport to current node
-
-  # print screenNode.transform()
-
-
-
+  mat = mat * screenNode.transform().inverse()
   drawToAtlas(screenNode)
 
-  #var nodeImage = drawCompleteFrame(node)
-  #ctx.putImage(node.id, nodeImage)
+  glClearColor(0, 0, 0, 0)
+  glClear(GL_COLOR_BUFFER_BIT)
 
   ctx.beginFrame(viewportSize)
-
-  #print "---"
-
-  mat = mat * screenNode.transform().inverse()
   drawWithAtlas(screenNode)
-
   ctx.endFrame()
 
   #ctx.writeAtlas("atlas.png")
-
-
+  #perfDump()
 
 proc setupWindow*(
   frameNode: Node,
@@ -97,6 +143,8 @@ proc setupWindow*(
     # Disable V-Sync
     windowHint(DOUBLEBUFFER, false.cint)
 
+  viewportSize = vec2(400, 400)
+
   windowHint(VISIBLE, (not offscreen).cint)
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
@@ -113,5 +161,18 @@ proc setupWindow*(
   loadExtensions()
 
   # Setup Context
-
   ctx = newContext()
+
+
+proc readGpuPixelsFromScreen*(): pixie.Image =
+  ## Read the GPU pixels from screen.
+  ## Use for debugging and tests only.
+  var screen = newImage(viewportSize.x.int, viewportSize.y.int)
+  glReadPixels(
+    0, 0,
+    screen.width.Glint, screen.height.Glint,
+    GL_RGBA, GL_UNSIGNED_BYTE,
+    screen.data[0].addr
+  )
+  screen.flipVertical()
+  return screen
