@@ -25,16 +25,6 @@ elif defined(zpu):
 elif defined(gpu_vs_zpu):
   import fidget2/gpurender, fidget2/zpurender
   const w = "gpu_vs_zpu"
-elif defined(nanovg):
-  const w = "nanovg"
-  import fidget2/nanovgrender
-elif defined(cairo):
-  const w = "cairo"
-  import fidget2/cairorender
-elif defined(skia):
-  const w = "skia"
-  import fidget2/skiarender
-
 elif defined(hyb):
   const w = "hyb"
   import fidget2/hybridrender, fidget2/context
@@ -65,9 +55,9 @@ proc main(r = "", e = "", l = 10000) =
       echo frame.name, " --------------------------------- "
 
     if firstTime and w in [
-        "skia", "nanovg", "gpu_atlas", "gpu_atlas_full", "gpu",
-        "gpu_vs_zpu", "hyb"
-      ]:
+      "gpu_atlas", "gpu_atlas_full", "gpu",
+      "gpu_vs_zpu", "hyb"
+    ]:
       setupWindow(frame, offscreen = true)
       firstTime = false
 
@@ -87,14 +77,6 @@ proc main(r = "", e = "", l = 10000) =
         result = drawCompleteZpuFrame(frame)
       elif defined(gpu_vs_zpu):
         drawGpuFrameToScreen(frame)
-        result = readGpuPixelsFromScreen()
-      elif defined(nanovg):
-        drawToScreen(frame)
-        result = readGpuPixelsFromScreen()
-      elif defined(cairo):
-        result = drawCompleteFrame(frame)
-      elif defined(skia):
-        drawToScreen(frame)
         result = readGpuPixelsFromScreen()
       elif defined(cpu2):
         result = drawCompleteFrame(frame)
