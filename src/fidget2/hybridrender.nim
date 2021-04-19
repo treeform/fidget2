@@ -1,7 +1,5 @@
-import algorithm, bumpy, globs, input, json, loader, math, opengl,
-    pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, times, perf, context, common,
-    cpu2render, layout, flatty/hashy2
+import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
+  perf, context, common, cpu2render, layout, flatty/hashy2
 
 var
   ctx*: Context
@@ -32,8 +30,7 @@ proc computeIntBounds(node: Node, mat: Mat3): Rect =
   rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
 
 proc drawToAtlas(node: Node) =
-  # Draw the nodes into the atlas (and setup pixel box).
-
+  ## Draw the nodes into the atlas (and setup pixel box).
   if not node.visible or node.opacity == 0:
     return
 
@@ -52,14 +49,11 @@ proc drawToAtlas(node: Node) =
     var bounds: Rect
     if node.kind == nkText:
       node.genHitRectGeometry()
-      #bounds = rect(0, 0, viewportSize.x, viewportSize.y)
     else:
       node.genFillGeometry()
       node.genStrokeGeometry()
     bounds = computeIntBounds(node, mat)
     node.pixelBox = bounds
-
-    #print node.name, node.pixelBox
 
     if bounds.w.int > 0 and bounds.h.int > 0:
 
@@ -77,7 +71,6 @@ proc drawToAtlas(node: Node) =
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 
-  #if not node.collapse:
   for child in node.children:
     drawToAtlas(child)
 
@@ -85,13 +78,11 @@ proc drawToAtlas(node: Node) =
 
 proc drawWithAtlas(node: Node) =
   # Draw the nodes using atlas.
-
   if node.id in ctx.entries:
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0
     ctx.drawImage(node.id, pos=node.pixelBox.xy)
 
-  #if not node.collapse:
   for child in node.children:
     drawWithAtlas(child)
 
@@ -162,7 +153,6 @@ proc setupWindow*(
 
   # Setup Context
   ctx = newContext()
-
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Read the GPU pixels from screen.
