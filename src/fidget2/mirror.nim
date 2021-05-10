@@ -1,8 +1,6 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
-    pixie, schema, sequtils, staticglfw, strformat, tables, typography,
-    typography/textboxes, unicode, vmath, times, perf, common
-    # zpurender
-
+    pixie, schema, sequtils, staticglfw, strformat, tables,
+    textboxes, unicode, vmath, times, perf, common
 
 export textboxes
 
@@ -45,6 +43,8 @@ type
     wheelDelta*: float32
     cursorStyle*: MouseCursorStyle ## Sets the mouse cursor icon
     prevCursorStyle*: MouseCursorStyle
+    clickTimes*: array[3, float64]
+    click*, doubleClick*, tripleClick*: bool
 
   Keyboard* = ref object
     state*: KeyState
@@ -104,6 +104,10 @@ proc clearInputs*() =
   ## Clear inputs that are only valid for 1 frame.
 
   mouse.wheelDelta = 0
+  mouse.click = false
+  mouse.doubleClick = false
+  mouse.tripleClick = false
+
   # Reset key and mouse press to default state
   for i in 0 ..< buttonPress.len:
     buttonPress[i] = false
@@ -116,10 +120,6 @@ proc clearInputs*() =
 
   keyboard.onFocusNode = nil
   keyboard.onUnfocusNode = nil
-
-proc click*(mouse: Mouse): bool =
-  ## Was mouse just clicked?
-  buttonPress[MOUSE_LEFT]
 
 proc down*(mouse: Mouse): bool =
   ## Is the ouse button pressed down?
@@ -232,12 +232,12 @@ proc setupTextBox(node: Node) =
     int node.pixelBox.w,
     int node.pixelBox.h,
     node.characters,
-    node.style.textAlignHorizontal,
-    node.style.textAlignVertical,
-    false, #TODO: node.multiline,
+    HAlignMode(node.style.textAlignHorizontal.int),
+    VAlignMode(node.style.textAlignVertical.int),
+    multiline = true, #TODO: node.multiline,
     worldWrap = true,
   )
-  textBox.glyphs = layoutCache[node.id]
+  textBox.arrangement = arrangementCache[node.id]
   # TODO: add these:
   #textBox.editable = node.editableText
   #textBox.scrollable = true
@@ -265,6 +265,15 @@ template onEdit*(body: untyped) =
             if textBoxFocus != node:
               setupTextBox(node)
             textBoxMouseAction()
+      elif mouse.doubleClick:
+        if textBox != nil:
+          textBoxFocus.dirty = true
+          textBox.selectWord(textBoxFocus.mat.inverse() * mouse.pos)
+      elif mouse.tripleClick:
+        if textBox != nil:
+          textBoxFocus.dirty = true
+          textBox.selectParagraph(textBoxFocus.mat.inverse() * mouse.pos)
+
   )
   addCb(
     eOnEdit,
@@ -460,7 +469,31 @@ proc onMouseButton(
   if buttonDown[button] == false and setKey == false:
     buttonRelease[button] = true
 
-  textBoxMouseAction()
+
+  if setKey:
+    for i in 0 ..< 2:
+      mouse.clickTimes[i] = mouse.clickTimes[i + 1]
+    mouse.clickTimes[2] = epochTime()
+  let doubleClickTime = mouse.clickTimes[2] - mouse.clickTimes[1]
+  let tripleClickTime = mouse.clickTimes[1] - mouse.clickTimes[0]
+  if doubleClickTime < 0.500 and tripleClickTime < 0.500:
+    if setKey:
+      mouse.click = false
+      mouse.doubleClick = false
+      mouse.tripleClick = true
+  elif doubleClickTime < 0.500:
+    if setKey:
+      mouse.click = false
+      mouse.doubleClick = true
+      mouse.tripleClick = false
+  else:
+    if setKey:
+      # regular click
+      mouse.click = true
+      mouse.doubleClick = true
+      mouse.tripleClick = false
+    else:
+      textBoxMouseAction()
 
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   ## Mouse moved glfw callback.

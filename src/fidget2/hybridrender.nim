@@ -68,6 +68,10 @@ proc drawToAtlas(node: Node) =
         node.drawPaint(node.fills, node.fillGeometry)
         node.drawPaint(node.strokes, node.strokeGeometry)
 
+      for effect in node.effects:
+        if effect.kind == ekInnerShadow:
+          drawInnerShadowEffect(effect, node, node.maskSelfImage())
+
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 

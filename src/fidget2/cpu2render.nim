@@ -1,8 +1,9 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
-    common, staticglfw, pixie, typography, typography/textboxes
+    common, staticglfw, pixie, textboxes
 
 type Image = pixie.Image
 type Paint = schema.Paint
+type Font = pixie.Font
 
 var
   layer*: Image
@@ -168,9 +169,11 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
       fillImage.draw(mask, blendMode = bmMask)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
-proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
+proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) =
   ## Draws the inner shadow.
   var shadow = fillMask.copy()
+  if effect.offset != vec2(0, 0):
+    shadow.shift(effect.offset)
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
@@ -184,7 +187,7 @@ proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
   # Draw it back.
   layer.draw(color)
 
-proc drawDropShadowEffect(lowerLayer: Image, layer: Image, effect: Effect, node: Node) =
+proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: Node) =
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = bmOverwrite)
@@ -192,7 +195,7 @@ proc drawDropShadowEffect(lowerLayer: Image, layer: Image, effect: Effect, node:
     effect.offset, effect.spread, effect.radius, effect.color.rgbx)
   lowerLayer.draw(shadow)
 
-proc maskSelfImage(node: Node): Mask =
+proc maskSelfImage*(node: Node): Mask =
   ## Returns a self mask (used for clips content).
   var mask = newMask(layer.width, layer.height)
   for geometry in node.fillGeometry:
@@ -211,7 +214,7 @@ proc drawText*(node: Node) =
   if node.style.fontPostScriptName notin typefaceCache:
     if node.style.fontPostScriptName == "":
       node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
-    font = readFontTtf(figmaFontPath(node.style.fontPostScriptName))
+    font = pixie.parseOtf(readFile(figmaFontPath(node.style.fontPostScriptName)))
     typefaceCache[node.style.fontPostScriptName] = font.typeface
   else:
     font = Font()
@@ -225,27 +228,45 @@ proc drawText*(node: Node) =
     wrap = true
   let kern = node.style.opentypeFlags.KERN != 0
 
-  # Generate the layout.
-  var layout = font.typeset(
-    text = if textBoxFocus == node:
-        textBox.text
-      else:
-        node.characters,
-    pos = vec2(0, 0),
-    size = node.size,
-    hAlign = node.style.textAlignHorizontal,
-    vAlign = node.style.textAlignVertical,
-    clip = false,
-    wrap = wrap,
-    kern = kern,
-    textCase = node.style.textCase,
+  # layer.fillText(
+  #   font,
+  #   node.characters,
+  #   color.rgbx,
+  #   mat
+  # )
+
+  let textCase = case node.style.textCase:
+    of typography.tcNormal: pixie.tcNormal
+    of typography.tcUpper: pixie.tcUpper
+    of typography.tcLower: pixie.tcLower
+    of typography.tcTitle: pixie.tcTitle
+
+  let hAlign = case node.style.textAlignHorizontal:
+    of typography.Left: pixie.haLeft
+    of typography.Center: pixie.haCenter
+    of typography.Right: pixie.haRight
+
+  let vAlign = case node.style.textAlignVertical:
+    of typography.Top: pixie.vaTop
+    of typography.Middle: pixie.vaMiddle
+    of typography.Bottom: pixie.vaBottom
+
+  var arrangement = font.typeset(
+    node.characters,
+    #textCase = textCase,
+    bounds = node.size,
+    # wrap = wrap
+    # kern = kern
+    hAlign = hAlign,
+    vAlign = vAlign,
   )
-  layoutCache[node.id] = layout
+  arrangementCache[node.id] = arrangement
+
 
   if textBoxFocus == node:
     # Don't recompute the layout twice,
     # Set the text layout to textBox layout.
-    textBox.glyphs = layout
+    textBox.arrangement = arrangement
 
     # TODO: Draw selection outline by using a parent focus variant?
     # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
@@ -263,39 +284,98 @@ proc drawText*(node: Node) =
     path.rect(s)
     layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
-  for i, gpos in layout:
-    # For every character in the layout draw it.
-    var font = gpos.font
+  for i, rune in arrangement.runes:
+    var
+      selRect = arrangement.selectionRects[i]
+      glyphPath = arrangement.getPath(i)
+      glyphColor = node.fills[0].color
 
-    if gpos.character in font.typeface.glyphs:
-      var glyph = font.typeface.glyphs[gpos.character]
-      glyph.makeReady(font)
+    if textBoxFocus == node:
+      # If editing text and character is in selection range,
+      # draw it white.
+      let s = textBox.selection()
+      if i >= s.a and i < s.b:
+        glyphColor = color(1, 1, 1, 1)
 
-      if glyph.path.commands.len == 0:
-        continue
+    layer.fillPath(glyphPath, glyphColor, mat)
+    var rectPath: Path
 
-      let characterMat = translate(vec2(
-        gpos.rect.x + gpos.subPixelShift,
-        gpos.rect.y
-      )) * scale(vec2(font.scale, -font.scale))
+    # print selRect
+    # rectPath.rect(selRect)
+    # layer.strokePath(rectPath, rgba(255, 0, 0, 255), mat)
 
-      # TODO: Better fill system?
-      var color = node.fills[0].color
 
-      if textBoxFocus == node:
-        # If editing text and character is in selection range,
-        # draw it white.
-        let s = textBox.selection()
-        if i >= s.a and i < s.b:
-          color = color(1, 1, 1, 1)
+  # # Generate the layout.
+  # var layout = font.typeset(
+  #   text = if textBoxFocus == node:
+  #       textBox.text
+  #     else:
+  #       node.characters,
+  #   pos = vec2(0, 0),
+  #   size = node.size,
+  #   hAlign = node.style.textAlignHorizontal,
+  #   vAlign = node.style.textAlignVertical,
+  #   clip = false,
+  #   wrap = wrap,
+  #   kern = kern,
+  #   textCase = node.style.textCase,
+  # )
+  # layoutCache[node.id] = layout
 
-      layer.fillPath(
-        glyph.path,
-        color.rgbx,
-        mat * characterMat,
-        wrNonZero,
-        bmNormal
-      )
+  # if textBoxFocus == node:
+  #   # Don't recompute the layout twice,
+  #   # Set the text layout to textBox layout.
+  #   textBox.glyphs = layout
+
+  #   # TODO: Draw selection outline by using a parent focus variant?
+  #   # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
+
+  #   # Draw the selection ranges.
+  #   for selectionRegion in textBox.selectionRegions():
+  #     var s = selectionRegion
+  #     var path: Path
+  #     path.rect(s)
+  #     layer.fillPath(path, defaultTextHighlightColor, mat)
+
+  #   # Draw the typing cursor
+  #   var s = textBox.cursorRect()
+  #   var path: Path
+  #   path.rect(s)
+  #   layer.fillPath(path, node.fills[0].color.rgbx, mat)
+
+  # for i, gpos in layout:
+  #   # For every character in the layout draw it.
+  #   var font = gpos.font
+
+  #   if gpos.character in font.typeface.glyphs:
+  #     var glyph = font.typeface.glyphs[gpos.character]
+  #     glyph.makeReady(font)
+
+  #     if glyph.path.commands.len == 0:
+  #       continue
+
+  #     let characterMat = translate(vec2(
+  #       gpos.rect.x + gpos.subPixelShift,
+  #       gpos.rect.y
+  #     )) * scale(vec2(font.scale, -font.scale))
+
+  #     # TODO: Better fill system?
+  #     var color = node.fills[0].color
+
+  #     if textBoxFocus == node:
+  #       # If editing text and character is in selection range,
+  #       # draw it white.
+  #       let s = textBox.selection()
+  #       if i >= s.a and i < s.b:
+  #         color = color(1, 1, 1, 1)
+
+  #     layer.fillPath(
+  #       glyph.path,
+  #       color.rgbx,
+  #       mat * characterMat,
+  #       wrNonZero,
+  #       bmNormal
+  #     )
 
 proc drawNode*(node: Node, withChildren=true)
 

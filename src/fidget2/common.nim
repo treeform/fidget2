@@ -1,9 +1,14 @@
-import vmath, chroma, schema, staticglfw, typography, typography/textboxes,
-    tables, print, loader, bumpy, pixie
+import vmath, chroma, schema, staticglfw, textboxes,
+    tables, print, loader, bumpy, pixie,
+
+    pixie/fontformats/opentype
+
 
 export print
 
 type Image = pixie.Image
+type Font = pixie.Font
+type Typeface = pixie.Typeface
 
 ## Common vars shared across renderers.
 var
@@ -23,7 +28,7 @@ var
   mat*: Mat3
   imageCache*: Table[string, Image]
 
-  layoutCache*: Table[string, seq[GlyphPosition]]
+  arrangementCache*: Table[string, Arrangement]
 
   defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
 
@@ -52,7 +57,7 @@ proc textFillGeometries(node: Node): seq[Geometry] =
     if node.style.fontPostScriptName == "":
       node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
 
-    font = readFontTtf(figmaFontPath(node.style.fontPostScriptName))
+    font = pixie.parseOtf(readFile(figmaFontPath(node.style.fontPostScriptName)))
     typefaceCache[node.style.fontPostScriptName] = font.typeface
   else:
     font = Font()
@@ -66,43 +71,43 @@ proc textFillGeometries(node: Node): seq[Geometry] =
 
   let kern = node.style.opentypeFlags.KERN != 0
 
-  let layout = font.typeset(
-    text = if textBoxFocus == node:
-        textBox.text
-      else:
-        node.characters,
-    pos = vec2(0, 0),
-    size = node.size,
-    hAlign = node.style.textAlignHorizontal,
-    vAlign = node.style.textAlignVertical,
-    clip = false,
-    wrap = wrap,
-    kern = kern,
-    textCase = node.style.textCase,
-  )
+  # let layout = font.typeset(
+  #   text = if textBoxFocus == node:
+  #       textBox.text
+  #     else:
+  #       node.characters,
+  #   pos = vec2(0, 0),
+  #   size = node.size,
+  #   hAlign = node.style.textAlignHorizontal,
+  #   vAlign = node.style.textAlignVertical,
+  #   clip = false,
+  #   wrap = wrap,
+  #   kern = kern,
+  #   textCase = node.style.textCase,
+  # )
 
-  #TODO: curser and selection
+  # #TODO: curser and selection
 
-  for i, gpos in layout:
-    var font = gpos.font
+  # for i, gpos in layout:
+  #   var font = gpos.font
 
-    if gpos.character in font.typeface.glyphs:
-      var glyph = font.typeface.glyphs[gpos.character]
-      glyph.makeReady(font)
+  #   if gpos.character in font.typeface.glyphs:
+  #     var glyph = font.typeface.glyphs[gpos.character]
+  #     glyph.makeReady(font)
 
-      if glyph.path.commands.len == 0:
-        continue
+  #     if glyph.path.commands.len == 0:
+  #       continue
 
-      let characterMat = translate(vec2(
-        gpos.rect.x + gpos.subPixelShift,
-        gpos.rect.y
-      )) * scale(vec2(font.scale, -font.scale))
+  #     let characterMat = translate(vec2(
+  #       gpos.rect.x + gpos.subPixelShift,
+  #       gpos.rect.y
+  #     )) * scale(vec2(font.scale, -font.scale))
 
-      var geometry = Geometry()
-      geometry.windingRule = wrNonZero
-      geometry.path = glyph.path
-      geometry.mat = characterMat
-      result.add(geometry)
+  #     var geometry = Geometry()
+  #     geometry.windingRule = wrNonZero
+  #     geometry.path = glyph.path
+  #     geometry.mat = characterMat
+  #     result.add(geometry)
 
 proc rectangleFillGeometry(node: Node): Geometry =
   ## Creates a fill geometry from a rectangle like node.
