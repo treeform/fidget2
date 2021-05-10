@@ -469,7 +469,6 @@ proc onMouseButton(
   if buttonDown[button] == false and setKey == false:
     buttonRelease[button] = true
 
-
   if setKey:
     for i in 0 ..< 2:
       mouse.clickTimes[i] = mouse.clickTimes[i + 1]
