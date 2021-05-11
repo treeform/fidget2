@@ -9,21 +9,19 @@ var
   layer*: Image
   layers: seq[Image]
 
-proc drawFill(node: Node, paint: Paint): Image =
-  ## Creates a fill image based on the paint.
-
-  proc toImageSpace(handle: Vec2): Vec2 =
-    vec2(
+proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
+  for handle in paint.gradientHandlePositions:
+    result.gradientHandlePositions.add vec2(
       handle.x * node.absoluteBoundingBox.w + node.box.x,
       handle.y * node.absoluteBoundingBox.h + node.box.y,
     )
+  for stop in paint.gradientStops:
+    var color = stop.color
+    color.a = color.a * paint.opacity
+    result.gradientStops.add(pixie.ColorStop(color: color.rgbx, position: stop.position))
 
-  proc gradientAdjust(stops: seq[schema.ColorStop], alpha: float32): seq[pixie.ColorStop] =
-    for stop in stops:
-      var color = stop.color
-      color.a = color.a * alpha
-      result.add(pixie.ColorStop(color: color.rgbx, position: stop.position))
-
+proc drawFill(node: Node, paint: Paint): Image =
+  ## Creates a fill image based on the paint.
   result = newImage(layer.width, layer.height)
   case paint.kind
   of schema.PaintKind.pkSolid:
@@ -102,35 +100,13 @@ proc drawFill(node: Node, paint: Paint): Image =
         x += image.width.float32
 
   of schema.PaintKind.pkGradientLinear:
-    result.fillLinearGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
-
+    result.fillGradientLinear(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientRadial:
-    result.fillRadialGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
-
+    result.fillGradientRadial(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientAngular:
-    result.fillAngularGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
-
+    result.fillGradientAngular(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientDiamond:
-    result.fillRadialGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
+    result.fillGradientRadial(paint.toPixiePaint(node))
 
 proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
   if paints.len == 0 or geometries.len == 0:
@@ -226,7 +202,7 @@ proc drawText*(node: Node) =
   var wrap = false
   if node.style.textAutoResize == tarHeight:
     wrap = true
-  font.noKerningAdjustments = node.style.opentypeFlags.KERN != 0
+  font.noKerningAdjustments = not(node.style.opentypeFlags.KERN != 0)
 
   font.textCase = case node.style.textCase:
     of typography.tcNormal: pixie.tcNormal
@@ -244,8 +220,10 @@ proc drawText*(node: Node) =
     of typography.Middle: pixie.vaMiddle
     of typography.Bottom: pixie.vaBottom
 
-  var arrangement = font.typeset(
-    node.characters,
+  font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
+
+  var arrangement = typeset(
+    @[newSpan(node.characters, font)],
     bounds = node.size,
     # wrap = wrap
     hAlign = hAlign,
@@ -274,19 +252,31 @@ proc drawText*(node: Node) =
     path.rect(s)
     layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
-  for i, rune in arrangement.runes:
-    var
-      glyphPath = arrangement.getPath(i)
-      glyphColor = node.fills[0].color
+  # for i, rune in arrangement.runes:
+  #   var
+  #     glyphPath = arrangement.getPath(i)
+  #     glyphColor = node.fills[0].color
 
-    if textBoxFocus == node:
-      # If editing text and character is in selection range,
-      # draw it white.
-      let s = textBox.selection()
-      if i >= s.a and i < s.b:
-        glyphColor = color(1, 1, 1, 1)
+  #   if textBoxFocus == node:
+  #     # If editing text and character is in selection range,
+  #     # draw it white.
+  #     let s = textBox.selection()
+  #     if i >= s.a and i < s.b:
+  #       glyphColor = color(1, 1, 1, 1)
 
-    layer.fillPath(glyphPath, glyphColor, mat)
+  #   layer.fillPath(glyphPath, glyphColor, mat)
+
+  ## Fills the text arrangement.
+  for spanIndex, (start, stop) in arrangement.spans:
+    let font = arrangement.fonts[spanIndex]
+    for runeIndex in start .. stop:
+      var path = font.typeface.getGlyphPath(arrangement.runes[runeIndex])
+      path.transform(
+        translate(arrangement.positions[runeIndex]) *
+        scale(vec2(font.scale))
+      )
+      layer.fillPath(path, font.paint, mat)
+
 
 proc drawNode*(node: Node, withChildren=true)
 
