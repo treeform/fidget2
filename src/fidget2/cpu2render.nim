@@ -252,31 +252,25 @@ proc drawText*(node: Node) =
     path.rect(s)
     layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
-  # for i, rune in arrangement.runes:
-  #   var
-  #     glyphPath = arrangement.getPath(i)
-  #     glyphColor = node.fills[0].color
-
-  #   if textBoxFocus == node:
-  #     # If editing text and character is in selection range,
-  #     # draw it white.
-  #     let s = textBox.selection()
-  #     if i >= s.a and i < s.b:
-  #       glyphColor = color(1, 1, 1, 1)
-
-  #   layer.fillPath(glyphPath, glyphColor, mat)
-
   ## Fills the text arrangement.
   for spanIndex, (start, stop) in arrangement.spans:
-    let font = arrangement.fonts[spanIndex]
+    var font = arrangement.fonts[spanIndex]
     for runeIndex in start .. stop:
       var path = font.typeface.getGlyphPath(arrangement.runes[runeIndex])
       path.transform(
         translate(arrangement.positions[runeIndex]) *
         scale(vec2(font.scale))
       )
-      layer.fillPath(path, font.paint, mat)
 
+      var paint = font.paint
+      if textBoxFocus == node:
+        # If editing text and character is in selection range,
+        # draw it white.
+        let s = textBox.selection()
+        if runeIndex >= s.a and runeIndex < s.b:
+          paint.color = color(1, 1, 1, 1).rgbx
+
+      layer.fillPath(path, paint, mat)
 
 proc drawNode*(node: Node, withChildren=true)
 
