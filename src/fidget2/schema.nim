@@ -133,7 +133,7 @@ type
     textAlignHorizontal*: HAlignMode
     textAlignVertical*: VAlignMode
     letterSpacing*: float32
-    fills: seq[Paint]
+    fills*: seq[Paint]
     lineHeightPx*: float32
     lineHeightPercent*: float32
     lineHeightPercentFontSizeNumber*: float32
@@ -191,6 +191,8 @@ type
     rectangleCornerRadii*: ref array[4, float32]
     characters*: string
     style*: TypeStyle
+    characterStyleOverrides*: seq[int]
+    styleOverrideTable*: Table[string, TypeStyle]
     fillGeometry*: seq[Geometry]
     strokeGeometry*: seq[Geometry]
     booleanOperation*: BooleanOperation

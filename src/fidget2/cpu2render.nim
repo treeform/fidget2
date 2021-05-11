@@ -195,6 +195,7 @@ proc drawText*(node: Node) =
   else:
     font = Font()
     font.typeface = typefaceCache[node.style.fontPostScriptName]
+    font.lineHeight = AutoLineHeight
   font.size = node.style.fontSize
   font.lineHeight = node.style.lineHeightPx
 
@@ -220,15 +221,59 @@ proc drawText*(node: Node) =
     of typography.Middle: pixie.vaMiddle
     of typography.Bottom: pixie.vaBottom
 
-  font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
+  var spans: seq[pixie.Span]
+  if node.characterStyleOverrides.len > 0:
+    # The 0th style is node default style:
+    node.styleOverrideTable["0"] = node.style
+    var prevStyle: int
+    for i, styleKey in node.characterStyleOverrides:
+      if i == 0 or node.characterStyleOverrides[i] != prevStyle:
+        let style = node.styleOverrideTable[$styleKey]
+        # Get the proper font.
+        var font: Font
+        if style.fontPostScriptName notin typefaceCache:
+          if style.fontPostScriptName == "":
+            if style.fontFamily == "":
+              style.fontFamily = node.style.fontFamily
+            style.fontPostScriptName = style.fontFamily & "-Regular"
+          font = pixie.parseOtf(readFile(figmaFontPath(style.fontPostScriptName)))
+          typefaceCache[style.fontPostScriptName] = font.typeface
+        else:
+          font = Font()
+          font.typeface = typefaceCache[style.fontPostScriptName]
+        if style.fontSize == 0:
+          style.fontSize = node.style.fontSize
+        font.size = style.fontSize
+        if style.lineHeightPx == 0:
+          style.lineHeightPx = node.style.lineHeightPx
+        font.lineHeight = style.lineHeightPx
+        font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
+
+        if style.fills.len == 0:
+          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: rgbx(0,0,0,255))
+        else:
+          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: style.fills[0].color.rgbx)
+
+        spans.add(newSpan("", font))
+
+      spans[^1].text.add(node.characters[i])
+      prevStyle = styleKey
+
+    # for span in spans:
+    #   print span.text, span.font.paint.color, span.font.size, span.font.lineHeight
+
+  else:
+    font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
+    spans = @[newSpan(node.characters, font)]
 
   var arrangement = typeset(
-    @[newSpan(node.characters, font)],
+    spans,
     bounds = node.size,
     # wrap = wrap
     hAlign = hAlign,
     vAlign = vAlign,
   )
+
   arrangementCache[node.id] = arrangement
 
   if textBoxFocus == node:
