@@ -13,7 +13,9 @@ find "CounterFrame":
   # When text is displayed it grabs the value from the count variable.
   find "CounterDisplay/text":
     onDisplay:
-      thisNode.characters = $count
+      if thisNode.characters != $count:
+        thisNode.dirty = true
+        thisNode.characters = $count
 
 # Starts the fidget main loop.
 startFidget(

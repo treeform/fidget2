@@ -222,8 +222,11 @@ proc setupTextBox(node: Node) =
   textBoxFocus = node
   keyboard.onFocusNode = textBoxFocus
 
-  var font = Font()
-  font.typeface = typefaceCache[node.style.fontPostScriptName]
+  if keyboard.onUnfocusNode != nil:
+    keyboard.onUnfocusNode.dirty = true
+  keyboard.onFocusNode.dirty = true
+
+  var font = fontCache[node.style.fontPostScriptName]
   font.size = node.style.fontSize
   font.lineHeight = node.style.lineHeightPx
 
@@ -469,30 +472,36 @@ proc onMouseButton(
   if buttonDown[button] == false and setKey == false:
     buttonRelease[button] = true
 
+  # if setKey:
+  #   for i in 0 ..< 2:
+  #     mouse.clickTimes[i] = mouse.clickTimes[i + 1]
+  #   mouse.clickTimes[2] = epochTime()
+  # let doubleClickTime = mouse.clickTimes[2] - mouse.clickTimes[1]
+  # let tripleClickTime = mouse.clickTimes[1] - mouse.clickTimes[0]
+  # if doubleClickTime < 0.500 and tripleClickTime < 0.500:
+  #   if setKey:
+  #     mouse.click = false
+  #     mouse.doubleClick = false
+  #     mouse.tripleClick = true
+  # elif doubleClickTime < 0.500:
+  #   if setKey:
+  #     mouse.click = false
+  #     mouse.doubleClick = true
+  #     mouse.tripleClick = false
+  # else:
+  #   if setKey:
+  #     # regular click
+  #     mouse.click = true
+  #     mouse.doubleClick = true
+  #     mouse.tripleClick = false
+  #   else:
+  #     textBoxMouseAction()
+
   if setKey:
-    for i in 0 ..< 2:
-      mouse.clickTimes[i] = mouse.clickTimes[i + 1]
-    mouse.clickTimes[2] = epochTime()
-  let doubleClickTime = mouse.clickTimes[2] - mouse.clickTimes[1]
-  let tripleClickTime = mouse.clickTimes[1] - mouse.clickTimes[0]
-  if doubleClickTime < 0.500 and tripleClickTime < 0.500:
-    if setKey:
-      mouse.click = false
-      mouse.doubleClick = false
-      mouse.tripleClick = true
-  elif doubleClickTime < 0.500:
-    if setKey:
-      mouse.click = false
-      mouse.doubleClick = true
-      mouse.tripleClick = false
+    mouse.click = true
   else:
-    if setKey:
-      # regular click
-      mouse.click = true
-      mouse.doubleClick = true
-      mouse.tripleClick = false
-    else:
-      textBoxMouseAction()
+    textBoxMouseAction()
+
 
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   ## Mouse moved glfw callback.

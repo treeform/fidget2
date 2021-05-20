@@ -23,7 +23,7 @@ var
   # Text edit.
   textBox*: TextBox
   textBoxFocus*: Node
-  typefaceCache*: Table[string, Typeface]
+  fontCache*: Table[string, Font]
 
   mat*: Mat3
   imageCache*: Table[string, Image]
@@ -50,64 +50,63 @@ proc pos(mat: Mat3): Vec2 =
   result.x = mat[2, 0]
   result.y = mat[2, 1]
 
+proc getFont*(fontName: string): Font =
+  if fontName notin fontCache:
+    fontCache[fontName] = pixie.readFont(figmaFontPath(fontName))
+  return fontCache[fontName]
+
 proc textFillGeometries(node: Node): seq[Geometry] =
+  discard
 
-  var font: Font
-  if node.style.fontPostScriptName notin typefaceCache:
-    if node.style.fontPostScriptName == "":
-      node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
+#   if node.style.fontPostScriptName == "":
+#     node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
+#   var font = getFont(node.style.fontPostScriptName)
+#   font.size = node.style.fontSize
+#   font.lineHeight = node.style.lineHeightPx
 
-    font = pixie.parseOtf(readFile(figmaFontPath(node.style.fontPostScriptName)))
-    typefaceCache[node.style.fontPostScriptName] = font.typeface
-  else:
-    font = Font()
-    font.typeface = typefaceCache[node.style.fontPostScriptName]
-  font.size = node.style.fontSize
-  font.lineHeight = node.style.lineHeightPx
+#   var wrap = false
+#   if node.style.textAutoResize == tarHeight:
+#     wrap = true
 
-  var wrap = false
-  if node.style.textAutoResize == tarHeight:
-    wrap = true
+#   let kern = node.style.opentypeFlags.KERN != 0
 
-  let kern = node.style.opentypeFlags.KERN != 0
+#   # let layout = font.typeset(
+#   #   text = if textBoxFocus == node:
+#   #       textBox.text
+#   #     else:
+#   #       node.characters,
+#   #   pos = vec2(0, 0),
+#   #   size = node.size,
+#   #   hAlign = node.style.textAlignHorizontal,
+#   #   vAlign = node.style.textAlignVertical,
+#   #   clip = false,
+#   #   wrap = wrap,
+#   #   kern = kern,
+#   #   textCase = node.style.textCase,
+#   # )
 
-  # let layout = font.typeset(
-  #   text = if textBoxFocus == node:
-  #       textBox.text
-  #     else:
-  #       node.characters,
-  #   pos = vec2(0, 0),
-  #   size = node.size,
-  #   hAlign = node.style.textAlignHorizontal,
-  #   vAlign = node.style.textAlignVertical,
-  #   clip = false,
-  #   wrap = wrap,
-  #   kern = kern,
-  #   textCase = node.style.textCase,
-  # )
+#   # #TODO: curser and selection
 
-  # #TODO: curser and selection
+#   # for i, gpos in layout:
+#   #   var font = gpos.font
 
-  # for i, gpos in layout:
-  #   var font = gpos.font
+#   #   if gpos.character in font.typeface.glyphs:
+#   #     var glyph = font.typeface.glyphs[gpos.character]
+#   #     glyph.makeReady(font)
 
-  #   if gpos.character in font.typeface.glyphs:
-  #     var glyph = font.typeface.glyphs[gpos.character]
-  #     glyph.makeReady(font)
+#   #     if glyph.path.commands.len == 0:
+#   #       continue
 
-  #     if glyph.path.commands.len == 0:
-  #       continue
+#   #     let characterMat = translate(vec2(
+#   #       gpos.rect.x + gpos.subPixelShift,
+#   #       gpos.rect.y
+#   #     )) * scale(vec2(font.scale, -font.scale))
 
-  #     let characterMat = translate(vec2(
-  #       gpos.rect.x + gpos.subPixelShift,
-  #       gpos.rect.y
-  #     )) * scale(vec2(font.scale, -font.scale))
-
-  #     var geometry = Geometry()
-  #     geometry.windingRule = wrNonZero
-  #     geometry.path = glyph.path
-  #     geometry.mat = characterMat
-  #     result.add(geometry)
+#   #     var geometry = Geometry()
+#   #     geometry.windingRule = wrNonZero
+#   #     geometry.path = glyph.path
+#   #     geometry.mat = characterMat
+#   #     result.add(geometry)
 
 proc rectangleFillGeometry(node: Node): Geometry =
   ## Creates a fill geometry from a rectangle like node.

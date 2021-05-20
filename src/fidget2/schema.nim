@@ -119,6 +119,11 @@ type
     tdStrikethrough
     tdUnderline
 
+  LineHeightUnit* = enum
+    lhuPixels
+    lhuFontSizePercent
+    lhuIntrinsicPercent
+
   TypeStyle* = ref object
     fontFamily*: string
     fontPostScriptName*: string
@@ -136,7 +141,7 @@ type
     fills*: seq[Paint]
     lineHeightPx*: float32
     lineHeightPercent*: float32
-    lineHeightPercentFontSizeNumber*: float32
+    lineHeightPercentFontSize*: float32
     lineHeightUnit*: string
     opentypeFlags*: OpenTypeFlags
 
@@ -198,7 +203,6 @@ type
     booleanOperation*: BooleanOperation
 
     # Non figma parameters:
-    hash*: uint32
     dirty*: bool     ## Do the pixels need redrawing?
     pixels*: Image   ## Pixel image cache.
     pixelBox*: Rect  ## Pixel position and size.
@@ -374,6 +378,13 @@ proc enumHook(s: string, v: var TextDecoration) =
     of "STRIKETHROUGH": tdStrikethrough
     of "UNDERLINE": tdUnderline
     else: raise newException(FidgetError, "Invalid text decoration:" & s)
+
+proc enumHook(s: string, v: var LineHeightUnit) =
+  v = case s:
+    of "PIXELS": lhuPixels
+    of "FONT_SIZE_%": lhuFontSizePercent
+    of "INTRINSIC_%": lhuIntrinsicPercent
+    else: raise newException(FidgetError, "Invalid text line height unit:" & s)
 
 proc enumHook(s: string, v: var StrokeAlign) =
   v = case s:

@@ -10,11 +10,22 @@ var
   layers: seq[Image]
 
 proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
+  let paintKind = case paint.kind:
+    of schema.pkSolid: pixie.pkSolid
+    of schema.pkImage: pixie.pkImage
+    of schema.pkGradientLinear: pixie.pkGradientLinear
+    of schema.pkGradientRadial: pixie.pkGradientRadial
+    of schema.pkGradientAngular: pixie.pkGradientAngular
+    of schema.pkGradientDiamond: pixie.pkGradientRadial
+
+  result = pixie.Paint(kind: paintKind)
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add vec2(
       handle.x * node.absoluteBoundingBox.w + node.box.x,
       handle.y * node.absoluteBoundingBox.h + node.box.y,
     )
+  if result.kind == pixie.pkGradientLinear:
+    result.gradientHandlePositions.setLen(2)
   for stop in paint.gradientStops:
     var color = stop.color
     color.a = color.a * paint.opacity
@@ -185,32 +196,6 @@ proc maskSelfImage*(node: Node): Mask =
 proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
 
-  # Get the proper font.
-  var font: Font
-  if node.style.fontPostScriptName notin typefaceCache:
-    if node.style.fontPostScriptName == "":
-      node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
-    font = pixie.parseOtf(readFile(figmaFontPath(node.style.fontPostScriptName)))
-    typefaceCache[node.style.fontPostScriptName] = font.typeface
-  else:
-    font = Font()
-    font.typeface = typefaceCache[node.style.fontPostScriptName]
-    font.lineHeight = AutoLineHeight
-  font.size = node.style.fontSize
-  font.lineHeight = node.style.lineHeightPx
-
-  # Set text params.
-  var wrap = false
-  if node.style.textAutoResize == tarHeight:
-    wrap = true
-  font.noKerningAdjustments = not(node.style.opentypeFlags.KERN != 0)
-
-  font.textCase = case node.style.textCase:
-    of typography.tcNormal: pixie.tcNormal
-    of typography.tcUpper: pixie.tcUpper
-    of typography.tcLower: pixie.tcLower
-    of typography.tcTitle: pixie.tcTitle
-
   let hAlign = case node.style.textAlignHorizontal:
     of typography.Left: pixie.haLeft
     of typography.Center: pixie.haCenter
@@ -229,24 +214,30 @@ proc drawText*(node: Node) =
     for i, styleKey in node.characterStyleOverrides:
       if i == 0 or node.characterStyleOverrides[i] != prevStyle:
         let style = node.styleOverrideTable[$styleKey]
-        # Get the proper font.
-        var font: Font
-        if style.fontPostScriptName notin typefaceCache:
-          if style.fontPostScriptName == "":
-            if style.fontFamily == "":
-              style.fontFamily = node.style.fontFamily
-            style.fontPostScriptName = style.fontFamily & "-Regular"
-          font = pixie.parseOtf(readFile(figmaFontPath(style.fontPostScriptName)))
-          typefaceCache[style.fontPostScriptName] = font.typeface
-        else:
-          font = Font()
-          font.typeface = typefaceCache[style.fontPostScriptName]
+        if style.fontFamily == "":
+          style.fontFamily = node.style.fontFamily
+
+        if style.fontPostScriptName == "":
+          style.fontPostScriptName = style.fontFamily & "-Regular"
+
+        var font = getFont(node.style.fontPostScriptName)
+
         if style.fontSize == 0:
           style.fontSize = node.style.fontSize
         font.size = style.fontSize
-        if style.lineHeightPx == 0:
-          style.lineHeightPx = node.style.lineHeightPx
-        font.lineHeight = style.lineHeightPx
+
+        if style.lineHeightUnit == "":
+          style.lineHeightUnit = node.style.lineHeightUnit
+
+        # TODO
+        # if style.lineHeightUnit ==
+        # print style.lineHeightPercentFontSize
+        # if style.lineHeightPx == 0:
+        #   style.lineHeightPx = node.style.lineHeightPx
+        # font.lineHeight = style.lineHeightPx
+
+        font.lineHeight = AutoLineHeight
+
         font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
         if style.fills.len == 0:
@@ -260,9 +251,34 @@ proc drawText*(node: Node) =
       prevStyle = styleKey
 
     # for span in spans:
-    #   print span.text, span.font.paint.color, span.font.size, span.font.lineHeight
+    #   print "---"
+    #   print span.text
+    #   print span.font.typeface.filePath
+    #   print span.font.paint.color
+    #   print span.font.size
+    #   print span.font.lineHeight
 
   else:
+
+    if node.style.fontPostScriptName == "":
+      node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
+
+    var font = getFont(node.style.fontPostScriptName)
+    font.size = node.style.fontSize
+    font.lineHeight = node.style.lineHeightPx
+
+    # Set text params.
+    var wrap = false
+    if node.style.textAutoResize == tarHeight:
+      wrap = true
+    font.noKerningAdjustments = not(node.style.opentypeFlags.KERN != 0)
+
+    font.textCase = case node.style.textCase:
+      of typography.tcNormal: pixie.tcNormal
+      of typography.tcUpper: pixie.tcUpper
+      of typography.tcLower: pixie.tcLower
+      of typography.tcTitle: pixie.tcTitle
+
     font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
     spans = @[newSpan(node.characters, font)]
 

@@ -37,13 +37,8 @@ proc drawToAtlas(node: Node) =
   let prevMat = mat
   mat = mat * node.transform()
 
-  let hash = hashy(node)
-  if node.hash != hash:
-    node.hash = hash
-  #if node.dirty:
-    #node.dirty = false
-
-    node.mat = mat
+  if node.dirty:
+    node.dirty = false
 
     # compute bounds
     var bounds: Rect
@@ -82,6 +77,10 @@ proc drawToAtlas(node: Node) =
 
 proc drawWithAtlas(node: Node) =
   # Draw the nodes using atlas.
+
+  if not node.visible or node.opacity == 0:
+    return
+
   if node.id in ctx.entries:
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0
