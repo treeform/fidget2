@@ -2,7 +2,7 @@ import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
   perf, context, common, cpu2render, layout, flatty/hashy2
 
 var
-  ctx*: Context
+  ctx*: context.Context
   viewportRect: Rect
 
 proc computeIntBounds(node: Node, mat: Mat3): Rect =
