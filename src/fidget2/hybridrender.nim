@@ -1,5 +1,5 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
-  perf, context, common, cpu2render, layout, flatty/hashy2
+  perf, context, common, cpu2render, layout
 
 var
   ctx*: context.Context
