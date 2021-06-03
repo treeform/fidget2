@@ -31,6 +31,7 @@ type
     textureId*: GLuint
 
 proc bindTextureBufferData*(texture: Texture, buffer: Buffer, data: pointer) =
+  ## Binds data to a texture buffer.
   bindBufferData(buffer, data)
 
   if texture.textureId == 0:
@@ -44,6 +45,7 @@ proc bindTextureBufferData*(texture: Texture, buffer: Buffer, data: pointer) =
   )
 
 proc bindTextureData*(texture: Texture, data: pointer) =
+  ## Binds the data to a texture.
   if texture.textureId == 0:
     glGenTextures(1, texture.textureId.addr)
 
@@ -77,9 +79,11 @@ proc bindTextureData*(texture: Texture, data: pointer) =
     glGenerateMipmap(GL_TEXTURE_2D)
 
 func getFormat(image: Image): GLenum =
+  ## Gets the format of the image.
   result = GL_RGBA
 
 proc newTexture*(image: Image): Texture =
+  ## Creates a new format.
   result = Texture()
   result.width = image.width.GLint
   result.height = image.height.GLint

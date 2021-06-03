@@ -186,7 +186,7 @@ proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node
   lowerLayer.draw(shadow)
 
 proc maskSelfImage*(node: Node): Mask =
-  ## Returns a self mask (used for clips content).
+  ## Returns a self mask (used for clips-content).
   var mask = newMask(layer.width, layer.height)
   for geometry in node.fillGeometry:
     mask.fillPath(

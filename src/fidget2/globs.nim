@@ -107,9 +107,11 @@ type
     data: seq[(string, T)]
 
 proc len*[T](tree: GlobTree[T]): int =
+  ## Return size of the tree.
   tree.data.len
 
 proc add*[T](tree: GlobTree[T], path: string, data: T) =
+  ## Add a path to the tree.
   tree.data.add((path, data))
 
 proc del*[T](tree: GlobTree[T], path: string, data: T) =
@@ -119,6 +121,7 @@ proc del*[T](tree: GlobTree[T], path: string, data: T) =
       return
 
 proc del*[T](tree: GlobTree[T], glob: string) =
+  ## Delete a paths from a tree matching glob.
   var i = 0
   while i < tree.data.len:
     let entry = tree.data[i]
@@ -128,14 +131,17 @@ proc del*[T](tree: GlobTree[T], glob: string) =
     inc i
 
 iterator findAll*[T](tree: GlobTree[T], glob: string): T =
+  ## Find all paths that match the glob.
   for entry in tree.data:
     if entry[0].globMatch(glob):
       yield entry[1]
 
 proc find*[T](tree: GlobTree[T], glob: string): T =
+  ## Find a single path that matches the glob.
   for data in tree.findAll(glob):
     return data
 
 iterator keys*[T](tree: GlobTree[T]): string =
+  ## Iterate all of the keys of the tree.
   for entry in tree.data:
     yield entry[0]

@@ -39,7 +39,6 @@ proc drawToAtlas(node: Node) =
 
   if node.dirty:
     node.dirty = false
-
     # compute bounds
     var bounds: Rect
     if node.kind == nkText:
@@ -51,7 +50,6 @@ proc drawToAtlas(node: Node) =
     node.pixelBox = bounds
 
     if bounds.w.int > 0 and bounds.h.int > 0:
-
       layer = newImage(bounds.w.int, bounds.h.int)
       let prevBoundsMat = mat
       mat = translate(-bounds.xy) * mat

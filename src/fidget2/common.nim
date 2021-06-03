@@ -1,14 +1,8 @@
 import vmath, chroma, schema, staticglfw, textboxes,
     tables, print, loader, bumpy, pixie,
-
     pixie/fontformats/opentype
 
-
-export print
-
 type Image = pixie.Image
-type Font = pixie.Font
-type Typeface = pixie.Typeface
 
 ## Common vars shared across renderers.
 var
@@ -54,59 +48,6 @@ proc getFont*(fontName: string): Font =
   if fontName notin fontCache:
     fontCache[fontName] = pixie.readFont(figmaFontPath(fontName))
   return fontCache[fontName]
-
-proc textFillGeometries(node: Node): seq[Geometry] =
-  discard
-
-#   if node.style.fontPostScriptName == "":
-#     node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
-#   var font = getFont(node.style.fontPostScriptName)
-#   font.size = node.style.fontSize
-#   font.lineHeight = node.style.lineHeightPx
-
-#   var wrap = false
-#   if node.style.textAutoResize == tarHeight:
-#     wrap = true
-
-#   let kern = node.style.opentypeFlags.KERN != 0
-
-#   # let layout = font.typeset(
-#   #   text = if textBoxFocus == node:
-#   #       textBox.text
-#   #     else:
-#   #       node.characters,
-#   #   pos = vec2(0, 0),
-#   #   size = node.size,
-#   #   hAlign = node.style.textAlignHorizontal,
-#   #   vAlign = node.style.textAlignVertical,
-#   #   clip = false,
-#   #   wrap = wrap,
-#   #   kern = kern,
-#   #   textCase = node.style.textCase,
-#   # )
-
-#   # #TODO: curser and selection
-
-#   # for i, gpos in layout:
-#   #   var font = gpos.font
-
-#   #   if gpos.character in font.typeface.glyphs:
-#   #     var glyph = font.typeface.glyphs[gpos.character]
-#   #     glyph.makeReady(font)
-
-#   #     if glyph.path.commands.len == 0:
-#   #       continue
-
-#   #     let characterMat = translate(vec2(
-#   #       gpos.rect.x + gpos.subPixelShift,
-#   #       gpos.rect.y
-#   #     )) * scale(vec2(font.scale, -font.scale))
-
-#   #     var geometry = Geometry()
-#   #     geometry.windingRule = wrNonZero
-#   #     geometry.path = glyph.path
-#   #     geometry.mat = characterMat
-#   #     result.add(geometry)
 
 proc rectangleFillGeometry(node: Node): Geometry =
   ## Creates a fill geometry from a rectangle like node.
@@ -216,8 +157,6 @@ proc genFillGeometry*(node: Node) =
   case node.kind:
   of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
     node.fillGeometry = @[node.rectangleFillGeometry()]
-  of nkText:
-    node.fillGeometry = node.textFillGeometries()
   else:
     discard
 
@@ -234,7 +173,6 @@ proc genHitRectGeometry*(node: Node) =
   ## Generates geometry thats a simple rect over the node,
   ## no matter what kind of node it is.
   ## Used for simple mouse hit prediction
-  ##
   var geom = Geometry()
   geom.mat = mat3()
   geom.windingRule = wrNonZero

@@ -1,6 +1,7 @@
 import bumpy, chroma, jsony, strutils, tables, typography, vmath
 
-from pixie import Image, newImage, `[]`, `[]=`, strokeSegment, draw, BlendMode, Path, WindingRule, PixieError, parsePath
+from pixie import Image, newImage, `[]`, `[]=`, strokeSegment, draw, BlendMode,
+   Path, WindingRule, PixieError, parsePath
 
 type
   FidgetError* = object of ValueError ## Raised if an operation fails.

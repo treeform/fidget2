@@ -7,7 +7,7 @@ type
     image*: Image
     heights*: seq[uint16]
     margin*: int
-    dirty*: bool
+    dirty*: bool # Has the atlas changed and needs to be re-uploaded?
 
 proc newCpuAtlas*(size, margin: int): CpuAtlas =
   ## Creates a new CPU based texture atlas.
@@ -80,7 +80,7 @@ proc size*(atlas: CpuAtlas): int =
   atlas.image.width
 
 proc grow(atlas: CpuAtlas) =
-  ## Grows the atlas by 2.
+  ## Grows the atlas by 2. All current entries remain in their place.
   var image = newImage(atlas.size*2, atlas.size*2)
   image.draw(atlas.image)
   atlas.image = image

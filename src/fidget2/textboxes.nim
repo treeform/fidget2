@@ -26,6 +26,10 @@ because it is so natural. Here is a small list of the most important ones:
 * There should be a scroll bar and a scroll window
 * Scroll window should stay with the text cursor
 * Backspace and delete with selected text remove selected text and don't perform their normal action
+
+TODO:
+* affinity for left or right of the line.
+
 ]#
 
 const

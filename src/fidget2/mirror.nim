@@ -472,6 +472,7 @@ proc onMouseButton(
   if buttonDown[button] == false and setKey == false:
     buttonRelease[button] = true
 
+  # TODO: Figure out double and triple clicks.
   # if setKey:
   #   for i in 0 ..< 2:
   #     mouse.clickTimes[i] = mouse.clickTimes[i + 1]
