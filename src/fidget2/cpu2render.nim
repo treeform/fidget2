@@ -18,11 +18,17 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     of schema.pkGradientAngular: pixie.pkGradientAngular
     of schema.pkGradientDiamond: pixie.pkGradientRadial
 
+  let nodeOffset =
+    when defined(cpu2):
+      node.box.xy
+    else:
+      vec2(0, 0)
+
   result = pixie.Paint(kind: paintKind)
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add vec2(
-      handle.x * node.absoluteBoundingBox.w,
-      handle.y * node.absoluteBoundingBox.h
+      handle.x * node.absoluteBoundingBox.w + nodeOffset.x,
+      handle.y * node.absoluteBoundingBox.h + nodeOffset.y
     )
   if result.kind == pixie.pkGradientLinear:
     result.gradientHandlePositions.setLen(2)
@@ -34,6 +40,13 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
 proc drawFill(node: Node, paint: Paint): Image =
   ## Creates a fill image based on the paint.
   result = newImage(layer.width, layer.height)
+
+  let nodeOffset =
+    when defined(cpu2):
+      node.box.xy
+    else:
+      vec2(0, 0)
+
   case paint.kind
   of schema.PaintKind.pkSolid:
     var color = paint.color
@@ -89,8 +102,8 @@ proc drawFill(node: Node, paint: Paint): Image =
       mat[2, 2] = 1
 
       mat = mat.inverse()
-      mat[2, 0] = node.box.x + mat[2, 0] * node.absoluteBoundingBox.w
-      mat[2, 1] = node.box.y + mat[2, 1] * node.absoluteBoundingBox.h
+      mat[2, 0] = nodeOffset.x + mat[2, 0] * node.absoluteBoundingBox.w
+      mat[2, 1] = nodeOffset.y + mat[2, 1] * node.absoluteBoundingBox.h
       let
         ratioW = image.width.float32 / node.absoluteBoundingBox.w
         ratioH = image.height.float32 / node.absoluteBoundingBox.h
@@ -106,7 +119,7 @@ proc drawFill(node: Node, paint: Paint): Image =
       while x < node.absoluteBoundingBox.w:
         var y = 0.0
         while y < node.absoluteBoundingBox.h:
-          result.draw(image, node.box.xy + vec2(x, y))
+          result.draw(image, nodeOffset + vec2(x, y))
           y += image.height.float32
         x += image.width.float32
 
