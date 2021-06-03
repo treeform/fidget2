@@ -1,28 +1,38 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
-    common, staticglfw, pixie, typography, typography/textboxes
+    common, staticglfw, pixie, textboxes
 
 type Image = pixie.Image
 type Paint = schema.Paint
+type Font = pixie.Font
 
 var
   layer*: Image
   layers: seq[Image]
 
-proc drawFill(node: Node, paint: Paint): Image =
-  ## Creates a fill image based on the paint.
+proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
+  let paintKind = case paint.kind:
+    of schema.pkSolid: pixie.pkSolid
+    of schema.pkImage: pixie.pkImage
+    of schema.pkGradientLinear: pixie.pkGradientLinear
+    of schema.pkGradientRadial: pixie.pkGradientRadial
+    of schema.pkGradientAngular: pixie.pkGradientAngular
+    of schema.pkGradientDiamond: pixie.pkGradientRadial
 
-  proc toImageSpace(handle: Vec2): Vec2 =
-    vec2(
+  result = pixie.Paint(kind: paintKind)
+  for handle in paint.gradientHandlePositions:
+    result.gradientHandlePositions.add vec2(
       handle.x * node.absoluteBoundingBox.w + node.box.x,
       handle.y * node.absoluteBoundingBox.h + node.box.y,
     )
+  if result.kind == pixie.pkGradientLinear:
+    result.gradientHandlePositions.setLen(2)
+  for stop in paint.gradientStops:
+    var color = stop.color
+    color.a = color.a * paint.opacity
+    result.gradientStops.add(pixie.ColorStop(color: color.rgbx, position: stop.position))
 
-  proc gradientAdjust(stops: seq[schema.ColorStop], alpha: float32): seq[pixie.ColorStop] =
-    for stop in stops:
-      var color = stop.color
-      color.a = color.a * alpha
-      result.add(pixie.ColorStop(color: color.rgbx, position: stop.position))
-
+proc drawFill(node: Node, paint: Paint): Image =
+  ## Creates a fill image based on the paint.
   result = newImage(layer.width, layer.height)
   case paint.kind
   of schema.PaintKind.pkSolid:
@@ -101,35 +111,13 @@ proc drawFill(node: Node, paint: Paint): Image =
         x += image.width.float32
 
   of schema.PaintKind.pkGradientLinear:
-    result.fillLinearGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
-
+    result.fillGradientLinear(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientRadial:
-    result.fillRadialGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
-
+    result.fillGradientRadial(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientAngular:
-    result.fillAngularGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
-
+    result.fillGradientAngular(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientDiamond:
-    result.fillRadialGradient(
-      paint.gradientHandlePositions[0].toImageSpace(),
-      paint.gradientHandlePositions[1].toImageSpace(),
-      paint.gradientHandlePositions[2].toImageSpace(),
-      paint.gradientStops.gradientAdjust(paint.opacity)
-    )
+    result.fillGradientRadial(paint.toPixiePaint(node))
 
 proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
   if paints.len == 0 or geometries.len == 0:
@@ -147,10 +135,13 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
     for geometry in geometries:
       layer.fillPath(
         geometry.path,
-        color.rgbx,
+        pixie.Paint(
+          kind: pixie.PaintKind.pkSolid,
+          color:color.rgbx,
+          blendMode: paint.blendMode
+        ),
         mat * geometry.mat,
-        geometry.windingRule,
-        blendMode = paint.blendMode
+        geometry.windingRule
       )
   else:
     # Mask + fill based on paint.
@@ -168,9 +159,11 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
       fillImage.draw(mask, blendMode = bmMask)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
-proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
+proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) =
   ## Draws the inner shadow.
   var shadow = fillMask.copy()
+  if effect.offset != vec2(0, 0):
+    shadow.shift(effect.offset)
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
@@ -184,7 +177,7 @@ proc drawInnerShadowEffect(effect: Effect, node: Node, fillMask: Mask) =
   # Draw it back.
   layer.draw(color)
 
-proc drawDropShadowEffect(lowerLayer: Image, layer: Image, effect: Effect, node: Node) =
+proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: Node) =
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = bmOverwrite)
@@ -192,7 +185,7 @@ proc drawDropShadowEffect(lowerLayer: Image, layer: Image, effect: Effect, node:
     effect.offset, effect.spread, effect.radius, effect.color.rgbx)
   lowerLayer.draw(shadow)
 
-proc maskSelfImage(node: Node): Mask =
+proc maskSelfImage*(node: Node): Mask =
   ## Returns a self mask (used for clips content).
   var mask = newMask(layer.width, layer.height)
   for geometry in node.fillGeometry:
@@ -206,46 +199,106 @@ proc maskSelfImage(node: Node): Mask =
 proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
 
-  # Get the proper font.
-  var font: Font
-  if node.style.fontPostScriptName notin typefaceCache:
+  let hAlign = case node.style.textAlignHorizontal:
+    of typography.Left: pixie.haLeft
+    of typography.Center: pixie.haCenter
+    of typography.Right: pixie.haRight
+
+  let vAlign = case node.style.textAlignVertical:
+    of typography.Top: pixie.vaTop
+    of typography.Middle: pixie.vaMiddle
+    of typography.Bottom: pixie.vaBottom
+
+  var spans: seq[pixie.Span]
+  if node.characterStyleOverrides.len > 0:
+    # The 0th style is node default style:
+    node.styleOverrideTable["0"] = node.style
+    var prevStyle: int
+    for i, styleKey in node.characterStyleOverrides:
+      if i == 0 or node.characterStyleOverrides[i] != prevStyle:
+        let style = node.styleOverrideTable[$styleKey]
+        if style.fontFamily == "":
+          style.fontFamily = node.style.fontFamily
+
+        if style.fontPostScriptName == "":
+          style.fontPostScriptName = style.fontFamily & "-Regular"
+
+        var font = getFont(node.style.fontPostScriptName)
+
+        if style.fontSize == 0:
+          style.fontSize = node.style.fontSize
+        font.size = style.fontSize
+
+        if style.lineHeightUnit == "":
+          style.lineHeightUnit = node.style.lineHeightUnit
+
+        # TODO
+        # if style.lineHeightUnit ==
+        # print style.lineHeightPercentFontSize
+        # if style.lineHeightPx == 0:
+        #   style.lineHeightPx = node.style.lineHeightPx
+        # font.lineHeight = style.lineHeightPx
+
+        font.lineHeight = AutoLineHeight
+
+        font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
+
+        if style.fills.len == 0:
+          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: rgbx(0,0,0,255))
+        else:
+          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: style.fills[0].color.rgbx)
+
+        spans.add(newSpan("", font))
+
+      spans[^1].text.add(node.characters[i])
+      prevStyle = styleKey
+
+    # for span in spans:
+    #   print "---"
+    #   print span.text
+    #   print span.font.typeface.filePath
+    #   print span.font.paint.color
+    #   print span.font.size
+    #   print span.font.lineHeight
+
+  else:
+
     if node.style.fontPostScriptName == "":
       node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
-    font = readFontTtf(figmaFontPath(node.style.fontPostScriptName))
-    typefaceCache[node.style.fontPostScriptName] = font.typeface
-  else:
-    font = Font()
-    font.typeface = typefaceCache[node.style.fontPostScriptName]
-  font.size = node.style.fontSize
-  font.lineHeight = node.style.lineHeightPx
 
-  # Set text params.
-  var wrap = false
-  if node.style.textAutoResize == tarHeight:
-    wrap = true
-  let kern = node.style.opentypeFlags.KERN != 0
+    var font = getFont(node.style.fontPostScriptName)
+    font.size = node.style.fontSize
+    font.lineHeight = node.style.lineHeightPx
 
-  # Generate the layout.
-  var layout = font.typeset(
-    text = if textBoxFocus == node:
-        textBox.text
-      else:
-        node.characters,
-    pos = vec2(0, 0),
-    size = node.size,
-    hAlign = node.style.textAlignHorizontal,
-    vAlign = node.style.textAlignVertical,
-    clip = false,
-    wrap = wrap,
-    kern = kern,
-    textCase = node.style.textCase,
+    # Set text params.
+    var wrap = false
+    if node.style.textAutoResize == tarHeight:
+      wrap = true
+    font.noKerningAdjustments = not(node.style.opentypeFlags.KERN != 0)
+
+    font.textCase = case node.style.textCase:
+      of typography.tcNormal: pixie.tcNormal
+      of typography.tcUpper: pixie.tcUpper
+      of typography.tcLower: pixie.tcLower
+      of typography.tcTitle: pixie.tcTitle
+
+    font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
+    spans = @[newSpan(node.characters, font)]
+
+  var arrangement = typeset(
+    spans,
+    bounds = node.size,
+    # wrap = wrap
+    hAlign = hAlign,
+    vAlign = vAlign,
   )
-  layoutCache[node.id] = layout
+
+  arrangementCache[node.id] = arrangement
 
   if textBoxFocus == node:
     # Don't recompute the layout twice,
     # Set the text layout to textBox layout.
-    textBox.glyphs = layout
+    textBox.arrangement = arrangement
 
     # TODO: Draw selection outline by using a parent focus variant?
     # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
@@ -263,39 +316,25 @@ proc drawText*(node: Node) =
     path.rect(s)
     layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
-  for i, gpos in layout:
-    # For every character in the layout draw it.
-    var font = gpos.font
+  ## Fills the text arrangement.
+  for spanIndex, (start, stop) in arrangement.spans:
+    var font = arrangement.fonts[spanIndex]
+    for runeIndex in start .. stop:
+      var path = font.typeface.getGlyphPath(arrangement.runes[runeIndex])
+      path.transform(
+        translate(arrangement.positions[runeIndex]) *
+        scale(vec2(font.scale))
+      )
 
-    if gpos.character in font.typeface.glyphs:
-      var glyph = font.typeface.glyphs[gpos.character]
-      glyph.makeReady(font)
-
-      if glyph.path.commands.len == 0:
-        continue
-
-      let characterMat = translate(vec2(
-        gpos.rect.x + gpos.subPixelShift,
-        gpos.rect.y
-      )) * scale(vec2(font.scale, -font.scale))
-
-      # TODO: Better fill system?
-      var color = node.fills[0].color
-
+      var paint = font.paint
       if textBoxFocus == node:
         # If editing text and character is in selection range,
         # draw it white.
         let s = textBox.selection()
-        if i >= s.a and i < s.b:
-          color = color(1, 1, 1, 1)
+        if runeIndex >= s.a and runeIndex < s.b:
+          paint.color = color(1, 1, 1, 1).rgbx
 
-      layer.fillPath(
-        glyph.path,
-        color.rgbx,
-        mat * characterMat,
-        wrNonZero,
-        bmNormal
-      )
+      layer.fillPath(path, paint, mat)
 
 proc drawNode*(node: Node, withChildren=true)
 

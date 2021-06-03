@@ -1,8 +1,8 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
-  perf, context, common, cpu2render, layout, flatty/hashy2
+  perf, context, common, cpu2render, layout
 
 var
-  ctx*: Context
+  ctx*: context.Context
   viewportRect: Rect
 
 proc computeIntBounds(node: Node, mat: Mat3): Rect =
@@ -37,13 +37,8 @@ proc drawToAtlas(node: Node) =
   let prevMat = mat
   mat = mat * node.transform()
 
-  let hash = hashy(node)
-  if node.hash != hash:
-    node.hash = hash
-  #if node.dirty:
-    #node.dirty = false
-
-    node.mat = mat
+  if node.dirty:
+    node.dirty = false
 
     # compute bounds
     var bounds: Rect
@@ -68,6 +63,10 @@ proc drawToAtlas(node: Node) =
         node.drawPaint(node.fills, node.fillGeometry)
         node.drawPaint(node.strokes, node.strokeGeometry)
 
+      for effect in node.effects:
+        if effect.kind == ekInnerShadow:
+          drawInnerShadowEffect(effect, node, node.maskSelfImage())
+
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 
@@ -78,6 +77,10 @@ proc drawToAtlas(node: Node) =
 
 proc drawWithAtlas(node: Node) =
   # Draw the nodes using atlas.
+
+  if not node.visible or node.opacity == 0:
+    return
+
   if node.id in ctx.entries:
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0

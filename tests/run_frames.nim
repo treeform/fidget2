@@ -46,13 +46,16 @@ proc main(r = "", e = "", l = 10000) =
   </style>
   """
   var count = 0
+
+  echo "name.......................... render      time      diff"
+
   for frame in figmaFile.document.children[0].children:
     if count >= l: continue
     if r != "" and not frame.name.startsWith(r): continue
     if e != "" and frame.name != e: continue
 
-    when not defined(benchy):
-      echo frame.name, " --------------------------------- "
+    #when not defined(benchy):
+    #  echo frame.name, " --------------------------------- "
 
     if firstTime and w in [
       "gpu_atlas", "gpu_atlas_full", "gpu",
@@ -117,7 +120,7 @@ proc main(r = "", e = "", l = 10000) =
       diffImage.writeFile("tests/frames/diffs/" & frame.name & ".png")
       count += 1
 
-    echo &"  {w} {frameTime*1000:0.3f}ms {diffScore:0.3f}% diffpx"
+    echo &"{frame.name:.<30} {w} {frameTime*1000:>9.3f}ms {diffScore:>8.3f}%"
 
     totalDiff += diffScore
 
