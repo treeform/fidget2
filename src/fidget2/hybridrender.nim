@@ -82,7 +82,11 @@ proc drawWithAtlas(node: Node) =
   if node.id in ctx.entries:
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0
-    ctx.drawImage(node.id, pos=node.pixelBox.xy)
+    ctx.drawImage(
+      node.id,
+      pos = node.pixelBox.xy,
+      color = color(node.opacity, node.opacity, node.opacity, node.opacity)
+    )
 
   for child in node.children:
     drawWithAtlas(child)
