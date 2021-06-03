@@ -57,9 +57,39 @@ proc drawToAtlas(node: Node) =
       if node.kind == nkText:
         node.drawText()
       else:
-        # geometry compute when doing bounds.
-        node.drawPaint(node.fills, node.fillGeometry)
-        node.drawPaint(node.strokes, node.strokeGeometry)
+
+        if node.strokeGeometry.len == 0:
+          # No stroke just fill.
+          node.drawPaint(node.fills, node.fillGeometry)
+        else:
+          # Draw stroke depending on stroke align.
+          case node.strokeAlign
+          of saInside:
+            if node.fillGeometry.len == 0:
+              node.drawPaint(node.strokes, node.strokeGeometry)
+
+            else:
+              # Deal with fill
+              var fillLayer = layer
+              node.drawPaint(node.fills, node.fillGeometry)
+              # Deal with fill mask
+              var fillMask = newMask(bounds.w.int, bounds.h.int)
+              for geometry in node.fillGeometry:
+                fillMask.fillPath(geometry.path, mat, geometry.windingRule)
+              # Deal with stroke
+              var strokeLayer = newImage(bounds.w.int, bounds.h.int)
+              layer = strokeLayer
+              node.drawPaint(node.strokes, node.strokeGeometry)
+              layer = fillLayer
+              strokeLayer.draw(fillMask, blendMode = bmMask)
+              layer.draw(strokeLayer)
+
+          of saCenter:
+            node.drawPaint(node.fills, node.fillGeometry)
+            node.drawPaint(node.strokes, node.strokeGeometry)
+          of saOutside:
+            node.drawPaint(node.strokes, node.strokeGeometry)
+            node.drawPaint(node.fills, node.fillGeometry)
 
       for effect in node.effects:
         if effect.kind == ekInnerShadow:
