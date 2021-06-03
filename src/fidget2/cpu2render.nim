@@ -21,8 +21,8 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   result = pixie.Paint(kind: paintKind)
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add vec2(
-      handle.x * node.absoluteBoundingBox.w + node.box.x,
-      handle.y * node.absoluteBoundingBox.h + node.box.y,
+      handle.x * node.absoluteBoundingBox.w,
+      handle.y * node.absoluteBoundingBox.h
     )
   if result.kind == pixie.pkGradientLinear:
     result.gradientHandlePositions.setLen(2)
