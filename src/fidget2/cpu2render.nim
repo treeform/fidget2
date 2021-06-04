@@ -172,6 +172,53 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
       fillImage.draw(mask, blendMode = bmMask)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
+proc drawGeometry*(node: Node) =
+  if node.strokeGeometry.len == 0:
+    # No stroke just fill.
+    node.drawPaint(node.fills, node.fillGeometry)
+  else:
+    # Draw stroke depending on stroke align.
+    case node.strokeAlign
+    of saInside:
+      if node.fillGeometry.len == 0:
+        node.drawPaint(node.strokes, node.strokeGeometry)
+
+      else:
+        # Deal with fill
+        var fillLayer = layer
+        node.drawPaint(node.fills, node.fillGeometry)
+        # Deal with fill mask
+        var fillMask = newMask(layer.width, layer.height)
+        for geometry in node.fillGeometry:
+          fillMask.fillPath(geometry.path, mat, geometry.windingRule)
+        # Deal with stroke
+        var strokeLayer = newImage(layer.width, layer.height)
+        layer = strokeLayer
+        node.drawPaint(node.strokes, node.strokeGeometry)
+        layer = fillLayer
+        strokeLayer.draw(fillMask, blendMode = bmMask)
+        layer.draw(strokeLayer)
+
+    of saCenter:
+      node.drawPaint(node.fills, node.fillGeometry)
+      node.drawPaint(node.strokes, node.strokeGeometry)
+
+    of saOutside:
+      # Deal with fill
+      var fillLayer = layer
+      node.drawPaint(node.fills, node.fillGeometry)
+      # Deal with fill mask
+      var fillMask = newMask(layer.width, layer.height)
+      for geometry in node.fillGeometry:
+        fillMask.fillPath(geometry.path, mat, geometry.windingRule)
+      # Deal with stroke
+      var strokeLayer = newImage(layer.width, layer.height)
+      layer = strokeLayer
+      node.drawPaint(node.strokes, node.strokeGeometry)
+      layer = fillLayer
+      strokeLayer.draw(fillMask, blendMode = bmSubtractMask)
+      layer.draw(strokeLayer)
+
 proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) =
   ## Draws the inner shadow.
   var shadow = fillMask.copy()
@@ -374,9 +421,8 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
     node.drawText()
   else:
     node.genFillGeometry()
-    node.drawPaint(node.fills, node.fillGeometry)
     node.genStrokeGeometry()
-    node.drawPaint(node.strokes, node.strokeGeometry)
+    node.drawGeometry()
 
   for effect in node.effects:
     if effect.kind == ekInnerShadow:
