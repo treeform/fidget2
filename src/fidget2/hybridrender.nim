@@ -88,8 +88,21 @@ proc drawToAtlas(node: Node) =
             node.drawPaint(node.fills, node.fillGeometry)
             node.drawPaint(node.strokes, node.strokeGeometry)
           of saOutside:
-            node.drawPaint(node.strokes, node.strokeGeometry)
+
+            # Deal with fill
+            var fillLayer = layer
             node.drawPaint(node.fills, node.fillGeometry)
+            # Deal with fill mask
+            var fillMask = newMask(bounds.w.int, bounds.h.int)
+            for geometry in node.fillGeometry:
+              fillMask.fillPath(geometry.path, mat, geometry.windingRule)
+            # Deal with stroke
+            var strokeLayer = newImage(bounds.w.int, bounds.h.int)
+            layer = strokeLayer
+            node.drawPaint(node.strokes, node.strokeGeometry)
+            layer = fillLayer
+            strokeLayer.draw(fillMask, blendMode = bmSubtractMask)
+            layer.draw(strokeLayer)
 
       for effect in node.effects:
         if effect.kind == ekInnerShadow:
