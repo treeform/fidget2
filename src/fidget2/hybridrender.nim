@@ -33,6 +33,15 @@ proc computeIntBounds(node: Node, mat: Mat3): Rect =
     if effect.kind == ekLayerBlur:
       borderMinV = min(borderMinV, vec2(-effect.radius))
       borderMaxV = max(borderMaxV, vec2(effect.radius))
+    if effect.kind == ekDropShadow:
+      borderMinV = min(
+        borderMinV,
+        effect.offset - vec2(effect.radius+effect.spread)
+      )
+      borderMaxV = max(
+        borderMaxV,
+        effect.offset + vec2(effect.radius + effect.spread)
+      )
 
   minV += borderMinV
   maxV += borderMaxV
@@ -72,7 +81,12 @@ proc drawToAtlas(node: Node) =
       for effect in node.effects:
         case effect.kind
         of ekDropShadow:
-          discard
+          var bottom = newImage(layer.width, layer.height)
+          bottom.draw(layer, blendMode = bmOverwrite)
+          bottom = bottom.shadow(
+            effect.offset, effect.spread, effect.radius, effect.color.rgbx)
+          bottom.draw(layer)
+          layer = bottom
         of ekInnerShadow:
           drawInnerShadowEffect(effect, node, node.maskSelfImage())
         of ekLayerBlur:
