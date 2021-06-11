@@ -18,17 +18,10 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     of schema.pkGradientAngular: pixie.pkGradientAngular
     of schema.pkGradientDiamond: pixie.pkGradientRadial
 
-  let nodeOffset =
-    when defined(cpu2):
-      node.box.xy
-    else:
-      vec2(0, 0)
-
   result = pixie.Paint(kind: paintKind)
   for handle in paint.gradientHandlePositions:
-    result.gradientHandlePositions.add vec2(
-      handle.x * node.absoluteBoundingBox.w + nodeOffset.x,
-      handle.y * node.absoluteBoundingBox.h + nodeOffset.y
+    result.gradientHandlePositions.add(
+      handle * node.absoluteBoundingBox.wh + mat.pos
     )
   if result.kind == pixie.pkGradientLinear:
     result.gradientHandlePositions.setLen(2)

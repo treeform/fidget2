@@ -27,6 +27,16 @@ proc computeIntBounds(node: Node, mat: Mat3): Rect =
             maxV.y = max(maxV.y, v.y)
   minV = minV.floor
   maxV = maxV.ceil
+
+  var borderMinV, borderMaxV: Vec2
+  for effect in node.effects:
+    if effect.kind == ekLayerBlur:
+      borderMinV = min(borderMinV, vec2(-effect.radius))
+      borderMaxV = max(borderMaxV, vec2(effect.radius))
+
+  minV += borderMinV
+  maxV += borderMaxV
+
   rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
 
 proc drawToAtlas(node: Node) =
@@ -60,8 +70,15 @@ proc drawToAtlas(node: Node) =
         node.drawGeometry()
 
       for effect in node.effects:
-        if effect.kind == ekInnerShadow:
+        case effect.kind
+        of ekDropShadow:
+          discard
+        of ekInnerShadow:
           drawInnerShadowEffect(effect, node, node.maskSelfImage())
+        of ekLayerBlur:
+          layer.blur(effect.radius)
+        of ekBackgroundBlur:
+          discard
 
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
