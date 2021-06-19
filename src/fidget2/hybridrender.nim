@@ -5,7 +5,7 @@ var
   ctx*: context.Context
   viewportRect: Rect
 
-proc computeIntBounds(node: Node, mat: Mat3): Rect =
+proc computeIntBounds(node: Node, mat: Mat3, withChildren=false): Rect =
   ## Compute self bounds of a given node.
   var
     minV: Vec2
@@ -25,6 +25,7 @@ proc computeIntBounds(node: Node, mat: Mat3): Rect =
             minV.y = min(minV.y, v.y)
             maxV.x = max(maxV.x, v.x)
             maxV.y = max(maxV.y, v.y)
+
   minV = minV.floor
   maxV = maxV.ceil
 
@@ -46,7 +47,14 @@ proc computeIntBounds(node: Node, mat: Mat3): Rect =
   minV += borderMinV
   maxV += borderMaxV
 
-  rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
+  result = rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
+
+  if withChildren:
+    for child in node.children:
+      result = result or child.computeIntBounds(
+        mat * node.transform(),
+        withChildren
+      )
 
 proc drawToAtlas(node: Node) =
   ## Draw the nodes into the atlas (and setup pixel box).
@@ -65,7 +73,8 @@ proc drawToAtlas(node: Node) =
     else:
       node.genFillGeometry()
       node.genStrokeGeometry()
-    bounds = computeIntBounds(node, mat)
+    bounds = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
+
     node.pixelBox = bounds
 
     if bounds.w.int > 0 and bounds.h.int > 0:
@@ -75,30 +84,17 @@ proc drawToAtlas(node: Node) =
 
       if node.kind == nkText:
         node.drawText()
+      elif node.kind == nkBooleanOperation:
+        node.drawBoolean()
       else:
-        node.drawGeometry()
-
-      for effect in node.effects:
-        case effect.kind
-        of ekDropShadow:
-          var bottom = newImage(layer.width, layer.height)
-          bottom.draw(layer, blendMode = bmOverwrite)
-          bottom = bottom.shadow(
-            effect.offset, effect.spread, effect.radius, effect.color.rgbx)
-          bottom.draw(layer)
-          layer = bottom
-        of ekInnerShadow:
-          drawInnerShadowEffect(effect, node, node.maskSelfImage())
-        of ekLayerBlur:
-          layer.blur(effect.radius)
-        of ekBackgroundBlur:
-          discard
+        node.drawNodeInternal(withChildren=false)
 
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 
-  for child in node.children:
-    drawToAtlas(child)
+  if node.kind != nkBooleanOperation:
+    for child in node.children:
+      drawToAtlas(child)
 
   mat = prevMat
 

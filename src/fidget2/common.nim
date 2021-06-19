@@ -1,6 +1,8 @@
 import vmath, chroma, schema, staticglfw, textboxes,
     tables, print, loader, bumpy, pixie,
-    pixie/fontformats/opentype
+    pixie/fontformats/opentype, print
+
+export print
 
 type Image = pixie.Image
 

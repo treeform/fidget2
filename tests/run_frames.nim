@@ -47,7 +47,7 @@ proc main(r = "", e = "", l = 10000) =
   """
   var count = 0
 
-  echo "name.......................... render      time      diff"
+  echo "name.......................... render     time      diff"
 
   for frame in figmaFile.document.children[0].children:
     if count >= l: continue
