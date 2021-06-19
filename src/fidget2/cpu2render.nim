@@ -8,6 +8,7 @@ type Font = pixie.Font
 var
   layer*: Image
   layers: seq[Image]
+  maskLayer*: Image
 
 proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   let paintKind = case paint.kind:
@@ -139,13 +140,14 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
     if color.a == 0:
       return
     for geometry in geometries:
+      var paint = pixie.Paint(
+        kind: pixie.PaintKind.pkSolid,
+        color:color.rgbx,
+        blendMode: paint.blendMode
+      )
       layer.fillPath(
         geometry.path,
-        pixie.Paint(
-          kind: pixie.PaintKind.pkSolid,
-          color:color.rgbx,
-          blendMode: paint.blendMode
-        ),
+        paint,
         mat * geometry.mat,
         geometry.windingRule
       )
@@ -391,6 +393,49 @@ proc drawText*(node: Node) =
 
 proc drawNode*(node: Node, withChildren=true)
 
+proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
+  let prevMat = mat
+  mat = mat * node.transform()
+
+  if node.children.len == 0:
+    node.genFillGeometry()
+    for geometry in node.fillGeometry:
+      var paint = pixie.Paint(kind: pixie.pkSolid)
+      paint.color = rgbx(255, 255, 255, 255)
+      paint.blendMode = blendMode
+      maskLayer.fillPath(
+        geometry.path,
+        paint,
+        mat,
+        geometry.windingRule
+      )
+
+  for i, child in node.children:
+    let blendMode =
+      if i == 0:
+        bmNormal
+      else:
+        case node.booleanOperation:
+          of boUnion: bmNormal
+          of boSubtract: bmSubtractMask
+          of boIntersect: bmMask
+          of boExclude: bmExcludeMask
+    drawBooleanNode(child, blendMode)
+
+  mat = prevMat
+
+proc drawBoolean*(node: Node) =
+  ## Draws boolean
+  maskLayer = newImage(layer.width, layer.height)
+  mat = mat * node.transform().inverse()
+  drawBooleanNode(node, bmNormal)
+  for paint in node.fills:
+    if not paint.visible or paint.opacity == 0:
+      continue
+    var fillImage = drawFill(node, paint)
+    fillImage.draw(maskLayer, blendMode = bmMask)
+    layer.draw(fillImage)
+
 proc drawNodeInternal*(node: Node, withChildren=true) =
 
   if not node.visible or node.opacity == 0:
@@ -420,6 +465,8 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
   for effect in node.effects:
     if effect.kind == ekInnerShadow:
       drawInnerShadowEffect(effect, node, node.maskSelfImage())
+    if effect.kind == ekLayerBlur:
+      layer.blur(effect.radius)
 
   if withChildren:
     for child in node.children:
