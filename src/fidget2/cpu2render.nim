@@ -142,7 +142,7 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
     for geometry in geometries:
       var paint = pixie.Paint(
         kind: pixie.PaintKind.pkSolid,
-        color:color.rgbx,
+        color: color.rgbx,
         blendMode: paint.blendMode
       )
       layer.fillPath(
