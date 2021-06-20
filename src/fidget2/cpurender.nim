@@ -536,8 +536,6 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
   for effect in node.effects:
     if effect.kind == ekInnerShadow:
       drawInnerShadowEffect(effect, node, node.maskSelfImage())
-    if effect.kind == ekLayerBlur:
-      layer.blur(effect.radius)
 
   if withChildren:
     if hasMaskedChildren:
@@ -573,6 +571,8 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
     for effect in node.effects:
       if effect.kind == ekDropShadow:
         lowerLayer.drawDropShadowEffect(layer, effect, node)
+      if effect.kind == ekLayerBlur:
+        layer.blur(effect.radius)
     lowerLayer.draw(layer, blendMode = node.blendMode)
     layer = lowerLayer
 
