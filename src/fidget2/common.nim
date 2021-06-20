@@ -1,6 +1,6 @@
 import vmath, chroma, schema, staticglfw, textboxes,
     tables, print, loader, bumpy, pixie,
-    pixie/fontformats/opentype, print
+    pixie/fontformats/opentype, print, os, puppy, strformat
 
 export print
 
@@ -48,7 +48,15 @@ proc pos(mat: Mat3): Vec2 =
 
 proc getFont*(fontName: string): Font =
   if fontName notin fontCache:
-    fontCache[fontName] = pixie.readFont(figmaFontPath(fontName))
+    let path = figmaFontPath(fontName)
+    if not fileExists(path):
+      let url = fmt"https://github.com/treeform/fidgetfonts/raw/main/fonts/{fontName}.ttf"
+      echo "Downloading ", url
+      let data = fetch(url)
+      if data == "":
+        raise newException(FidgetError, "Downloading " & url & " failed")
+      writeFile(figmaFontPath(fontName), data)
+    fontCache[fontName] = pixie.readFont(path)
   return fontCache[fontName]
 
 proc rectangleFillGeometry(node: Node): Geometry =

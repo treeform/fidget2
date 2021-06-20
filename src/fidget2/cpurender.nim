@@ -1,5 +1,5 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
-    common, staticglfw, pixie, textboxes, pixie/fileformats/png
+    common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils
 
 type Image = pixie.Image
 type Paint = schema.Paint
@@ -335,9 +335,19 @@ proc drawText*(node: Node) =
           style.fontFamily = node.style.fontFamily
 
         if style.fontPostScriptName == "":
-          style.fontPostScriptName = style.fontFamily & "-Regular"
+          style.fontPostScriptName = style.fontFamily
 
-        var font = getFont(node.style.fontPostScriptName)
+        style.fontPostScriptName.removeSuffix("-Bold")
+        style.fontPostScriptName.removeSuffix("-Regular")
+
+        case int(style.fontWeight):
+        of 700:
+          style.fontPostScriptName.add "-Bold"
+        else:
+          # 400 and 0
+          style.fontPostScriptName.add "-Regular"
+
+        var font = getFont(style.fontPostScriptName)
 
         if style.fontSize == 0:
           style.fontSize = node.style.fontSize
