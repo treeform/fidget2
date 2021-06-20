@@ -357,16 +357,17 @@ proc drawText*(node: Node) =
 
         font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
+        var fillColor: Color
         if style.fills.len == 0:
-          font.paint = pixie.Paint(
-            kind: pixie.PaintKind.pkSolid,
-            color: rgbx(0,0,0,255)
-          )
+          fillColor = node.fills[0].color
+          fillColor.a = node.fills[0].opacity
         else:
-          font.paint = pixie.Paint(
-            kind: pixie.PaintKind.pkSolid,
-            color: style.fills[0].color.rgbx
-          )
+          fillColor = style.fills[0].color
+          fillColor.a = style.fills[0].opacity
+        font.paint = pixie.Paint(
+          kind: pixie.PaintKind.pkSolid,
+          color: fillColor.rgbx
+        )
 
         spans.add(newSpan("", font))
 
