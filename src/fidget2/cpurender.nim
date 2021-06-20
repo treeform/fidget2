@@ -573,6 +573,14 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
         lowerLayer.drawDropShadowEffect(layer, effect, node)
       if effect.kind == ekLayerBlur:
         layer.blur(effect.radius)
+      if effect.kind == ekBackgroundBlur:
+        var blurLayer = lowerLayer.copy() # Maybe collapse bg?
+        var blurMask = newMask(layer)
+        blurMask.ceil()
+        blurLayer.blur(effect.radius)
+        blurLayer.draw(blurMask, blendMode = bmMask)
+        blurLayer.draw(layer)
+        layer = blurLayer
     lowerLayer.draw(layer, blendMode = node.blendMode)
     layer = lowerLayer
 
