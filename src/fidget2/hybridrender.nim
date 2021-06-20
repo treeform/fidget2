@@ -5,7 +5,7 @@ var
   ctx*: context.Context
   viewportRect: Rect
 
-proc drawToAtlas(node: Node) =
+proc drawToAtlas(node: Node, level: int) =
   ## Draw the nodes into the atlas (and setup pixel box).
   if not node.visible or node.opacity == 0:
     return
@@ -42,7 +42,7 @@ proc drawToAtlas(node: Node) =
         break
 
     # Can't draw clips content on the GPU.
-    if node.clipsContent:
+    if level != 0 and node.clipsContent:
       node.collapse = true
 
     # Can't draw effects with children.
@@ -61,7 +61,7 @@ proc drawToAtlas(node: Node) =
 
   if not node.collapse:
     for child in node.children:
-      drawToAtlas(child)
+      drawToAtlas(child, level + 1)
 
   mat = prevMat
 
@@ -103,7 +103,8 @@ proc drawToScreen*(screenNode: Node) =
   # Setup proper matrix for drawing.
   mat = mat3()
   mat = mat * screenNode.transform().inverse()
-  drawToAtlas(screenNode)
+
+  drawToAtlas(screenNode, 0)
 
   glClearColor(0, 0, 0, 0)
   glClear(GL_COLOR_BUFFER_BIT)
