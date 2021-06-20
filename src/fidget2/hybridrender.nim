@@ -25,15 +25,25 @@ proc drawToAtlas(node: Node) =
     ## If we are looking to optimize some thing is to take
     ## more things away from CPU and give them to GPU
 
-    # Can't draw booleans on GPU.
+    # Can't draw booleans on the GPU.
     if node.kind == nkBooleanOperation:
       node.collapse = true
 
-    # Can't draw blending layers on GPU.
+    # Can't draw blending layers on the GPU.
     for child in node.children:
       if child.blendMode != bmNormal:
         node.collapse = true
         break
+
+    # Can't draw masks on the GPU.
+    for child in node.children:
+      if child.isMask:
+        node.collapse = true
+        break
+
+    # Can't draw clips content on the GPU.
+    if node.clipsContent:
+      node.collapse = true
 
     # Can't draw effects with children.
     if node.effects.len != 0:
