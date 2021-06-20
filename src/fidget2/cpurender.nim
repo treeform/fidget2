@@ -310,6 +310,19 @@ proc maskSelfImage*(node: Node): Mask =
     )
   return mask
 
+const fontWeights = {
+  0: "Regular",
+  100: "Thin",
+  200: "ExtraLight",
+  300: "Light",
+  400: "Regular",
+  500: "Medium",
+  600: "SemiBold",
+  700: "Bold",
+  800: "ExtraBold",
+  900: "Black",
+}.toTable
+
 proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
 
@@ -337,14 +350,13 @@ proc drawText*(node: Node) =
         if style.fontPostScriptName == "":
           style.fontPostScriptName = style.fontFamily
 
-        style.fontPostScriptName.removeSuffix("-Bold")
-        style.fontPostScriptName.removeSuffix("-Regular")
+        for name in fontWeights.values:
+          style.fontPostScriptName.removeSuffix("-" & name)
 
-        case int(style.fontWeight):
-        of 700:
-          style.fontPostScriptName.add "-Bold"
+        let fontWeight = int(style.fontWeight)
+        if fontWeight in fontWeights:
+          style.fontPostScriptName.add "-" & fontWeights[fontWeight]
         else:
-          # 400 and 0
           style.fontPostScriptName.add "-Regular"
 
         var font = getFont(style.fontPostScriptName)

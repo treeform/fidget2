@@ -143,11 +143,9 @@ proc downloadFigmaFile(fileKey: string) =
   else:
     if fileExists(figmaFilePath) and fileExists(lastModifiedPath):
       # If we have a saved Figma file, is it up to date?
-      echo "getting data file"
       let
         url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
         data = fetch(url, headers = figmaHeaders())
-      echo "got data file"
       if data == "":
         echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
         useCached = true
