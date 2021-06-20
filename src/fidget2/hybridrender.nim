@@ -16,13 +16,7 @@ proc drawToAtlas(node: Node) =
   if node.dirty:
     node.dirty = false
     # compute bounds
-    var bounds: Rect
-    if node.kind == nkText:
-      node.genHitRectGeometry()
-    else:
-      node.genFillGeometry()
-      node.genStrokeGeometry()
-    bounds = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
+    var bounds = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
 
     node.pixelBox = bounds
 
@@ -34,10 +28,7 @@ proc drawToAtlas(node: Node) =
       let prevBoundsMat = mat
       mat = translate(-bounds.xy) * mat
 
-      if node.kind == nkText:
-        node.drawText()
-      else:
-        node.drawNodeInternal(withChildren=not node.collapse)
+      node.drawNodeInternal(withChildren=node.collapse)
 
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat

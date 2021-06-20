@@ -12,6 +12,14 @@ var
 
 proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
   ## Compute self bounds of a given node.
+  ##
+
+  if node.kind == nkText:
+    node.genHitRectGeometry()
+  else:
+    node.genFillGeometry()
+    node.genStrokeGeometry()
+
   var
     minV: Vec2
     maxV: Vec2
