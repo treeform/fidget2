@@ -8,7 +8,7 @@ type Font = pixie.Font
 var
   layer*: Image
   layers: seq[Image]
-  maskLayer*: Image
+  maskLayer*: Mask
 
 proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
   ## Compute self bounds of a given node.
@@ -459,14 +459,11 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
   if node.children.len == 0:
     node.genFillGeometry()
     for geometry in node.fillGeometry:
-      var paint = pixie.Paint(kind: pixie.pkSolid)
-      paint.color = rgbx(255, 255, 255, 255)
-      paint.blendMode = blendMode
       maskLayer.fillPath(
         geometry.path,
-        paint,
         mat,
-        geometry.windingRule
+        geometry.windingRule,
+        blendMode
       )
 
   for i, child in node.children:
@@ -485,7 +482,7 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
 
 proc drawBoolean*(node: Node) =
   ## Draws boolean
-  maskLayer = newImage(layer.width, layer.height)
+  maskLayer = newMask(layer.width, layer.height)
   mat = mat * node.transform().inverse()
   drawBooleanNode(node, bmNormal)
   for paint in node.fills:
