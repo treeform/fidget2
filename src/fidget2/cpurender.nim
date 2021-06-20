@@ -1,5 +1,5 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
-    common, staticglfw, pixie, textboxes
+    common, staticglfw, pixie, textboxes, pixie/fileformats/png
 
 type Image = pixie.Image
 type Paint = schema.Paint
@@ -503,6 +503,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
   if not node.visible or node.opacity == 0:
     return
 
+  var hasMaskedChildren = false
   var needsLayer = false
   if node.opacity != 1.0:
     needsLayer = true
@@ -512,6 +513,12 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
     needsLayer = true
   if node.effects.len > 0:
     needsLayer = true
+  for child in node.children:
+    if child.isMask:
+      needsLayer = true
+      hasMaskedChildren = true
+      maskLayer = newMask(layer.width, layer.height)
+      break
 
   if needsLayer:
     layers.add(layer)
@@ -532,9 +539,28 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
     if effect.kind == ekLayerBlur:
       layer.blur(effect.radius)
 
-  if withChildren and node.kind != nkBooleanOperation:
-    for child in node.children:
-      drawNode(child)
+  if withChildren:
+    if hasMaskedChildren:
+      layers.add(layer)
+      layer = newImage(layer.width, layer.height)
+      var childLayer = layer
+      for child in node.children:
+        if child.isMask:
+          layers.add(layer)
+          layer = newImage(layer.width, layer.height)
+          drawNode(child)
+          maskLayer.draw(layer, blendMode=bmNormal)
+          layer = layers.pop()
+        else:
+          drawNode(child)
+          layer.draw(maskLayer, blendMode=bmMask)
+      layer = layers.pop()
+      layer.draw(childLayer)
+    elif node.kind == nkBooleanOperation:
+      discard
+    else:
+      for child in node.children:
+        drawNode(child)
 
   if node.clipsContent:
     var mask = node.maskSelfImage()
