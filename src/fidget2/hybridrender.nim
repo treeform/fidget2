@@ -26,6 +26,9 @@ proc drawToAtlas(node: Node) =
 
     node.pixelBox = bounds
 
+    if node.kind == nkBooleanOperation:
+      node.collapse = true
+
     if bounds.w.int > 0 and bounds.h.int > 0:
       layer = newImage(bounds.w.int, bounds.h.int)
       let prevBoundsMat = mat
@@ -33,15 +36,13 @@ proc drawToAtlas(node: Node) =
 
       if node.kind == nkText:
         node.drawText()
-      elif node.kind == nkBooleanOperation:
-        node.drawBoolean()
       else:
-        node.drawNodeInternal(withChildren=false)
+        node.drawNodeInternal(withChildren=not node.collapse)
 
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 
-  if node.kind != nkBooleanOperation:
+  if not node.collapse:
     for child in node.children:
       drawToAtlas(child)
 
@@ -62,8 +63,9 @@ proc drawWithAtlas(node: Node) =
       color = color(node.opacity, node.opacity, node.opacity, node.opacity)
     )
 
-  for child in node.children:
-    drawWithAtlas(child)
+  if not node.collapse:
+    for child in node.children:
+      drawWithAtlas(child)
 
 proc drawToScreen*(screenNode: Node) =
   ## Draw the current node onto the screen.

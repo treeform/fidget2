@@ -213,7 +213,7 @@ type
     orgBox*: Rect    ## Original size needed for constraints.
     idNum*: int
     mat*: Mat3       ## Useful to get back to the node.
-    collapse*: bool
+    collapse*: bool  ## Is the node drawn as a single texture (CPU internals)
 
   FigmaFile* = ref object
     document*: Node

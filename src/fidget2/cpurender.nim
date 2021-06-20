@@ -508,6 +508,8 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
 
   if node.kind == nkText:
     node.drawText()
+  elif node.kind == nkBooleanOperation:
+    node.drawBoolean()
   else:
     node.genFillGeometry()
     node.genStrokeGeometry()
@@ -519,7 +521,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
     if effect.kind == ekLayerBlur:
       layer.blur(effect.radius)
 
-  if withChildren:
+  if withChildren and node.kind != nkBooleanOperation:
     for child in node.children:
       drawNode(child)
 
