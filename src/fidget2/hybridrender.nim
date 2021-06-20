@@ -1,60 +1,9 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
-  perf, context, common, cpu2render, layout
+  perf, context, common, cpurender, layout
 
 var
   ctx*: context.Context
   viewportRect: Rect
-
-proc computeIntBounds(node: Node, mat: Mat3, withChildren=false): Rect =
-  ## Compute self bounds of a given node.
-  var
-    minV: Vec2
-    maxV: Vec2
-    first = true
-  for geoms in [node.fillGeometry, node.strokeGeometry]:
-    for geom in geoms:
-      for shape in geom.path.commandsToShapes():
-        for vec in shape:
-          let v = mat * vec
-          if first:
-            minV = v
-            maxV = v
-            first = false
-          else:
-            minV.x = min(minV.x, v.x)
-            minV.y = min(minV.y, v.y)
-            maxV.x = max(maxV.x, v.x)
-            maxV.y = max(maxV.y, v.y)
-
-  minV = minV.floor
-  maxV = maxV.ceil
-
-  var borderMinV, borderMaxV: Vec2
-  for effect in node.effects:
-    if effect.kind == ekLayerBlur:
-      borderMinV = min(borderMinV, vec2(-effect.radius))
-      borderMaxV = max(borderMaxV, vec2(effect.radius))
-    if effect.kind == ekDropShadow:
-      borderMinV = min(
-        borderMinV,
-        effect.offset - vec2(effect.radius+effect.spread)
-      )
-      borderMaxV = max(
-        borderMaxV,
-        effect.offset + vec2(effect.radius + effect.spread)
-      )
-
-  minV += borderMinV
-  maxV += borderMaxV
-
-  result = rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
-
-  if withChildren:
-    for child in node.children:
-      result = result or child.computeIntBounds(
-        mat * node.transform(),
-        withChildren
-      )
 
 proc drawToAtlas(node: Node) =
   ## Draw the nodes into the atlas (and setup pixel box).

@@ -7,9 +7,6 @@ export textboxes
 when defined(cpu):
   import cpurender
 
-elif defined(cpu2):
-  import cpu2render
-
 elif defined(gpu):
   import gpurender
 
@@ -548,7 +545,7 @@ proc display() =
   drawToScreen(thisFrame)
   perfMark "drawToScreen"
 
-  when not defined(cpu) and not defined(cpu2):
+  when not defined(cpu):
     if vSync:
       swapBuffers(window)
       perfMark "swapBuffers"

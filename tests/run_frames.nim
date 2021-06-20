@@ -16,9 +16,6 @@ elif defined(gpu_atlas_full):
 elif defined(cpu):
   import fidget2/cpurender
   const w = "cpu"
-elif defined(cpu2):
-  import fidget2/cpu2render
-  const w = "cpu2"
 elif defined(zpu):
   import fidget2/zpurender
   const w = "zpu"
@@ -74,14 +71,12 @@ proc main(r = "", e = "", l = 10000) =
       elif defined(gpu_atlas_full):
         drawGpuFrameToAtlas(frame, "screen")
         result = readGpuPixelsFromAtlas("screen", crop = false)
-      elif defined(cpu):
-        result = drawCompleteCpuFrame(frame)
       elif defined(zpu):
         result = drawCompleteZpuFrame(frame)
       elif defined(gpu_vs_zpu):
         drawGpuFrameToScreen(frame)
         result = readGpuPixelsFromScreen()
-      elif defined(cpu2):
+      elif defined(cpu):
         result = drawCompleteFrame(frame)
       elif defined(hyb):
         ctx.clearAtlas()
