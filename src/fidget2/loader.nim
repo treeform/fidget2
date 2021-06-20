@@ -138,25 +138,30 @@ proc downloadFigmaFile(fileKey: string) =
     lastModifiedPath = lastModifiedFilePath(fileKey)
 
   var useCached: bool
-  if fileExists(figmaFilePath) and fileExists(lastModifiedPath):
-    # If we have a saved Figma file, is it up to date?
-    let
-      url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
-      data = fetch(url, headers = figmaHeaders())
-    if data == "":
-      echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
-      useCached = true
+  when defined(useCached):
+    useCached = true
+  else:
+    if fileExists(figmaFilePath) and fileExists(lastModifiedPath):
+      # If we have a saved Figma file, is it up to date?
+      echo "getting data file"
+      let
+        url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
+        data = fetch(url, headers = figmaHeaders())
+      echo "got data file"
+      if data == "":
+        echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
+        useCached = true
 
-    if data != "":
-      try:
-        let liveFile = parseFigmaFile(data)
-        if liveFile.lastModified == readFile(lastModifiedPath):
-          useCached = true
-        else:
-          echo "Cached Figma file out of date, downloading latest"
-      except:
-        echo "Unexpected error while validating cached Figma file: " &
-          getCurrentExceptionMsg()
+      if data != "":
+        try:
+          let liveFile = parseFigmaFile(data)
+          if liveFile.lastModified == readFile(lastModifiedPath):
+            useCached = true
+          else:
+            echo "Cached Figma file out of date, downloading latest"
+        except:
+          echo "Unexpected error while validating cached Figma file: " &
+            getCurrentExceptionMsg()
 
   if useCached:
     echo "Using cached Figma file"

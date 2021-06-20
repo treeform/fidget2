@@ -16,19 +16,21 @@ elif defined(gpu_atlas_full):
 elif defined(cpu):
   import fidget2/cpurender
   const w = "cpu"
-elif defined(cpu2):
-  import fidget2/cpu2render
-  const w = "cpu2"
 elif defined(zpu):
   import fidget2/zpurender
   const w = "zpu"
 elif defined(gpu_vs_zpu):
   import fidget2/gpurender, fidget2/zpurender
   const w = "gpu_vs_zpu"
+elif defined(cpu_vs_hyb):
+  import fidget2/cpurender
+  import fidget2/hybridrender, fidget2/context
+  const w = "cpu_vs_hyb"
+  proc setupWindow(frameNode: Node, offscreen: bool) =
+    hybridrender.setupWindow(frameNode, offscreen)
 elif defined(hyb):
   const w = "hyb"
   import fidget2/hybridrender, fidget2/context
-
 
 proc main(r = "", e = "", l = 10000) =
 
@@ -59,7 +61,7 @@ proc main(r = "", e = "", l = 10000) =
 
     if firstTime and w in [
       "gpu_atlas", "gpu_atlas_full", "gpu",
-      "gpu_vs_zpu", "hyb"
+      "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
       setupWindow(frame, offscreen = true)
       firstTime = false
@@ -74,19 +76,19 @@ proc main(r = "", e = "", l = 10000) =
       elif defined(gpu_atlas_full):
         drawGpuFrameToAtlas(frame, "screen")
         result = readGpuPixelsFromAtlas("screen", crop = false)
-      elif defined(cpu):
-        result = drawCompleteCpuFrame(frame)
       elif defined(zpu):
         result = drawCompleteZpuFrame(frame)
       elif defined(gpu_vs_zpu):
         drawGpuFrameToScreen(frame)
         result = readGpuPixelsFromScreen()
-      elif defined(cpu2):
+      elif defined(cpu):
         result = drawCompleteFrame(frame)
       elif defined(hyb):
         ctx.clearAtlas()
         drawToScreen(frame)
         result = readGpuPixelsFromScreen()
+      elif defined(cpu_vs_hyb):
+        result = drawCompleteFrame(frame)
 
     when defined(benchy):
       var mainFrame = frame
@@ -114,6 +116,11 @@ proc main(r = "", e = "", l = 10000) =
       when defined(gpu_vs_zpu):
         master = drawCompleteZpuFrame(frame)
         master.writeFile("tests/frames/zpu/" & frame.name & ".png")
+      elif defined(cpu_vs_hyb):
+        ctx.clearAtlas()
+        hybridrender.drawToScreen(frame)
+        master = readGpuPixelsFromScreen()
+        master.writeFile("tests/frames/hyb/" & frame.name & ".png")
       else:
         master = readImage(&"tests/frames/masters/{frame.name}.png")
       (diffScore, diffImage) = diff(master, image)
@@ -127,8 +134,10 @@ proc main(r = "", e = "", l = 10000) =
     framesHtml.add(&"<h4>{frame.name}</h4>")
     framesHTML.add(&"<p>{w} {frameTime*1000:0.3f}ms {diffScore:0.3f}% diffpx</p>")
     framesHTML.add(&"<img src='{frame.name}.png'>")
-    if w == "vs":
+    if w == "gpu_vs_zpu":
       framesHTML.add(&"<img src='zpu/{frame.name}.png'>")
+    elif w == "cpu_vs_hyb":
+      framesHTML.add(&"<img src='hyb/{frame.name}.png'>")
     else:
       framesHTML.add(&"<img src='masters/{frame.name}.png'>")
     framesHTML.add(&"<img src='diffs/{frame.name}.png'><br>")

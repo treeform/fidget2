@@ -1,5 +1,5 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
-    common, staticglfw, pixie, textboxes
+    common, staticglfw, pixie, textboxes, pixie/fileformats/png
 
 type Image = pixie.Image
 type Paint = schema.Paint
@@ -8,7 +8,66 @@ type Font = pixie.Font
 var
   layer*: Image
   layers: seq[Image]
-  maskLayer*: Image
+  maskLayer*: Mask
+
+proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
+  ## Compute self bounds of a given node.
+  ##
+
+  if node.kind == nkText:
+    node.genHitRectGeometry()
+  else:
+    node.genFillGeometry()
+    node.genStrokeGeometry()
+
+  var
+    minV: Vec2
+    maxV: Vec2
+    first = true
+  for geoms in [node.fillGeometry, node.strokeGeometry]:
+    for geom in geoms:
+      for shape in geom.path.commandsToShapes():
+        for vec in shape:
+          let v = mat * vec
+          if first:
+            minV = v
+            maxV = v
+            first = false
+          else:
+            minV.x = min(minV.x, v.x)
+            minV.y = min(minV.y, v.y)
+            maxV.x = max(maxV.x, v.x)
+            maxV.y = max(maxV.y, v.y)
+
+  minV = minV.floor
+  maxV = maxV.ceil
+
+  var borderMinV, borderMaxV: Vec2
+  for effect in node.effects:
+    if effect.kind == ekLayerBlur:
+      borderMinV = min(borderMinV, vec2(-effect.radius))
+      borderMaxV = max(borderMaxV, vec2(effect.radius))
+    if effect.kind == ekDropShadow:
+      borderMinV = min(
+        borderMinV,
+        effect.offset - vec2(effect.radius+effect.spread)
+      )
+      borderMaxV = max(
+        borderMaxV,
+        effect.offset + vec2(effect.radius + effect.spread)
+      )
+
+  minV += borderMinV
+  maxV += borderMaxV
+
+  result = rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
+
+  if withChildren:
+    for child in node.children:
+      result = result or child.computeIntBounds(
+        mat * node.transform(),
+        withChildren
+      )
 
 proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   let paintKind = case paint.kind:
@@ -36,7 +95,7 @@ proc drawFill(node: Node, paint: Paint): Image =
   result = newImage(layer.width, layer.height)
 
   let nodeOffset =
-    when defined(cpu2):
+    when defined(cpu):
       node.box.xy
     else:
       vec2(0, 0)
@@ -299,9 +358,15 @@ proc drawText*(node: Node) =
         font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
         if style.fills.len == 0:
-          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: rgbx(0,0,0,255))
+          font.paint = pixie.Paint(
+            kind: pixie.PaintKind.pkSolid,
+            color: rgbx(0,0,0,255)
+          )
         else:
-          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: style.fills[0].color.rgbx)
+          font.paint = pixie.Paint(
+            kind: pixie.PaintKind.pkSolid,
+            color: style.fills[0].color.rgbx
+          )
 
         spans.add(newSpan("", font))
 
@@ -400,14 +465,11 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
   if node.children.len == 0:
     node.genFillGeometry()
     for geometry in node.fillGeometry:
-      var paint = pixie.Paint(kind: pixie.pkSolid)
-      paint.color = rgbx(255, 255, 255, 255)
-      paint.blendMode = blendMode
       maskLayer.fillPath(
         geometry.path,
-        paint,
         mat,
-        geometry.windingRule
+        geometry.windingRule,
+        blendMode
       )
 
   for i, child in node.children:
@@ -426,7 +488,7 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
 
 proc drawBoolean*(node: Node) =
   ## Draws boolean
-  maskLayer = newImage(layer.width, layer.height)
+  maskLayer = newMask(layer.width, layer.height)
   mat = mat * node.transform().inverse()
   drawBooleanNode(node, bmNormal)
   for paint in node.fills:
@@ -441,6 +503,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
   if not node.visible or node.opacity == 0:
     return
 
+  var hasMaskedChildren = false
   var needsLayer = false
   if node.opacity != 1.0:
     needsLayer = true
@@ -450,6 +513,12 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
     needsLayer = true
   if node.effects.len > 0:
     needsLayer = true
+  for child in node.children:
+    if child.isMask:
+      needsLayer = true
+      hasMaskedChildren = true
+      maskLayer = newMask(layer.width, layer.height)
+      break
 
   if needsLayer:
     layers.add(layer)
@@ -457,6 +526,8 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
 
   if node.kind == nkText:
     node.drawText()
+  elif node.kind == nkBooleanOperation:
+    node.drawBoolean()
   else:
     node.genFillGeometry()
     node.genStrokeGeometry()
@@ -469,8 +540,27 @@ proc drawNodeInternal*(node: Node, withChildren=true) =
       layer.blur(effect.radius)
 
   if withChildren:
-    for child in node.children:
-      drawNode(child)
+    if hasMaskedChildren:
+      layers.add(layer)
+      layer = newImage(layer.width, layer.height)
+      var childLayer = layer
+      for child in node.children:
+        if child.isMask:
+          layers.add(layer)
+          layer = newImage(layer.width, layer.height)
+          drawNode(child)
+          maskLayer.draw(layer, blendMode=bmNormal)
+          layer = layers.pop()
+        else:
+          drawNode(child)
+          layer.draw(maskLayer, blendMode=bmMask)
+      layer = layers.pop()
+      layer.draw(childLayer)
+    elif node.kind == nkBooleanOperation:
+      discard
+    else:
+      for child in node.children:
+        drawNode(child)
 
   if node.clipsContent:
     var mask = node.maskSelfImage()

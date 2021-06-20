@@ -1,60 +1,9 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
-  perf, context, common, cpu2render, layout
+  perf, context, common, cpurender, layout
 
 var
   ctx*: context.Context
   viewportRect: Rect
-
-proc computeIntBounds(node: Node, mat: Mat3, withChildren=false): Rect =
-  ## Compute self bounds of a given node.
-  var
-    minV: Vec2
-    maxV: Vec2
-    first = true
-  for geoms in [node.fillGeometry, node.strokeGeometry]:
-    for geom in geoms:
-      for shape in geom.path.commandsToShapes():
-        for vec in shape:
-          let v = mat * vec
-          if first:
-            minV = v
-            maxV = v
-            first = false
-          else:
-            minV.x = min(minV.x, v.x)
-            minV.y = min(minV.y, v.y)
-            maxV.x = max(maxV.x, v.x)
-            maxV.y = max(maxV.y, v.y)
-
-  minV = minV.floor
-  maxV = maxV.ceil
-
-  var borderMinV, borderMaxV: Vec2
-  for effect in node.effects:
-    if effect.kind == ekLayerBlur:
-      borderMinV = min(borderMinV, vec2(-effect.radius))
-      borderMaxV = max(borderMaxV, vec2(effect.radius))
-    if effect.kind == ekDropShadow:
-      borderMinV = min(
-        borderMinV,
-        effect.offset - vec2(effect.radius+effect.spread)
-      )
-      borderMaxV = max(
-        borderMaxV,
-        effect.offset + vec2(effect.radius + effect.spread)
-      )
-
-  minV += borderMinV
-  maxV += borderMaxV
-
-  result = rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
-
-  if withChildren:
-    for child in node.children:
-      result = result or child.computeIntBounds(
-        mat * node.transform(),
-        withChildren
-      )
 
 proc drawToAtlas(node: Node) =
   ## Draw the nodes into the atlas (and setup pixel box).
@@ -67,32 +16,50 @@ proc drawToAtlas(node: Node) =
   if node.dirty:
     node.dirty = false
     # compute bounds
-    var bounds: Rect
-    if node.kind == nkText:
-      node.genHitRectGeometry()
-    else:
-      node.genFillGeometry()
-      node.genStrokeGeometry()
-    bounds = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
+    var bounds = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
 
     node.pixelBox = bounds
+
+    ## Any special thing we can't do on the GPU
+    ## we have to collapse the node so that CPU draws it all
+    ## If we are looking to optimize some thing is to take
+    ## more things away from CPU and give them to GPU
+
+    # Can't draw booleans on the GPU.
+    if node.kind == nkBooleanOperation:
+      node.collapse = true
+
+    # Can't draw blending layers on the GPU.
+    for child in node.children:
+      if child.blendMode != bmNormal:
+        node.collapse = true
+        break
+
+    # Can't draw masks on the GPU.
+    for child in node.children:
+      if child.isMask:
+        node.collapse = true
+        break
+
+    # Can't draw clips content on the GPU.
+    if node.clipsContent:
+      node.collapse = true
+
+    # Can't draw effects with children.
+    if node.effects.len != 0:
+      node.collapse = true
 
     if bounds.w.int > 0 and bounds.h.int > 0:
       layer = newImage(bounds.w.int, bounds.h.int)
       let prevBoundsMat = mat
       mat = translate(-bounds.xy) * mat
 
-      if node.kind == nkText:
-        node.drawText()
-      elif node.kind == nkBooleanOperation:
-        node.drawBoolean()
-      else:
-        node.drawNodeInternal(withChildren=false)
+      node.drawNodeInternal(withChildren=node.collapse)
 
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 
-  if node.kind != nkBooleanOperation:
+  if not node.collapse:
     for child in node.children:
       drawToAtlas(child)
 
@@ -113,8 +80,9 @@ proc drawWithAtlas(node: Node) =
       color = color(node.opacity, node.opacity, node.opacity, node.opacity)
     )
 
-  for child in node.children:
-    drawWithAtlas(child)
+  if not node.collapse:
+    for child in node.children:
+      drawWithAtlas(child)
 
 proc drawToScreen*(screenNode: Node) =
   ## Draw the current node onto the screen.

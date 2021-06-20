@@ -23,6 +23,7 @@ tests/frames/*.png
 tests/files/*.png
 tests/frames/gpu/*.png
 tests/frames/zpu/*.png
+tests/frames/hyb/*.png
 tests/files/gpu/*.png
 tests/frames/diffs/*.png
 tests/files/diffs/*.png
