@@ -358,9 +358,15 @@ proc drawText*(node: Node) =
         font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
         if style.fills.len == 0:
-          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: rgbx(0,0,0,255))
+          font.paint = pixie.Paint(
+            kind: pixie.PaintKind.pkSolid,
+            color: rgbx(0,0,0,255)
+          )
         else:
-          font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: style.fills[0].color.rgbx)
+          font.paint = pixie.Paint(
+            kind: pixie.PaintKind.pkSolid,
+            color: style.fills[0].color.rgbx
+          )
 
         spans.add(newSpan("", font))
 

@@ -20,7 +20,23 @@ proc drawToAtlas(node: Node) =
 
     node.pixelBox = bounds
 
+    ## Any special thing we can't do on the GPU
+    ## we have to collapse the node so that CPU draws it all
+    ## If we are looking to optimize some thing is to take
+    ## more things away from CPU and give them to GPU
+
+    # Can't draw booleans on GPU.
     if node.kind == nkBooleanOperation:
+      node.collapse = true
+
+    # Can't draw blending layers on GPU.
+    for child in node.children:
+      if child.blendMode != bmNormal:
+        node.collapse = true
+        break
+
+    # Can't draw effects with children.
+    if node.effects.len != 0:
       node.collapse = true
 
     if bounds.w.int > 0 and bounds.h.int > 0:
