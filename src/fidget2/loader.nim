@@ -6,6 +6,8 @@ var
 
 proc figmaHeaders(): seq[Header] =
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
+  result["user-agent"] = "nim/puppy"
+  result["accept-encoding"] = "gzip"
 
 proc figmaFilePath(fileKey: string): string =
   "figma/" & fileKey & ".json"
@@ -178,14 +180,14 @@ proc downloadFigmaFile(fileKey: string) =
     # lastModified file. This is important for falling back to cached data
     # in the event the API returns an error.
     downloadImages(fileKey, liveFile)
-    downloadFonts(liveFile)
+    # downloadFonts(liveFile)
     writeFile(figmaFilePath, pretty(json))
     writeFile(lastModifiedPath, liveFile.lastModified)
     echo "Downloaded latest Figma file"
   else:
     raise newException(
       FidgetError,
-      "Error downloading Figma file: " & getCurrentExceptionMsg()
+      "Error downloading Figma file."
     )
 
 proc rebuildGlobTree() =

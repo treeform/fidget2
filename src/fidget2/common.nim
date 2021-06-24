@@ -52,10 +52,13 @@ proc getFont*(fontName: string): Font =
     if not fileExists(path):
       let url = fmt"https://github.com/treeform/fidgetfonts/raw/main/fonts/{fontName}.ttf"
       echo "Downloading ", url
-      let data = fetch(url)
-      if data == "":
-        raise newException(FidgetError, "Downloading " & url & " failed")
-      writeFile(figmaFontPath(fontName), data)
+      let response = newRequest(url).fetch()
+      if response.body == "" or response.code != 200:
+        raise newException(
+          FidgetError,
+          "Downloading " & url & " failed: " & $response.code
+        )
+      writeFile(path, response.body)
     fontCache[fontName] = pixie.readFont(path)
   return fontCache[fontName]
 

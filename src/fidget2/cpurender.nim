@@ -310,18 +310,43 @@ proc maskSelfImage*(node: Node): Mask =
     )
   return mask
 
-const fontWeights = {
-  0: "Regular",
-  100: "Thin",
-  200: "ExtraLight",
-  300: "Light",
-  400: "Regular",
-  500: "Medium",
-  600: "SemiBold",
-  700: "Bold",
-  800: "ExtraBold",
-  900: "Black",
-}.toTable
+proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
+  ## Get the font!
+
+  var fontName = style.fontPostScriptName
+
+  if backup != nil:
+    if fontName == "" and backup.fontFamily != "":
+      fontName = backup.fontPostScriptName
+
+  var font = getFont(fontName)
+
+  if style.fontSize != 0:
+    font.size = style.fontSize
+  elif backup != nil:
+    font.size = backup.fontSize
+
+  var lineStyle = style
+  if style.lineHeightUnit == nil and backup != nil:
+    lineStyle = backup
+
+  case lineStyle.lineHeightUnit[]
+  of lhuPixels:
+    font.lineHeight = round(lineStyle.lineHeightPx)
+  of lhuFontSizePercent:
+    font.lineHeight = round(lineStyle.lineHeightPx)
+  of lhuIntrinsicPercent:
+    font.lineHeight = round(font.defaultLineHeight * lineStyle.lineHeightPercent / 100)
+
+  font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
+
+  font.textCase = case style.textCase:
+    of typography.tcNormal: pixie.tcNormal
+    of typography.tcUpper: pixie.tcUpper
+    of typography.tcLower: pixie.tcLower
+    of typography.tcTitle: pixie.tcTitle
+
+  return font
 
 proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
@@ -344,40 +369,8 @@ proc drawText*(node: Node) =
     for i, styleKey in node.characterStyleOverrides:
       if i == 0 or node.characterStyleOverrides[i] != prevStyle:
         let style = node.styleOverrideTable[$styleKey]
-        if style.fontFamily == "":
-          style.fontFamily = node.style.fontFamily
 
-        if style.fontPostScriptName == "":
-          style.fontPostScriptName = style.fontFamily
-
-        for name in fontWeights.values:
-          style.fontPostScriptName.removeSuffix("-" & name)
-
-        let fontWeight = int(style.fontWeight)
-        if fontWeight in fontWeights:
-          style.fontPostScriptName.add "-" & fontWeights[fontWeight]
-        else:
-          style.fontPostScriptName.add "-Regular"
-
-        var font = getFont(style.fontPostScriptName)
-
-        if style.fontSize == 0:
-          style.fontSize = node.style.fontSize
-        font.size = style.fontSize
-
-        if style.lineHeightUnit == "":
-          style.lineHeightUnit = node.style.lineHeightUnit
-
-        # TODO
-        # if style.lineHeightUnit ==
-        # print style.lineHeightPercentFontSize
-        # if style.lineHeightPx == 0:
-        #   style.lineHeightPx = node.style.lineHeightPx
-        # font.lineHeight = style.lineHeightPx
-
-        font.lineHeight = AutoLineHeight
-
-        font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
+        var font = getFont(style, node.style)
 
         var fillColor: Color
         if style.fills.len == 0:
@@ -405,26 +398,7 @@ proc drawText*(node: Node) =
     #   print span.font.lineHeight
 
   else:
-
-    if node.style.fontPostScriptName == "":
-      node.style.fontPostScriptName = node.style.fontFamily & "-Regular"
-
-    var font = getFont(node.style.fontPostScriptName)
-    font.size = node.style.fontSize
-    font.lineHeight = node.style.lineHeightPx
-
-    # Set text params.
-    var wrap = false
-    if node.style.textAutoResize == tarHeight:
-      wrap = true
-    font.noKerningAdjustments = not(node.style.opentypeFlags.KERN != 0)
-
-    font.textCase = case node.style.textCase:
-      of typography.tcNormal: pixie.tcNormal
-      of typography.tcUpper: pixie.tcUpper
-      of typography.tcLower: pixie.tcLower
-      of typography.tcTitle: pixie.tcTitle
-
+    var font = getFont(node.style)
     font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
     spans = @[newSpan(node.characters, font)]
 

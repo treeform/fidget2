@@ -144,7 +144,7 @@ type
     lineHeightPx*: float32
     lineHeightPercent*: float32
     lineHeightPercentFontSize*: float32
-    lineHeightUnit*: string
+    lineHeightUnit*: ref LineHeightUnit
     opentypeFlags*: OpenTypeFlags
 
   Geometry* = object
