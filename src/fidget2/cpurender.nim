@@ -1,4 +1,4 @@
-import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
+import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils
 
 type Image = pixie.Image
@@ -340,26 +340,10 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
 
   font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
-  font.textCase = case style.textCase:
-    of typography.tcNormal: pixie.tcNormal
-    of typography.tcUpper: pixie.tcUpper
-    of typography.tcLower: pixie.tcLower
-    of typography.tcTitle: pixie.tcTitle
-
   return font
 
 proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
-
-  let hAlign = case node.style.textAlignHorizontal:
-    of typography.Left: pixie.haLeft
-    of typography.Center: pixie.haCenter
-    of typography.Right: pixie.haRight
-
-  let vAlign = case node.style.textAlignVertical:
-    of typography.Top: pixie.vaTop
-    of typography.Middle: pixie.vaMiddle
-    of typography.Bottom: pixie.vaBottom
 
   var spans: seq[pixie.Span]
   if node.characterStyleOverrides.len > 0:
@@ -406,8 +390,8 @@ proc drawText*(node: Node) =
     spans,
     bounds = node.size,
     # wrap = wrap
-    hAlign = hAlign,
-    vAlign = vAlign,
+    hAlign = node.style.textAlignHorizontal,
+    vAlign = node.style.textAlignVertical,
   )
 
   arrangementCache[node.id] = arrangement
@@ -627,48 +611,3 @@ proc setupWindow*(
     nil)
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
-
-import staticglfw, winim
-
-proc GetWin32Window*(window: Window): pointer {.cdecl,
-  importc: "glfwGetWin32Window".}
-
-proc drawToScreen*(node: Node) =
-
-  var screen = drawCompleteFrame(node)
-
-  # Draw image pixels onto glfw-win32-window without openGL
-  let
-    w = screen.width.int32
-    h = screen.height.int32
-    hwnd = cast[HWND](GetWin32Window(window))
-    dc = GetDC(hwnd)
-  var info = BITMAPINFO()
-  info.bmiHeader.biBitCount = 32
-  info.bmiHeader.biWidth = w
-  info.bmiHeader.biHeight = h
-  info.bmiHeader.biPlanes = 1
-  info.bmiHeader.biSize = DWORD sizeof(BITMAPINFOHEADER)
-  info.bmiHeader.biSizeImage = w * h * 4
-  info.bmiHeader.biCompression = BI_RGB
-  var bgrBuffer = newSeq[uint8](screen.data.len * 4)
-  for i, c in screen.data:
-    bgrBuffer[i*4+0] = c.b
-    bgrBuffer[i*4+1] = c.g
-    bgrBuffer[i*4+2] = c.r
-  discard StretchDIBits(
-    dc,
-    0,
-    h - 1,
-    w,
-    -h,
-    0,
-    0,
-    w,
-    h,
-    bgrBuffer[0].addr,
-    info,
-    DIB_RGB_COLORS,
-    SRCCOPY
-  )
-  discard ReleaseDC(hwnd, dc)

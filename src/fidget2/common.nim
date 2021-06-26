@@ -48,19 +48,8 @@ proc pos(mat: Mat3): Vec2 =
 
 proc getFont*(fontName: string): Font =
   if fontName notin fontCache:
-    let path = figmaFontPath(fontName)
-    if not fileExists(path):
-      let url = fmt"https://github.com/treeform/fidgetfonts/raw/main/fonts/{fontName}.ttf"
-      echo "Downloading ", url
-      let response = newRequest(url).fetch()
-      if response.body == "" or response.code != 200:
-        raise newException(
-          FidgetError,
-          "Downloading " & url & " failed: " & $response.code
-        )
-      writeFile(path, response.body)
-    fontCache[fontName] = pixie.readFont(path)
-  return fontCache[fontName]
+    fontCache[fontName] = pixie.readFont(figmaFontPath(fontName))
+  fontCache[fontName]
 
 proc rectangleFillGeometry(node: Node): Geometry =
   ## Creates a fill geometry from a rectangle like node.

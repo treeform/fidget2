@@ -1,4 +1,4 @@
-import bumpy, chroma, jsony, strutils, tables, typography, vmath
+import bumpy, chroma, jsony, strutils, tables, pixie, vmath
 
 from pixie import Image, newImage, `[]`, `[]=`, strokeSegment, draw, BlendMode,
    Path, WindingRule, PixieError, parsePath
@@ -397,16 +397,16 @@ proc enumHook(s: string, v: var StrokeAlign) =
 
 proc enumHook(s: string, v: var HAlignMode) =
   v = case s:
-    of "CENTER": Center
-    of "LEFT": Left
-    of "RIGHT": Right
+    of "CENTER": haCenter
+    of "LEFT": haLeft
+    of "RIGHT": haRight
     else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var VAlignMode) =
   v = case s:
-    of "CENTER": Middle
-    of "TOP": Top
-    of "BOTTOM": Bottom
+    of "CENTER": vaMiddle
+    of "TOP": vaTop
+    of "BOTTOM": vaBottom
     else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var WindingRule) =
