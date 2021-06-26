@@ -1,4 +1,4 @@
-import globs, json, jsony, os, schema, strutils, sets, puppy
+import globs, json, jsony, os, schema, strutils, sets, tables, puppy
 
 var
   figmaFile*: FigmaFile                ## Main figma file.
@@ -6,8 +6,6 @@ var
 
 proc figmaHeaders(): seq[Header] =
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
-  result["user-agent"] = "nim/puppy"
-  result["accept-encoding"] = "gzip"
 
 proc figmaFilePath(fileKey: string): string =
   "figma/" & fileKey & ".json"
@@ -43,10 +41,10 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
 
   proc walk(node: Node) =
     for fill in node.fills:
-      if fill.imageRef.len > 0:
+      if fill.imageRef != "":
         imagesUsed.incl(fill.imageRef)
     for stroke in node.strokes:
-      if stroke.imageRef.len > 0:
+      if stroke.imageRef != "":
         imagesUsed.incl(stroke.imageRef)
     for c in node.children:
       walk(c)
@@ -74,8 +72,10 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
     let url = json["meta"]["images"][imageRef].getStr()
     downloadImage(imageRef, url)
 
-proc downloadFont(fontPostScriptName, url: string) =
+proc downloadFont(fontPostScriptName: string) =
   if not fileExists(figmaFontPath(fontPostScriptName)):
+    const baseUrl = "https://github.com/treeform/fidgetfonts/raw/main/fonts/"
+    let url = baseUrl & fontPostScriptName & ".ttf"
     echo "Downloading ", url
     let data = fetch(url)
     if data == "":
@@ -90,9 +90,17 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   var fontsUsed: HashSet[string]
 
+  proc incl(style: TypeStyle) =
+    if style.fontPostScriptName != "":
+      fontsUsed.incl(style.fontPostScriptName)
+    elif style.fontFamily != "":
+      fontsUsed.incl(style.fontFamily & "-Regular")
+
   proc walk(node: Node) =
-    if node.style != nil and node.style.fontPostScriptName.len > 0:
-      fontsUsed.incl(node.style.fontPostScriptName)
+    if node.style != nil:
+      incl(node.style)
+    for _, style in node.styleOverrideTable:
+      incl(style)
     for c in node.children:
       walk(c)
 
@@ -111,27 +119,8 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   # We need to download one or more fonts
 
-  let csv = fetch(
-    "https://raw.githubusercontent.com/treeform/" &
-    "freefrontfinder/master/fonts.csv"
-  )
-  if csv == "":
-    raise newException(PuppyError, "Downloading font finder failed")
-
-  let lines = csv.split("\n")
   for fontPostScriptName in fontsUsed:
-    let fontFilePath = figmaFontPath(fontPostScriptName)
-
-    var found: bool
-    for line in lines:
-      var parts = line.split(",")
-      if parts[0] == fontPostScriptName:
-        found = true
-        downloadFont(fontPostScriptName, parts[1])
-        break
-
-    if not found:
-      echo "Missing font ", fontFilePath
+    downloadFont(fontPostScriptName)
 
 proc downloadFigmaFile(fileKey: string) =
   ## Download and cache the Figma file for this file key.
@@ -140,7 +129,7 @@ proc downloadFigmaFile(fileKey: string) =
     lastModifiedPath = lastModifiedFilePath(fileKey)
 
   var useCached: bool
-  when defined(useCached):
+  when defined(fidgetUseCached):
     useCached = true
   else:
     if fileExists(figmaFilePath) and fileExists(lastModifiedPath):
@@ -180,14 +169,14 @@ proc downloadFigmaFile(fileKey: string) =
     # lastModified file. This is important for falling back to cached data
     # in the event the API returns an error.
     downloadImages(fileKey, liveFile)
-    # downloadFonts(liveFile)
+    downloadFonts(liveFile)
     writeFile(figmaFilePath, pretty(json))
     writeFile(lastModifiedPath, liveFile.lastModified)
     echo "Downloaded latest Figma file"
   else:
     raise newException(
       FidgetError,
-      "Error downloading Figma file."
+      "Error downloading Figma file: " & getCurrentExceptionMsg()
     )
 
 proc rebuildGlobTree() =
