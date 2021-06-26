@@ -1,4 +1,4 @@
-import bumpy, chroma, loader, math, pixie, schema, tables, typography, vmath,
+import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils
 
 type Image = pixie.Image
@@ -340,26 +340,10 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
 
   font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
-  font.textCase = case style.textCase:
-    of typography.tcNormal: pixie.tcNormal
-    of typography.tcUpper: pixie.tcUpper
-    of typography.tcLower: pixie.tcLower
-    of typography.tcTitle: pixie.tcTitle
-
   return font
 
 proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
-
-  let hAlign = case node.style.textAlignHorizontal:
-    of typography.Left: pixie.haLeft
-    of typography.Center: pixie.haCenter
-    of typography.Right: pixie.haRight
-
-  let vAlign = case node.style.textAlignVertical:
-    of typography.Top: pixie.vaTop
-    of typography.Middle: pixie.vaMiddle
-    of typography.Bottom: pixie.vaBottom
 
   var spans: seq[pixie.Span]
   if node.characterStyleOverrides.len > 0:
@@ -406,8 +390,8 @@ proc drawText*(node: Node) =
     spans,
     bounds = node.size,
     # wrap = wrap
-    hAlign = hAlign,
-    vAlign = vAlign,
+    hAlign = node.style.textAlignHorizontal,
+    vAlign = node.style.textAlignVertical,
   )
 
   arrangementCache[node.id] = arrangement
