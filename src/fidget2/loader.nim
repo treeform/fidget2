@@ -97,10 +97,13 @@ proc downloadFonts(figmaFile: FigmaFile) =
       fontsUsed.incl(style.fontFamily & "-Regular")
 
   proc walk(node: Node) =
-    if node.style != nil:
-      incl(node.style)
-    for _, style in node.styleOverrideTable:
-      incl(style)
+    if node.characterStyleOverrides.len == 0:
+      if node.style != nil:
+        incl(node.style)
+    else:
+      node.styleOverrideTable["0"] = node.style
+      for i, styleKey in node.characterStyleOverrides:
+        incl(node.styleOverrideTable[$styleKey])
     for c in node.children:
       walk(c)
 
