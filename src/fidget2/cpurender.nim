@@ -1,5 +1,6 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
-    common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils
+    common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils,
+    options
 
 type Image = pixie.Image
 type Paint = schema.Paint
@@ -327,10 +328,10 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
     font.size = backup.fontSize
 
   var lineStyle = style
-  if style.lineHeightUnit == nil and backup != nil:
+  if style.lineHeightUnit.isNone and backup != nil:
     lineStyle = backup
 
-  case lineStyle.lineHeightUnit[]
+  case lineStyle.lineHeightUnit.get()
   of lhuPixels:
     font.lineHeight = round(lineStyle.lineHeightPx)
   of lhuFontSizePercent:
@@ -340,10 +341,10 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
 
   font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
-  if style.textCase != nil:
-    font.textCase = style.textCase[]
-  elif backup != nil and backup.textCase != nil:
-    font.textCase = backup.textCase[]
+  if style.textCase.isSome:
+    font.textCase = style.textCase.get()
+  elif backup != nil and backup.textCase.isSome:
+    font.textCase = backup.textCase.get()
 
   return font
 
@@ -590,8 +591,9 @@ proc drawCompleteFrame*(node: Node): pixie.Image =
 
   layer = newImage(w, h)
   mat = mat3()
-  var t = node.relativeTransform
-  mat = mat * translate(vec2(-t[0][2], -t[1][2]))
+  if node.relativeTransform.isSome:
+    let transform = node.relativeTransform.get()
+    mat = mat * translate(vec2(-transform[0][2], -transform[1][2]))
   drawNode(node)
 
   doAssert layers.len == 0

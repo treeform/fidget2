@@ -1,4 +1,4 @@
-import bumpy, chroma, jsony, strutils, tables, pixie, vmath
+import bumpy, chroma, jsony, strutils, tables, pixie, vmath, options
 
 from pixie import Image, newImage, `[]`, `[]=`, strokeSegment, draw, BlendMode,
    Path, WindingRule, PixieError, parsePath
@@ -51,7 +51,7 @@ type
     smStretch
     smTile
 
-  Transform* = ref array[2, array[3, float32]]
+  Transform* = array[2, array[3, float32]]
     ## A 2D affine transformation matrix that can be used to calculate the
     ## affine transforms applied to a layer, including scaling,
     ## rotation, shearing, and translation.
@@ -134,7 +134,7 @@ type
     italic*: bool
     fontWeight*: float32
     fontSize*: float32
-    textCase*: ref TextCase
+    textCase*: Option[TextCase]
     textDecoration*: TextDecoration
     textAutoResize*: TextAutoResize
     textAlignHorizontal*: HAlignMode
@@ -144,7 +144,7 @@ type
     lineHeightPx*: float32
     lineHeightPercent*: float32
     lineHeightPercentFontSize*: float32
-    lineHeightUnit*: ref LineHeightUnit
+    lineHeightUnit*: Option[LineHeightUnit]
     opentypeFlags*: OpenTypeFlags
 
   Geometry* = object
@@ -180,7 +180,7 @@ type
     prototypeStartNodeID*: string
     absoluteBoundingBox*: Rect
     size*: Vec2
-    relativeTransform*: Transform
+    relativeTransform*: Option[Transform]
     clipsContent*: bool
     fills*: seq[Paint]
     strokes*: seq[Paint]
@@ -195,7 +195,7 @@ type
     isMask*: bool
     isMaskOutline*: bool
     cornerRadius*: float32
-    rectangleCornerRadii*: ref array[4, float32]
+    rectangleCornerRadii*: Option[array[4, float32]]
     characters*: string
     style*: TypeStyle
     characterStyleOverrides*: seq[int]
@@ -236,8 +236,9 @@ proc newHook(v: var Node) =
   v.opacity = 1.0
 
 proc postHook(v: var Node) =
-  if v.relativeTransform != nil:
-    v.box.xy = vec2(v.relativeTransform[0][2], v.relativeTransform[1][2])
+  if v.relativeTransform.isSome:
+    let transform = v.relativeTransform.get()
+    v.box.xy = vec2(transform[0][2], transform[1][2])
   v.box.wh = v.size
   v.orgBox = v.box
   v.dirty = true

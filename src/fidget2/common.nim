@@ -1,5 +1,5 @@
 import vmath, chroma, schema, staticglfw, textboxes,
-    tables, print, loader, bumpy, pixie,
+    tables, print, loader, bumpy, pixie, options,
     pixie/fontformats/opentype, print, os, puppy, strformat
 
 export print
@@ -30,17 +30,20 @@ var
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
-  result[0, 0] = node.relativeTransform[0][0]
-  result[0, 1] = node.relativeTransform[1][0]
-  result[0, 2] = 0
-  result[1, 0] = node.relativeTransform[0][1]
-  result[1, 1] = node.relativeTransform[1][1]
-  result[1, 2] = 0
-  # result[2, 0] = node.box.x
-  # result[2, 1] = node.box.y
-  result[2, 0] = node.relativeTransform[0][2]
-  result[2, 1] = node.relativeTransform[1][2]
-  result[2, 2] = 1
+  result = mat3()
+  if node.relativeTransform.isSome:
+    let transform = node.relativeTransform.get()
+    result[0, 0] = transform[0][0]
+    result[0, 1] = transform[1][0]
+    result[0, 2] = 0
+    result[1, 0] = transform[0][1]
+    result[1, 1] = transform[1][1]
+    result[1, 2] = 0
+    # result[2, 0] = node.box.x
+    # result[2, 1] = node.box.y
+    result[2, 0] = transform[0][2]
+    result[2, 1] = transform[1][2]
+    result[2, 2] = 1
 
 proc pos(mat: Mat3): Vec2 =
   result.x = mat[2, 0]
@@ -67,15 +70,16 @@ proc rectangleFillGeometry(node: Node): Geometry =
       se = node.cornerRadius,
       sw = node.cornerRadius
     )
-  elif node.rectangleCornerRadii != nil:
+  elif node.rectangleCornerRadii.isSome:
     # Rectangle with different corners.
+    let radii = node.rectangleCornerRadii.get()
     result.path.roundedRect(
       vec2(0, 0),
       node.size,
-      nw = node.rectangleCornerRadii[0],
-      ne = node.rectangleCornerRadii[1],
-      se = node.rectangleCornerRadii[2],
-      sw = node.rectangleCornerRadii[3],
+      nw = radii[0],
+      ne = radii[1],
+      se = radii[2],
+      sw = radii[3],
     )
   else:
     # Basic rectangle.
@@ -124,13 +128,14 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
       r-inner, r-inner, r-inner, r-inner,
       clockwise = false
     )
-  elif node.rectangleCornerRadii != nil:
+  elif node.rectangleCornerRadii.isSome:
     # Rectangle with different corners.
     let
-      nw = node.rectangleCornerRadii[0]
-      ne = node.rectangleCornerRadii[1]
-      se = node.rectangleCornerRadii[2]
-      sw = node.rectangleCornerRadii[3]
+      radii = node.rectangleCornerRadii.get()
+      nw = radii[0]
+      ne = radii[1]
+      se = radii[2]
+      sw = radii[3]
     result.path.roundedRect(
       vec2(x-outer, y-outer),
       vec2(w+outer*2, h+outer*2),
