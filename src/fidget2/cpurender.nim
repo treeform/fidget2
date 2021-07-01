@@ -340,6 +340,11 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
 
   font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
 
+  if style.textCase != nil:
+    font.textCase = style.textCase[]
+  elif backup != nil and backup.textCase != nil:
+    font.textCase = backup.textCase[]
+
   return font
 
 proc drawText*(node: Node) =

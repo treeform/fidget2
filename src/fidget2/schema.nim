@@ -134,7 +134,7 @@ type
     italic*: bool
     fontWeight*: float32
     fontSize*: float32
-    textCase*: TextCase
+    textCase*: ref TextCase
     textDecoration*: TextDecoration
     textAutoResize*: TextAutoResize
     textAlignHorizontal*: HAlignMode
