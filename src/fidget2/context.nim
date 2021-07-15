@@ -118,8 +118,8 @@ proc newContext*(
     result.atlasShader = newShaderStatic("glsl/emscripten/atlas.vert", "glsl/emscripten/atlas.frag")
     result.maskShader = newShaderStatic("glsl/emscripten/atlas.vert", "glsl/emscripten/mask.frag")
   else:
-    result.atlasShader = newShaderStatic("glsl/atlas.vert", "glsl/atlas.frag")
-    result.maskShader = newShaderStatic("glsl/atlas.vert", "glsl/mask.frag")
+    result.atlasShader = newShaderStatic("glsl/410/atlas.vert", "glsl/410/atlas.frag")
+    result.maskShader = newShaderStatic("glsl/410/atlas.vert", "glsl/410/mask.frag")
 
   result.positions.buffer = Buffer()
   result.positions.buffer.componentType = cGL_FLOAT
