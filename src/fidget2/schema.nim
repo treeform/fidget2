@@ -33,9 +33,6 @@ type
   LayoutAlign* = enum
     laInherit
     laStretch
-    laMin,
-    laCenter
-    laMax
 
   PaintKind* = enum
     pkSolid
@@ -100,12 +97,17 @@ type
     lpRows
     lpGrid
 
+  GridAlign* = enum
+    gaMin
+    gaStretch
+    gaCenter
+
   LayoutGrid* = object
     pattern*: LayoutPattern
     sectionSize*: float32
     visible*: bool
     color*: Color
-    alignment*: LayoutAlign ## Only min, stretch and center
+    alignment*: GridAlign ## Only min, stretch and center
     gutterSize*: float32
     offset*: float32
     count*: int
@@ -167,6 +169,10 @@ type
     saOutside
     saCenter
 
+  AxisSizingMode* = enum
+    asAuto
+    asFixed
+
   Node* = ref object
     id*: string     ## A string uniquely identifying this node within the document.
     name*: string   ## The name given to the node by the user in the tool.
@@ -178,9 +184,15 @@ type
     blendMode*: BlendMode
     children*: seq[Node]
     prototypeStartNodeID*: string
-    absoluteBoundingBox*: Rect
+
+    #absoluteBoundingBox*: Rect # is not used and computed a new
+
+    position*: Vec2
     size*: Vec2
-    relativeTransform*: Option[Transform]
+    rotation*: float32
+
+    relativeTransform: Option[Transform] # only used during loading
+
     clipsContent*: bool
     fills*: seq[Paint]
     strokes*: seq[Paint]
@@ -204,13 +216,24 @@ type
     strokeGeometry*: seq[Geometry]
     booleanOperation*: BooleanOperation
 
+    # Frame
+    counterAxisSizingMode*: AxisSizingMode
+    #verticalPadding*: float32
+    #horizontalPadding*: float32
+    paddingLeft*: float32
+    paddingRight*: float32
+    paddingTop*: float32
+    paddingBottom*: float32
+
     # Non figma parameters:
     dirty*: bool     ## Do the pixels need redrawing?
     pixels*: Image   ## Pixel image cache.
     pixelBox*: Rect  ## Pixel position and size.
     editable*: bool  ## Can the user edit the text?
-    box*: Rect       ## xy/size of the node.
-    orgBox*: Rect    ## Original size needed for constraints.
+    #box*: Rect       ## xy/size of the node.
+    orgPosition*: Vec2    ## Original size needed for constraints.
+    orgSize*: Vec2    ## Original size needed for constraints.
+
     idNum*: int
     mat*: Mat3       ## Useful to get back to the node.
     collapse*: bool  ## Is the node drawn as a single texture (CPU internals)
@@ -238,9 +261,10 @@ proc newHook(v: var Node) =
 proc postHook(v: var Node) =
   if v.relativeTransform.isSome:
     let transform = v.relativeTransform.get()
-    v.box.xy = vec2(transform[0][2], transform[1][2])
-  v.box.wh = v.size
-  v.orgBox = v.box
+    v.position = vec2(transform[0][2], transform[1][2])
+    v.rotation = arctan2(transform[0][1], transform[0][0])
+  v.orgPosition = v.position
+  v.orgSize = v.size
   v.dirty = true
 
 proc renameHook(v: var Node, fieldName: var string) =
@@ -262,13 +286,6 @@ proc newHook(v: var LayoutGrid) =
 
 proc newHook(v: var Geometry) =
   v.mat = mat3()
-
-proc postHook(v: var LayoutGrid) =
-  if v.alignment notin {laMin, laStretch, laCenter}:
-    raise newException(
-      FidgetError,
-      "Invalid layout grid alignment: " & $v.alignment
-    )
 
 proc renameHook(v: var Paint, fieldName: var string) =
   if fieldName == "type":
@@ -428,13 +445,17 @@ proc enumHook(s: string, v: var ConstraintKind) =
     of "LEFT_RIGHT": cStretch
     else: raise newException(FidgetError, "Invalid constraint kind:" & s)
 
+proc enumHook(s: string, v: var GridAlign) =
+  v = case s:
+    of "STRETCH": gaStretch
+    of "MIN": gaMin
+    of "CENTER": gaCenter
+    else: raise newException(FidgetError, "Invalid grid align:" & s)
+
 proc enumHook(s: string, v: var LayoutAlign) =
   v = case s:
     of "INHERIT": laInherit
     of "STRETCH": laStretch
-    of "MIN": laMin
-    of "CENTER": laCenter
-    of "MAX": laMax
     else: raise newException(FidgetError, "Invalid layout align:" & s)
 
 proc enumHook(s: string, v: var LayoutPattern) =
@@ -450,6 +471,12 @@ proc enumHook(s: string, v: var LayoutMode) =
     of "HORIZONTAL": lmHorizontal
     of "VERTICAL": lmVertical
     else: raise newException(FidgetError, "Invalid layout mode:" & s)
+
+proc enumHook(s: string, v: var AxisSizingMode) =
+  v = case s:
+    of "AUTO": asAuto
+    of "FIXED": asFixed
+    else: raise newException(FidgetError, "Invalid axis sizing mode:" & s)
 
 proc parseHook(s: string, i: var int, v: var Vec2) =
     type Vec2Obj = object

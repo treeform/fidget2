@@ -1,4 +1,4 @@
-import bumpy, schema, vmath
+import bumpy, schema, vmath, common, options
 
 proc computeLayout*(parent, node: Node) =
   ## Computes constraints and auto-layout.
@@ -10,36 +10,34 @@ proc computeLayout*(parent, node: Node) =
   case node.constraints.horizontal:
     of cMin: discard
     of cMax:
-      let rightSpace = parent.orgBox.w - node.orgBox.x
-      node.box.x = parent.box.w - rightSpace
+      let rightSpace = parent.orgSize.x - node.orgPosition.x
+      node.position.x = parent.size.x - rightSpace
     of cScale:
-      let xScale = parent.box.w / parent.orgBox.w
-      node.box.x = node.orgBox.x * xScale
-      node.box.w = node.orgBox.w * xScale
+      let xScale = parent.size.x / parent.orgSize.x
+      node.position.x = node.orgPosition.x * xScale
+      node.size.x = node.orgSize.x * xScale
     of cStretch:
-      let rightSpace = parent.orgBox.w - node.orgBox.w
-      node.box.w = parent.box.w - rightSpace
+      let rightSpace = parent.orgSize.x - node.orgSize.x
+      node.size.x = parent.size.x - rightSpace
     of cCenter:
-      let offset = floor((node.orgBox.w - parent.orgBox.w) / 2.0 + node.orgBox.x)
-      node.box.x = floor((parent.box.w - node.box.w) / 2.0) + offset
+      let offset = floor((node.orgSize.x - parent.orgSize.x) / 2.0 + node.orgPosition.x)
+      node.position.x = floor((parent.size.x - node.size.x) / 2.0) + offset
 
   case node.constraints.vertical:
     of cMin: discard
     of cMax:
-      let bottomSpace = parent.orgBox.h - node.orgBox.y
-      node.box.y = parent.box.h - bottomSpace
+      let bottomSpace = parent.orgSize.y - node.orgPosition.y
+      node.position.y = parent.size.y - bottomSpace
     of cScale:
-      let yScale = parent.box.h / parent.orgBox.h
-      node.box.y = node.orgBox.y * yScale
-      node.box.h = node.orgBox.h * yScale
+      let yScale = parent.size.y / parent.orgSize.y
+      node.position.y = node.orgPosition.y * yScale
+      node.size.y = node.orgSize.y * yScale
     of cStretch:
-      let bottomSpace = parent.orgBox.h - node.orgBox.h
-      node.box.h = parent.box.h - bottomSpace
+      let bottomSpace = parent.orgSize.y - node.orgSize.y
+      node.size.y = parent.size.y - bottomSpace
     of cCenter:
-      let offset = floor((node.orgBox.h - parent.orgBox.h) / 2.0 + node.orgBox.y)
-      node.box.y = floor((parent.box.h - node.box.h) / 2.0) + offset
-
-  node.size = node.box.wh
+      let offset = floor((node.orgSize.y - parent.orgSize.y) / 2.0 + node.orgPosition.y)
+      node.position.y = floor((parent.size.y - node.size.y) / 2.0) + offset
 
   # TODO: Implement more of the layout.
   # # Typeset text
@@ -51,71 +49,69 @@ proc computeLayout*(parent, node: Node) =
   #       discard
   #     of tsHeight:
   #       # Text will grow down.
-  #       node.box.h = node.textLayoutHeight
+  #       node.size.y = node.textLayoutHeight
   #     of tsWidthAndHeight:
   #       # Text will grow down and wide.
-  #       node.box.w = node.textLayoutWidth
-  #       node.box.h = node.textLayoutHeight
+  #       node.size.x = node.textLayoutWidth
+  #       node.size.y = node.textLayoutHeight
 
-  # # Auto-layout code.
-  # if node.layoutMode == lmVertical:
-  #   if node.counterAxisSizingMode == csAuto:
-  #     # Resize to fit elements tightly.
-  #     var maxW = 0.0
-  #     for n in node.children:
-  #       if n.layoutAlign != laStretch:
-  #         maxW = max(maxW, n.box.w)
-  #     node.box.w = maxW + node.horizontalPadding * 2
+  # Auto-layout code.
+  if node.layoutMode == lmVertical:
+    if node.counterAxisSizingMode == asAuto:
+      # Resize to fit elements tightly.
+      var maxW = 0.0
+      for n in node.children:
+        if n.layoutAlign != laStretch:
+          maxW = max(maxW, n.size.x)
+      node.size.x = maxW + node.paddingTop + node.paddingBottom
 
-  #   var at = 0.0
-  #   at += node.verticalPadding
-  #   for i, n in node.children.reversePairs:
-  #     if i > 0:
-  #       at += node.itemSpacing
-  #     n.box.y = at
-  #     case n.layoutAlign:
-  #       of laMin:
-  #         n.box.x = node.horizontalPadding
-  #       of laCenter:
-  #         n.box.x = node.box.w/2 - n.box.w/2
-  #       of laMax:
-  #         n.box.x = node.box.w - n.box.w - node.horizontalPadding
-  #       of laStretch:
-  #         n.box.x = node.horizontalPadding
-  #         n.box.w = node.box.w - node.horizontalPadding * 2
-  #         # Redo the layout for child node.
-  #         computeLayout(node, n)
-  #     at += n.box.h
-  #   at += node.verticalPadding
-  #   node.box.h = at
+    var at = 0.0
+    at += node.paddingTop
+    for i, n in node.children:
+      n.position.y = 0
 
-  # if node.layoutMode == lmHorizontal:
-  #   if node.counterAxisSizingMode == csAuto:
-  #     # Resize to fit elements tightly.
-  #     var maxH = 0.0
-  #     for n in node.children:
-  #       if n.layoutAlign != laStretch:
-  #         maxH = max(maxH, n.box.h)
-  #     node.box.h = maxH + node.verticalPadding * 2
+      if i > 0:
+        at += node.itemSpacing
+      n.position.y = at
+      case n.layoutAlign:
+        of laStretch:
+          n.position.x = node.paddingTop
+          n.size.x = node.size.x - (node.paddingTop + node.paddingBottom)
+          # Redo the layout for child node.
+          computeLayout(node, n)
+        of laInherit:
+          discard
 
-  #   var at = 0.0
-  #   at += node.horizontalPadding
-  #   for i, n in node.children.reversePairs:
-  #     if i > 0:
-  #       at += node.itemSpacing
-  #     n.box.x = at
-  #     case n.layoutAlign:
-  #       of laMin:
-  #         n.box.y = node.verticalPadding
-  #       of laCenter:
-  #         n.box.y = node.box.h/2 - n.box.h/2
-  #       of laMax:
-  #         n.box.y = node.box.h - n.box.h - node.verticalPadding
-  #       of laStretch:
-  #         n.box.y = node.verticalPadding
-  #         n.box.h = node.box.h - node.verticalPadding * 2
-  #         # Redo the layout for child node.
-  #         computeLayout(node, n)
-  #     at += n.box.w
-  #   at += node.horizontalPadding
-  #   node.box.w = at
+      at += n.size.y
+    at += node.paddingBottom
+    node.size.y = at
+
+  if node.layoutMode == lmHorizontal:
+
+    if node.counterAxisSizingMode == asAuto:
+      # Resize to fit elements tightly.
+      var maxH = 0.0
+      for n in node.children:
+        if n.layoutAlign != laStretch:
+          maxH = max(maxH, n.size.y)
+      node.size.y = maxH + node.paddingLeft + node.paddingRight
+
+    var at = 0.0
+    at += node.paddingLeft
+    for i, n in node.children:
+      if i > 0:
+        at += node.itemSpacing
+      n.position.x = at
+
+      case n.layoutAlign:
+        of laStretch:
+          n.position.y = node.paddingLeft
+          n.size.y = node.size.y - (node.paddingLeft + node.paddingRight)
+          # Redo the layout for child node.
+          computeLayout(node, n)
+        of laInherit:
+          discard
+
+      at += n.size.x
+    at += node.paddingRight
+    node.size.x = at

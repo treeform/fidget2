@@ -1,6 +1,6 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils,
-    options
+    options, layout
 
 type Image = pixie.Image
 type Paint = schema.Paint
@@ -82,7 +82,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   result = pixie.Paint(kind: paintKind)
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add(
-      handle * node.absoluteBoundingBox.wh + mat.pos
+      handle * node.size + mat.pos
     )
   if result.kind == pixie.pkGradientLinear:
     result.gradientHandlePositions.setLen(2)
@@ -97,7 +97,7 @@ proc drawFill(node: Node, paint: Paint): Image =
 
   let nodeOffset =
     when defined(cpu):
-      node.box.xy
+      node.position
     else:
       vec2(0, 0)
 
@@ -156,11 +156,11 @@ proc drawFill(node: Node, paint: Paint): Image =
       mat[2, 2] = 1
 
       mat = mat.inverse()
-      mat[2, 0] = nodeOffset.x + mat[2, 0] * node.absoluteBoundingBox.w
-      mat[2, 1] = nodeOffset.y + mat[2, 1] * node.absoluteBoundingBox.h
+      mat[2, 0] = nodeOffset.x + mat[2, 0] * node.size.x
+      mat[2, 1] = nodeOffset.y + mat[2, 1] * node.size.y
       let
-        ratioW = image.width.float32 / node.absoluteBoundingBox.w
-        ratioH = image.height.float32 / node.absoluteBoundingBox.h
+        ratioW = image.width.float32 / node.size.x
+        ratioH = image.height.float32 / node.size.y
         scale = min(ratioW, ratioH)
       mat = mat * scale(vec2(1/scale))
       result.draw(image, mat)
@@ -170,9 +170,9 @@ proc drawFill(node: Node, paint: Paint): Image =
         int(image.width.float32 * paint.scalingFactor),
         int(image.height.float32 * paint.scalingFactor))
       var x = 0.0
-      while x < node.absoluteBoundingBox.w:
+      while x < node.size.x:
         var y = 0.0
-        while y < node.absoluteBoundingBox.h:
+        while y < node.size.y:
           result.draw(image, nodeOffset + vec2(x, y))
           y += image.height.float32
         x += image.width.float32
@@ -578,7 +578,7 @@ proc drawNode*(node: Node, withChildren=true) =
 
   node.mat = mat
   node.pixelBox.xy = mat * vec2(0, 0)
-  node.pixelBox.wh = node.box.wh
+  node.pixelBox.wh = node.size
 
   node.drawNodeInternal(withChildren)
 
@@ -586,14 +586,13 @@ proc drawNode*(node: Node, withChildren=true) =
 
 proc drawCompleteFrame*(node: Node): pixie.Image =
   let
-    w = node.absoluteBoundingBox.w.int
-    h = node.absoluteBoundingBox.h.int
+    w = node.size.x.int
+    h = node.size.y.int
+
+  computeLayout(nil, node)
 
   layer = newImage(w, h)
-  mat = mat3()
-  if node.relativeTransform.isSome:
-    let transform = node.relativeTransform.get()
-    mat = mat * translate(vec2(-transform[0][2], -transform[1][2]))
+  mat = translate(-node.position)
   drawNode(node)
 
   doAssert layers.len == 0

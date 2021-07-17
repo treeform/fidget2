@@ -30,24 +30,23 @@ var
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
-  result = mat3()
-  if node.relativeTransform.isSome:
-    let transform = node.relativeTransform.get()
-    result[0, 0] = transform[0][0]
-    result[0, 1] = transform[1][0]
-    result[0, 2] = 0
-    result[1, 0] = transform[0][1]
-    result[1, 1] = transform[1][1]
-    result[1, 2] = 0
-    # result[2, 0] = node.box.x
-    # result[2, 1] = node.box.y
-    result[2, 0] = transform[0][2]
-    result[2, 1] = transform[1][2]
-    result[2, 2] = 1
+  translate(node.position) * rotate(node.rotation)
 
 proc pos(mat: Mat3): Vec2 =
   result.x = mat[2, 0]
   result.y = mat[2, 1]
+
+iterator reverse*[T](a: seq[T]): T {.inline.} =
+  var i = a.len - 1
+  while i > -1:
+    yield a[i]
+    dec i
+
+iterator reversePairs*[T](a: seq[T]): (int, T) {.inline.} =
+  var i = a.len - 1
+  while i > -1:
+    yield (a.len - 1 - i, a[i])
+    dec i
 
 proc getFont*(fontName: string): Font =
   if fontName notin fontCache:
