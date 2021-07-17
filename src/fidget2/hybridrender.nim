@@ -138,6 +138,9 @@ proc setupWindow*(
   windowHint(VISIBLE, (not offscreen).cint)
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
+  windowHint(CONTEXT_VERSION_MAJOR, 4)
+  windowHint(CONTEXT_VERSION_MINOR, 1)
+
   window = createWindow(
     viewportSize.x.cint, viewportSize.y.cint,
     "run_shaders",
@@ -149,6 +152,11 @@ proc setupWindow*(
 
   # Load opengl.
   loadExtensions()
+
+  echo "GL_VERSION: ", cast[cstring](glGetString(GL_VERSION))
+  echo "GL_VENDOR: ", cast[cstring](glGetString(GL_VENDOR))
+  echo "GL_RENDERER: ", cast[cstring](glGetString(GL_RENDERER))
+  echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
 
   # Setup Context
   ctx = newContext()
