@@ -174,69 +174,69 @@ type
     asFixed
 
   Node* = ref object
-    id*: string     ## A string uniquely identifying this node within the document.
-    name*: string   ## The name given to the node by the user in the tool.
+    # Basic Node properties
+    id*: string     ## A string uniquely identifying this node.
     kind*: NodeKind ## The type of the node, refer to table below for details.
-    opacity*: float32
-    visible*: bool  ## Whether or not the node is visible on the canvas.
-    #pluginData: JsonNode ## Data written by plugins that is visible only to the plugin that wrote it. Requires the `pluginData` to include the ID of the plugin.
-    #sharedPluginData: JsonNode ##  Data written by plugins that is visible to all plugins. Requires the `pluginData` parameter to include the string "shared".
-    blendMode*: BlendMode
+    name*: string   ## The name given to the node by the user in the tool.
     children*: seq[Node]
     prototypeStartNodeID*: string
 
-    #absoluteBoundingBox*: Rect # is not used and computed a new
-
+    # Transform
     position*: Vec2
     size*: Vec2
     rotation*: float32
+    relativeTransform: Option[Transform] # Only used during loading.
 
-    relativeTransform: Option[Transform] # only used during loading
-
-    clipsContent*: bool
-    fills*: seq[Paint]
-    strokes*: seq[Paint]
+    # Shape
+    fillGeometry*: seq[Geometry]
     strokeWeight*: float32
     strokeAlign*: StrokeAlign
+    strokeGeometry*: seq[Geometry]
+    cornerRadius*: float32                           ## For any shape.
+    rectangleCornerRadii*: Option[array[4, float32]] ## Only for rectangles.
+
+    # Visual
+    blendMode*: BlendMode   ## Blend modes such as darken, screen, overlay...
+    fills*: seq[Paint]      ## Fill colors and gradients.
+    strokes*: seq[Paint]    ## Stroke colors and gradients.
+    effects*: seq[Effect]   ## Effects such as shadows and blurs.
+    opacity*: float32       ## Opacity, 0 .. 1
+    visible*: bool          ## Visibility on/off.
+
+    # Masking
+    isMask*: bool                        ## Used by masking
+    isMaskOutline*: bool                 ## ???
+    booleanOperation*: BooleanOperation  ## Used by boolean nodes
+    clipsContent*: bool                  ## Used by frame nodes to cut children.
+
+    # Text
+    characters*: string
+    style*: TypeStyle
+    characterStyleOverrides*: seq[int]
+    styleOverrideTable*: Table[string, TypeStyle]
+
+    # Layout
     constraints*: LayoutConstraint
     layoutAlign*: LayoutAlign
     layoutGrids*: seq[LayoutGrid]
     layoutMode*: LayoutMode
     itemSpacing*: float32
-    effects*: seq[Effect]
-    isMask*: bool
-    isMaskOutline*: bool
-    cornerRadius*: float32
-    rectangleCornerRadii*: Option[array[4, float32]]
-    characters*: string
-    style*: TypeStyle
-    characterStyleOverrides*: seq[int]
-    styleOverrideTable*: Table[string, TypeStyle]
-    fillGeometry*: seq[Geometry]
-    strokeGeometry*: seq[Geometry]
-    booleanOperation*: BooleanOperation
-
-    # Frame
     counterAxisSizingMode*: AxisSizingMode
-    #verticalPadding*: float32
-    #horizontalPadding*: float32
     paddingLeft*: float32
     paddingRight*: float32
     paddingTop*: float32
     paddingBottom*: float32
 
     # Non figma parameters:
-    dirty*: bool     ## Do the pixels need redrawing?
-    pixels*: Image   ## Pixel image cache.
-    pixelBox*: Rect  ## Pixel position and size.
-    editable*: bool  ## Can the user edit the text?
-    #box*: Rect       ## xy/size of the node.
-    orgPosition*: Vec2    ## Original size needed for constraints.
-    orgSize*: Vec2    ## Original size needed for constraints.
-
-    idNum*: int
-    mat*: Mat3       ## Useful to get back to the node.
-    collapse*: bool  ## Is the node drawn as a single texture (CPU internals)
+    dirty*: bool        ## Do the pixels need redrawing?
+    pixels*: Image      ## Pixel image cache.
+    pixelBox*: Rect     ## Pixel position and size.
+    editable*: bool     ## Can the user edit the text?
+    orgPosition*: Vec2  ## Original position used by constraints.
+    orgSize*: Vec2      ## Original size used by constraints.
+    idNum*: int         ## Integer ID of the node
+    mat*: Mat3          ## Useful to get back to the node.
+    collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
 
   FigmaFile* = ref object
     document*: Node
