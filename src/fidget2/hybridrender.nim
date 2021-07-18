@@ -87,7 +87,7 @@ proc drawWithAtlas(node: Node) =
 proc drawToScreen*(screenNode: Node) =
   ## Draw the current node onto the screen.
 
-  viewportSize = screenNode.absoluteBoundingBox.wh.ceil
+  viewportSize = screenNode.size.ceil
 
   # Resize the window if needed.
   if viewportRect != rect(0, 0, viewportSize.x, viewportSize.y):

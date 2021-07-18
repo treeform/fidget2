@@ -9,14 +9,16 @@ find "CounterFrame":
     onClick:
       inc count
       echo count
+      var display = find("../CounterDisplay/text")
+      display.characters = $count
+      display.dirty = true
 
-  # When text is displayed it grabs the value from the count variable.
-  find "CounterDisplay/text":
-    onDisplay:
-      var sdfsdf = thisNode
-      if thisNode.characters != $count:
-        thisNode.dirty = true
-        thisNode.characters = $count
+  # # When text is displayed it grabs the value from the count variable.
+  # find "CounterDisplay/text":
+  #   onDisplay:
+  #     if thisNode.characters != $count:
+  #       thisNode.dirty = true
+  #       thisNode.characters = $count
 
 # Starts the fidget main loop.
 startFidget(

@@ -323,10 +323,10 @@ template onFocus*(body: untyped) =
 proc rect*(node: Node): Rect =
   ## Gets the nodes rectangle on screen.
   # TODO: this might be off with rotations, use better method.
-  result.x = node.absoluteBoundingBox.x + framePos.x
-  result.y = node.absoluteBoundingBox.y + framePos.y
-  result.w = node.absoluteBoundingBox.w
-  result.h = node.absoluteBoundingBox.h
+  result.x = node.position.x + framePos.x
+  result.y = node.position.y + framePos.y
+  result.w = node.size.x
+  result.h = node.size.y
 
 proc updateWindowSize() =
   ## Handle window resize.
@@ -524,14 +524,13 @@ proc display() =
 
   if windowResizable:
     # Stretch the current frame to fit the window.
-    if windowSize != thisFrame.box.wh:
+    if windowSize != thisFrame.size:
       thisFrame.markDirty()
-      thisFrame.box.wh = windowSize
-      thisFrame.absoluteBoundingBox.wh = windowSize
+      thisFrame.size = windowSize
   else:
     # Stretch the window to fit the current frame.
-    if windowSize != thisFrame.box.wh:
-      window.setWindowSize(thisFrame.box.w.cint, thisFrame.box.h.cint)
+    if windowSize != thisFrame.size:
+      window.setWindowSize(thisFrame.size.x.cint, thisFrame.size.y.cint)
 
   for cb in eventCbs:
     thisCb = cb
@@ -568,7 +567,7 @@ proc startFidget*(
   thisFrame = find(entryFrame)
   windowResizable = resizable
 
-  viewportSize = thisFrame.absoluteBoundingBox.wh
+  viewportSize = thisFrame.size
 
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
