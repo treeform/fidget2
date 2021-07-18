@@ -13,6 +13,7 @@ find "CounterFrame":
   # When text is displayed it grabs the value from the count variable.
   find "CounterDisplay/text":
     onDisplay:
+      var sdfsdf = thisNode
       if thisNode.characters != $count:
         thisNode.dirty = true
         thisNode.characters = $count
