@@ -558,7 +558,7 @@ proc startFidget*(
   figmaUrl: string,
   windowTitle: string,
   entryFrame: string,
-  resizable = true
+  resizable: bool
 ) =
   ## Starts Fidget Main loop.
 

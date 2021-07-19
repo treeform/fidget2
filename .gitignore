@@ -6,6 +6,10 @@
 # normal ignores:
 *.exe
 *.dll
+*.a
+*.o
+*.lib
+*.pyc
 nimcache
 *.pdb
 *.ilk
