@@ -1,6 +1,18 @@
 #include <stdbool.h>
-void fidget_call_me_maybe(char* phone);
-char* fidget_flight_club_rule(int n);
-bool fidget_input_code(int a, int b, int c, int d);
-char* fidget_node_get_name(int node_id);
-void fidget_start_fidget(char* figma_url, char* window_title, char* entry_frame, bool resizable);
+bool fidget_test_numbers(char a, unsigned char b, short c, unsigned short d, int e, unsigned int f, long long g, unsigned long long h, long long i, unsigned long long j, float k, double l, double m);
+
+typedef long long Node;
+char* fidget_get_node_name(Node node);
+void fidget_set_node_name(Node node, char* name);
+long long fidget_get_node_count(Node node);
+void fidget_set_node_count(Node node, long long count);
+
+Node fidget_create_node();
+
+typedef struct Vec2 {
+  float x;
+  float y;
+} Vec2;
+
+void fidget_give_vec(Vec2 v);
+Vec2 fidget_take_vec();
