@@ -436,6 +436,11 @@ proc onSetKey(
       buttonRelease[key] = true
     buttonDown[key] = setKey
 
+var onClickGlobalCb: proc() {.cdecl.}
+proc onClickGlobal*(a: proc() {.cdecl.}) =
+  echo "setting onClickGlobal"
+  onClickGlobalCb = a
+
 proc onSetCharCallback(window: staticglfw.Window, character: cuint) {.cdecl.} =
   ## User typed a character, needed for unicode entry.
   requestedFrame = true
@@ -500,7 +505,6 @@ proc onMouseButton(
   else:
     textBoxMouseAction()
 
-
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   ## Mouse moved glfw callback.
   requestedFrame = true
@@ -538,6 +542,11 @@ proc display() =
     thisCb.run()
   thisSelector = ""
   thisCb = nil
+
+  if mouse.click:
+    if onClickGlobalCb != nil:
+      echo "calling onClickGlobalCb"
+      onClickGlobalCb()
 
   clearInputs()
 

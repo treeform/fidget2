@@ -1,26 +1,48 @@
 from fidget import *
 
-# call_me_maybe("+9 360872 1222")
-# print(flight_club_rule(2))
-# print(input_code(1, 2, 3, 4))
-# print(node_get_name(1))
-
+# Test function calling
+call_me_maybe("+9 360872 1222")
+print(flight_club_rule(2))
+print(input_code(1, 2, 3, 4))
 print(test_numbers(
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 ))
 
-# start_fidget(
-#     "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
-#     "Fidget",
-#     "WelcomeFrame",
-#     False,
-# )
+# Test ref objects
+fod = create_fod()
+print("n.ref", fod.ref)
+fod.count = 123
+print("n.count", fod.count)
 
+# Test objects
+print(give_vec(Vector2(x = 1, y = 2)))
+v = take_vec()
+print(v.x, v.y)
 
-n = create_node()
-print("n.ref", n.ref)
-n.count = 123
-print("n.count", n.count)
+# Test enums
+print(repeat_enum(asRight))
 
-print(give_vec(Vec2(x = 1, y = 2)))
-print(take_vec())
+# Test callbacks
+@c_proc_cb
+def python_cb():
+    print("in python_cb")
+call_me_back(python_cb)
+
+# Test fidget
+count = 0
+@c_proc_cb
+def click_cb():
+    global count
+    count += 1
+    print("in click_cb", count)
+    n = find_node("CounterFrame/CounterDisplay/text")
+    n.characters = str(count)
+    n.dirty = True
+
+on_click_global(click_cb)
+start_fidget(
+  "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
+  "Python Counter",
+  "CounterFrame",
+  False
+)

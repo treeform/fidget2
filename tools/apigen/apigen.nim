@@ -1,6 +1,10 @@
-import macros, strutils, tables
+import macros, strutils, print
 
-## Generates .h files for C based on nim exports
+## Generates .h and py files for nim exports
+
+const allowedFields = @["name", "count", "characters", "dirty"]
+
+converter cstringToString(s: cstring): string = $s
 
 {.passL: "-o fidget.dll".} # {.passL: "-o fidget.dll -s -shared -Wl,--out-implib,libfidget.a".}
 
@@ -48,11 +52,11 @@ proc typeH(nimType: string): string =
   of "float32": "float"
   of "float64": "double"
   of "float": "double"
+  of "proc () {.cdecl.}": "proc_cb"
   of "": "void"
   else: nimType
 
 proc exportProcH(defSym: NimNode) =
-  echo defSym.treeRepr
   let def = defSym.getImpl()
   assert def.kind == nnkProcDef
 
@@ -79,8 +83,6 @@ proc exportRefObjectH(def: NimNode) =
     baseType = refType[1][1].getType()
     objName = refType[1][1].repr.split(":")[0]
 
-  echo baseType.treeRepr
-
   codec.add "\n"
   codec.add "typedef long long "
   codec.add objName
@@ -89,20 +91,16 @@ proc exportRefObjectH(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
+    if field.repr notin allowedFields:
+      continue
     let fieldType = field.getType()
     let objName = refType[1][1].repr.split(":")[0]
 
-    echo field.treeRepr
-    echo " ", field.getImpl().treeRepr
-    echo " ", field.getType().treeRepr
-    echo " ", field.getTypeInst().treeRepr
-    echo " " , field.isExported
-
     # generate getter and setter:
     codec.add typeH(fieldType.repr)
-    codec.add " fidget_get_"
+    codec.add " fidget_"
     codec.add toSnakeCase(objName)
-    codec.add "_"
+    codec.add "_get_"
     codec.add toSnakeCase(field.repr)
     codec.add "("
     codec.add objName
@@ -111,9 +109,9 @@ proc exportRefObjectH(def: NimNode) =
     codec.add ");\n"
 
     codec.add "void"
-    codec.add " fidget_set_"
+    codec.add " fidget_"
     codec.add toSnakeCase(objName)
-    codec.add "_"
+    codec.add "_set_"
     codec.add toSnakeCase(field.repr)
     codec.add "("
     codec.add objName
@@ -147,9 +145,27 @@ proc exportObjectH(def: NimNode) =
   codec.add objName
   codec.add ";\n\n"
 
+proc exportEnumH(def: NimNode) =
+  let enumTy = def.getType()[1]
+  var i = 0
+  codec.add "\n"
+  codec.add "typedef long long "
+  codec.add def.repr
+  codec.add ";\n"
+  for enums in enumTy[1 .. ^1]:
+    codec.add "#define "
+    codec.add enums.repr
+    codec.add " "
+    codec.add $i
+    codec.add "\n"
+    inc i
+
 macro writeH() =
   let header = """
 #include <stdbool.h>
+
+typedef void (*proc_cb)();
+
 """
   writeFile("fidget.h", header & codec)
 
@@ -170,6 +186,7 @@ proc typePy(nimType: string): string =
   of "float32": "c_float"
   of "float64": "c_double"
   of "float": "c_double"
+  of "proc () {.cdecl.}": "c_proc_cb"
   of "": "None"
   else: nimType #"c_longlong"
 
@@ -228,6 +245,10 @@ proc exportProcPy(defSym: NimNode) =
       if param[^2].repr == "string":
         codepy.add param[i].repr
         codepy.add(".encode('utf8')")
+      # elif param[^2].repr == "proc () {.cdecl.}":
+      #   codepy.add("c_proc_cb(")
+      #   codepy.add param[i].repr
+      #   codepy.add(")")
       elif param[^2].repr == "int":
         codepy.add param[i].repr
       else:
@@ -257,12 +278,12 @@ proc exportRefObjectPy(def: NimNode) =
   codepy.add "class "
   codepy.add objName
   codepy.add "(Structure):\n"
-  # codepy.add "    def __init__(self, id):\n"
-  # codepy.add "      self.id = id\n"
   codepy.add "    _fields_ = [(\"ref\", c_void_p)]\n"
 
   for field in baseType[2]:
     if field.isExported == false:
+      continue
+    if field.repr notin allowedFields:
       continue
     let fieldType = field.getType()
 
@@ -272,11 +293,14 @@ proc exportRefObjectPy(def: NimNode) =
     codepy.add toSnakeCase(field.repr)
     codepy.add "(self):\n"
 
-    codepy.add "        return dll.fidget_get_"
+    codepy.add "        return dll.fidget_"
     codepy.add toSnakeCase(objName)
-    codepy.add "_"
+    codepy.add "_get_"
     codepy.add toSnakeCase(field.repr)
-    codepy.add "(self)\n"
+    codepy.add "(self)"
+    if fieldType.repr == "string":
+      codepy.add(".decode('utf8')")
+    codepy.add "\n"
 
     codepy.add "\n"
     codepy.add "    @"
@@ -287,12 +311,14 @@ proc exportRefObjectPy(def: NimNode) =
     codepy.add "(self, "
     codepy.add toSnakeCase(field.repr)
     codepy.add "):\n"
-    codepy.add "        dll.fidget_set_"
+    codepy.add "        dll.fidget_"
     codepy.add toSnakeCase(objName)
-    codepy.add "_"
+    codepy.add "_set_"
     codepy.add toSnakeCase(field.repr)
     codepy.add "(self, "
     codepy.add toSnakeCase(field.repr)
+    if fieldType.repr == "string":
+      codepy.add(".encode('utf8')")
     codepy.add ")\n"
 
   codepy.add "\n"
@@ -300,28 +326,30 @@ proc exportRefObjectPy(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
+    if field.repr notin allowedFields:
+      continue
     let fieldType = field.getType()
 
-    codepy.add "dll.fidget_get_"
+    codepy.add "dll.fidget_"
     codepy.add toSnakeCase(objName)
-    codepy.add "_"
+    codepy.add "_get_"
     codepy.add toSnakeCase(field.repr)
     codepy.add ".argtypes = ["
     codepy.add objName
     codepy.add "]"
     codepy.add "\n"
 
-    codepy.add "dll.fidget_get_"
+    codepy.add "dll.fidget_"
     codepy.add toSnakeCase(objName)
-    codepy.add "_"
+    codepy.add "_get_"
     codepy.add toSnakeCase(field.repr)
     codepy.add ".restype = "
     codepy.add typePy(fieldType.repr)
     codepy.add "\n"
 
-    codepy.add "dll.fidget_set_"
+    codepy.add "dll.fidget_"
     codepy.add toSnakeCase(objName)
-    codepy.add "_"
+    codepy.add "_set_"
     codepy.add toSnakeCase(field.repr)
     codepy.add ".argtypes = ["
     codepy.add objName
@@ -341,10 +369,6 @@ proc exportObjectPy(def: NimNode) =
   codepy.add objName
   codepy.add "(Structure):\n"
   codepy.add "    _fields_ = [\n"
-  #  ("x", c_int),
-  # ("y", c_int)
-
-
   for field in baseType[2]:
     if field.isExported == false:
       continue
@@ -356,11 +380,26 @@ proc exportObjectPy(def: NimNode) =
     codepy.add "),\n"
   codepy.add "    ]\n"
 
+proc exportEnumPy(def: NimNode) =
+  let enumTy = def.getType()[1]
+  var i = 0
+  codepy.add def.repr
+  codepy.add " = c_longlong"
+  codepy.add "\n"
+  for enums in enumTy[1 .. ^1]:
+    codepy.add enums.repr
+    codepy.add " = "
+    codepy.add $i
+    codepy.add "\n"
+    inc i
+  codepy.add "\n"
 
 macro writePy() =
   let header = """
 from ctypes import *
 dll = cdll.LoadLibrary("fidget.dll")
+
+c_proc_cb = CFUNCTYPE(None)
 
 """
   writeFile("fidget.py", header & codepy)
@@ -382,6 +421,11 @@ const nimBasicTypes = [
   "float",
   "Vec2"
 ]
+
+proc typeNim(nimType: string): string =
+  case nimType:
+  of "GVec2": "Vec2"
+  else: nimType
 
 proc exportProcNim(defSym: NimNode) =
   let
@@ -442,36 +486,48 @@ proc exportRefObjectNim(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
+    if field.repr notin allowedFields:
+      continue
+
     let fieldType = field.getType()
+    var
+      isEnum = false
+      isObj = false
+      isString = false
+
     let fieldTypeName =
-      if "enum" in fieldType.repr or "object" in fieldType.repr:
+      if "enum" in fieldType.repr:
+        isEnum = true
         "int"
+      elif "object" in fieldType.repr:
+        fieldType.getTypeInst().repr
       elif fieldType.repr == "string":
         "cstring"
       else:
         fieldType.repr
 
-    codenim.add "proc fidget_get_"
+    codenim.add "proc fidget_"
     codenim.add toSnakeCase(objName)
-    codenim.add "_"
+    codenim.add "_get_"
     codenim.add toSnakeCase(field.repr)
     codenim.add "("
     codenim.add toSnakeCase(objName)
     codenim.add ": "
     codenim.add objName
     codenim.add "): "
-    codenim.add fieldTypeName
+    codenim.add typeNim(fieldTypeName)
     codenim.add " {.cdecl, exportc, dynlib.} = \n"
-    codenim.add "  echo \"get:\", cast[uint64](node)\n"
     codenim.add "  "
     codenim.add toSnakeCase(objName)
     codenim.add "."
     codenim.add field.repr
+    if isEnum:
+      codenim.add ".ord"
     codenim.add "\n"
 
-    codenim.add "proc fidget_set_"
+    codenim.add "proc fidget_"
     codenim.add toSnakeCase(objName)
-    codenim.add "_"
+    codenim.add "_set_"
     codenim.add toSnakeCase(field.repr)
     codenim.add "("
     codenim.add toSnakeCase(objName)
@@ -480,99 +536,22 @@ proc exportRefObjectNim(def: NimNode) =
     codenim.add ", "
     codenim.add field.repr
     codenim.add ": "
-    codenim.add fieldTypeName
+    codenim.add typeNim(fieldTypeName)
     codenim.add ")"
     codenim.add " {.cdecl, exportc, dynlib.} = \n"
-    codenim.add "  echo \"set:\", cast[uint64](node)\n"
     codenim.add "  "
     codenim.add toSnakeCase(objName)
     codenim.add "."
     codenim.add field.repr
     codenim.add " = "
     codenim.add field.repr
+    if isEnum:
+      codenim.add "."
+      echo field.treeRepr
+      echo field.getTypeInst().treeRepr
+
+      codenim.add fieldType.getTypeInst().repr
     codenim.add "\n"
-
-    # codenim.add "proc fidget_get_"
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_"
-    # codenim.add toSnakeCase(field.repr)
-    # codenim.add "("
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id: "
-    # codenim.add "int"
-    # codenim.add "): "
-    # codenim.add fieldTypeName
-    # codenim.add " {.cdecl, exportc, dynlib.} = "
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id.to"
-    # codenim.add objName
-    # codenim.add "()."
-    # codenim.add field.repr
-    # codenim.add "\n"
-
-    # codenim.add "proc fidget_set_"
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_"
-    # codenim.add toSnakeCase(field.repr)
-    # codenim.add "("
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id: "
-    # codenim.add "int"
-    # codenim.add ", "
-    # codenim.add field.repr
-    # codenim.add ": "
-    # codenim.add fieldTypeName
-    # codenim.add ")"
-    # codenim.add " {.cdecl, exportc, dynlib.} = \n"
-    # codenim.add "  echo \"got:\", node_id\n"
-    # codenim.add "  "
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id.to"
-    # codenim.add objName
-    # codenim.add "()."
-    # codenim.add field.repr
-    # codenim.add " = "
-    # codenim.add field.repr
-    # codenim.add "\n"
-
-    # codenim.add "proc fidget_get_"
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_"
-    # codenim.add toSnakeCase(field.repr)
-    # codenim.add "("
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id: int): "
-    # codenim.add fieldTypeName
-    # codenim.add " {.cdecl, exportc, dynlib.} = "
-    # codenim.add toVarCase(objName)
-    # codenim.add "s["
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id]."
-    # codenim.add field.repr
-    # codenim.add "\n"
-
-    # codenim.add "proc fidget_set_"
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_"
-    # codenim.add toSnakeCase(field.repr)
-    # codenim.add "("
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id: int, "
-    # codenim.add field.repr
-    # codenim.add ": "
-    # codenim.add fieldTypeName
-    # codenim.add ")"
-    # codenim.add " {.cdecl, exportc, dynlib.} = "
-    # codenim.add toVarCase(objName)
-    # codenim.add "s["
-    # codenim.add toSnakeCase(objName)
-    # codenim.add "_id]."
-    # codenim.add field.repr
-    # codenim.add " = "
-    # codenim.add field.repr
-    # codenim.add "\n"
-
-
   codenim.add "\n"
   codenim.add "\n"
 
@@ -580,6 +559,10 @@ macro writeNim() =
   let header = """
 """
   writeFile("fidgetapi.nim", header & codenim)
+
+macro exportEnum(def: typed) =
+  exportEnumH(def)
+  exportEnumPy(def)
 
 macro exportRefObject(def: typed) =
   exportRefObjectH(def)
@@ -596,19 +579,13 @@ macro exportProc(def: typed) =
   exportProcPy(def)
   exportProcNim(def)
 
+# Test function calling
 proc callMeMaybe(phone: string) =
   echo "from nim: ", phone
-
 proc flightClubRule(n: int): string =
   return "Don't talk about flight club."
-
 proc inputCode(a, b, c, d: int): bool =
   return false
-
-proc nodeGetName(nodeId: int): string =
-  return "nodeName"
-
-import print
 proc testNumbers(
   a: int8,
   b: uint8,
@@ -625,68 +602,73 @@ proc testNumbers(
   m: float,
 ): bool =
   print a, b, c, d, e, f, g, h, i, j, k, l, m
-
-
-# exportProc(callMeMaybe)
-# exportProc(flightClubRule)
-# exportProc(inputCode)
-# exportProc(nodeGetName)
+exportProc(callMeMaybe)
+exportProc(flightClubRule)
+exportProc(inputCode)
 exportProc(testNumbers)
 
-# import fidget2
-# exportProc(startFidget)
-
-# proc startFidget() {.cdecl, exportc, dynlib, exporth, exportpy.} =
-#   fidget2.startFidget(
-#     figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
-#     windowTitle = "Fidget",     # The title of the window.
-#     entryFrame = "WelcomeFrame", # Frame to use as the entry from.
-#     resizable = false,           # We want the window to resize to frame size.
-#   )
-
-# import tables
-
-
-
+# Test ref objects
 type
-  Node = ref object
+  Fod = ref object
     id: int
     name*: string
     count*: int
-exportRefObject(Node)
+exportRefObject(Fod)
+proc createFod(): Fod =
+  var fod = Fod()
+  echo "new:", cast[int64](fod)
+  return fod
+exportProc(createFod)
 
-# var
-#   nodesGenCount = 1
-#   nodes: Table[int, Node]
-# proc toInt(n: Node): int =
-#   n.id
-# proc toNode(i: int): Node =
-#   nodes[i]
-# nodes[0] = Node()
-
-proc createNode(): Node =
-  var node = Node()
-  echo "new:", cast[int64](node)
-  return node
-exportProc(createNode)
-
+# Test objects
 type
-  Vec2 = object
+  Vector2 = object
     x*, y*: float32
-exportObject(Vec2)
-proc giveVec(v: Vec2) =
+exportObject(Vector2)
+proc giveVec(v: Vector2) =
   echo "given vec ", v
-
-proc takeVec(): Vec2 =
-  echo "taken vec ", Vec2(x: 1.2, y: 3.4)
-
+proc takeVec(): Vector2 =
+  result = Vector2(x: 1.2, y: 3.4)
+  echo "taken vec ", result
 exportProc(giveVec)
 exportProc(takeVec)
+
+# Test enums
+type
+  AlignSomething = enum
+    asDefault
+    asTop
+    asBottom
+    asRight
+    asLeft
+exportEnum(AlignSomething)
+proc repeatEnum(e: AlignSomething): AlignSomething =
+  return e
+exportProc(repeatEnum)
+
+# Test callbacks
+proc callMeBack(cb: proc() {.cdecl.}) =
+  echo "calling cb"
+  cb()
+  echo "done with cb"
+exportProc(callMeBack)
+
+import fidget2, vmath
+# proc setCharacters(glob, characters: string) =
+#   var node = find(glob)
+#   node.characters = characters
+#   node.dirty = true
+# exportProc(setCharacters)
+exportProc(onClickGlobal)
+
+# exportObject(Vec2)
+exportRefObject(Node)
+proc findNode(glob: string): Node =
+  find(glob)
+exportProc(findNode)
+exportProc(startFidget)
 
 writeH()
 writePy()
 writeNim()
-
-converter cstringToString(s: cstring): string = $s
-
 include fidgetapi
