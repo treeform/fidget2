@@ -25,6 +25,20 @@ proc toSnakeCase(s: string): string =
       prevCap = false
       result.add c
 
+proc toCapCase(s: string): string =
+  ## Converts NimTypes to NIM_TYPES.
+  if s.len == 0:
+    return
+  var prevCap = false
+  for i, c in s:
+    if c in {'A'..'Z'}:
+      if result.len > 0 and result[result.len-1] != '_' and not prevCap:
+        result.add '_'
+      prevCap = true
+    else:
+      prevCap = false
+    result.add c.toUpperAscii()
+
 proc toVarCase(s: string): string =
   ## Lower the first char, NimType -> nimType.
   result = s
@@ -152,7 +166,7 @@ proc exportEnumH(def: NimNode) =
   codec.add ";\n"
   for enums in enumTy[1 .. ^1]:
     codec.add "#define "
-    codec.add enums.repr
+    codec.add toCapCase(enums.repr)
     codec.add " "
     codec.add $i
     codec.add "\n"
@@ -365,7 +379,7 @@ proc exportEnumPy(def: NimNode) =
   codepy.add " = c_longlong"
   codepy.add "\n"
   for enums in enumTy[1 .. ^1]:
-    codepy.add enums.repr
+    codepy.add toCapCase(enums.repr)
     codepy.add " = "
     codepy.add $i
     codepy.add "\n"

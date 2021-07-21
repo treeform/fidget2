@@ -71,11 +71,11 @@ def take_vec():
   return dll.fidget_take_vec()
 
 AlignSomething = c_longlong
-asDefault = 0
-asTop = 1
-asBottom = 2
-asRight = 3
-asLeft = 4
+AS_DEFAULT = 0
+AS_TOP = 1
+AS_BOTTOM = 2
+AS_RIGHT = 3
+AS_LEFT = 4
 
 dll.fidget_repeat_enum.argtypes = [AlignSomething]
 dll.fidget_repeat_enum.restype = AlignSomething

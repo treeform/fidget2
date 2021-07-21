@@ -24,11 +24,11 @@ void fidget_give_vec(Vector2 v);
 Vector2 fidget_take_vec();
 
 typedef long long AlignSomething;
-#define asDefault 0
-#define asTop 1
-#define asBottom 2
-#define asRight 3
-#define asLeft 4
+#define AS_DEFAULT 0
+#define AS_TOP 1
+#define AS_BOTTOM 2
+#define AS_RIGHT 3
+#define AS_LEFT 4
 AlignSomething fidget_repeat_enum(AlignSomething e);
 void fidget_call_me_back(proc_cb cb);
 void fidget_on_click_global(proc_cb a);
