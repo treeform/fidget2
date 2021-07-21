@@ -4,7 +4,7 @@ import macros, strutils, print
 
 const allowedFields = @["name", "count", "characters", "dirty"]
 
-converter cstringToString(s: cstring): string = $s
+# converter cstringToString(s: cstring): string = $s
 
 {.passL: "-o fidget.dll".} # {.passL: "-o fidget.dll -s -shared -Wl,--out-implib,libfidget.a".}
 
@@ -42,9 +42,9 @@ proc rm(s: var string, what: string) =
   if s.len >= what.len and s[^what.len..^1] == what:
     s.setLen(s.len - what.len)
 
-proc typeH(nimType: string): string =
+proc typeH(nimType: NimNode): string =
   ## Converts nim type to c type.
-  case nimType:
+  case nimType.repr:
   of "string": "char*"
   of "bool": "bool"
   of "int8": "char"
@@ -62,17 +62,16 @@ proc typeH(nimType: string): string =
   of "float": "double"
   of "proc () {.cdecl.}": "proc_cb"
   of "": "void"
-  else: nimType
+  else: nimType.repr
 
 proc exportProcH(defSym: NimNode) =
   let def = defSym.getImpl()
   assert def.kind == nnkProcDef
-  echo def.treeRepr
-  codec.add typeH(def[3][0].repr), " fidget_", toSnakeCase(def[0].repr)
+  codec.add typeH(def[3][0]), " fidget_", toSnakeCase(def[0].repr)
   codec.add "("
   for param in def[3][1..^1]:
     for i in 0 .. param.len - 3:
-      codec.add typeH(param[^2].repr), " ", toSnakeCase(param[i].repr), ", "
+      codec.add typeH(param[^2]), " ", toSnakeCase(param[i].repr), ", "
   codec.rm(", ")
   codec.add ")"
   codec.add ";\n"
@@ -96,7 +95,7 @@ proc exportRefObjectH(def: NimNode) =
     let fieldType = field.getType()
 
     # generate getter and setter:
-    codec.add typeH(fieldType.repr)
+    codec.add typeH(fieldType)
     codec.add " fidget_"
     codec.add toSnakeCase(objName)
     codec.add "_get_"
@@ -117,7 +116,7 @@ proc exportRefObjectH(def: NimNode) =
     codec.add " "
     codec.add toSnakeCase(objName)
     codec.add ", "
-    codec.add typeH(fieldType.repr)
+    codec.add typeH(fieldType)
     codec.add " "
     codec.add toSnakeCase(field.repr)
     codec.add ");\n"
@@ -137,7 +136,7 @@ proc exportObjectH(def: NimNode) =
       quit()
     let fieldType = field.getType()
     codec.add "  "
-    codec.add typeH(fieldType.repr)
+    codec.add typeH(fieldType)
     codec.add " "
     codec.add toSnakeCase(field.repr)
     codec.add ";\n"
@@ -169,8 +168,9 @@ typedef void (*proc_cb)();
 """
   writeFile("fidget.h", header & codec)
 
-proc typePy(nimType: string): string =
-  case nimType:
+proc typePy(nimType: NimNode): string =
+  ## Converts nim type to python type.
+  case nimType.repr:
   of "string": "c_char_p"
   of "bool": "c_bool"
   of "int8": "c_byte"
@@ -188,7 +188,7 @@ proc typePy(nimType: string): string =
   of "float": "c_double"
   of "proc () {.cdecl.}": "c_proc_cb"
   of "": "None"
-  else: nimType #"c_longlong"
+  else: nimType.repr
 
 proc exportProcPy(defSym: NimNode) =
   let def = defSym.getImpl()
@@ -203,9 +203,9 @@ proc exportProcPy(defSym: NimNode) =
   codepy.add "dll."
   codepy.add cName
   codepy.add ".argtypes = ["
-  for param in def[3][1..^1]:
+  for param in params:
     for i in 0 .. param.len - 3:
-      codepy.add typePy(param[^2].repr)
+      codepy.add typePy(param[^2])
       codepy.add ", "
   codepy.rm(", ")
   codepy.add "]"
@@ -214,13 +214,13 @@ proc exportProcPy(defSym: NimNode) =
   codepy.add "dll."
   codepy.add cName
   codepy.add ".restype = "
-  codepy.add typePy(ret.repr)
+  codepy.add typePy(ret)
   codepy.add "\n"
 
   codepy.add "def "
   codepy.add pyName
   codepy.add "("
-  for param in def[3][1..^1]:
+  for param in params:
     for i in 0 .. param.len - 3:
       codepy.add toSnakeCase(param[i].repr)
       codepy.add ", "
@@ -232,7 +232,7 @@ proc exportProcPy(defSym: NimNode) =
   codepy.add "dll."
   codepy.add cName
   codepy.add "("
-  for param in def[3][1..^1]:
+  for param in params:
     for i in 0 .. param.len - 3:
       if param[^2].repr == "string":
         codepy.add toSnakeCase(param[i].repr)
@@ -321,7 +321,7 @@ proc exportRefObjectPy(def: NimNode) =
     codepy.add "_get_"
     codepy.add toSnakeCase(field.repr)
     codepy.add ".restype = "
-    codepy.add typePy(fieldType.repr)
+    codepy.add typePy(fieldType)
     codepy.add "\n"
 
     codepy.add "dll.fidget_"
@@ -331,7 +331,7 @@ proc exportRefObjectPy(def: NimNode) =
     codepy.add ".argtypes = ["
     codepy.add objName
     codepy.add ", "
-    codepy.add typePy(fieldType.repr)
+    codepy.add typePy(fieldType)
     codepy.add "]"
     codepy.add "\n"
 
@@ -353,7 +353,7 @@ proc exportObjectPy(def: NimNode) =
     codepy.add "        (\""
     codepy.add toSnakeCase(field.repr)
     codepy.add "\", "
-    codepy.add  typePy(fieldType.repr)
+    codepy.add  typePy(fieldType)
     codepy.add "),\n"
   codepy.add "    ]\n"
 
@@ -399,10 +399,34 @@ const nimBasicTypes = [
   "Vec2"
 ]
 
-proc typeNim(nimType: string): string =
-  case nimType:
-  of "GVec2": "Vec2"
-  else: nimType
+proc typeNim(nimType: NimNode): string =
+  # echo nimType.repr
+  # echo nimType.getImpl().treeRepr
+  if "enum" in nimType.repr or
+    (nimType.kind == nnkSym and "EnumTy" in nimType.getImpl().treeRepr):
+    return "int"
+  elif "object" in nimType.repr:
+    return nimType.getTypeInst().repr
+  elif nimType.repr == "string":
+    return "cstring"
+  elif nimType.repr == "GVec2":
+    return "Vec2"
+  else:
+    nimType.repr
+
+proc converterFromNim(nimType: NimNode): string =
+  if "enum" in nimType.repr or
+    (nimType.kind == nnkSym and "EnumTy" in nimType.getImpl().treeRepr):
+    return ".ord"
+  elif "string" == nimType.repr:
+    return ".cstring"
+
+proc converterToNim(nimType: NimNode): string =
+  if "enum" in nimType.repr or (
+    nimType.kind == nnkSym and "EnumTy" in nimType.getImpl().treeRepr):
+    return "." & nimType.getTypeInst().repr
+  elif "string" == nimType.repr:
+    return ".`$`"
 
 proc exportProcNim(defSym: NimNode) =
   let
@@ -419,19 +443,13 @@ proc exportProcNim(defSym: NimNode) =
     for i in 0 .. param.len - 3:
       codenim.add toSnakeCase(param[i].repr)
       codenim.add ": "
-      if param[^2].repr == "string":
-        codenim.add "cstring"
-      else:
-        codenim.add param[^2].repr
+      codenim.add typeNim(param[^2])
       codenim.add ", "
   codenim.rm ", "
   codenim.add ")"
   if ret.kind != nnkEmpty:
     codenim.add ": "
-    if ret.repr == "string":
-      codenim.add "cstring"
-    else:
-      codenim.add ret.repr
+    codenim.add typeNim(ret)
   codenim.add " {.cdecl, exportc, dynlib.} =\n"
 
   codenim.add "  "
@@ -443,14 +461,12 @@ proc exportProcNim(defSym: NimNode) =
       # TODO Handle default types
       # if paramType.kind == nnkEmpty:
       #   paramType = param[^1].getType()
-      if paramType.repr == "string":
-        codenim.add "$"
       codenim.add toSnakeCase(param[i].repr)
+      codenim.add converterToNim(paramType)
       codenim.add ", "
   codenim.rm ", "
   codenim.add ")"
-  if ret.repr == "string":
-    codenim.add ".cstring"
+  codenim.add converterFromNim(ret)
   codenim.add "\n\n"
 
 proc exportRefObjectNim(def: NimNode) =
@@ -466,21 +482,6 @@ proc exportRefObjectNim(def: NimNode) =
       continue
 
     let fieldType = field.getType()
-    var
-      isEnum = false
-      isObj = false
-      isString = false
-
-    let fieldTypeName =
-      if "enum" in fieldType.repr:
-        isEnum = true
-        "int"
-      elif "object" in fieldType.repr:
-        fieldType.getTypeInst().repr
-      elif fieldType.repr == "string":
-        "cstring"
-      else:
-        fieldType.repr
 
     codenim.add "proc fidget_"
     codenim.add toSnakeCase(objName)
@@ -491,14 +492,13 @@ proc exportRefObjectNim(def: NimNode) =
     codenim.add ": "
     codenim.add objName
     codenim.add "): "
-    codenim.add typeNim(fieldTypeName)
+    codenim.add typeNim(fieldType)
     codenim.add " {.cdecl, exportc, dynlib.} = \n"
     codenim.add "  "
     codenim.add toSnakeCase(objName)
     codenim.add "."
     codenim.add field.repr
-    if isEnum:
-      codenim.add ".ord"
+    codenim.add converterFromNim(fieldType)
     codenim.add "\n"
 
     codenim.add "proc fidget_"
@@ -512,7 +512,7 @@ proc exportRefObjectNim(def: NimNode) =
     codenim.add ", "
     codenim.add field.repr
     codenim.add ": "
-    codenim.add typeNim(fieldTypeName)
+    codenim.add typeNim(fieldType)
     codenim.add ")"
     codenim.add " {.cdecl, exportc, dynlib.} = \n"
     codenim.add "  "
@@ -521,9 +521,7 @@ proc exportRefObjectNim(def: NimNode) =
     codenim.add field.repr
     codenim.add " = "
     codenim.add field.repr
-    if isEnum:
-      codenim.add "."
-      codenim.add fieldType.getTypeInst().repr
+    codenim.add converterToNim(fieldType)
     codenim.add "\n"
   codenim.add "\n"
   codenim.add "\n"
