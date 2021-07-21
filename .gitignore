@@ -16,6 +16,7 @@ nimcache
 .*
 *.glsl
 node_modules
+package-lock.json
 
 # figma tmp files
 figma

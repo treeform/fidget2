@@ -1,25 +1,29 @@
-import macros, strutils, print, c, python, common, nim
+import macros, strutils, common, print, c, python, nim, js
 
 ## Generates .h and py files for nim exports
 
 macro exportProc(def: typed) =
   exportProcH(def)
   exportProcPy(def)
+  exportProcJs(def)
   exportProcNim(def)
 
 macro exportRefObject(def: typed) =
   exportRefObjectH(def)
   exportRefObjectPy(def)
+  exportRefObjectJs(def)
   exportRefObjectNim(def)
 
 macro exportObject(def: typed) =
   exportObjectH(def)
   exportObjectPy(def)
+  exportObjectJs(def)
   #exportObjectNim(def)
 
 macro exportEnum(def: typed) =
   exportEnumH(def)
   exportEnumPy(def)
+  exportEnumJs(def)
 
 # Test function calling
 proc callMeMaybe(phone: string) =
@@ -27,6 +31,7 @@ proc callMeMaybe(phone: string) =
 proc flightClubRule(n: int): string =
   return "Don't talk about flight club."
 proc inputCode(a, b, c, d: int): bool =
+  echo "got code: ", a, b, c, d
   return false
 proc testNumbers(
   a: int8,
@@ -96,11 +101,6 @@ proc callMeBack(cb: proc() {.cdecl.}) =
 exportProc(callMeBack)
 
 import fidget2, vmath
-# proc setCharacters(glob, characters: string) =
-#   var node = find(glob)
-#   node.characters = characters
-#   node.dirty = true
-# exportProc(setCharacters)
 exportProc(onClickGlobal)
 
 # exportObject(Vec2)
@@ -112,5 +112,6 @@ exportProc(startFidget)
 
 writeH()
 writePy()
+writeJs()
 writeNim()
 include fidgetapi
