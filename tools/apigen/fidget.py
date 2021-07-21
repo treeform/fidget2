@@ -137,6 +137,6 @@ def find_node(glob):
 
 dll.fidget_start_fidget.argtypes = [c_char_p, c_char_p, c_char_p, c_bool]
 dll.fidget_start_fidget.restype = None
-def start_fidget(figmaUrl, windowTitle, entryFrame, resizable):
-  return dll.fidget_start_fidget(figmaUrl.encode('utf8'), windowTitle.encode('utf8'), entryFrame.encode('utf8'), resizable)
+def start_fidget(figma_url, window_title, entry_frame, resizable):
+  return dll.fidget_start_fidget(figma_url.encode('utf8'), window_title.encode('utf8'), entry_frame.encode('utf8'), resizable)
 

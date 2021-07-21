@@ -12,7 +12,12 @@ var codec {.compiletime.}: string
 var codepy {.compiletime.}: string
 var codenim {.compiletime.}: string
 
+proc add(s: var string, args: varargs[string]) =
+  for a in args:
+    s.add(a)
+
 proc toSnakeCase(s: string): string =
+  ## Converts NimTypes to nim_types.
   if s.len == 0:
     return
   var prevCap = false
@@ -27,15 +32,18 @@ proc toSnakeCase(s: string): string =
       result.add c
 
 proc toVarCase(s: string): string =
+  ## Lower the first char, NimType -> nimType.
   result = s
   if s.len > 0:
     result[0] = s[0].toLowerAscii()
 
 proc rm(s: var string, what: string) =
+  ## Will remove the last thing from a string, usually used for ", "
   if s.len >= what.len and s[^what.len..^1] == what:
     s.setLen(s.len - what.len)
 
 proc typeH(nimType: string): string =
+  ## Converts nim type to c type.
   case nimType:
   of "string": "char*"
   of "bool": "bool"
@@ -59,20 +67,12 @@ proc typeH(nimType: string): string =
 proc exportProcH(defSym: NimNode) =
   let def = defSym.getImpl()
   assert def.kind == nnkProcDef
-
-  codec.add typeH(def[3][0].repr)
-
-  codec.add " "
-  codec.add "fidget_"
-  codec.add toSnakeCase(def[0].repr)
-
+  echo def.treeRepr
+  codec.add typeH(def[3][0].repr), " fidget_", toSnakeCase(def[0].repr)
   codec.add "("
   for param in def[3][1..^1]:
     for i in 0 .. param.len - 3:
-      codec.add typeH(param[^2].repr)
-      codec.add " "
-      codec.add toSnakeCase(param[i].repr)
-      codec.add ", "
+      codec.add typeH(param[^2].repr), " ", toSnakeCase(param[i].repr), ", "
   codec.rm(", ")
   codec.add ")"
   codec.add ";\n"
@@ -94,7 +94,6 @@ proc exportRefObjectH(def: NimNode) =
     if field.repr notin allowedFields:
       continue
     let fieldType = field.getType()
-    let objName = refType[1][1].repr.split(":")[0]
 
     # generate getter and setter:
     codec.add typeH(fieldType.repr)
@@ -134,7 +133,8 @@ proc exportObjectH(def: NimNode) =
   codec.add " {\n"
   for field in baseType[2]:
     if field.isExported == false:
-      continue
+      # TODO: Probably can't do this as layout will not match.
+      quit()
     let fieldType = field.getType()
     codec.add "  "
     codec.add typeH(fieldType.repr)
@@ -203,7 +203,6 @@ proc exportProcPy(defSym: NimNode) =
   codepy.add "dll."
   codepy.add cName
   codepy.add ".argtypes = ["
-
   for param in def[3][1..^1]:
     for i in 0 .. param.len - 3:
       codepy.add typePy(param[^2].repr)
@@ -215,7 +214,7 @@ proc exportProcPy(defSym: NimNode) =
   codepy.add "dll."
   codepy.add cName
   codepy.add ".restype = "
-  codepy.add typePy(def[3][0].repr)
+  codepy.add typePy(ret.repr)
   codepy.add "\n"
 
   codepy.add "def "
@@ -223,50 +222,28 @@ proc exportProcPy(defSym: NimNode) =
   codepy.add "("
   for param in def[3][1..^1]:
     for i in 0 .. param.len - 3:
-      codepy.add param[i].repr
+      codepy.add toSnakeCase(param[i].repr)
       codepy.add ", "
   codepy.rm(", ")
   codepy.add ")"
   codepy.add ":\n"
-  codepy.add "  return "
-  if ret.repr == "string":
-    discard
-  elif ret.repr == "int":
-    discard
-  # else:
-  #   codepy.add ret.repr
-  #   codepy.add("(")
 
+  codepy.add "  return "
   codepy.add "dll."
   codepy.add cName
   codepy.add "("
   for param in def[3][1..^1]:
     for i in 0 .. param.len - 3:
       if param[^2].repr == "string":
-        codepy.add param[i].repr
+        codepy.add toSnakeCase(param[i].repr)
         codepy.add(".encode('utf8')")
-      # elif param[^2].repr == "proc () {.cdecl.}":
-      #   codepy.add("c_proc_cb(")
-      #   codepy.add param[i].repr
-      #   codepy.add(")")
-      elif param[^2].repr == "int":
-        codepy.add param[i].repr
       else:
-        #codepy.add "here"
-        # codepy.add "tmp = "
-        codepy.add param[i].repr
-        # codepy.add "()\n"
-        # codepy.add param[i].repr
-
+        codepy.add toSnakeCase(param[i].repr)
       codepy.add ", "
   codepy.rm(", ")
   codepy.add ")"
   if ret.repr == "string":
     codepy.add(".decode('utf8')")
-  elif ret.repr == "int":
-    discard
-  # else:
-  #   codepy.add(")")
   codepy.add "\n\n"
 
 proc exportRefObjectPy(def: NimNode) =
@@ -456,6 +433,7 @@ proc exportProcNim(defSym: NimNode) =
     else:
       codenim.add ret.repr
   codenim.add " {.cdecl, exportc, dynlib.} =\n"
+
   codenim.add "  "
   codenim.add name
   codenim.add "("
@@ -473,8 +451,6 @@ proc exportProcNim(defSym: NimNode) =
   codenim.add ")"
   if ret.repr == "string":
     codenim.add ".cstring"
-  #if ret.repr notin nimBasicTypes:
-  #  codenim.add ".toInt()"
   codenim.add "\n\n"
 
 proc exportRefObjectNim(def: NimNode) =
@@ -547,9 +523,6 @@ proc exportRefObjectNim(def: NimNode) =
     codenim.add field.repr
     if isEnum:
       codenim.add "."
-      echo field.treeRepr
-      echo field.getTypeInst().treeRepr
-
       codenim.add fieldType.getTypeInst().repr
     codenim.add "\n"
   codenim.add "\n"
@@ -560,9 +533,10 @@ macro writeNim() =
 """
   writeFile("fidgetapi.nim", header & codenim)
 
-macro exportEnum(def: typed) =
-  exportEnumH(def)
-  exportEnumPy(def)
+macro exportProc(def: typed) =
+  exportProcH(def)
+  exportProcPy(def)
+  exportProcNim(def)
 
 macro exportRefObject(def: typed) =
   exportRefObjectH(def)
@@ -574,10 +548,9 @@ macro exportObject(def: typed) =
   exportObjectPy(def)
   #exportObjectNim(def)
 
-macro exportProc(def: typed) =
-  exportProcH(def)
-  exportProcPy(def)
-  exportProcNim(def)
+macro exportEnum(def: typed) =
+  exportEnumH(def)
+  exportEnumPy(def)
 
 # Test function calling
 proc callMeMaybe(phone: string) =
