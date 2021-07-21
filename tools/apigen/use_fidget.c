@@ -44,7 +44,7 @@ void main(){
     printf("%f %f\n", v.x, v.y);
 
     // Test enums
-    printf("%d\n", fidget_repeat_enum(asRight));
+    printf("%d\n", fidget_repeat_enum(AS_RIGHT));
 
     // Test callbacks
     fidget_call_me_back(c_cb);

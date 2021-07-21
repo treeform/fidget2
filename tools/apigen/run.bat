@@ -1,4 +1,4 @@
-@REM nim c --app:lib --gc:arc apigen.nim
+@REM nim c --app:lib --gc:arc fidget.nim
 @REM python .\tools\apigen\use_fidget.py
 
 rm use_fidget.exe

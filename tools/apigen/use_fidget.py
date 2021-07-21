@@ -20,7 +20,7 @@ v = take_vec()
 print(v.x, v.y)
 
 # Test enums
-print(repeat_enum(asRight))
+print(repeat_enum(AS_RIGHT))
 
 # Test callbacks
 @c_proc_cb
