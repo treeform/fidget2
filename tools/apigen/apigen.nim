@@ -4,8 +4,6 @@ import macros, strutils, print
 
 const allowedFields = @["name", "count", "characters", "dirty"]
 
-# converter cstringToString(s: cstring): string = $s
-
 {.passL: "-o fidget.dll".} # {.passL: "-o fidget.dll -s -shared -Wl,--out-implib,libfidget.a".}
 
 var codec {.compiletime.}: string
@@ -190,6 +188,14 @@ proc typePy(nimType: NimNode): string =
   of "": "None"
   else: nimType.repr
 
+proc converterFromPy(nimType: NimNode): string =
+  if "string" == nimType.repr:
+    return ".encode('utf8')"
+
+proc converterToPy(nimType: NimNode): string =
+  if "string" == nimType.repr:
+    return ".decode('utf8')"
+
 proc exportProcPy(defSym: NimNode) =
   let def = defSym.getImpl()
   assert def.kind == nnkProcDef
@@ -234,16 +240,12 @@ proc exportProcPy(defSym: NimNode) =
   codepy.add "("
   for param in params:
     for i in 0 .. param.len - 3:
-      if param[^2].repr == "string":
-        codepy.add toSnakeCase(param[i].repr)
-        codepy.add(".encode('utf8')")
-      else:
-        codepy.add toSnakeCase(param[i].repr)
+      codepy.add toSnakeCase(param[i].repr)
+      codepy.add converterFromPy(param[^2])
       codepy.add ", "
   codepy.rm(", ")
   codepy.add ")"
-  if ret.repr == "string":
-    codepy.add(".decode('utf8')")
+  codepy.add converterToPy(ret)
   codepy.add "\n\n"
 
 proc exportRefObjectPy(def: NimNode) =
@@ -275,8 +277,7 @@ proc exportRefObjectPy(def: NimNode) =
     codepy.add "_get_"
     codepy.add toSnakeCase(field.repr)
     codepy.add "(self)"
-    if fieldType.repr == "string":
-      codepy.add(".decode('utf8')")
+    codepy.add converterToPy(fieldType)
     codepy.add "\n"
 
     codepy.add "\n"
@@ -294,8 +295,7 @@ proc exportRefObjectPy(def: NimNode) =
     codepy.add toSnakeCase(field.repr)
     codepy.add "(self, "
     codepy.add toSnakeCase(field.repr)
-    if fieldType.repr == "string":
-      codepy.add(".encode('utf8')")
+    codepy.add converterFromPy(fieldType)
     codepy.add ")\n"
 
   codepy.add "\n"
