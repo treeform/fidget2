@@ -23,7 +23,6 @@ console.log(v.x, v.y)
 console.log(fidget.repeatEnum(fidget.AS_RIGHT))
 
 // Test callbacks
-
 jsCb = fidget.cb(function() {
     console.log("in jsCb")
 })
@@ -39,7 +38,6 @@ clickCb = fidget.cb(function() {
     n.dirty = true
 })
 fidget.onClickGlobal(clickCb)
-
 fidget.startFidget(
   "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   "JavaScript Counter",
