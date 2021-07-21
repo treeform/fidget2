@@ -10,10 +10,6 @@ var codec {.compiletime.}: string
 var codepy {.compiletime.}: string
 var codenim {.compiletime.}: string
 
-proc add(s: var string, args: varargs[string]) =
-  for a in args:
-    s.add(a)
-
 proc toSnakeCase(s: string): string =
   ## Converts NimTypes to nim_types.
   if s.len == 0:
@@ -65,11 +61,16 @@ proc typeH(nimType: NimNode): string =
 proc exportProcH(defSym: NimNode) =
   let def = defSym.getImpl()
   assert def.kind == nnkProcDef
-  codec.add typeH(def[3][0]), " fidget_", toSnakeCase(def[0].repr)
+  codec.add typeH(def[3][0])
+  codec.add " fidget_"
+  codec.add  toSnakeCase(def[0].repr)
   codec.add "("
   for param in def[3][1..^1]:
     for i in 0 .. param.len - 3:
-      codec.add typeH(param[^2]), " ", toSnakeCase(param[i].repr), ", "
+      codec.add typeH(param[^2])
+      codec.add " "
+      codec.add toSnakeCase(param[i].repr)
+      codec.add ", "
   codec.rm(", ")
   codec.add ")"
   codec.add ";\n"
