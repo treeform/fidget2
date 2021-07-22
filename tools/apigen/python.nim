@@ -209,7 +209,15 @@ proc exportEnumPy*(def: NimNode) =
 
 const header = """
 from ctypes import *
-dll = cdll.LoadLibrary("fidget.dll")
+import os, os.path
+for dllPath in ["fidget.dll", "libfidget.so", "libfidget.dylib"]:
+  dllPath = os.getcwd() + "/" + dllPath
+  if os.path.exists(dllPath):
+    dll = cdll.LoadLibrary(dllPath)
+    break
+else:
+  print("Could not load fidget dynamic library.")
+  exit()
 
 c_proc_cb = CFUNCTYPE(None)
 
