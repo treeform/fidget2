@@ -31,9 +31,9 @@ void main(){
 
     // Test ref objects
     Fod fod = fidget_create_fod();
-    printf("n.ref %d\n", (long long)fod);
+    printf("n.ref %lld\n", (long long)fod);
     fidget_fod_set_count(fod, 123);
-    printf("n.count %d\n", fidget_fod_get_count(fod));
+    printf("n.count %lld\n", fidget_fod_get_count(fod));
 
     // Test objects
     Vector2 a;
@@ -44,7 +44,7 @@ void main(){
     printf("%f %f\n", v.x, v.y);
 
     // Test enums
-    printf("%d\n", fidget_repeat_enum(AS_RIGHT));
+    printf("%lld\n", fidget_repeat_enum(AS_RIGHT));
 
     // Test callbacks
     fidget_call_me_back(c_cb);
