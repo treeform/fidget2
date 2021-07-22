@@ -169,8 +169,19 @@ exports.cb = function(f){return ffi.Callback('void', [], f)};
 
 """
 const loader = """
+let fs = require('fs');
+var dllPath = '';
+const names = ['fidget.dll', 'libfidget.so', 'libfidget.dylib'];
+for (i in names){
+  let testPath = __dirname + "/" + names[i];
+  console.log(testPath)
+  if(fs.existsSync(testPath)){
+    dllPath = testPath;
+    break;
+  }
+}
 
-var fidget = ffi.Library('fidget', {
+var fidget = ffi.Library(dllPath, {
 """
 const footer = """
 });

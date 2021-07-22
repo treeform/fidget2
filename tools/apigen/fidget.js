@@ -15,8 +15,19 @@ exports.AS_RIGHT = 3
 exports.AS_LEFT = 4
 
 var Node = Struct({'nimRef': 'pointer'});
+let fs = require('fs');
+var dllPath = '';
+const names = ['fidget.dll', 'libfidget.so', 'libfidget.dylib'];
+for (i in names){
+  let testPath = __dirname + "/" + names[i];
+  console.log(testPath)
+  if(fs.existsSync(testPath)){
+    dllPath = testPath;
+    break;
+  }
+}
 
-var fidget = ffi.Library('fidget', {
+var fidget = ffi.Library(dllPath, {
   'fidget_call_me_maybe': ['void', ['string']],
   'fidget_flight_club_rule': ['string', ['int64']],
   'fidget_input_code': ['bool', ['int64', 'int64', 'int64', 'int64']],

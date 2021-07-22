@@ -8,6 +8,7 @@
 *.dll
 *.a
 *.o
+*.so
 *.lib
 *.pyc
 nimcache
@@ -17,6 +18,7 @@ nimcache
 *.glsl
 node_modules
 package-lock.json
+package.json
 
 # figma tmp files
 figma
