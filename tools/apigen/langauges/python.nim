@@ -94,6 +94,7 @@ proc exportRefObjectPy*(def: NimNode) =
   codepy.add objName
   codepy.add "(Structure):\n"
   codepy.add "    _fields_ = [(\"ref\", c_void_p)]\n"
+  codepy.add "    def __bool__(self): return self.ref != None"
 
   for field in baseType[2]:
     if field.isExported == false:

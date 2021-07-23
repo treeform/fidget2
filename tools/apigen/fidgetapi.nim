@@ -55,6 +55,9 @@ proc fidget_node_set_dirty(node: Node, dirty: bool) {.cdecl, exportc, dynlib.} =
 proc fidget_find_node(glob: cstring): Node {.cdecl, exportc, dynlib.} =
   findNode(glob.`$`)
 
+proc fidget_add_cb(kind: int, priority: int, glob: cstring, handler: proc () {.cdecl.}) {.cdecl, exportc, dynlib.} =
+  addCb(kind.EventCbKind, priority, glob.`$`, handler)
+
 proc fidget_start_fidget(figma_url: cstring, window_title: cstring, entry_frame: cstring, resizable: int) {.cdecl, exportc, dynlib.} =
   startFidget(figma_url.`$`, window_title.`$`, entry_frame.`$`, resizable.bool)
 

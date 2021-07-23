@@ -106,8 +106,15 @@ exportProc(onClickGlobal)
 # exportObject(Vec2)
 exportRefObject(Node)
 proc findNode(glob: string): Node =
-  find(glob)
+  if glob == ".":
+    thisNode
+  else:
+    find(glob)
 exportProc(findNode)
+
+exportEnum(EventCbKind)
+
+exportProc(addCb)
 exportProc(startFidget)
 
 writeH()

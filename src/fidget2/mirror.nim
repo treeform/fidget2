@@ -66,8 +66,8 @@ type
   EventCb* = ref object
     kind*: EventCbKind
     priority*: int
-    selector*: string
-    run*: proc()
+    glob*: string
+    handler*: proc() {.cdecl.}
 
 var
   windowTitle* = "Fidget"
@@ -130,15 +130,16 @@ proc showPopup*(name: string) =
 proc addCb*(
   kind: EventCbKind,
   priority: int,
-  selector: string,
-  run: proc(),
+  glob: string,
+  handler: proc() {.cdecl.},
 ) =
   ## Adds a generic call back.
+  echo "adding callback", kind, " ", glob
   eventCbs.add EventCb(
     kind: kind,
     priority: priority,
-    selector: selector,
-    run: run
+    glob: glob,
+    handler: handler
   )
 
 proc find*(glob: string): Node =
@@ -191,11 +192,7 @@ template onDisplay*(body: untyped) =
     eOnDisplay,
     1000,
     thisSelector,
-    proc() =
-      for node in globTree.findAll(thisSelector):
-        thisNode = node
-        body
-        thisNode = nil
+    proc() = body
   )
 
 template onClick*(body: untyped) =
@@ -204,13 +201,7 @@ template onClick*(body: untyped) =
     eOnClick,
     100,
     thisSelector,
-    proc() =
-      if mouse.click:
-        for node in globTree.findAll(thisSelector):
-          if node.pixelBox.overlaps(mousePos):
-            thisNode = node
-            body
-            thisNode = nil
+    proc() = body
   )
 
 proc setupTextBox(node: Node) =
@@ -538,8 +529,29 @@ proc display() =
 
   for cb in eventCbs:
     thisCb = cb
-    thisSelector = thisCb.selector
-    thisCb.run()
+    thisSelector = thisCb.glob
+
+    case cb.kind:
+    of eOnClick:
+
+      if mouse.click:
+        for node in globTree.findAll(thisSelector):
+          if node.pixelBox.overlaps(mousePos):
+            thisNode = node
+            thisCb.handler()
+            thisNode = nil
+
+    of eOnDisplay:
+
+      for node in globTree.findAll(thisSelector):
+        thisNode = node
+        thisCb.handler()
+        thisNode = nil
+
+    else:
+      echo "not covered: ": cb.kind
+
+
   thisSelector = ""
   thisCb = nil
 

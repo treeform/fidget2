@@ -15,6 +15,14 @@ exports.AS_RIGHT = 3
 exports.AS_LEFT = 4
 
 var Node = Struct({'nimRef': 'pointer'});
+EventCbKind = 'int64'
+exports.E_ON_CLICK = 0
+exports.E_ON_FRAME = 1
+exports.E_ON_EDIT = 2
+exports.E_ON_DISPLAY = 3
+exports.E_ON_FOCUS = 4
+exports.E_ON_UNFOCUS = 5
+
 
 var dllPath = ""
 if(process.platform == "win32") {
@@ -47,6 +55,7 @@ var fidget = ffi.Library(dllPath, {
   'fidget_node_get_dirty': ['bool', [Node]],
   'fidget_node_set_dirty': ['void', [Node, 'bool']],
   'fidget_find_node': [Node, ['string']],
+  'fidget_add_cb': ['void', [EventCbKind, 'int64', 'string', 'pointer']],
   'fidget_start_fidget': ['void', ['string', 'string', 'string', 'bool']],
 });
 
@@ -84,4 +93,5 @@ Object.defineProperty(Node.prototype, 'dirty', {
   set: function(v) {fidget.fidget_node_set_dirty(this, v)}
 });
 exports.findNode = fidget.fidget_find_node;
+exports.addCb = fidget.fidget_add_cb;
 exports.startFidget = fidget.fidget_start_fidget;

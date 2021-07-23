@@ -33,7 +33,7 @@ def test_numbers(a, b, c, d, e, f, g, h, i, j, k, l, m):
 
 class Fod(Structure):
     _fields_ = [("ref", c_void_p)]
-
+    def __bool__(self): return self.ref != None
     @property
     def name(self):
         return dll.fidget_fod_get_name(self).decode('utf8')
@@ -102,7 +102,7 @@ def on_click_global(a):
 
 class Node(Structure):
     _fields_ = [("ref", c_void_p)]
-
+    def __bool__(self): return self.ref != None
     @property
     def name(self):
         return dll.fidget_node_get_name(self).decode('utf8')
@@ -142,6 +142,19 @@ dll.fidget_find_node.argtypes = [c_char_p]
 dll.fidget_find_node.restype = Node
 def find_node(glob):
   return dll.fidget_find_node(glob.encode('utf8'))
+
+EventCbKind = c_longlong
+E_ON_CLICK = 0
+E_ON_FRAME = 1
+E_ON_EDIT = 2
+E_ON_DISPLAY = 3
+E_ON_FOCUS = 4
+E_ON_UNFOCUS = 5
+
+dll.fidget_add_cb.argtypes = [EventCbKind, c_longlong, c_char_p, c_proc_cb]
+dll.fidget_add_cb.restype = None
+def add_cb(kind, priority, glob, handler):
+  return dll.fidget_add_cb(kind, priority, glob.encode('utf8'), handler)
 
 dll.fidget_start_fidget.argtypes = [c_char_p, c_char_p, c_char_p, c_bool]
 dll.fidget_start_fidget.restype = None
