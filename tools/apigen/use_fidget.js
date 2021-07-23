@@ -28,7 +28,7 @@ jsCb = fidget.cb(function() {
 })
 fidget.callMeBack(jsCb)
 
-// # Test fidget
+// Test fidget
 var count = 0
 clickCb = fidget.cb(function() {
     count += 1
