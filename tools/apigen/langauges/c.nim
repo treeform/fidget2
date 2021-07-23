@@ -1,4 +1,4 @@
-import macros, strutils, common
+import macros, strutils, ../common
 
 var codec {.compiletime.}: string
 

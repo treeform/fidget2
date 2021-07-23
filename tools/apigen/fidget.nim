@@ -1,4 +1,4 @@
-import macros, strutils, common, print, c, python, nim, javascript
+import macros, strutils, common, print, langauges/c, langauges/python, langauges/nim, langauges/javascript
 
 ## Generates .h and py files for nim exports
 

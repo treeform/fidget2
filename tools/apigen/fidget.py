@@ -1,13 +1,13 @@
 from ctypes import *
-import os, os.path
-for dllPath in ["fidget.dll", "libfidget.so", "libfidget.dylib"]:
-  dllPath = os.getcwd() + "/" + dllPath
-  if os.path.exists(dllPath):
-    dll = cdll.LoadLibrary(dllPath)
-    break
+import os, sys
+
+if sys.platform == "win32":
+  dllPath = 'fidget.dll'
+elif sys.platform == "darwin":
+  dllPath = 'libfidget.dylib'
 else:
-  print("Could not load fidget dynamic library.")
-  exit()
+  dllPath = os.getcwd() + '/libfidget.so'
+dll = cdll.LoadLibrary(dllPath)
 
 c_proc_cb = CFUNCTYPE(None)
 

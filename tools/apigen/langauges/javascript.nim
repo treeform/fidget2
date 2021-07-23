@@ -1,4 +1,4 @@
-import macros, strutils, common
+import macros, strutils, ../common
 
 var code0 {.compiletime.}: string
 var code1 {.compiletime.}: string
@@ -169,16 +169,14 @@ exports.cb = function(f){return ffi.Callback('void', [], f)};
 
 """
 const loader = """
-let fs = require('fs');
-var dllPath = '';
-const names = ['fidget.dll', 'libfidget.so', 'libfidget.dylib'];
-for (i in names){
-  let testPath = __dirname + "/" + names[i];
-  console.log(testPath)
-  if(fs.existsSync(testPath)){
-    dllPath = testPath;
-    break;
-  }
+
+var dllPath = ""
+if(process.platform == "win32") {
+  dllPath = 'fidget.dll'
+} else if (process.platform == "darwin") {
+  dllPath = 'libfidget.dylib'
+} else {
+  dllPath = __dirname + '/libfidget.so'
 }
 
 var fidget = ffi.Library(dllPath, {
