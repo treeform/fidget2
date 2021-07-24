@@ -2,27 +2,7 @@ import macros, strutils, ../common
 
 var codenim {.compiletime.}: string
 
-const nimBasicTypes = [
-  "bool",
-  "int8",
-  "uint8",
-  "int16",
-  "uint16",
-  "int32",
-  "uint32",
-  "int64",
-  "uint64",
-  "int",
-  "uint",
-  "float32",
-  "float64",
-  "float",
-  "Vec2"
-]
-
 proc typeNim(nimType: NimNode): string =
-  # echo nimType.repr
-  # echo nimType.getImpl().treeRepr
   if "object" in nimType.repr:
     return nimType.getTypeInst().repr
   elif nimType.repr == "string":
@@ -32,20 +12,6 @@ proc typeNim(nimType: NimNode): string =
   else:
     nimType.repr
 
-proc converterFromNim(nimType: NimNode): string =
-  if "enum" in nimType.repr or
-    (nimType.kind == nnkSym and "EnumTy" in nimType.getImpl().treeRepr):
-    return ".ord"
-  elif "string" == nimType.repr:
-    return ".cstring"
-
-proc converterToNim(nimType: NimNode): string =
-  if "enum" in nimType.repr or (
-    nimType.kind == nnkSym and "EnumTy" in nimType.getImpl().treeRepr):
-    return "." & nimType.getTypeInst().repr
-  elif "string" == nimType.repr:
-    return ".`$`"
-
 proc exportProcNim*(defSym: NimNode) =
   let
     def = defSym.getImpl()
@@ -53,7 +19,6 @@ proc exportProcNim*(defSym: NimNode) =
     cName = "fidget_" & toSnakeCase(name)
     ret = def[3][0]
     params = def[3][1..^1]
-
 
   codenim.add "proc "
   codenim.add name
@@ -72,23 +37,6 @@ proc exportProcNim*(defSym: NimNode) =
   codenim.add " {.importc: \""
   codenim.add cName
   codenim.add "\".}\n\n"
-
-  # codenim.add "  "
-  # codenim.add name
-  # codenim.add "("
-  # for param in params:
-  #   for i in 0 .. param.len - 3:
-  #     var paramType = param[^2]
-  #     # TODO Handle default types
-  #     # if paramType.kind == nnkEmpty:
-  #     #   paramType = param[^1].getType()
-  #     codenim.add toSnakeCase(param[i].repr)
-  #     codenim.add converterToNim(paramType)
-  #     codenim.add ", "
-  # codenim.rm ", "
-  # codenim.add ")"
-  # codenim.add converterFromNim(ret)
-  # codenim.add "\n\n"
 
 proc exportRefObjectNim*(def: NimNode) =
   let
