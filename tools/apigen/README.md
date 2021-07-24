@@ -1,8 +1,7 @@
 install JS:
 
 ```
-npm install ffi-napi
-npm install ref-struct-napi
+npm install ffi-napi ref-struct-napi
 ```
 
 
