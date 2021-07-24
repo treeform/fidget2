@@ -1,63 +1,72 @@
-proc fidget_call_me_maybe(phone: cstring) {.cdecl, exportc, dynlib.} =
-  callMeMaybe(phone.`$`)
+when defined(windows):
+  const LibFidget* = "fidget.dll"
+elif defined(macosx):
+  const LibFidget* = "libfidget.dylib"
+else:
+  const LibFidget* = "libfidget.so"
 
-proc fidget_flight_club_rule(n: int): cstring {.cdecl, exportc, dynlib.} =
-  flightClubRule(n).cstring
+{.push dynlib: LibFidget, cdecl.}
 
-proc fidget_input_code(a: int, b: int, c: int, d: int): int {.cdecl, exportc, dynlib.} =
-  inputCode(a, b, c, d).ord
+proc callMeMaybe*(phone: cstring) {.importc: "fidget_call_me_maybe".}
 
-proc fidget_test_numbers(a: int8, b: uint8, c: int16, d: uint16, e: int32, f: uint32, g: int64, h: uint64, i: int, j: uint, k: float32, l: float64, m: float): int {.cdecl, exportc, dynlib.} =
-  testNumbers(a, b, c, d, e, f, g, h, i, j, k, l, m).ord
+proc flightClubRule*(n: int): cstring {.importc: "fidget_flight_club_rule".}
 
-proc fidget_fod_get_name(fod: Fod): cstring {.cdecl, exportc, dynlib.} = 
-  fod.name.cstring
-proc fidget_fod_set_name(fod: Fod, name: cstring) {.cdecl, exportc, dynlib.} = 
-  fod.name = name.`$`
-proc fidget_fod_get_count(fod: Fod): int {.cdecl, exportc, dynlib.} = 
-  fod.count
-proc fidget_fod_set_count(fod: Fod, count: int) {.cdecl, exportc, dynlib.} = 
-  fod.count = count
+proc inputCode*(a: int, b: int, c: int, d: int): bool {.importc: "fidget_input_code".}
+
+proc testNumbers*(a: int8, b: uint8, c: int16, d: uint16, e: int32, f: uint32, g: int64, h: uint64, i: int, j: uint, k: float32, l: float64, m: float): bool {.importc: "fidget_test_numbers".}
+
+type Fod* = object
+  reference: uint64
+proc `name`*(fod: Fod): cstring {.importc: "fidget_fod_get_name".}
+proc `name=`*(fod: Fod, name: cstring) {.importc: "fidget_fod_set_name".}
+proc `count`*(fod: Fod): int {.importc: "fidget_fod_get_count".}
+proc `count=`*(fod: Fod, count: int) {.importc: "fidget_fod_set_count".}
+
+proc createFod*(): Fod {.importc: "fidget_create_fod".}
+
+type Vector2* = object
+  x*: float32
+  y*: float32
+
+proc giveVec*(v: Vector2) {.importc: "fidget_give_vec".}
+
+proc takeVec*(): Vector2 {.importc: "fidget_take_vec".}
+
+type AlignSomething* = enum
+  asDefault = 0
+  asTop = 1
+  asBottom = 2
+  asRight = 3
+  asLeft = 4
+
+proc repeatEnum*(e: AlignSomething): AlignSomething {.importc: "fidget_repeat_enum".}
+
+proc callMeBack*(cb: proc () {.cdecl.}) {.importc: "fidget_call_me_back".}
+
+proc onClickGlobal*(a: proc () {.cdecl.}) {.importc: "fidget_on_click_global".}
+
+type Node* = object
+  reference: uint64
+proc `name`*(node: Node): cstring {.importc: "fidget_node_get_name".}
+proc `name=`*(node: Node, name: cstring) {.importc: "fidget_node_set_name".}
+proc `characters`*(node: Node): cstring {.importc: "fidget_node_get_characters".}
+proc `characters=`*(node: Node, characters: cstring) {.importc: "fidget_node_set_characters".}
+proc `dirty`*(node: Node): bool {.importc: "fidget_node_get_dirty".}
+proc `dirty=`*(node: Node, dirty: bool) {.importc: "fidget_node_set_dirty".}
+
+proc findNode*(glob: cstring): Node {.importc: "fidget_find_node".}
+
+type EventCbKind* = enum
+  eOnClick = 0
+  eOnFrame = 1
+  eOnEdit = 2
+  eOnDisplay = 3
+  eOnFocus = 4
+  eOnUnfocus = 5
+
+proc addCb*(kind: EventCbKind, priority: int, glob: cstring, handler: proc () {.cdecl.}) {.importc: "fidget_add_cb".}
+
+proc startFidget*(figma_url: cstring, window_title: cstring, entry_frame: cstring, resizable: bool) {.importc: "fidget_start_fidget".}
 
 
-proc fidget_create_fod(): Fod {.cdecl, exportc, dynlib.} =
-  createFod()
-
-proc fidget_give_vec(v: Vector2) {.cdecl, exportc, dynlib.} =
-  giveVec(v)
-
-proc fidget_take_vec(): Vector2 {.cdecl, exportc, dynlib.} =
-  takeVec()
-
-proc fidget_repeat_enum(e: int): int {.cdecl, exportc, dynlib.} =
-  repeatEnum(e.AlignSomething).ord
-
-proc fidget_call_me_back(cb: proc () {.cdecl.}) {.cdecl, exportc, dynlib.} =
-  callMeBack(cb)
-
-proc fidget_on_click_global(a: proc () {.cdecl.}) {.cdecl, exportc, dynlib.} =
-  onClickGlobal(a)
-
-proc fidget_node_get_name(node: Node): cstring {.cdecl, exportc, dynlib.} = 
-  node.name.cstring
-proc fidget_node_set_name(node: Node, name: cstring) {.cdecl, exportc, dynlib.} = 
-  node.name = name.`$`
-proc fidget_node_get_characters(node: Node): cstring {.cdecl, exportc, dynlib.} = 
-  node.characters.cstring
-proc fidget_node_set_characters(node: Node, characters: cstring) {.cdecl, exportc, dynlib.} = 
-  node.characters = characters.`$`
-proc fidget_node_get_dirty(node: Node): bool {.cdecl, exportc, dynlib.} = 
-  node.dirty
-proc fidget_node_set_dirty(node: Node, dirty: bool) {.cdecl, exportc, dynlib.} = 
-  node.dirty = dirty
-
-
-proc fidget_find_node(glob: cstring): Node {.cdecl, exportc, dynlib.} =
-  findNode(glob.`$`)
-
-proc fidget_add_cb(kind: int, priority: int, glob: cstring, handler: proc () {.cdecl.}) {.cdecl, exportc, dynlib.} =
-  addCb(kind.EventCbKind, priority, glob.`$`, handler)
-
-proc fidget_start_fidget(figma_url: cstring, window_title: cstring, entry_frame: cstring, resizable: int) {.cdecl, exportc, dynlib.} =
-  startFidget(figma_url.`$`, window_title.`$`, entry_frame.`$`, resizable.bool)
-
+{.pop.}
