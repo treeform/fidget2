@@ -4,7 +4,7 @@ import os, sys
 if sys.platform == "win32":
   dllPath = 'fidget.dll'
 elif sys.platform == "darwin":
-  dllPath = 'libfidget.dylib'
+  dllPath = os.getcwd() + '/libfidget.dylib'
 else:
   dllPath = os.getcwd() + '/libfidget.so'
 dll = cdll.LoadLibrary(dllPath)

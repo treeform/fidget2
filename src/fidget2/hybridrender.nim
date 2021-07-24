@@ -115,7 +115,7 @@ proc drawToScreen*(screenNode: Node) =
 
   #ctx.writeAtlas("atlas.png")
   #perfDump()
-
+import os
 proc setupWindow*(
   frameNode: Node,
   offscreen = false,
@@ -125,8 +125,10 @@ proc setupWindow*(
   ## Also setups all the shaders and buffers.
 
   # Init glfw.
+  let tmp = getCurrentDir()
   if init() == 0:
     raise newException(Exception, "Failed to intialize GLFW")
+  setCurrentDir(tmp)
 
   # Open a window.
   if not vSync:
@@ -140,7 +142,7 @@ proc setupWindow*(
   windowHint(SAMPLES, 0)
   windowHint(CONTEXT_VERSION_MAJOR, 4)
   windowHint(CONTEXT_VERSION_MINOR, 1)
-
+  echo "3", getCurrentDir()
   window = createWindow(
     viewportSize.x.cint, viewportSize.y.cint,
     "run_shaders",
@@ -149,9 +151,10 @@ proc setupWindow*(
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
   window.makeContextCurrent()
-
+  echo "4", getCurrentDir()
   # Load opengl.
   loadExtensions()
+  echo "5", getCurrentDir()
 
   echo "GL_VERSION: ", cast[cstring](glGetString(GL_VERSION))
   echo "GL_VENDOR: ", cast[cstring](glGetString(GL_VENDOR))

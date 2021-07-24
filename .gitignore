@@ -10,6 +10,7 @@
 *.o
 *.so
 *.lib
+*.dylib
 *.pyc
 nimcache
 *.pdb
