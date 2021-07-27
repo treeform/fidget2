@@ -5,7 +5,7 @@ callMeMaybe("+9 360872 1222")
 echo(flightClubRule(2))
 echo(inputCode(1, 2, 3, 4))
 echo(testNumbers(
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
 ))
 
 # Test ref objects
@@ -24,7 +24,7 @@ echo(repeatEnum(asRight))
 
 # Test callbacks
 proc nimCb() {.cdecl.} =
-    echo("in nimCb")
+  echo("in nimCb")
 callMeBack(nimCb)
 
 # Test fidget

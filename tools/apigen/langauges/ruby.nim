@@ -83,13 +83,11 @@ proc exportProcRuby*(defSym: NimNode) =
   coderb2.add ")\n"
   coderb2.add "end\n\n"
 
-
 proc exportRefObjectRuby*(def: NimNode) =
   let
     refType = def.getType()
     baseType = refType[1][1].getType()
     objName = refType[1][1].repr.split(":")[0]
-
 
   coderb0.add "class "
   coderb0.add objName
@@ -154,80 +152,6 @@ proc exportRefObjectRuby*(def: NimNode) =
 
   coderb0.add "end\n\n"
 
-
-
-  #   coderb1.add "\n"
-  #   coderb1.add "    @property\n"
-  #   coderb1.add "    def "
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add "(self):\n"
-
-  #   coderb1.add "        return dll.fidget_"
-  #   coderb1.add toSnakeCase(objName)
-  #   coderb1.add "_get_"
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add "(self)"
-  #   coderb1.add converterToRuby(fieldType)
-  #   coderb1.add "\n"
-
-  #   coderb1.add "\n"
-  #   coderb1.add "    @"
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add ".setter\n"
-  #   coderb1.add "    def "
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add "(self, "
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add "):\n"
-  #   coderb1.add "        dll.fidget_"
-  #   coderb1.add toSnakeCase(objName)
-  #   coderb1.add "_set_"
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add "(self, "
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add converterFromRuby(fieldType)
-  #   coderb1.add ")\n"
-
-  # coderb1.add "\n"
-
-  # for field in baseType[2]:
-  #   if field.isExported == false:
-  #     continue
-  #   if field.repr notin allowedFields:
-  #     continue
-  #   let fieldType = field.getType()
-
-  #   coderb1.add "dll.fidget_"
-  #   coderb1.add toSnakeCase(objName)
-  #   coderb1.add "_get_"
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add ".argtypes = ["
-  #   coderb1.add objName
-  #   coderb1.add "]"
-  #   coderb1.add "\n"
-
-  #   coderb1.add "dll.fidget_"
-  #   coderb1.add toSnakeCase(objName)
-  #   coderb1.add "_get_"
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add ".restype = "
-  #   coderb1.add typeRuby(fieldType)
-  #   coderb1.add "\n"
-
-  #   coderb1.add "dll.fidget_"
-  #   coderb1.add toSnakeCase(objName)
-  #   coderb1.add "_set_"
-  #   coderb1.add toSnakeCase(field.repr)
-  #   coderb1.add ".argtypes = ["
-  #   coderb1.add objName
-  #   coderb1.add ", "
-  #   coderb1.add typeRuby(fieldType)
-  #   coderb1.add "]"
-  #   coderb1.add "\n"
-
-  # coderb1.add "\n"
-  # coderb1.add "\n"
-
 proc exportObjectRuby*(def: NimNode) =
   let
     baseType = def.getType()[1].getType()
@@ -249,14 +173,6 @@ proc exportObjectRuby*(def: NimNode) =
     coderb0.add ",\n"
   coderb0.rm ",\n"
   coderb0.add "\n"
-
-  # TODO: Do we need them? How do they work?
-  # for field in baseType[2]:
-  #   if field.isExported == false:
-  #     continue
-  #   coderb0.add "  attr_accessor :"
-  #   coderb0.add toSnakeCase(field.repr)
-  #   coderb0.add "\n"
 
   coderb0.add "end\n\n"
 
