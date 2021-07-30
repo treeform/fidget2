@@ -28,7 +28,7 @@ var dllPath = ""
 if(process.platform == "win32") {
   dllPath = 'fidget.dll'
 } else if (process.platform == "darwin") {
-  dllPath = 'libfidget.dylib'
+  dllPath = __dirname + '/libfidget.dylib'
 } else {
   dllPath = __dirname + '/libfidget.so'
 }

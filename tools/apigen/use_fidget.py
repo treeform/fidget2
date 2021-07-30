@@ -34,6 +34,7 @@ count = 0
 def click_cb():
     global count
     count += 1
+    print("count:", count)
 add_cb(E_ON_CLICK, 100, "/CounterFrame/Count1Up", click_cb)
 
 @c_proc_cb

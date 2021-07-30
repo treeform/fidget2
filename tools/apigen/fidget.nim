@@ -1,4 +1,5 @@
-import macros, strutils, common, print, langauges/c, langauges/python, langauges/nim, langauges/javascript
+import macros, strutils, common, print, langauges/internal,
+  langauges/c, langauges/python, langauges/ruby, langauges/nim, langauges/javascript
 
 ## Generates .h and py files for nim exports
 
@@ -6,24 +7,31 @@ macro exportProc(def: typed) =
   exportProcH(def)
   exportProcPy(def)
   exportProcJs(def)
+  exportProcRuby(def)
   exportProcNim(def)
+  exportProcInternal(def)
 
 macro exportRefObject(def: typed) =
   exportRefObjectH(def)
   exportRefObjectPy(def)
   exportRefObjectJs(def)
+  exportRefObjectRuby(def)
   exportRefObjectNim(def)
+  exportRefObjectInternal(def)
 
 macro exportObject(def: typed) =
   exportObjectH(def)
   exportObjectPy(def)
   exportObjectJs(def)
-  #exportObjectNim(def)
+  exportObjectRuby(def)
+  exportObjectNim(def)
 
 macro exportEnum(def: typed) =
   exportEnumH(def)
   exportEnumPy(def)
   exportEnumJs(def)
+  exportEnumRuby(def)
+  exportEnumNim(def)
 
 # Test function calling
 proc callMeMaybe(phone: string) =
@@ -120,5 +128,7 @@ exportProc(startFidget)
 writeH()
 writePy()
 writeJs()
+writeRuby()
 writeNim()
-include fidgetapi
+writeInternal()
+include internalapi
