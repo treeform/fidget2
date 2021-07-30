@@ -182,7 +182,7 @@ template onFrame*(body: untyped) =
     eOnFrame,
     0,
     "",
-    proc() =
+    proc() {.cdecl.} =
       body
   )
 
@@ -192,7 +192,7 @@ template onDisplay*(body: untyped) =
     eOnDisplay,
     1000,
     thisSelector,
-    proc() = body
+    proc() {.cdecl.} = body
   )
 
 template onClick*(body: untyped) =
@@ -201,7 +201,7 @@ template onClick*(body: untyped) =
     eOnClick,
     100,
     thisSelector,
-    proc() = body
+    proc() {.cdecl.} = body
   )
 
 proc setupTextBox(node: Node) =
@@ -496,6 +496,22 @@ proc onMouseButton(
   else:
     textBoxMouseAction()
 
+proc simulateClick*(glob: string) =
+  ## Simulates a mouse click on a node. Used mainly for writing tests.
+  for cb in eventCbs:
+    if cb.kind == eOnClick:
+      thisCb = cb
+      thisSelector = thisCb.glob
+      if cb.glob == glob:
+        for node in globTree.findAll(cb.glob):
+          thisNode = node
+          cb.handler()
+          thisNode = nil
+
+proc takeScreenShot*(): Image =
+  ## Takes a screenshot of the current screen. Used mainly for writing tests.
+  readGpuPixelsFromScreen()
+
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   ## Mouse moved glfw callback.
   requestedFrame = true
@@ -547,6 +563,9 @@ proc display() =
         thisNode = node
         thisCb.handler()
         thisNode = nil
+
+    of eOnFrame:
+      thisCb.handler()
 
     else:
       echo "not covered: ": cb.kind
@@ -614,8 +633,10 @@ proc startFidget*(
   # Sort fidget user callbacks.
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
 
+  running = true
+
   # Run while window is open.
-  while windowShouldClose(window) == 0:
+  while windowShouldClose(window) == 0 and running:
     perfMark "start ----------- "
     pollEvents()
     display()
