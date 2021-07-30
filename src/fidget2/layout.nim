@@ -63,7 +63,7 @@ proc computeLayout*(parent, node: Node) =
       for n in node.children:
         if n.layoutAlign != laStretch:
           maxW = max(maxW, n.size.x)
-      node.size.x = maxW + node.paddingTop + node.paddingBottom
+      node.size.x = maxW + node.paddingLeft + node.paddingRight
 
     var at = 0.0
     at += node.paddingTop
@@ -94,7 +94,7 @@ proc computeLayout*(parent, node: Node) =
       for n in node.children:
         if n.layoutAlign != laStretch:
           maxH = max(maxH, n.size.y)
-      node.size.y = maxH + node.paddingLeft + node.paddingRight
+      node.size.y = maxH + node.paddingTop + node.paddingBottom
 
     var at = 0.0
     at += node.paddingLeft

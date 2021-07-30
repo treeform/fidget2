@@ -100,6 +100,8 @@ proc drawToScreen*(screenNode: Node) =
       viewportRect.h.cint
     )
 
+  computeLayout(nil, screenNode)
+
   # Setup proper matrix for drawing.
   mat = mat3()
   mat = mat * screenNode.transform().inverse()

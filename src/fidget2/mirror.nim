@@ -95,7 +95,7 @@ var
 
   frameNum*: int
 
-proc display()
+proc display(withEvents=true)
 
 proc clearInputs*() =
   ## Clear inputs that are only valid for 1 frame.
@@ -348,7 +348,7 @@ proc updateWindowSize() =
 proc onResize(handle: staticglfw.Window, w, h: int32) {.cdecl.} =
   ## Handle window resize glfw callback.
   updateWindowSize()
-  display()
+  display(withEvents = false)
 
 proc onFocus(window: staticglfw.Window, state: cint) {.cdecl.} =
   ## Handle window focus glfw callback.
@@ -512,6 +512,13 @@ proc takeScreenShot*(): Image =
   ## Takes a screenshot of the current screen. Used mainly for writing tests.
   readGpuPixelsFromScreen()
 
+proc clearAllEventHandlers*() =
+  ## Clears all handlers.  Used mainly for writing tests.
+  eventCbs.setLen(0)
+
+proc resizeWindow*(x, y: int) =
+  window.setWindowSize(x.cint, y.cint)
+
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   ## Mouse moved glfw callback.
   requestedFrame = true
@@ -521,7 +528,7 @@ proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   if buttonDown[MOUSE_LEFT]:
     textBoxMouseAction()
 
-proc display() =
+proc display(withEvents = true) =
   ## Called every frame by main while loop.
 
   block:
@@ -543,43 +550,38 @@ proc display() =
     if windowSize != thisFrame.size:
       window.setWindowSize(thisFrame.size.x.cint, thisFrame.size.y.cint)
 
-  for cb in eventCbs:
-    thisCb = cb
-    thisSelector = thisCb.glob
+  if withEvents:
+    for cb in eventCbs:
+      thisCb = cb
+      thisSelector = thisCb.glob
 
-    case cb.kind:
-    of eOnClick:
+      case cb.kind:
+      of eOnClick:
 
-      if mouse.click:
+        if mouse.click:
+          for node in globTree.findAll(thisSelector):
+            if node.pixelBox.overlaps(mousePos):
+              thisNode = node
+              thisCb.handler()
+              thisNode = nil
+
+      of eOnDisplay:
+
         for node in globTree.findAll(thisSelector):
-          if node.pixelBox.overlaps(mousePos):
-            thisNode = node
-            thisCb.handler()
-            thisNode = nil
+          thisNode = node
+          thisCb.handler()
+          thisNode = nil
 
-    of eOnDisplay:
-
-      for node in globTree.findAll(thisSelector):
-        thisNode = node
+      of eOnFrame:
         thisCb.handler()
-        thisNode = nil
 
-    of eOnFrame:
-      thisCb.handler()
+      else:
+        echo "not covered: ": cb.kind
 
-    else:
-      echo "not covered: ": cb.kind
+    thisSelector = ""
+    thisCb = nil
 
-
-  thisSelector = ""
-  thisCb = nil
-
-  if mouse.click:
-    if onClickGlobalCb != nil:
-      echo "calling onClickGlobalCb"
-      onClickGlobalCb()
-
-  clearInputs()
+    clearInputs()
 
   drawToScreen(thisFrame)
   perfMark "drawToScreen"
