@@ -11,6 +11,10 @@ proc computeLayout*(parent, node: Node) =
   for n in node.children:
     computeLayout(node, n)
 
+  let
+    orgPosition = node.position
+    orgSize = node.size
+
   # Constraints code.
   case node.constraints.horizontal:
     of cMin: discard
@@ -62,14 +66,13 @@ proc computeLayout*(parent, node: Node) =
 
   # Auto-layout code.
   if node.layoutMode == lmVertical:
-    var size = node.size
     if node.counterAxisSizingMode == asAuto:
       # Resize to fit elements tightly.
       var maxW = 0.0
       for n in node.children:
         if n.layoutAlign != laStretch:
           maxW = max(maxW, n.size.x)
-      size.x = maxW + node.paddingLeft + node.paddingRight
+      node.size.x = maxW + node.paddingLeft + node.paddingRight
 
     var at: float32 = 0.0
     at += node.paddingTop
@@ -83,21 +86,16 @@ proc computeLayout*(parent, node: Node) =
 
       at += n.size.y
     at += node.paddingBottom
-    size.y = at
-
-    if size != node.size:
-      node.size = size
-      node.markDirty(true)
+    node.size.y = at
 
   if node.layoutMode == lmHorizontal:
-    var size = node.size
     if node.counterAxisSizingMode == asAuto:
       # Resize to fit elements tightly.
       var maxH = 0.0
       for n in node.children:
         if n.layoutAlign != laStretch:
           maxH = max(maxH, n.size.y)
-      size.y = maxH + node.paddingTop + node.paddingBottom
+      node.size.y = maxH + node.paddingTop + node.paddingBottom
 
     var at: float32 = 0.0
     at += node.paddingLeft
@@ -111,8 +109,8 @@ proc computeLayout*(parent, node: Node) =
 
       at += n.size.x
     at += node.paddingRight
-    size.x = at
+    node.size.x = at
 
-    if size != node.size:
-      node.size = size
-      node.markDirty(true)
+  if orgPosition != node.position or orgSize != node.size:
+    # If some thing change redraw all.
+    node.markDirty(true)
