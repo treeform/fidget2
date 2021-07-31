@@ -1,6 +1,6 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils,
-    options, layout
+    options, layout, unicode
 
 type Image = pixie.Image
 type Paint = schema.Paint
@@ -311,96 +311,10 @@ proc maskSelfImage*(node: Node): Mask =
     )
   return mask
 
-proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
-  ## Get the font!
-
-  var fontName = style.fontPostScriptName
-
-  if backup != nil:
-    if fontName == "" and backup.fontFamily != "":
-      fontName = backup.fontPostScriptName
-
-  var font = getFont(fontName)
-
-  if style.fontSize != 0:
-    font.size = style.fontSize
-  elif backup != nil:
-    font.size = backup.fontSize
-
-  var lineStyle = style
-  if style.lineHeightUnit.isNone and backup != nil:
-    lineStyle = backup
-
-  case lineStyle.lineHeightUnit.get()
-  of lhuPixels:
-    font.lineHeight = round(lineStyle.lineHeightPx)
-  of lhuFontSizePercent:
-    font.lineHeight = round(lineStyle.lineHeightPx)
-  of lhuIntrinsicPercent:
-    font.lineHeight = round(font.defaultLineHeight * lineStyle.lineHeightPercent / 100)
-
-  font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
-
-  if style.textCase.isSome:
-    font.textCase = style.textCase.get()
-  elif backup != nil and backup.textCase.isSome:
-    font.textCase = backup.textCase.get()
-
-  return font
-
 proc drawText*(node: Node) =
   ## Draws the text (including editing of text).
 
-  var spans: seq[pixie.Span]
-  if node.characterStyleOverrides.len > 0:
-    # The 0th style is node default style:
-    node.styleOverrideTable["0"] = node.style
-    var prevStyle: int
-    for i, styleKey in node.characterStyleOverrides:
-      if i == 0 or node.characterStyleOverrides[i] != prevStyle:
-        let style = node.styleOverrideTable[$styleKey]
-
-        var font = getFont(style, node.style)
-
-        var fillColor: Color
-        if style.fills.len == 0:
-          fillColor = node.fills[0].color
-          fillColor.a = node.fills[0].opacity
-        else:
-          fillColor = style.fills[0].color
-          fillColor.a = style.fills[0].opacity
-        font.paint = pixie.Paint(
-          kind: pixie.PaintKind.pkSolid,
-          color: fillColor.rgbx
-        )
-
-        spans.add(newSpan("", font))
-
-      spans[^1].text.add(node.characters[i])
-      prevStyle = styleKey
-
-    # for span in spans:
-    #   print "---"
-    #   print span.text
-    #   print span.font.typeface.filePath
-    #   print span.font.paint.color
-    #   print span.font.size
-    #   print span.font.lineHeight
-
-  else:
-    var font = getFont(node.style)
-    font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
-    spans = @[newSpan(node.characters, font)]
-
-  var arrangement = typeset(
-    spans,
-    bounds = node.size,
-    # wrap = wrap
-    hAlign = node.style.textAlignHorizontal,
-    vAlign = node.style.textAlignVertical,
-  )
-
-  arrangementCache[node.id] = arrangement
+  var arrangement = node.computeArrangement()
 
   if textBoxFocus == node:
     # Don't recompute the layout twice,

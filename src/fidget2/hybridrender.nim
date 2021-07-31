@@ -14,6 +14,7 @@ proc drawToAtlas(node: Node, level: int) =
   mat = mat * node.transform()
 
   if node.dirty:
+    echo "redraw: ", node.name
     node.dirty = false
     # compute bounds
     var bounds = computeIntBounds(node, mat, node.kind == nkBooleanOperation)

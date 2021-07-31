@@ -116,6 +116,7 @@ type
     KERN*: int
 
   TextAutoResize* = enum
+    tarFixed
     tarHeight
     tarWidthAndHeight
 

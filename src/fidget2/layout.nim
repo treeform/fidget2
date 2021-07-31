@@ -1,4 +1,9 @@
-import bumpy, schema, vmath, common, options
+import bumpy, schema, vmath, common, options, tables, pixie, unicode
+
+proc computeTextBounds(node: Node): Vec2 =
+
+  let arrangement = node.computeArrangement()
+  return arrangement.computeBounds()
 
 proc computeLayout*(parent, node: Node) =
   ## Computes constraints and auto-layout.
@@ -39,79 +44,75 @@ proc computeLayout*(parent, node: Node) =
       let offset = floor((node.orgSize.y - parent.orgSize.y) / 2.0 + node.orgPosition.y)
       node.position.y = floor((parent.size.y - node.size.y) / 2.0) + offset
 
-  # TODO: Implement more of the layout.
-  # # Typeset text
-  # if node.kind == nkText:
-  #   computeTextLayout(node)
-  #   case node.textStyle.autoResize:
-  #     of tsNone:
-  #       # Fixed sized text node.
-  #       discard
-  #     of tsHeight:
-  #       # Text will grow down.
-  #       node.size.y = node.textLayoutHeight
-  #     of tsWidthAndHeight:
-  #       # Text will grow down and wide.
-  #       node.size.x = node.textLayoutWidth
-  #       node.size.y = node.textLayoutHeight
+  # Typeset text
+  if node.kind == nkText:
+    case node.style.textAutoResize:
+      of tarFixed:
+        # Fixed sized text node.
+        discard
+      of tarHeight:
+        # Text will grow down.
+        var bounds = computeTextBounds(node)
+        node.size.y = bounds.y
+      of tarWidthAndHeight:
+        # Text will grow down and wide.
+        var bounds = computeTextBounds(node)
+        node.size.x = bounds.x
+        node.size.y = bounds.y
 
   # Auto-layout code.
   if node.layoutMode == lmVertical:
+    var size = node.size
     if node.counterAxisSizingMode == asAuto:
       # Resize to fit elements tightly.
       var maxW = 0.0
       for n in node.children:
         if n.layoutAlign != laStretch:
           maxW = max(maxW, n.size.x)
-      node.size.x = maxW + node.paddingLeft + node.paddingRight
+      size.x = maxW + node.paddingLeft + node.paddingRight
 
-    var at = 0.0
+    var at: float32 = 0.0
     at += node.paddingTop
     for i, n in node.children:
-      n.position.y = 0
-
       if i > 0:
         at += node.itemSpacing
-      n.position.y = at
-      case n.layoutAlign:
-        of laStretch:
-          n.position.x = node.paddingTop
-          n.size.x = node.size.x - (node.paddingTop + node.paddingBottom)
-          # Redo the layout for child node.
-          computeLayout(node, n)
-        of laInherit:
-          discard
+
+      if n.position.y != at:
+        n.position.y = at
+        n.markDirty(true)
 
       at += n.size.y
     at += node.paddingBottom
-    node.size.y = at
+    size.y = at
+
+    if size != node.size:
+      node.size = size
+      node.markDirty(true)
 
   if node.layoutMode == lmHorizontal:
-
+    var size = node.size
     if node.counterAxisSizingMode == asAuto:
       # Resize to fit elements tightly.
       var maxH = 0.0
       for n in node.children:
         if n.layoutAlign != laStretch:
           maxH = max(maxH, n.size.y)
-      node.size.y = maxH + node.paddingTop + node.paddingBottom
+      size.y = maxH + node.paddingTop + node.paddingBottom
 
-    var at = 0.0
+    var at: float32 = 0.0
     at += node.paddingLeft
     for i, n in node.children:
       if i > 0:
         at += node.itemSpacing
-      n.position.x = at
 
-      case n.layoutAlign:
-        of laStretch:
-          n.position.y = node.paddingLeft
-          n.size.y = node.size.y - (node.paddingLeft + node.paddingRight)
-          # Redo the layout for child node.
-          computeLayout(node, n)
-        of laInherit:
-          discard
+      if n.position.x != at:
+        n.position.x = at
+        n.markDirty(true)
 
       at += n.size.x
     at += node.paddingRight
-    node.size.x = at
+    size.x = at
+
+    if size != node.size:
+      node.size = size
+      node.markDirty(true)

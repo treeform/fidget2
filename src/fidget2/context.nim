@@ -285,8 +285,8 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
       #echo "update ", imagePath
       return
     else:
-      echo rect.wh, image.wh
-      echo "size of spot changed:", imagePath
+      #echo rect.wh, image.wh
+      #echo "size of spot changed:", imagePath
       ctx.entries.del(imagePath)
 
   let rect = ctx.findEmptyRect(image.width, image.height)
