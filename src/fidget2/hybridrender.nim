@@ -14,12 +14,16 @@ proc drawToAtlas(node: Node, level: int) =
   mat = mat * node.transform()
 
   if node.dirty:
-    echo "redraw: ", node.name
+    #print "redraw: ", node.name, node.size
     node.dirty = false
     # compute bounds
-    var bounds = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
+    node.pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
 
-    node.pixelBox = bounds
+    # TODO: figure out why we need pixel box border?
+    node.pixelBox.x -= 1
+    node.pixelBox.y -= 1
+    node.pixelBox.w += 2
+    node.pixelBox.h += 2
 
     ## Any special thing we can't do on the GPU
     ## we have to collapse the node so that CPU draws it all
@@ -50,13 +54,12 @@ proc drawToAtlas(node: Node, level: int) =
     if node.effects.len != 0:
       node.collapse = true
 
-    if bounds.w.int > 0 and bounds.h.int > 0:
-      layer = newImage(bounds.w.int, bounds.h.int)
+    if node.pixelBox.w.int > 0 and node.pixelBox.h.int > 0:
+      layer = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
       let prevBoundsMat = mat
-      mat = translate(-bounds.xy) * mat
+      mat = translate(-node.pixelBox.xy) * mat
 
       node.drawNodeInternal(withChildren=node.collapse)
-
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 

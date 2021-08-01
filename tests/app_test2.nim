@@ -201,7 +201,7 @@ block:
     of 5:
       resizeWindow(673, 311)
     of 6:
-      takeScreenShot().writeFile("tests/shots/PB.673x311.png")
+       takeScreenShot().writeFile("tests/shots/PB.673x311.png")
     else:
       running = false
     inc numFrame

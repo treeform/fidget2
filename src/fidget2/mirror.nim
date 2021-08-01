@@ -543,7 +543,7 @@ proc display(withEvents = true) =
   if windowResizable:
     # Stretch the current frame to fit the window.
     if windowSize != thisFrame.size:
-      thisFrame.markDirty()
+      thisFrame.markTreeDirty()
       thisFrame.size = windowSize
   else:
     # Stretch the window to fit the current frame.
