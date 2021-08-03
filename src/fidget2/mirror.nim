@@ -1,6 +1,6 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
-    pixie, schema, sequtils, staticglfw, strformat, tables,
-    textboxes, unicode, vmath, times, perf, common
+    pixie, schema, strutils, sequtils, staticglfw, strformat, tables,
+    textboxes, unicode, vmath, times, perf, common, algorithm, flatty/hashy2
 
 export textboxes
 
@@ -595,6 +595,100 @@ proc display(withEvents = true) =
       perfMark "glFlush"
 
   inc frameNum
+
+proc findNodeById(id: string): Node =
+  ## Finds a node by id (slow).
+  proc recur(node: Node): Node =
+    if node.id == id:
+      return node
+    for n in node.children:
+      let c = recur(n)
+      if c != nil:
+        return c
+  return recur(figmaFile.document)
+
+proc parent(node: Node): Node =
+  ## Finds node's parent (slow).
+  let id = node.id
+  proc recur(p: Node): Node =
+    for n in p.children:
+      if n.id == id:
+        return p
+      let c = recur(n)
+      if c != nil:
+        return c
+  return recur(figmaFile.document)
+
+proc normalize(props: var seq[(string, string)]) =
+  ## Makes sure that prop name is sorted.
+  props.sort proc(a, b: (string, string)): int = cmp(a[0], b[0])
+
+proc parseName(name: string): seq[(string, string)] =
+  ## Parses a name like "State=Off,Color=blue" into PropName.
+  for pair in name.split(","):
+    let
+      arr = pair.split("=")
+      k = arr[0]
+      v = arr[1]
+    result.add((k, v))
+  result.normalize()
+
+func `[]`*(query: seq[(string, string)], key: string): string =
+  ## Get a key out of PropName.
+  for (k, v) in query:
+    if k == key:
+      return v
+
+func `[]=`*(query: var seq[(string, string)], key, value: string) =
+  ## Sets a key in the PropName. If key is not there appends a
+  ## new key-value pair at the end.
+  for pair in query.mitems:
+    if pair[0] == key:
+      pair[1] = value
+      return
+  query.add((key, value))
+
+proc deepClone[T](a: T): T =
+  ## Deep copy of the object.
+  deepCopy(result, a)
+
+proc triMerge(current, prevMaster, currMaster: Node) =
+  ## Does a tri merge of the node trees.
+  # If current.x and prevMaster.x are same, we can change to currMaster.x
+  # TODO: changes all the way back to the original
+
+  template mergeField(x: untyped) =
+    if hashy(current.x) == hashy(prevMaster.x):
+      current.x = currMaster.x.deepClone()
+      current.dirty = true
+
+  mergeField fills
+  mergeField componentId
+
+  for i in 0 ..< current.children.len:
+    doAssert current.children[i].name == prevMaster.children[i].name and
+      current.children[i].name == currMaster.children[i].name
+    triMerge(
+      current.children[i],
+      prevMaster.children[i],
+      currMaster.children[i]
+    )
+
+proc setVariant*(node: Node, name, value: string) =
+  ## Changes the variant of the node.
+  var prevMaster = findNodeById(node.componentId)
+  var props = prevMaster.name.parseName()
+  props[name] = value
+  props.normalize()
+
+  var componentSet = prevMaster.parent
+  for n in componentSet.children:
+    var nProps = n.name.parseName()
+    if nProps == props:
+      var currMaster = n
+      triMerge(node, prevMaster, currMaster)
+      node.componentId = currMaster.id
+      break
 
 proc startFidget*(
   figmaUrl: string,

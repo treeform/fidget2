@@ -16,7 +16,6 @@ proc makeDiffHtml(folder: string) =
 
   """
   for f in walkFiles(folder & "/masters/*.png"):
-    echo f
     let
       f = folder & "/" & f.extractFilename
       fmaster = folder & "/masters/" & f.extractFilename
@@ -64,7 +63,6 @@ block:
 
   var numFrame = 0
   onFrame:
-    echo "Frame: ", numFrame
     case numFrame:
     of 0:
       discard
@@ -169,8 +167,73 @@ block:
     of 40:
       takeScreenShot().writeFile("tests/shots/Layouts.6.3.png")
 
+    of 41:
+      thisFrame = find("Variants")
+      resizeWindow(140, 140)
+    of 42:
+      takeScreenShot().writeFile("tests/shots/Variants.7.1.png")
+
+    of 43:
+      var n = find("Variants/Square")
+      n.setVariant("Color", "Green")
+    of 44:
+      takeScreenShot().writeFile("tests/shots/Variants.7.2.png")
+
+    of 45:
+      var n = find("Variants/Square")
+      n.setVariant("Color", "Blue")
+    of 46:
+      takeScreenShot().writeFile("tests/shots/Variants.7.3.png")
+
+    of 47:
+      thisFrame = find("VariantsSquare")
+      resizeWindow(140, 140)
+    of 48:
+      takeScreenShot().writeFile("tests/shots/VariantsSquare.7.1.png")
+
+    of 49:
+      var n = find("VariantsSquare/SquareText")
+      n.setVariant("Color", "Green")
+    of 50:
+      takeScreenShot().writeFile("tests/shots/VariantsSquare.7.2.png")
+
+    of 51:
+      var n = find("VariantsSquare/SquareText")
+      n.setVariant("Color", "Blue")
+    of 52:
+      takeScreenShot().writeFile("tests/shots/VariantsSquare.7.3.png")
+
+
+    of 53:
+      thisFrame = find("VariantsCombined")
+      resizeWindow(140, 140)
+    of 54:
+      takeScreenShot().writeFile("tests/shots/VariantsCombined.7.1.png")
+
+    of 55:
+      var n = find("VariantsCombined/CombinedSquare")
+      n.setVariant("Color", "Green")
+      var n2 = find("VariantsCombined/CombinedSquare/SquareText")
+      n2.setVariant("Color", "Red")
+
+
+    of 56:
+      takeScreenShot().writeFile("tests/shots/VariantsCombined.7.2.png")
+
+    of 57:
+      var n = find("VariantsCombined/CombinedSquare")
+      n.setVariant("Color", "Blue")
+      var n2 = find("VariantsCombined/CombinedSquare/SquareText")
+      n2.setVariant("Color", "Red")
+
+    of 58:
+      takeScreenShot().writeFile("tests/shots/VariantsCombined.7.3.png")
+
+
+
+
     else:
-      if numFrame > 40:
+      if numFrame > 58:
         running = false
     inc numFrame
 
