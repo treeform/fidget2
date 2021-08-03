@@ -236,7 +236,7 @@ type
     paddingRight*: float32
     paddingTop*: float32
     paddingBottom*: float32
-    overflowDirection: OverflowDirection
+    overflowDirection*: OverflowDirection
 
     # Non figma parameters:
     dirty*: bool        ## Do the pixels need redrawing?

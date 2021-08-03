@@ -655,15 +655,49 @@ proc deepClone[T](a: T): T =
 proc triMerge(current, prevMaster, currMaster: Node) =
   ## Does a tri merge of the node trees.
   # If current.x and prevMaster.x are same, we can change to currMaster.x
-  # TODO: changes all the way back to the original
+  # TODO: changes all the way back to the original restores maybe?
 
   template mergeField(x: untyped) =
     if hashy(current.x) == hashy(prevMaster.x):
       current.x = currMaster.x.deepClone()
       current.dirty = true
 
-  mergeField fills
+  # Ids
   mergeField componentId
+  # Shape
+  mergeField fillGeometry
+  mergeField strokeWeight
+  mergeField strokeAlign
+  mergeField strokeGeometry
+  mergeField cornerRadius
+  mergeField rectangleCornerRadii
+  # Visual
+  mergeField blendMode
+  mergeField fills
+  mergeField strokes
+  mergeField effects
+  mergeField opacity
+  mergeField visible
+  # Masking
+  mergeField isMask
+  mergeField isMaskOutline
+  mergeField booleanOperation
+  mergeField clipsContent
+  # Text
+  mergeField characters
+  mergeField style
+  # Layout
+  mergeField constraints
+  mergeField layoutAlign
+  mergeField layoutGrids
+  mergeField layoutMode
+  mergeField itemSpacing
+  mergeField counterAxisSizingMode
+  mergeField paddingLeft
+  mergeField paddingRight
+  mergeField paddingTop
+  mergeField paddingBottom
+  mergeField overflowDirection
 
   for i in 0 ..< current.children.len:
     doAssert current.children[i].name == prevMaster.children[i].name and
