@@ -30,7 +30,11 @@ var
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
-  translate(node.position) * rotate(node.rotation)
+  result = translate(node.position) * rotate(node.rotation)
+  if node.flipHorizontal:
+    result = result * scale(vec2(-1, 1))
+  if node.flipVertical:
+    result = result * scale(vec2(1, -1))
 
 proc pos(mat: Mat3): Vec2 =
   result.x = mat[2, 0]

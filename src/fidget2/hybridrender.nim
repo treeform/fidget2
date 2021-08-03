@@ -147,7 +147,6 @@ proc setupWindow*(
   windowHint(SAMPLES, 0)
   windowHint(CONTEXT_VERSION_MAJOR, 4)
   windowHint(CONTEXT_VERSION_MINOR, 1)
-  echo "3", getCurrentDir()
   window = createWindow(
     viewportSize.x.cint, viewportSize.y.cint,
     "run_shaders",
@@ -156,10 +155,8 @@ proc setupWindow*(
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
   window.makeContextCurrent()
-  echo "4", getCurrentDir()
   # Load opengl.
   loadExtensions()
-  echo "5", getCurrentDir()
 
   echo "GL_VERSION: ", cast[cstring](glGetString(GL_VERSION))
   echo "GL_VENDOR: ", cast[cstring](glGetString(GL_VENDOR))

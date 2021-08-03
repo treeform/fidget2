@@ -186,6 +186,8 @@ type
     position*: Vec2
     size*: Vec2
     rotation*: float32
+    flipHorizontal*: bool
+    flipVertical*: bool
     relativeTransform: Option[Transform] # Only used during loading.
 
     # Shape
@@ -264,7 +266,21 @@ proc postHook(v: var Node) =
     let transform = v.relativeTransform.get()
     v.position = vec2(transform[0][2], transform[1][2])
     v.rotation = arctan2(transform[0][1], transform[0][0])
-    # TODO: We might need also mirror horizontal and vertical.
+
+    # Extract the flips from the matrix:
+    let
+      actual = rotate(v.rotation)
+      original = mat3(
+        transform[0][0], transform[1][0], 0,
+        transform[0][1], transform[1][1], 0,
+        0, 0, 1,
+      )
+      residual = actual.inverse() * original
+    if residual[0, 0] < 0:
+      v.flipHorizontal = true
+    if residual[1, 1] < 0:
+      v.flipVertical = true
+
   v.orgPosition = v.position
   v.orgSize = v.size
   v.dirty = true
