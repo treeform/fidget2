@@ -264,6 +264,7 @@ proc postHook(v: var Node) =
     let transform = v.relativeTransform.get()
     v.position = vec2(transform[0][2], transform[1][2])
     v.rotation = arctan2(transform[0][1], transform[0][0])
+    # TODO: We might need also mirror horizontal and vertical.
   v.orgPosition = v.position
   v.orgSize = v.size
   v.dirty = true

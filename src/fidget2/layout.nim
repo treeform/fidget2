@@ -11,10 +11,6 @@ proc computeLayout*(parent, node: Node) =
   for n in node.children:
     computeLayout(node, n)
 
-  let
-    orgPosition = node.position
-    orgSize = node.size
-
   # Typeset text
   if node.kind == nkText:
     case node.style.textAutoResize:
@@ -126,11 +122,3 @@ proc computeLayout*(parent, node: Node) =
 
       let offset = node.orgPosition.y - round(parent.orgSize.y / 2.0)
       node.position.y = round(parent.size.y / 2.0) + offset
-
-      # let offset = floor((node.orgSize.y - parent.orgSize.y) / 2.0 + node.orgPosition.y)
-      # node.position.y = floor((parent.size.y - node.size.y) / 2.0) + offset
-
-  if orgPosition != node.position or orgSize != node.size:
-    # If some thing change redraw all.
-    node.markTreeDirty(true)
-  node.markTreeDirty(true)

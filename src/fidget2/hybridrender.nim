@@ -13,17 +13,19 @@ proc drawToAtlas(node: Node, level: int) =
   let prevMat = mat
   mat = mat * node.transform()
 
-  if node.dirty:
+  # TODO: Don't redraw if node only changed positions in whole pixels.
+  var pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
+  # TODO: figure out why we need pixel box border?
+  pixelBox.x -= 1
+  pixelBox.y -= 1
+  pixelBox.w += 2
+  pixelBox.h += 2
+
+  if node.dirty or pixelBox != node.pixelBox:
     #print "redraw: ", node.name, node.size
     node.dirty = false
     # compute bounds
-    node.pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
-
-    # TODO: figure out why we need pixel box border?
-    node.pixelBox.x -= 1
-    node.pixelBox.y -= 1
-    node.pixelBox.w += 2
-    node.pixelBox.h += 2
+    node.pixelBox = pixelBox
 
     ## Any special thing we can't do on the GPU
     ## we have to collapse the node so that CPU draws it all
@@ -104,6 +106,8 @@ proc drawToScreen*(screenNode: Node) =
       viewportRect.h.cint
     )
 
+  computeLayout(nil, screenNode)
+  # TODO: figure out how to call layout only once.
   computeLayout(nil, screenNode)
 
   # Setup proper matrix for drawing.
