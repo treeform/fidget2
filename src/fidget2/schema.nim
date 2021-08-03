@@ -174,6 +174,12 @@ type
     asAuto
     asFixed
 
+  OverflowDirection* = enum
+    odNone
+    odHorizontalScrolling
+    odVerticalScrolling
+    odHorizontalAndVerticalScrolling
+
   Node* = ref object
     # Basic Node properties
     id*: string     ## A string uniquely identifying this node.
@@ -181,6 +187,7 @@ type
     name*: string   ## The name given to the node by the user in the tool.
     children*: seq[Node]
     prototypeStartNodeID*: string
+    componentId*: string
 
     # Transform
     position*: Vec2
@@ -229,6 +236,7 @@ type
     paddingRight*: float32
     paddingTop*: float32
     paddingBottom*: float32
+    overflowDirection: OverflowDirection
 
     # Non figma parameters:
     dirty*: bool        ## Do the pixels need redrawing?
@@ -495,6 +503,14 @@ proc enumHook(s: string, v: var AxisSizingMode) =
     of "AUTO": asAuto
     of "FIXED": asFixed
     else: raise newException(FidgetError, "Invalid axis sizing mode:" & s)
+
+proc enumHook(s: string, v: var OverflowDirection) =
+  v = case s:
+    of "NONE": odNone
+    of "HORIZONTAL_SCROLLING": odHorizontalScrolling
+    of "VERTICAL_SCROLLING": odVerticalScrolling
+    of "HORIZONTAL_AND_VERTICAL_SCROLLING": odHorizontalAndVerticalScrolling
+    else: raise newException(FidgetError, "Invalid overflow direction:" & s)
 
 proc parseHook(s: string, i: var int, v: var Vec2) =
     type Vec2Obj = object
