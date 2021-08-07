@@ -214,7 +214,7 @@ proc setupTextBox(node: Node) =
     keyboard.onUnfocusNode.dirty = true
   keyboard.onFocusNode.dirty = true
 
-  var font = fontCache[node.style.fontPostScriptName]
+  var font = newFont(typefaceCache[node.style.fontPostScriptName])
   font.size = node.style.fontSize
   font.lineHeight = node.style.lineHeightPx
 
