@@ -28,19 +28,25 @@ jsCb = fidget.cb(function() {
 })
 fidget.callMeBack(jsCb)
 
-// Test fidget
-var count = 0
-clickCb = fidget.cb(function() {
-    count += 1
-    console.log("in click_cb", count)
-    n = fidget.findNode("CounterFrame/CounterDisplay/text")
-    n.characters = count.toString()
-    n.dirty = true
-})
-fidget.onClickGlobal(clickCb)
-fidget.startFidget(
-  "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
-  "JavaScript Counter",
-  "CounterFrame",
-  false
-)
+f = fidget.readFont2()
+
+console.log(f.underline)
+console.log(f.strikethrough)
+console.log(f.noKerningAdjustments)
+
+// // Test fidget
+// var count = 0
+// clickCb = fidget.cb(function() {
+//     count += 1
+//     console.log("in click_cb", count)
+//     n = fidget.findNode("CounterFrame/CounterDisplay/text")
+//     n.characters = count.toString()
+//     n.dirty = true
+// })
+// fidget.onClickGlobal(clickCb)
+// fidget.startFidget(
+//   "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
+//   "JavaScript Counter",
+//   "CounterFrame",
+//   false
+// )

@@ -78,7 +78,7 @@ dll.fidget_take_vec.restype = Vector2
 def take_vec():
   return dll.fidget_take_vec()
 
-AlignSomething = c_longlong
+AlignSomething = c_byte
 AS_DEFAULT = 0
 AS_TOP = 1
 AS_BOTTOM = 2
@@ -94,6 +94,58 @@ dll.fidget_call_me_back.argtypes = [c_proc_cb]
 dll.fidget_call_me_back.restype = None
 def call_me_back(cb):
   return dll.fidget_call_me_back(cb)
+
+class SeqOfUint64(Structure):
+    _fields_ = [
+        ("len", c_longlong),
+        ("data", c_longlong)
+    ]
+    def __getitem__(self, index):
+      return dll.fidget_seq_of_uint64_get(self, index)
+    def __setitem__(self, index, value):
+      return dll.fidget_seq_of_uint64_set(self, index, value)
+    def __len__(self):
+      return self.len
+dll.fidget_seq_of_uint64_get.argtypes = [SeqOfUint64, c_longlong]
+dll.fidget_seq_of_uint64_get.restype = c_ulonglong
+dll.fidget_seq_of_uint64_set.argtypes = [SeqOfUint64, c_longlong, c_ulonglong]
+dll.fidget_seq_of_uint64_set.restype = None
+
+dll.fidget_take_seq.argtypes = [SeqOfUint64]
+dll.fidget_take_seq.restype = None
+def take_seq(s):
+  return dll.fidget_take_seq(s)
+
+dll.fidget_return_seq.argtypes = []
+dll.fidget_return_seq.restype = SeqOfUint64
+def return_seq():
+  return dll.fidget_return_seq()
+
+TextCase = c_byte
+TC_NORMAL = 0
+TC_UPPER = 1
+TC_LOWER = 2
+TC_TITLE = 3
+
+class Typeface2(Structure):
+    _fields_ = [("ref", c_void_p)]
+    def __bool__(self): return self.ref != None
+
+
+class Font2(Structure):
+    _fields_ = [
+        ("typeface", c_longlong),
+        ("size", c_float),
+        ("line_height", c_float),
+        ("text_case", TextCase),
+        ("underline", c_bool),
+        ("strikethrough", c_bool),
+        ("no_kerning_adjustments", c_bool),
+    ]
+dll.fidget_read_font2.argtypes = [c_char_p]
+dll.fidget_read_font2.restype = Font2
+def read_font2(font_path):
+  return dll.fidget_read_font2(font_path.encode('utf8'))
 
 dll.fidget_on_click_global.argtypes = [c_proc_cb]
 dll.fidget_on_click_global.restype = None
@@ -143,7 +195,7 @@ dll.fidget_find_node.restype = Node
 def find_node(glob):
   return dll.fidget_find_node(glob.encode('utf8'))
 
-EventCbKind = c_longlong
+EventCbKind = c_byte
 E_ON_CLICK = 0
 E_ON_FRAME = 1
 E_ON_EDIT = 2
@@ -160,4 +212,3 @@ dll.fidget_start_fidget.argtypes = [c_char_p, c_char_p, c_char_p, c_bool]
 dll.fidget_start_fidget.restype = None
 def start_fidget(figma_url, window_title, entry_frame, resizable):
   return dll.fidget_start_fidget(figma_url.encode('utf8'), window_title.encode('utf8'), entry_frame.encode('utf8'), resizable)
-

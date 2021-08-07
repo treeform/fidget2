@@ -28,6 +28,23 @@ def python_cb():
     print("in python_cb")
 call_me_back(python_cb)
 
+# Test seq
+s = return_seq()
+print(s)
+take_seq(s)
+print("s[7]:", s[7])
+print("len(s):", len(s))
+print("s[3]:", s[3])
+s[3] = 33
+print("s[3]:", s[3])
+take_seq(s)
+
+f = read_font2("fontPath")
+print(sizeof(f))
+print(f.no_kerning_adjustments)
+
+exit()
+
 # Test fidget
 count = 0
 @c_proc_cb

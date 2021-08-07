@@ -31,6 +31,28 @@ AS_BOTTOM = 2
 AS_RIGHT = 3
 AS_LEFT = 4
 
+TextCase = :uint64
+TC_NORMAL = 0
+TC_UPPER = 1
+TC_LOWER = 2
+TC_TITLE = 3
+
+class Typeface2 < FFI::Struct
+  layout ref: :uint64
+end
+
+class Font2 < FFI::Struct
+  layout \
+    typeface: Typeface2.by_value,
+    size: :float,
+    line_height: :float,
+    text_case: enum
+  tcNormal, tcUpper, tcLower, tcTitle,
+    underline: :bool,
+    strikethrough: :bool,
+    no_kerning_adjustments: :bool
+end
+
 class Node < FFI::Struct
   layout ref: :uint64
 
@@ -83,6 +105,9 @@ module DLL
   attach_function :fidget_take_vec, [  ], Vector2.by_value
   attach_function :fidget_repeat_enum, [ AlignSomething ], AlignSomething
   attach_function :fidget_call_me_back, [ :fidget_cb ], :void
+  attach_function :fidget_take_seq, [ uint64.by_value ], :void
+  attach_function :fidget_return_seq, [  ], uint64.by_value
+  attach_function :fidget_read_font2, [ :string ], Font2.by_value
   attach_function :fidget_on_click_global, [ :fidget_cb ], :void
   attach_function :fidget_node_get_name, [Node.by_value], :string
   attach_function :fidget_node_set_name, [Node.by_value, :string], :void
@@ -128,6 +153,18 @@ end
 
 def call_me_back(cb)
   return DLL.fidget_call_me_back(cb)
+end
+
+def take_seq(s)
+  return DLL.fidget_take_seq(s)
+end
+
+def return_seq()
+  return DLL.fidget_return_seq()
+end
+
+def read_font2(font_path)
+  return DLL.fidget_read_font2(font_path)
 end
 
 def on_click_global(a)

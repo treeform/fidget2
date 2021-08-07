@@ -27,6 +27,12 @@ proc nimCb() {.cdecl.} =
   echo("in nimCb")
 callMeBack(nimCb)
 
+echo "loading font"
+var f = readFont2()
+echo "size of f:", sizeof(f)
+echo f
+quit()
+
 # Test fidget
 var count = 0
 proc clickCb() {.cdecl.} =

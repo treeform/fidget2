@@ -1,37 +1,4 @@
-import macros, strutils, common, print, langauges/internal,
-  langauges/c, langauges/python, langauges/ruby, langauges/nim, langauges/javascript
-
-## Generates .h and py files for nim exports
-
-macro exportProc(def: typed) =
-  exportProcH(def)
-  exportProcPy(def)
-  exportProcJs(def)
-  exportProcRuby(def)
-  exportProcNim(def)
-  exportProcInternal(def)
-
-macro exportRefObject(def: typed) =
-  exportRefObjectH(def)
-  exportRefObjectPy(def)
-  exportRefObjectJs(def)
-  exportRefObjectRuby(def)
-  exportRefObjectNim(def)
-  exportRefObjectInternal(def)
-
-macro exportObject(def: typed) =
-  exportObjectH(def)
-  exportObjectPy(def)
-  exportObjectJs(def)
-  exportObjectRuby(def)
-  exportObjectNim(def)
-
-macro exportEnum(def: typed) =
-  exportEnumH(def)
-  exportEnumPy(def)
-  exportEnumJs(def)
-  exportEnumRuby(def)
-  exportEnumNim(def)
+import polyglot, common, print
 
 # Test function calling
 proc callMeMaybe(phone: string) =
@@ -96,6 +63,7 @@ type
     asBottom
     asRight
     asLeft
+var a: AlignSomething
 exportEnum(AlignSomething)
 proc repeatEnum(e: AlignSomething): AlignSomething =
   return e
@@ -107,6 +75,81 @@ proc callMeBack(cb: proc() {.cdecl.}) =
   cb()
   echo "done with cb"
 exportProc(callMeBack)
+
+
+# Test seq
+proc takeSeq(s: seq[uint64]) =
+  echo s
+proc returnSeq(): seq[uint64] =
+  for i in 0 ..< 16:
+    result.add i.uint64
+exportSeq(seq[uint64])
+exportProc(takeSeq)
+exportProc(returnSeq)
+
+
+import pixie/fontformats/opentype, pixie/fontformats/svgfont, pixie
+# Test nested ref object
+type
+  Typeface2* = ref object
+    opentype: OpenType
+    svgFont: SvgFont
+    filePath*: string
+
+  Font2* = object
+    typeface*: Typeface2
+    size*: float32              ## Font size in pixels.
+    lineHeight*: float32 ## The line height in pixels or AutoLineHeight for the font's default line height.
+    #paint*: Paint
+    textCase*: TextCase
+    underline*: bool            ## Apply an underline.
+    strikethrough*: bool        ## Apply a strikethrough.
+    noKerningAdjustments*: bool ## Optionally disable kerning pair adjustments
+exportEnum(TextCase)
+exportRefObject(Typeface2)
+exportObject(Font2)
+proc readFont2(fontPath: string): Font2 =
+  var t = Typeface2()
+  t.filePath = fontPath
+  var f = Font2()
+  echo "size of f:", sizeof(f)
+  f.typeface = t
+  f.size = 1
+  f.lineHeight = 2
+  f.noKerningAdjustments = true
+
+  echo "underline:", offsetof(`f`, underline)
+  echo "strikethrough:", offsetof(`f`, strikethrough)
+  echo "noKerningAdjustments:", offsetof(`f`, noKerningAdjustments)
+
+  return f
+exportProc(readFont2)
+
+
+#import pixie/fontformats/opentype, pixie/fontformats/svgfont
+# Test nested ref object
+# type
+#   Typeface2 = ref object
+#     opentype: OpenType
+#     svgFont: SvgFont
+#     filePath*: string
+#   Font2* = object
+#     typeface*: Typeface2
+#     size*: float32
+#     lineHeight*: float32
+
+# exportRefObject(Typeface2)
+# exportObject(Font2)
+# proc readFont(): Font2 =
+#   var t = Typeface2()
+#   t.filePath = "foo/bar"
+#   var f = Font2()
+#   f.typeface = t
+#   f.size = 1
+#   f.lineHeight = 2
+#   return f
+# exportProc(readFont)
+
 
 import fidget2, vmath
 exportProc(onClickGlobal)
@@ -125,10 +168,6 @@ exportEnum(EventCbKind)
 exportProc(addCb)
 exportProc(startFidget)
 
-writeH()
-writePy()
-writeJs()
-writeRuby()
-writeNim()
-writeInternal()
+writeAll()
+
 include internalapi

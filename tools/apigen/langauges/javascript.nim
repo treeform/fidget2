@@ -6,6 +6,10 @@ var code2 {.compiletime.}: string
 
 proc typeJs(nimType: NimNode): string =
   ## Converts nim type to python type.
+
+  if nimType.kind == nnkBracketExpr:
+    return nimType[1].getTypeInst().repr.split(":")[0]
+
   case nimType.repr:
   of "string": "'string'"
   of "bool": "'bool'"
@@ -74,7 +78,7 @@ proc exportRefObjectJs*(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
-    if field.repr notin allowedFields:
+    if field.repr in bannedFields:
       continue
     let fieldType = field.getType()
 
@@ -186,5 +190,5 @@ const footer = """
 
 """
 
-macro writeJs*() =
-  writeFile("fidget.js", header & code0 & loader & code1 & footer & code2)
+proc writeJs*(name: string) =
+  writeFile(name & ".js", header & code0 & loader & code1 & footer & code2)

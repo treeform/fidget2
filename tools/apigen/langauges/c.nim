@@ -4,6 +4,10 @@ var codec {.compiletime.}: string
 
 proc typeH(nimType: NimNode): string =
   ## Converts nim type to c type.
+
+  if nimType.kind == nnkBracketExpr:
+    return nimType[1].getTypeInst().repr.split(":")[0]
+
   case nimType.repr:
   of "string": "char*"
   of "bool": "bool"
@@ -55,7 +59,7 @@ proc exportRefObjectH*(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
-    if field.repr notin allowedFields:
+    if field.repr in bannedFields:
       continue
     let fieldType = field.getType()
 
@@ -124,11 +128,12 @@ proc exportEnumH*(def: NimNode) =
     codec.add "\n"
     inc i
 
-macro writeH*() =
-  let header = """
+const header = """
 #include <stdbool.h>
 
 typedef void (*proc_cb)();
 
 """
-  writeFile("fidget.h", header & codec)
+
+proc writeH*(name: string) =
+  writeFile(name & ".h", header & codec)

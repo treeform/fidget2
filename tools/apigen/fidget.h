@@ -31,6 +31,30 @@ typedef long long AlignSomething;
 #define AS_LEFT 4
 AlignSomething fidget_repeat_enum(AlignSomething e);
 void fidget_call_me_back(proc_cb cb);
+void fidget_take_seq(uint64 s);
+uint64 fidget_return_seq();
+
+typedef long long TextCase;
+#define TC_NORMAL 0
+#define TC_UPPER 1
+#define TC_LOWER 2
+#define TC_TITLE 3
+
+typedef long long Typeface2;
+
+
+typedef struct Font2 {
+  Typeface2 typeface;
+  float size;
+  float line_height;
+  enum
+  tcNormal, tcUpper, tcLower, tcTitle text_case;
+  bool underline;
+  bool strikethrough;
+  bool no_kerning_adjustments;
+} Font2;
+
+Font2 fidget_read_font2(char* font_path);
 void fidget_on_click_global(proc_cb a);
 
 typedef long long Node;

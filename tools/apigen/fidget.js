@@ -14,6 +14,22 @@ exports.AS_BOTTOM = 2
 exports.AS_RIGHT = 3
 exports.AS_LEFT = 4
 
+TextCase = 'int64'
+exports.TC_NORMAL = 0
+exports.TC_UPPER = 1
+exports.TC_LOWER = 2
+exports.TC_TITLE = 3
+
+var Typeface2 = Struct({'nimRef': 'pointer'});
+var Font2 = Struct({
+  'typeface': Typeface2,
+  'size': 'float',
+  'lineHeight': 'float',
+  'textCase': enum
+  tcNormal, tcUpper, tcLower, tcTitle,
+  'underline': 'bool',
+  'strikethrough': 'bool',
+  'noKerningAdjustments': 'bool'});
 var Node = Struct({'nimRef': 'pointer'});
 EventCbKind = 'int64'
 exports.E_ON_CLICK = 0
@@ -47,6 +63,9 @@ var fidget = ffi.Library(dllPath, {
   'fidget_take_vec': [Vector2, []],
   'fidget_repeat_enum': [AlignSomething, [AlignSomething]],
   'fidget_call_me_back': ['void', ['pointer']],
+  'fidget_take_seq': ['void', [uint64]],
+  'fidget_return_seq': [uint64, []],
+  'fidget_read_font2': [Font2, ['string']],
   'fidget_on_click_global': ['void', ['pointer']],
   'fidget_node_get_name': ['string', [Node]],
   'fidget_node_set_name': ['void', [Node, 'string']],
@@ -78,6 +97,11 @@ exports.giveVec = fidget.fidget_give_vec;
 exports.takeVec = fidget.fidget_take_vec;
 exports.repeatEnum = fidget.fidget_repeat_enum;
 exports.callMeBack = fidget.fidget_call_me_back;
+exports.takeSeq = fidget.fidget_take_seq;
+exports.returnSeq = fidget.fidget_return_seq;
+exports.Typeface2 = Typeface2;
+exports.Font2 = Font2;
+exports.readFont2 = fidget.fidget_read_font2;
 exports.onClickGlobal = fidget.fidget_on_click_global;
 exports.Node = Node;
 Object.defineProperty(Node.prototype, 'name', {

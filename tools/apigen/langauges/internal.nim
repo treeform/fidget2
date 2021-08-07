@@ -21,9 +21,15 @@ const nimBasicTypes = [
 ]
 
 proc typeNim(nimType: NimNode): string =
-  # echo nimType.repr
-  # echo nimType.getImpl().treeRepr
-  if "enum" in nimType.repr or
+  echo nimType.treeRepr
+  if nimType.kind == nnkBracketExpr:
+    if nimType[0].repr == "ref":
+      nimType[1].repr.split(":")[0]
+    elif nimType[0].repr == "seq":
+      nimType.repr
+    else:
+      "???"
+  elif "enum" in nimType.repr or
     (nimType.kind == nnkSym and "EnumTy" in nimType.getImpl().treeRepr):
     return "int"
   elif "object" in nimType.repr:
@@ -99,7 +105,7 @@ proc exportRefObjectInternal*(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
-    if field.repr notin allowedFields:
+    if field.repr in bannedFields:
       continue
 
     let fieldType = field.getType()
@@ -147,8 +153,44 @@ proc exportRefObjectInternal*(def: NimNode) =
   codenim.add "\n"
   codenim.add "\n"
 
+
+proc exportSeqInternal*(def: NimNode) =
+  echo def.treeRepr
+  let
+    refType = def.getType()
+    objName = typeNim(refType[1][1])
+    seqName = "SeqOf" & objName.capitalizeAscii()
+    cName = toSnakeCase(seqName)
+
+  codenim.add "proc fidget_"
+  codenim.add cName
+  codenim.add "_get(s: seq["
+  codenim.add objName
+  codenim.add "], i: int): "
+  codenim.add objName
+  codenim.add " {.cdecl, exportc, dynlib.} =\n"
+  codenim.add "  s[i]\n"
+
+  codenim.add "proc fidget_"
+  codenim.add cName
+  codenim.add "_set(s: var seq["
+  codenim.add objName
+  codenim.add "], i: int, v: "
+  codenim.add objName
+  codenim.add ") {.cdecl, exportc, dynlib.} =\n"
+  codenim.add "  s[i] = v\n"
+  codenim.add "\n"
+
+  codenim.add "proc fidget_"
+  codenim.add cName
+  codenim.add "_len(s: var seq["
+  codenim.add objName
+  codenim.add "]): int {.cdecl, exportc, dynlib.} =\n"
+  codenim.add "  s.len\n"
+  codenim.add "\n"
+
 const header = """
 """
 
-macro writeInternal*() =
-  writeFile("internalapi.nim", header & codenim)
+proc writeInternal*(name: string) =
+  writeFile(name & "internalapi.nim", header & codenim)

@@ -3,7 +3,9 @@ import macros, strutils, ../common
 var codenim {.compiletime.}: string
 
 proc typeNim(nimType: NimNode): string =
-  if "object" in nimType.repr:
+  if nimType.kind == nnkBracketExpr:
+    return nimType[1].getTypeInst().repr.split(":")[0]
+  elif "object" in nimType.repr:
     return nimType.getTypeInst().repr
   elif nimType.repr == "string":
     return "cstring"
@@ -52,7 +54,7 @@ proc exportRefObjectNim*(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
-    if field.repr notin allowedFields:
+    if field.repr in bannedFields:
       continue
 
     let fieldType = field.getType()
@@ -108,7 +110,7 @@ proc exportObjectNim*(def: NimNode) =
     codenim.add "  "
     codenim.add field.repr
     codenim.add "*: "
-    codenim.add fieldType.repr
+    codenim.add typeNim(fieldType)
     codenim.add "\n"
   codenim.add "\n"
 
@@ -145,5 +147,5 @@ const footer = """
 {.pop.}
 """
 
-macro writeNim*() =
-  writeFile("fidgetapi.nim", header & codenim & footer)
+proc writeNim*(name: string) =
+  writeFile(name & "api.nim", header & codenim & footer)

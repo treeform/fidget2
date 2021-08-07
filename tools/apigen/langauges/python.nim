@@ -1,4 +1,4 @@
-import macros, strutils, ../common
+import macros, strutils, ../common, strformat
 
 var codepy {.compiletime.}: string
 
@@ -22,7 +22,20 @@ proc typePy(nimType: NimNode): string =
   of "float": "c_double"
   of "proc () {.cdecl.}": "c_proc_cb"
   of "": "None"
-  else: nimType.repr
+  else:
+    if nimType.kind == nnkVarTy:
+      typePy(nimType[0])
+    elif nimType.kind == nnkObjectTy:
+      nimType.getTypeInst().repr
+    elif nimType.kind == nnkBracketExpr:
+      if nimType[0].repr == "seq":
+        "SeqOf" & nimType[1].repr.capitalizeAscii()
+      else:
+        nimType[1].getTypeInst().repr.split(":")[0]
+    elif nimType.kind == nnkEnumTy:
+      nimType.getTypeInst().repr
+    else:
+      nimType.repr
 
 proc converterFromPy(nimType: NimNode): string =
   if "string" == nimType.repr:
@@ -93,13 +106,13 @@ proc exportRefObjectPy*(def: NimNode) =
   codepy.add "class "
   codepy.add objName
   codepy.add "(Structure):\n"
-  codepy.add "    _fields_ = [(\"ref\", c_void_p)]\n"
+  codepy.add "    _fields_ = [(\"ref\", c_longlong)]\n"
   codepy.add "    def __bool__(self): return self.ref != None"
 
   for field in baseType[2]:
     if field.isExported == false:
       continue
-    if field.repr notin allowedFields:
+    if field.repr in bannedFields:
       continue
     let fieldType = field.getType()
 
@@ -140,7 +153,7 @@ proc exportRefObjectPy*(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
-    if field.repr notin allowedFields:
+    if field.repr in bannedFields:
       continue
     let fieldType = field.getType()
 
@@ -190,15 +203,97 @@ proc exportObjectPy*(def: NimNode) =
     codepy.add "        (\""
     codepy.add toSnakeCase(field.repr)
     codepy.add "\", "
-    codepy.add  typePy(fieldType)
+    codepy.add typePy(fieldType)
     codepy.add "),\n"
   codepy.add "    ]\n"
+
+  codepy.add "    def __eq__(self, obj):\n"
+  codepy.add "        return "
+  for field in baseType[2]:
+    codepy.add "self."
+    codepy.add toSnakeCase(field.repr)
+    codepy.add " == obj."
+    codepy.add toSnakeCase(field.repr)
+    codepy.add " and "
+  codepy.rm " and "
+  codepy.add "\n"
+  codepy.add "\n"
+
+proc exportSeqPy*(def: NimNode) =
+  echo ":::", def.treeRepr
+  let
+    refType = def[1]
+    objPyType = typePy(refType)
+    objName = refType.repr
+    seqName = "SeqOf" & objName.capitalizeAscii()
+    cName = toSnakeCase(seqName)
+
+  codepy.add "class "
+  codepy.add seqName
+  codepy.add "(Structure):\n"
+  codepy.add "    _fields_ = [\n"
+  codepy.add "        (\"cap\", c_longlong),\n"
+  codepy.add "        (\"data\", c_longlong)\n"
+  codepy.add "    ]\n"
+
+  codepy.add "    def __getitem__(self, index):\n"
+  codepy.add "      return dll.fidget_"
+  codepy.add cName
+  codepy.add "_get(self, index)\n"
+  codepy.add "    def __setitem__(self, index, value):\n"
+  codepy.add "      return dll.fidget_"
+  codepy.add cName
+  codepy.add "_set(self, index, value)\n"
+  codepy.add "    def __len__(self):\n"
+  codepy.add "      return dll.fidget_"
+  codepy.add cName
+  codepy.add "_len(self)\n"
+
+  codepy.add "dll.fidget_"
+  codepy.add cName
+  codepy.add "_get.argtypes = ["
+  codepy.add seqName
+  codepy.add ", c_longlong]\n"
+  codepy.add "dll.fidget_"
+  codepy.add cName
+  codepy.add "_get.restype = "
+  codepy.add objPyType
+  codepy.add "\n"
+
+  codepy.add "dll.fidget_"
+  codepy.add cName
+  codepy.add "_set.argtypes = ["
+  codepy.add seqName
+  codepy.add ", c_longlong, "
+  codepy.add objPyType
+  codepy.add "]\n"
+  codepy.add "dll.fidget_"
+  codepy.add cName
+  codepy.add "_set.restype = None\n"
+
+  codepy.add "dll.fidget_"
+  codepy.add cName
+  codepy.add "_len.argtypes = ["
+  codepy.add seqName
+  codepy.add "]\n"
+  codepy.add "dll.fidget_"
+  codepy.add cName
+  codepy.add "_len.restype = c_longlong\n"
+
+  codepy.add "\n"
 
 proc exportEnumPy*(def: NimNode) =
   let enumTy = def.getType()[1]
   var i = 0
+  var pyType = case getSize(enumTy):
+    of 1: "c_byte"
+    of 2: "c_short"
+    of 4: "c_int"
+    of 8: "c_longlong"
+    else: quit("enum size not supported")
   codepy.add def.repr
-  codepy.add " = c_longlong"
+  codepy.add " = "
+  codepy.add pyType
   codepy.add "\n"
   for enums in enumTy[1 .. ^1]:
     codepy.add toCapCase(enums.repr)
@@ -208,21 +303,22 @@ proc exportEnumPy*(def: NimNode) =
     inc i
   codepy.add "\n"
 
-const header = """
+
+proc writePy*(name: string) =
+  var header = fmt"""
 from ctypes import *
 import os, sys
 
 if sys.platform == "win32":
-  dllPath = 'fidget.dll'
+  dllPath = '{name}.dll'
 elif sys.platform == "darwin":
-  dllPath = os.getcwd() + '/libfidget.dylib'
+  dllPath = os.getcwd() + '/lib{name}.dylib'
 else:
-  dllPath = os.getcwd() + '/libfidget.so'
+  dllPath = os.getcwd() + '/lib{name}.so'
 dll = cdll.LoadLibrary(dllPath)
 
 c_proc_cb = CFUNCTYPE(None)
 
 """
 
-macro writePy*() =
-  writeFile("fidget.py", header & codepy)
+  writeFile(name & ".py", header & codepy)

@@ -35,6 +35,22 @@ proc fidget_repeat_enum(e: int): int {.cdecl, exportc, dynlib.} =
 proc fidget_call_me_back(cb: proc () {.cdecl.}) {.cdecl, exportc, dynlib.} =
   callMeBack(cb)
 
+proc fidget_seq_of_uint64_get(s: seq[uint64], i: int): uint64 {.cdecl, exportc, dynlib.} =
+  s[i]
+proc fidget_seq_of_uint64_set(s: var seq[uint64], i: int, v: uint64) {.cdecl, exportc, dynlib.} =
+  s[i] = v
+
+proc fidget_take_seq(s: seq[uint64]) {.cdecl, exportc, dynlib.} =
+  takeSeq(s)
+
+proc fidget_return_seq(): seq[uint64] {.cdecl, exportc, dynlib.} =
+  returnSeq()
+
+
+
+proc fidget_read_font2(font_path: cstring): Font2 {.cdecl, exportc, dynlib.} =
+  readFont2(font_path.`$`)
+
 proc fidget_on_click_global(a: proc () {.cdecl.}) {.cdecl, exportc, dynlib.} =
   onClickGlobal(a)
 

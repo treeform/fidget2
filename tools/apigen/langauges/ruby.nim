@@ -6,7 +6,6 @@ var coderb2 {.compiletime.}: string
 
 proc typeRuby(nimType: NimNode): string =
   ## Converts nim type to python type.
-
   case nimType.repr:
   of "string": ":string"
   of "bool": ":bool"
@@ -26,7 +25,9 @@ proc typeRuby(nimType: NimNode): string =
   of "proc () {.cdecl.}": ":fidget_cb"
   of "": ":void"
   else:
-    if "enum" in nimType.repr or
+    if nimType.kind == nnkBracketExpr:
+      return nimType[1].getTypeInst().repr.split(":")[0] & ".by_value"
+    elif "enum" in nimType.repr or
       (nimType.kind == nnkSym and "EnumTy" in nimType.getImpl().treeRepr):
         nimType.repr
     else:
@@ -97,7 +98,7 @@ proc exportRefObjectRuby*(def: NimNode) =
   for field in baseType[2]:
     if field.isExported == false:
       continue
-    if field.repr notin allowedFields:
+    if field.repr in bannedFields:
       continue
     let
       fieldName = field.repr
@@ -208,5 +209,5 @@ const footer = """
 end
 """
 
-macro writeRuby*() =
-  writeFile("fidget.rb", header0 & coderb0 & header & coderb1 & footer & coderb2)
+proc writeRuby*(name: string) =
+  writeFile(name & ".rb", header0 & coderb0 & header & coderb1 & footer & coderb2)

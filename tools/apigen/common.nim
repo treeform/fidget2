@@ -1,6 +1,8 @@
 import strutils
 
-const allowedFields* = @["name", "count", "characters", "dirty"]
+const bannedFields* = @[
+  "?"
+]
 
 proc toSnakeCase*(s: string): string =
   ## Converts NimTypes to nim_types.

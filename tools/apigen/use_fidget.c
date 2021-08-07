@@ -49,13 +49,19 @@ void main(){
     // Test callbacks
     fidget_call_me_back(c_cb);
 
-    // Test Fidget
-    count = 0;
-    fidget_on_click_global(click_cb);
-    fidget_start_fidget(
-        "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
-        "C Counter",
-        "CounterFrame",
-        false
-    );
+    Font2 f = fidget_read_font2();
+     printf("%d\n", sizeof(f));
+
+    printf("underline %s\n", f.underline ? "True" : "False");
+    printf("strikethrough %s\n", f.strikethrough ? "True" : "False");
+    printf("no_kerning_adjustments %s\n", f.no_kerning_adjustments ? "True" : "False");
+    // // Test Fidget
+    // count = 0;
+    // fidget_on_click_global(click_cb);
+    // fidget_start_fidget(
+    //     "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
+    //     "C Counter",
+    //     "CounterFrame",
+    //     false
+    // );
 }

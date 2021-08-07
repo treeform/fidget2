@@ -43,6 +43,31 @@ proc repeatEnum*(e: AlignSomething): AlignSomething {.importc: "fidget_repeat_en
 
 proc callMeBack*(cb: proc () {.cdecl.}) {.importc: "fidget_call_me_back".}
 
+proc takeSeq*(s: uint64) {.importc: "fidget_take_seq".}
+
+proc returnSeq*(): uint64 {.importc: "fidget_return_seq".}
+
+type TextCase* = enum
+  tcNormal = 0
+  tcUpper = 1
+  tcLower = 2
+  tcTitle = 3
+
+type Typeface2* = object
+  reference: uint64
+
+type Font2* = object
+  typeface*: Typeface2
+  size*: float32
+  lineHeight*: float32
+  textCase*: enum
+  tcNormal, tcUpper, tcLower, tcTitle
+  underline*: bool
+  strikethrough*: bool
+  noKerningAdjustments*: bool
+
+proc readFont2*(font_path: cstring): Font2 {.importc: "fidget_read_font2".}
+
 proc onClickGlobal*(a: proc () {.cdecl.}) {.importc: "fidget_on_click_global".}
 
 type Node* = object
