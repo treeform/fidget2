@@ -19,7 +19,7 @@ var
   # Text edit.
   textBox*: TextBox
   textBoxFocus*: Node
-  fontCache*: Table[string, Font]
+  typefaceCache*: Table[string, Typeface]
 
   mat*: Mat3
   imageCache*: Table[string, Image]
@@ -53,9 +53,9 @@ iterator reversePairs*[T](a: seq[T]): (int, T) {.inline.} =
     dec i
 
 proc getFont*(fontName: string): Font =
-  if fontName notin fontCache:
-    fontCache[fontName] = pixie.readFont(figmaFontPath(fontName))
-  fontCache[fontName]
+  if fontName notin typefaceCache:
+    typefaceCache[fontName] = readTypeface(figmaFontPath(fontName))
+  newFont(typefaceCache[fontName])
 
 proc rectangleFillGeometry(node: Node): Geometry =
   ## Creates a fill geometry from a rectangle like node.
