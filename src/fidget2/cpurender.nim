@@ -79,7 +79,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     of schema.pkGradientAngular: pixie.pkGradientAngular
     of schema.pkGradientDiamond: pixie.pkGradientRadial
 
-  result = pixie.Paint(kind: paintKind)
+  result = newPaint(paintKind)
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add(
       handle * node.size + mat.pos
@@ -200,11 +200,9 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
     if color.a == 0:
       return
     for geometry in geometries:
-      var paint = pixie.Paint(
-        kind: pixie.PaintKind.pkSolid,
-        color: color.rgbx,
-        blendMode: paint.blendMode
-      )
+      var paint = newPaint(pixie.PaintKind.pkSolid)
+      paint.color = color.rgbx
+      paint.blendMode = paint.blendMode
       layer.fillPath(
         geometry.path,
         paint,

@@ -60,6 +60,7 @@ proc getFont*(fontName: string): Font =
 proc rectangleFillGeometry(node: Node): Geometry =
   ## Creates a fill geometry from a rectangle like node.
   result = Geometry()
+  result.path = newPath()
   result.mat = mat3()
   result.windingRule = wrNonZero
 
@@ -96,6 +97,7 @@ proc rectangleFillGeometry(node: Node): Geometry =
 proc rectangleStrokeGeometry(node: Node): Geometry =
   ## Creates a fill geometry from a rectangle like node.
   result = Geometry()
+  result.path = newPath()
   result.mat = mat3()
   result.windingRule = wrNonZero
 
@@ -184,6 +186,7 @@ proc genHitRectGeometry*(node: Node) =
   ## no matter what kind of node it is.
   ## Used for simple mouse hit prediction
   var geom = Geometry()
+  geom.path = newPath()
   geom.mat = mat3()
   geom.windingRule = wrNonZero
   # Basic rectangle.
@@ -251,11 +254,7 @@ proc computeArrangement*(node: Node): Arrangement =
         else:
           fillColor = style.fills[0].color
           fillColor.a = style.fills[0].opacity
-        font.paint = pixie.Paint(
-          kind: pixie.PaintKind.pkSolid,
-          color: fillColor.rgbx
-        )
-
+        font.paint = fillColor.rgbx
         spans.add(newSpan("", font))
 
       spans[^1].text.add(node.characters[i])
@@ -271,7 +270,7 @@ proc computeArrangement*(node: Node): Arrangement =
 
   else:
     var font = getFont(node.style)
-    font.paint = pixie.Paint(kind: pixie.PaintKind.pkSolid, color: node.fills[0].color.rgbx)
+    font.paint = node.fills[0].color.rgbx
     spans = @[newSpan(node.characters, font)]
 
   var wrap =
