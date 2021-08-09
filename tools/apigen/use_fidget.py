@@ -1,50 +1,5 @@
 from fidget import *
 
-# Test function calling
-call_me_maybe("+9 360872 1222")
-print(flight_club_rule(2))
-print(input_code(1, 2, 3, 4))
-print(test_numbers(
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
-))
-
-# Test ref objects
-fod = create_fod()
-print("n.ref", fod.ref)
-fod.count = 123
-print("n.count", fod.count)
-
-# Test objects
-print(give_vec(Vector2(x = 1, y = 2)))
-v = take_vec()
-print(v.x, v.y)
-
-# Test enums
-print(repeat_enum(AS_RIGHT))
-
-# Test callbacks
-@c_proc_cb
-def python_cb():
-    print("in python_cb")
-call_me_back(python_cb)
-
-# Test seq
-s = return_seq()
-print(s)
-take_seq(s)
-print("s[7]:", s[7])
-print("len(s):", len(s))
-print("s[3]:", s[3])
-s[3] = 33
-print("s[3]:", s[3])
-take_seq(s)
-
-f = read_font2("fontPath")
-print(sizeof(f))
-print(f.no_kerning_adjustments)
-
-exit()
-
 # Test fidget
 count = 0
 @c_proc_cb

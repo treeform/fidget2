@@ -1,37 +1,6 @@
 require_relative 'fidget'
 
-# Test function calling
-call_me_maybe("+9 360872 1222")
-puts flight_club_rule(2)
-puts input_code(1, 2, 3, 4)
-puts test_numbers(
-  1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
-)
-
-# Test ref objects
-fod = create_fod()
-puts "n.ref: " + fod[:ref].to_s
-fod.count = 123
-puts "n.count: " + fod.count.to_s
-
-# Test enums
-puts repeat_enum(AS_RIGHT)
-
-# Test objects
-a = Vector2.new()
-a[:x] = 1.0
-a[:y] = 2.0
-give_vec(a)
-v = take_vec()
-puts v[:x].to_s + " " + v[:y].to_s
-
-# Test callbacks
-ruby_cb = FFI::Function.new(:void, []) do
-  puts("in ruby_cb")
-end
-call_me_back(ruby_cb)
-
-# Test callbacks
+# Test fidget
 count = 0
 click_cb = FFI::Function.new(:void, []) do
   count += 1
