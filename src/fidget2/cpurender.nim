@@ -45,10 +45,11 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
 
   var borderMinV, borderMaxV: Vec2
   for effect in node.effects:
-    if effect.kind == ekLayerBlur:
+    case effect.kind
+    of ekLayerBlur, ekBackgroundBlur:
       borderMinV = min(borderMinV, vec2(-effect.radius))
       borderMaxV = max(borderMaxV, vec2(effect.radius))
-    if effect.kind == ekDropShadow:
+    of ekDropShadow, ekInnerShadow:
       borderMinV = min(
         borderMinV,
         effect.offset - vec2(effect.radius+effect.spread)
