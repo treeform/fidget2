@@ -1,62 +1,54 @@
-const visit = (node) => {
-	var obj = {};
-    console.log(Object.getOwnPropertyDescriptors(node.__proto__));
-
-    obj["id"] = node.id
-    obj["name"] = node.name
-    obj["kind"] = node.kind
-    obj["opacity"] = node.opacity
-    obj["visible"] = node.visible
-    obj["blendMode"] = node.blendMode
-    obj["prototypeStartNodeID"] = node.prototypeStartNodeID
-    obj["prototypeDevice"] = node.prototypeDevice
-
-    obj["relativeTransform"] = node.relativeTransform
-    obj["constraints"] = node.constraints
-    obj["layoutAlign"] = node.layoutAlign
-    obj["clipsContent"] = node.clipsContent
-    obj["background"] = node.background
-    obj["fills"] = node.fills
-    obj["strokes"] = node.strokes
-    obj["strokeWeight"] = node.strokeWeight
-    obj["strokeAlign"] = node.strokeAlign
-    obj["backgroundColor"] = node.backgroundColor
-    obj["layoutGrids"] = node.layoutGrids
-    obj["layoutMode"] = node.layoutMode
-    obj["itemSpacing"] = node.itemSpacing
-    obj["effects"] = node.effects
-    obj["isMask"] = node.isMask
-    obj["cornerRadius"] = node.cornerRadius
-    obj["rectangleCornerRadii"] = node.rectangleCornerRadii
-    obj["characters"] = node.characters
-    obj["style"] = node.style
-    obj["fillGeometry"] = node.fillGeometry
-    obj["strokeGeometry"] = node.strokeGeometry
-    obj["booleanOperation"] = node.booleanOperation
-
-    obj["absoluteBoundingBox"] = {
-        "x": node.x,
-        "y": node.y,
-        "w": node.width,
-        "h": node.height
+var text = ""
+function isObject(obj) {
+  return obj === Object(obj);
+}
+function isFunction(functionToCheck) {
+  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+}
+function isString(obj) {
+  return typeof obj === 'string' || obj instanceof String
+}
+function visit(obj) {
+  if (isString(obj) || obj === null) {
+    text += JSON.stringify(obj)
+  } else if (typeof obj.length !== "undefined") {
+    text += "["
+    for(var i = 0; i < obj.length; i ++){
+      if (i != 0) text += ", "
+      visit(obj[i])
     }
-
-    obj["size"] = {
-        "x": node.width,
-        "y": node.height
+    text += "]"
+  } else if (isFunction(obj)) {
+    text += "-->"
+    visit(obj())
+  } else if(isObject(obj)) {
+    text += "{"
+    var keys = Object.keys(Object.getPrototypeOf(obj))
+    if (keys.length == 0){
+      var keys = Object.keys(obj)
     }
-
-    obj["children"] = [];
-    if (node.children != undefined){
-        for (var c of node.children) {
-            obj["children"].push(visit(c))
-        }
+    var i = 0
+    for(const k of keys){
+      if (k == "parent") continue
+      if (i != 0) text += ", "
+      text += JSON.stringify(k)
+      text += ": "
+      visit(obj[k])
+      i ++
     }
-    return obj;
-};
-
-var text = JSON.stringify(visit(figma.currentPage), null, 2)
+    text += "}"
+  } else {
+    text += JSON.stringify(obj)
+  }
+}
+visit(figma.root)
 
 figma.showUI(`
-<span style="white-space:pre-wrap;font-family:monospace">${text}</span>
+<script>
+var xhttp = new XMLHttpRequest();
+xhttp.open("POST", "http://localhost:9080/", true);
+xhttp.setRequestHeader("Content-type", "application/json");
+xhttp.send('${text}');
+</script>
+<span style="white-space:pre-wrap;font-family:monospace">posting...</span>
 `, { width: 500, height: 600 });
