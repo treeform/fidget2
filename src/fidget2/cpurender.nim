@@ -89,7 +89,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   for stop in paint.gradientStops:
     var color = stop.color
     color.a = color.a * paint.opacity
-    result.gradientStops.add(pixie.ColorStop(color: color.rgbx, position: stop.position))
+    result.gradientStops.add(pixie.ColorStop(color: color, position: stop.position))
 
 proc drawFill(node: Node, paint: Paint): Image =
   ## Creates a fill image based on the paint.
@@ -173,18 +173,18 @@ proc drawFill(node: Node, paint: Paint): Image =
       while x < node.size.x:
         var y = 0.0
         while y < node.size.y:
-          result.draw(image, nodeOffset + vec2(x, y))
+          result.draw(image, translate(nodeOffset + vec2(x, y)))
           y += image.height.float32
         x += image.width.float32
 
   of schema.PaintKind.pkGradientLinear:
-    result.fillGradientLinear(paint.toPixiePaint(node))
+    result.fillGradient(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientRadial:
-    result.fillGradientRadial(paint.toPixiePaint(node))
+    result.fillGradient(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientAngular:
-    result.fillGradientAngular(paint.toPixiePaint(node))
+    result.fillGradient(paint.toPixiePaint(node))
   of schema.PaintKind.pkGradientDiamond:
-    result.fillGradientRadial(paint.toPixiePaint(node))
+    result.fillGradient(paint.toPixiePaint(node))
 
 proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
   if paints.len == 0 or geometries.len == 0:
@@ -201,7 +201,7 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
       return
     for geometry in geometries:
       var paint = newPaint(pixie.PaintKind.pkSolid)
-      paint.color = color.rgbx
+      paint.color = color
       paint.blendMode = paint.blendMode
       layer.fillPath(
         geometry.path,
@@ -274,9 +274,8 @@ proc drawGeometry*(node: Node) =
 
 proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) =
   ## Draws the inner shadow.
-  var shadow = fillMask.copy()
-  if effect.offset != vec2(0, 0):
-    shadow.shift(effect.offset)
+  var shadow = newMask(fillMask.width, fillMask.height)
+  shadow.draw(fillMask, translate(effect.offset), blendMode = bmOverwrite)
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
@@ -351,7 +350,7 @@ proc drawText*(node: Node) =
         # draw it white.
         let s = textBox.selection()
         if runeIndex >= s.a and runeIndex < s.b:
-          paint.color = color(1, 1, 1, 1).rgbx
+          paint.color = color(1, 1, 1, 1)
 
       layer.fillPath(path, paint, mat)
 
