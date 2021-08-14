@@ -72,7 +72,7 @@ proc put*(atlas: CpuAtlas, name: string, image: Image) =
   ## Adds an image to the atlas.
   let rect = atlas.findEmptyRect(image.width, image.height)
   atlas.entries[name] = rect
-  atlas.image.draw(image, rect.xy, blendMode = bmOverwrite)
+  atlas.image.draw(image, translate(rect.xy), blendMode = bmOverwrite)
   atlas.dirty = true
 
 proc size*(atlas: CpuAtlas): int =
