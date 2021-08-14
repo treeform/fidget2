@@ -7,9 +7,10 @@ const
 
 type
   TileInfo = object
-    tilesWidth: int
-    tilesHeight: int
-    tiles: seq[int]
+    tilesWidth: int             ## Number of tiles wide.
+    tilesHeight: int            ## Number of tiles high.
+    tiles: seq[int]             ## Tile indexes to look for tiles.
+    oneColor: Color             ## If tiles = [] then its one color.
 
   Context* = ref object
     atlasShader, maskShader, activeShader: Shader
@@ -40,6 +41,23 @@ type
     colors: tuple[buffer: Buffer, data: seq[uint8]]
     uvs: tuple[buffer: Buffer, data: seq[float32]]
     indices: tuple[buffer: Buffer, data: seq[uint16]]
+
+proc vec2(x, y: SomeNumber): Vec2 =
+  ## Integer short cut for creating vectors.
+  vec2(x.float32, y.float32)
+
+proc isOneColor(image: Image): bool =
+  ## True if image is fully one color, false otherwise.
+  let c = image[0, 0]
+  for y in 0 ..< image.height:
+    for x in 0 ..< image.width:
+      if image[x, y] != c:
+        return false
+  return true
+
+proc isTransparent(image: Image): bool =
+  ## True if image is fully transparent, false otherwise.
+  image.isOneColor() and image[0, 0].a == 0
 
 proc readAtlasImage(ctx: Context): Image =
   # read old atlas content
@@ -284,19 +302,25 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
       ctx.takenTiles[index] = false
 
   var tileInfo = TileInfo()
-  tileInfo.tilesWidth = ceil(image.width / tileSize).int
-  tileInfo.tilesHeight = ceil(image.height / tileSize).int
-  for x in 0 ..< tileInfo.tilesWidth:
-    for y in 0 ..< tileInfo.tilesHeight:
-      let index = ctx.getFreeTile()
-      tileInfo.tiles.add(index)
-      let imageTile = image.superImage(x * tileSize, y * tileSize, tileSize, tileSize)
-      updateSubImage(
-        ctx.atlasTexture,
-        (index mod ctx.tileRun) * tileSize,
-        (index div ctx.tileRun) * tileSize,
-        imageTile
-      )
+
+  if image.isTransparent():
+    tileInfo.oneColor = color(0, 0, 0, 0)
+  # elif image.isOneColor():
+  #   echo "one isOneColor: ", imagePath
+  else:
+    tileInfo.tilesWidth = ceil(image.width / tileSize).int
+    tileInfo.tilesHeight = ceil(image.height / tileSize).int
+    for x in 0 ..< tileInfo.tilesWidth:
+      for y in 0 ..< tileInfo.tilesHeight:
+        let index = ctx.getFreeTile()
+        tileInfo.tiles.add(index)
+        let imageTile = image.superImage(x * tileSize, y * tileSize, tileSize, tileSize)
+        updateSubImage(
+          ctx.atlasTexture,
+          (index mod ctx.tileRun) * tileSize,
+          (index div ctx.tileRun) * tileSize,
+          imageTile
+        )
 
   ctx.entries[imagePath] = tileInfo
 
@@ -451,30 +475,29 @@ proc drawImage*(
   scale = 1.0
 ) =
   ## Draws image the UI way - pos at top-left.
-
-  proc vec2(x, y: int): Vec2 = vec2(x.float32, y.float32)
-
   let tileInfo = ctx.entries[imagePath]
-
-  var i = 0
-  for x in 0 ..< tileInfo.tilesWidth:
-    for y in 0 ..< tileInfo.tilesHeight:
-      let
-        index = tileInfo.tiles[i]
-        posAt = pos + vec2(x * tileSize, y * tileSize)
-        uvAt = vec2(
-          (index mod ctx.tileRun) * tileSize,
-          (index div ctx.tileRun) * tileSize
+  if tileInfo.tiles.len == 0 and tileInfo.oneColor == color(0, 0, 0, 0):
+    return # Don't draw anything if its transparent.
+  else:
+    var i = 0
+    for x in 0 ..< tileInfo.tilesWidth:
+      for y in 0 ..< tileInfo.tilesHeight:
+        let
+          index = tileInfo.tiles[i]
+          posAt = pos + vec2(x * tileSize, y * tileSize)
+          uvAt = vec2(
+            (index mod ctx.tileRun) * tileSize,
+            (index div ctx.tileRun) * tileSize
+          )
+        ctx.drawUvRect(
+          posAt,
+          posAt + vec2(tileSize, tileSize),
+          uvAt,
+          uvAt + vec2(tileSize, tileSize),
+          color
         )
-      ctx.drawUvRect(
-        posAt,
-        posAt + vec2(tileSize, tileSize),
-        uvAt,
-        uvAt + vec2(tileSize, tileSize),
-        color
-      )
-      inc i
-  doAssert i == tileInfo.tiles.len
+        inc i
+    assert i == tileInfo.tiles.len
 
 proc clearMask*(ctx: Context) =
   ## Sets mask off (actually fills the mask with white).
