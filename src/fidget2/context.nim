@@ -3,8 +3,14 @@ import buffers, chroma, pixie, hashes, opengl, os, shaders, strformat,
 
 const
   quadLimit = 10_921
+  tileSize = 64
 
 type
+  TileInfo = object
+    tilesWidth: int
+    tilesHeight: int
+    tiles: seq[int]
+
   Context* = ref object
     atlasShader, maskShader, activeShader: Shader
     atlasTexture: Texture
@@ -17,14 +23,17 @@ type
     maxQuads: int               ## Max quads to draw before issuing an OpenGL call
     mat*: Mat4                  ## Current matrix
     mats: seq[Mat4]             ## Matrix stack
-    entries*: Table[string, Rect] ## Mapping of image name to atlas UV position
-    heights: seq[uint16]        ## Height map of the free space in the atlas
+    entries*: Table[string, TileInfo] ## Mapping of image name to atlas UV position
+    maxTiles: int
+    tileRun: int
+    takenTiles: seq[bool]        ## Height map of the free space in the atlas
     proj*: Mat4
     frameSize: Vec2             ## Dimensions of the window frame
     vertexArrayId, maskFramebufferId: GLuint
     frameBegun, maskBegun: bool
     pixelate*: bool             ## Makes texture look pixelated, like a pixel game.
     pixelScale*: float32        ## Multiple scaling factor.
+    compacting*: bool           ## Are we currently compacting.
 
     # Buffer data for OpenGL
     positions: tuple[buffer: Buffer, data: seq[float32]]
@@ -32,7 +41,29 @@ type
     uvs: tuple[buffer: Buffer, data: seq[float32]]
     indices: tuple[buffer: Buffer, data: seq[uint16]]
 
+proc readAtlasImage(ctx: Context): Image =
+  # read old atlas content
+  result = newImage(
+    ctx.atlasTexture.width.GLsizei,
+    ctx.atlasTexture.height.GLsizei,
+  )
+  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
+  glGetTexImage(
+    GL_TEXTURE_2D,
+    0,
+    GL_RGBA,
+    GL_UNSIGNED_BYTE,
+    result.data[0].addr
+  )
+
+proc writeAtlas*(ctx: Context, filePath: string) =
+  ## Writes the current atlas to a file, used for debugging.
+  var atlas = ctx.readAtlasImage()
+  atlas.writeFile(filePath)
+
 proc draw(ctx: Context)
+# proc grow(ctx: Context)
+# proc compact(ctx: Context)
 
 proc upload(ctx: Context) =
   ## When buffers change, uploads them to GPU.
@@ -90,8 +121,7 @@ proc addMaskTexture(ctx: Context, frameSize = vec2(1, 1)) =
   ctx.maskTextures.add(maskTexture)
 
 proc newContext*(
-  atlasSize = 1024,
-  atlasMargin = 4,
+  atlasSize = 512,
   maxQuads = 1024,
   pixelate = false,
   pixelScale = 1.0
@@ -102,14 +132,15 @@ proc newContext*(
 
   result = Context()
   result.atlasSize = atlasSize
-  result.atlasMargin = atlasMargin
   result.maxQuads = maxQuads
   result.mat = mat4()
   result.mats = newSeq[Mat4]()
   result.pixelate = pixelate
   result.pixelScale = pixelScale
 
-  result.heights = newSeq[uint16](atlasSize)
+  result.tileRun = atlasSize div tileSize
+  result.maxTiles = result.tileRun * result.tileRun
+  result.takenTiles = newSeq[bool](result.maxTiles)
   result.atlasTexture = result.createAtlasTexture(atlasSize)
 
   result.addMaskTexture()
@@ -199,121 +230,71 @@ func `[]`(t: var Table[Hash, Rect], key: string): Rect =
 
 proc clearAtlas*(ctx: Context) =
   ctx.entries.clear()
-  for i in 0 ..< ctx.atlasSize:
-    ctx.heights[i] = 0
+  for i in 0 ..< ctx.maxTiles:
+    ctx.takenTiles[i] = false
 
 proc grow(ctx: Context) =
+  ## Grows the atlas size by 2 (growing area by 4).
+
   ctx.draw()
 
   # read old atlas content
-  var atlasOld = newImage(
-    ctx.atlasTexture.width.GLsizei,
-    ctx.atlasTexture.height.GLsizei,
-  )
-  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
-  glGetTexImage(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    atlasOld.data[0].addr
-  )
+  let
+    oldAtlasImage = ctx.readAtlasImage()
+    oldTileRun = ctx.tileRun
 
   ctx.atlasSize = ctx.atlasSize * 2
-  echo "grow atlasSize ", ctx.atlasSize
-  ctx.heights.setLen(ctx.atlasSize)
+  ctx.tileRun = ctx.atlasSize div tileSize
+  ctx.maxTiles = ctx.tileRun * ctx.tileRun
+  ctx.takenTiles.setLen(ctx.maxTiles)
   ctx.atlasTexture = ctx.createAtlasTexture(ctx.atlasSize)
 
-  updateSubImage(
-    ctx.atlasTexture,
-    0,
-    0,
-    atlasOld
-  )
+  for y in 0 ..< oldTileRun:
+    for x in 0 ..< oldTileRun:
+      let
+        imageTile = oldAtlasImage.superImage(
+          x * tileSize,
+          y * tileSize,
+          tileSize,
+          tileSize
+        )
+        index = x + y * oldTileRun
+      updateSubImage(
+        ctx.atlasTexture,
+        (index mod ctx.tileRun) * tileSize,
+        (index div ctx.tileRun) * tileSize,
+        imageTile
+      )
 
-proc findEmptyRect(ctx: Context, width, height: int): Rect =
-  var slabWidth = width + ctx.atlasMargin
-  var slabHeight = height + ctx.atlasMargin
-
-  var lowest = ctx.atlasSize
-  var at = 0
-  for i in 0..ctx.atlasSize - 1:
-    var v = int(ctx.heights[i])
-    if v < lowest:
-      # found low point, is it consecutive?
-      var fit = true
-      for j in 0 .. slabWidth:
-        if i + j >= ctx.atlasSize:
-          fit = false
-          break
-        if int(ctx.heights[i + j]) > v:
-          fit = false
-          break
-      if fit:
-        # found!
-        lowest = v
-        at = i
-
-  if lowest + slabHeight > ctx.atlasSize:
-    #raise newException(Exception, "Context Atlas is full")
-    ctx.grow()
-    return ctx.findEmptyRect(width, height)
-
-  for j in at..at + slabWidth - 1:
-    ctx.heights[j] = uint16(lowest + slabHeight)
-
-  var rect = rect(
-    float32(at),
-    float32(lowest),
-    float32(width),
-    float32(height),
-  )
-
-  return rect
+proc getFreeTile(ctx: Context): int =
+  for index in 0 ..< ctx.maxTiles:
+    if ctx.takenTiles[index] == false:
+      ctx.takenTiles[index] = true
+      return index
+  ctx.grow()
 
 proc putImage*(ctx: Context, imagePath: string, image: Image) =
   # Reminder: This does not set mipmaps (used for text, should it?)
   if imagePath in ctx.entries:
-    var rect = ctx.entries[imagePath]
-    if rect.wh == image.wh:
+    for index in ctx.entries[imagePath].tiles:
+      ctx.takenTiles[index] = false
+
+  var tileInfo = TileInfo()
+  tileInfo.tilesWidth = ceil(image.width / tileSize).int
+  tileInfo.tilesHeight = ceil(image.height / tileSize).int
+  for x in 0 ..< tileInfo.tilesWidth:
+    for y in 0 ..< tileInfo.tilesHeight:
+      let index = ctx.getFreeTile()
+      tileInfo.tiles.add(index)
+      let imageTile = image.superImage(x * tileSize, y * tileSize, tileSize, tileSize)
       updateSubImage(
         ctx.atlasTexture,
-        int(rect.x),
-        int(rect.y),
-        image
+        (index mod ctx.tileRun) * tileSize,
+        (index div ctx.tileRun) * tileSize,
+        imageTile
       )
-      #echo "update ", imagePath
-      return
-    else:
-      #echo rect.wh, image.wh
-      #echo "size of spot changed:", imagePath
-      ctx.entries.del(imagePath)
 
-  let rect = ctx.findEmptyRect(image.width, image.height)
-  ctx.entries[imagePath] = rect
-  updateSubImage(
-    ctx.atlasTexture,
-    int(rect.x),
-    int(rect.y),
-    image
-  )
-  #echo "new: ", imagePath, rect
-
-
-proc updateImage*(ctx: Context, path: string, image: Image) =
-  ## Updates an image that was put there with putImage.
-  ## Useful for things like video.
-  ## * Must be the same size.
-  ## * This does not set mipmaps.
-  let rect = ctx.entries[path]
-  assert rect.w == image.width.float
-  assert rect.h == image.height.float
-  updateSubImage(
-    ctx.atlasTexture,
-    int(rect.x),
-    int(rect.y),
-    image
-  )
+  ctx.entries[imagePath] = tileInfo
 
 proc draw(ctx: Context) =
   ## Flips - draws current buffer and starts a new one.
@@ -456,7 +437,7 @@ proc drawUvRect(ctx: Context, rect, uvRect: Rect, color: Color) =
   )
 
 proc getOrLoadImageRect(ctx: Context, imagePath: string): Rect =
-  return ctx.entries[imagePath]
+  return rect(0, 0, 0, 0) #ctx.entries[imagePath]
 
 proc drawImage*(
   ctx: Context,
@@ -466,57 +447,30 @@ proc drawImage*(
   scale = 1.0
 ) =
   ## Draws image the UI way - pos at top-left.
-  let
-    rect = ctx.getOrLoadImageRect(imagePath)
-    wh = rect.wh * scale
-  ctx.drawUvRect(pos, pos + wh, rect.xy, rect.xy + rect.wh, color)
 
-proc drawImage*(
-  ctx: Context,
-  imagePath: string,
-  pos: Vec2 = vec2(0, 0),
-  color = color(1, 1, 1, 1),
-  size: Vec2
-) =
-  ## Draws image the UI way - pos at top-left.
-  let rect = ctx.getOrLoadImageRect(imagePath)
-  ctx.drawUvRect(pos, pos + size, rect.xy, rect.xy + rect.wh, color)
+  proc vec2(x, y: int): Vec2 = vec2(x.float32, y.float32)
 
-proc drawSprite*(
-  ctx: Context,
-  imagePath: string,
-  pos: Vec2 = vec2(0, 0),
-  color = color(1, 1, 1, 1),
-  scale = 1.0
-) =
-  ## Draws image the game way - pos at center.
-  let
-    rect = ctx.getOrLoadImageRect(imagePath)
-    wh = rect.wh * scale
-  ctx.drawUvRect(
-    pos - wh / 2,
-    pos + wh / 2,
-    rect.xy,
-    rect.xy + rect.wh,
-    color
-  )
+  let tileInfo = ctx.entries[imagePath]
 
-proc drawSprite*(
-  ctx: Context,
-  imagePath: string,
-  pos: Vec2 = vec2(0, 0),
-  color = color(1, 1, 1, 1),
-  size: Vec2
-) =
-  ## Draws image the game way - pos at center.
-  let rect = ctx.getOrLoadImageRect(imagePath)
-  ctx.drawUvRect(
-    pos - size / 2,
-    pos + size / 2,
-    rect.xy,
-    rect.xy + rect.wh,
-    color
-  )
+  var i = 0
+  for x in 0 ..< tileInfo.tilesWidth:
+    for y in 0 ..< tileInfo.tilesHeight:
+      let
+        index = tileInfo.tiles[i]
+        posAt = pos + vec2(x * tileSize, y * tileSize)
+        uvAt = vec2(
+          (index mod ctx.tileRun) * tileSize,
+          (index div ctx.tileRun) * tileSize
+        )
+      ctx.drawUvRect(
+        posAt,
+        posAt + vec2(tileSize, tileSize),
+        uvAt,
+        uvAt + vec2(tileSize, tileSize),
+        color
+      )
+      inc i
+  doAssert i == tileInfo.tiles.len
 
 proc clearMask*(ctx: Context) =
   ## Sets mask off (actually fills the mask with white).
@@ -646,21 +600,3 @@ proc toScreen*(ctx: Context, windowFrame: Vec2, v: Vec2): Vec2 =
   ## Takes a point from current transform and translates it to screen.
   result = (ctx.mat * vec3(v.x, v.y, 1)).xy
   result.y = -result.y + windowFrame.y
-
-proc writeAtlas*(ctx: Context, filePath: string) =
-  ## Writes the current atlas to a file, used for debugging.
-
-  var atlas = newImage(
-    ctx.atlasTexture.width.GLsizei,
-    ctx.atlasTexture.height.GLsizei,
-  )
-  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
-  glGetTexImage(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    atlas.data[0].addr
-  )
-
-  atlas.writeFile(filePath)

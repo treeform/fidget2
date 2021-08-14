@@ -581,6 +581,10 @@ proc display(withEvents = true) =
     thisSelector = ""
     thisCb = nil
 
+    if buttonDown[F4]:
+      echo "writing atlas"
+      ctx.writeAtlas("atlas.png")
+
     clearInputs()
 
   drawToScreen(thisFrame)
