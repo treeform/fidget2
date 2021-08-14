@@ -230,8 +230,8 @@ func `[]`(t: var Table[Hash, Rect], key: string): Rect =
 
 proc clearAtlas*(ctx: Context) =
   ctx.entries.clear()
-  for i in 0 ..< ctx.maxTiles:
-    ctx.takenTiles[i] = false
+  for index in 0 ..< ctx.maxTiles:
+    ctx.takenTiles[index] = false
 
 proc grow(ctx: Context) =
   ## Grows the atlas size by 2 (growing area by 4).
@@ -244,6 +244,9 @@ proc grow(ctx: Context) =
     oldTileRun = ctx.tileRun
 
   ctx.atlasSize = ctx.atlasSize * 2
+
+  echo "grow atlas: ", ctx.atlasSize
+
   ctx.tileRun = ctx.atlasSize div tileSize
   ctx.maxTiles = ctx.tileRun * ctx.tileRun
   ctx.takenTiles.setLen(ctx.maxTiles)
@@ -272,6 +275,7 @@ proc getFreeTile(ctx: Context): int =
       ctx.takenTiles[index] = true
       return index
   ctx.grow()
+  return ctx.getFreeTile()
 
 proc putImage*(ctx: Context, imagePath: string, image: Image) =
   # Reminder: This does not set mipmaps (used for text, should it?)
