@@ -78,7 +78,7 @@ proc drawWithAtlas(node: Node) =
     ctx.drawImage(
       node.id,
       pos = node.pixelBox.xy,
-      color = color(node.opacity, node.opacity, node.opacity, node.opacity)
+      tintColor = color(1, 1, 1, node.opacity)
     )
 
   if not node.collapse:

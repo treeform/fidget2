@@ -7,8 +7,8 @@ const
 
 type
   TileInfo = object
-    tilesWidth: int             ## Number of tiles wide.
-    tilesHeight: int            ## Number of tiles high.
+    width: int                  ## Width of the image in pixels.
+    height: int                 ## Height of the image in pixels.
     tiles: seq[int]             ## Tile indexes to look for tiles.
     oneColor: Color             ## If tiles = [] then its one color.
 
@@ -41,6 +41,15 @@ type
     colors: tuple[buffer: Buffer, data: seq[uint8]]
     uvs: tuple[buffer: Buffer, data: seq[float32]]
     indices: tuple[buffer: Buffer, data: seq[uint16]]
+
+
+proc tilesWidth(tileInfo: TileInfo ): int =
+  ## Number of tiles wide.
+  ceil(tileInfo.width / tileSize).int
+
+proc tilesHeight(tileInfo: TileInfo ): int =
+  ## Number of tiles high.
+  ceil(tileInfo.height / tileSize).int
 
 proc vec2(x, y: SomeNumber): Vec2 =
   ## Integer short cut for creating vectors.
@@ -80,8 +89,7 @@ proc writeAtlas*(ctx: Context, filePath: string) =
   atlas.writeFile(filePath)
 
 proc draw(ctx: Context)
-# proc grow(ctx: Context)
-# proc compact(ctx: Context)
+proc putImage*(ctx: Context, imagePath: string, image: Image)
 
 proc upload(ctx: Context) =
   ## When buffers change, uploads them to GPU.
@@ -137,6 +145,24 @@ proc addMaskTexture(ctx: Context, frameSize = vec2(1, 1)) =
     maskTexture.magFilter = magLinear
   bindTextureData(maskTexture, nil)
   ctx.maskTextures.add(maskTexture)
+
+proc addSolidTile(ctx: Context) =
+  # Insert solid color tile. (don't use putImage as its a solid color)
+  var solidTile = newImage(tileSize, tileSize)
+  solidTile.fill(color(1, 1, 1, 1))
+  updateSubImage(
+    ctx.atlasTexture,
+    0,
+    0,
+    solidTile
+  )
+  ctx.takenTiles[0] = true
+
+proc clearAtlas*(ctx: Context) =
+  ctx.entries.clear()
+  for index in 0 ..< ctx.maxTiles:
+    ctx.takenTiles[index] = false
+  ctx.addSolidTile()
 
 proc newContext*(
   atlasSize = 512,
@@ -240,16 +266,7 @@ proc newContext*(
   glEnable(GL_BLEND)
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
 
-func `[]=`(t: var Table[Hash, Rect], key: string, rect: Rect) =
-  t[hash(key)] = rect
-
-func `[]`(t: var Table[Hash, Rect], key: string): Rect =
-  t[hash(key)]
-
-proc clearAtlas*(ctx: Context) =
-  ctx.entries.clear()
-  for index in 0 ..< ctx.maxTiles:
-    ctx.takenTiles[index] = false
+  result.addSolidTile()
 
 proc grow(ctx: Context) =
   ## Grows the atlas size by 2 (growing area by 4).
@@ -269,6 +286,8 @@ proc grow(ctx: Context) =
   ctx.maxTiles = ctx.tileRun * ctx.tileRun
   ctx.takenTiles.setLen(ctx.maxTiles)
   ctx.atlasTexture = ctx.createAtlasTexture(ctx.atlasSize)
+
+  ctx.addSolidTile()
 
   for y in 0 ..< oldTileRun:
     for x in 0 ..< oldTileRun:
@@ -302,14 +321,14 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
       ctx.takenTiles[index] = false
 
   var tileInfo = TileInfo()
+  tileInfo.width = image.width
+  tileInfo.height = image.height
 
   if image.isTransparent():
     tileInfo.oneColor = color(0, 0, 0, 0)
-  # elif image.isOneColor():
-  #   echo "one isOneColor: ", imagePath
+  elif image.isOneColor():
+    tileInfo.oneColor = image[0, 0].color
   else:
-    tileInfo.tilesWidth = ceil(image.width / tileSize).int
-    tileInfo.tilesHeight = ceil(image.height / tileSize).int
     for x in 0 ..< tileInfo.tilesWidth:
       for y in 0 ..< tileInfo.tilesHeight:
         let index = ctx.getFreeTile()
@@ -455,29 +474,34 @@ proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
 
   inc ctx.quadCount
 
-proc drawUvRect(ctx: Context, rect, uvRect: Rect, color: Color) =
-  ctx.drawUvRect(
-    rect.xy,
-    rect.xy + rect.wh,
-    uvRect.xy,
-    uvRect.xy + uvRect.wh,
-    color
-  )
-
-proc getOrLoadImageRect(ctx: Context, imagePath: string): Rect =
-  return rect(0, 0, 0, 0) #ctx.entries[imagePath]
-
 proc drawImage*(
   ctx: Context,
   imagePath: string,
   pos: Vec2 = vec2(0, 0),
-  color = color(1, 1, 1, 1),
+  tintColor = color(1, 1, 1, 1),
   scale = 1.0
 ) =
   ## Draws image the UI way - pos at top-left.
   let tileInfo = ctx.entries[imagePath]
-  if tileInfo.tiles.len == 0 and tileInfo.oneColor == color(0, 0, 0, 0):
-    return # Don't draw anything if its transparent.
+  if tileInfo.tiles.len == 0:
+    if tileInfo.oneColor == color(0, 0, 0, 0):
+      return # Don't draw anything if its transparent.
+    else:
+      # Draw a single 1 color rect
+      var finalColor = color(
+        tileInfo.oneColor.r * tintColor.r,
+        tileInfo.oneColor.g * tintColor.g,
+        tileInfo.oneColor.b * tintColor.b,
+        tileInfo.oneColor.a * tintColor.a,
+      )
+      #print finalColor, tileInfo.oneColor, tintColor
+      ctx.drawUvRect(
+        pos,
+        pos + vec2(tileInfo.width, tileInfo.height),
+        vec2(2, 2),
+        vec2(2, 2),
+        finalColor
+      )
   else:
     var i = 0
     for x in 0 ..< tileInfo.tilesWidth:
@@ -494,7 +518,7 @@ proc drawImage*(
           posAt + vec2(tileSize, tileSize),
           uvAt,
           uvAt + vec2(tileSize, tileSize),
-          color
+          tintColor
         )
         inc i
     assert i == tileInfo.tiles.len
