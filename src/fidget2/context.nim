@@ -3,7 +3,7 @@ import buffers, chroma, pixie, hashes, opengl, os, shaders, strformat,
 
 const
   quadLimit = 10_921
-  tileSize = 64
+  tileSize = 32
 
 type
   TileInfo = object
@@ -41,7 +41,6 @@ type
     colors: tuple[buffer: Buffer, data: seq[uint8]]
     uvs: tuple[buffer: Buffer, data: seq[float32]]
     indices: tuple[buffer: Buffer, data: seq[uint16]]
-
 
 proc tilesWidth(tileInfo: TileInfo ): int =
   ## Number of tiles wide.
