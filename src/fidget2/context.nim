@@ -160,7 +160,8 @@ proc addSolidTile(ctx: Context) =
 proc clearAtlas*(ctx: Context) =
   ctx.entries.clear()
   for index in 0 ..< ctx.maxTiles:
-    ctx.takenTiles[index] = false
+    if index != -1:
+      ctx.takenTiles[index] = false
   ctx.addSolidTile()
 
 proc newContext*(
@@ -317,7 +318,8 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
   # Reminder: This does not set mipmaps (used for text, should it?)
   if imagePath in ctx.entries:
     for index in ctx.entries[imagePath].tiles:
-      ctx.takenTiles[index] = false
+      if index != -1:
+        ctx.takenTiles[index] = false
 
   var tileInfo = TileInfo()
   tileInfo.width = image.width
@@ -328,11 +330,24 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
   elif image.isOneColor():
     tileInfo.oneColor = image[0, 0].color
   else:
+    var firstSolid = true
     for x in 0 ..< tileInfo.tilesWidth:
       for y in 0 ..< tileInfo.tilesHeight:
+
+        let
+          imageTile = image.superImage(x * tileSize, y * tileSize, tileSize, tileSize)
+
+        if imageTile.isOneColor():
+          let tileColor = imageTile[0, 0].color
+          if firstSolid:
+            firstSolid = false
+            tileInfo.oneColor = tileColor
+          if tileColor == tileInfo.oneColor:
+            tileInfo.tiles.add(-1)
+            continue
+
         let index = ctx.getFreeTile()
         tileInfo.tiles.add(index)
-        let imageTile = image.superImage(x * tileSize, y * tileSize, tileSize, tileSize)
         updateSubImage(
           ctx.atlasTexture,
           (index mod ctx.tileRun) * tileSize,
@@ -473,6 +488,12 @@ proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
 
   inc ctx.quadCount
 
+proc `*`(a, b: Color): Color =
+  result.r = a.r * b.r
+  result.g = a.g * b.g
+  result.b = a.b * b.b
+  result.a = a.a * b.a
+
 proc drawImage*(
   ctx: Context,
   imagePath: string,
@@ -487,19 +508,12 @@ proc drawImage*(
       return # Don't draw anything if its transparent.
     else:
       # Draw a single 1 color rect
-      var finalColor = color(
-        tileInfo.oneColor.r * tintColor.r,
-        tileInfo.oneColor.g * tintColor.g,
-        tileInfo.oneColor.b * tintColor.b,
-        tileInfo.oneColor.a * tintColor.a,
-      )
-      #print finalColor, tileInfo.oneColor, tintColor
       ctx.drawUvRect(
         pos,
         pos + vec2(tileInfo.width, tileInfo.height),
         vec2(2, 2),
         vec2(2, 2),
-        finalColor
+        tileInfo.oneColor * tintColor
       )
   else:
     var i = 0
@@ -508,17 +522,31 @@ proc drawImage*(
         let
           index = tileInfo.tiles[i]
           posAt = pos + vec2(x * tileSize, y * tileSize)
-          uvAt = vec2(
-            (index mod ctx.tileRun) * tileSize,
-            (index div ctx.tileRun) * tileSize
+        if index == -1:
+          if tileInfo.oneColor == color(0, 0, 0, 0):
+            discard # Don't draw transparent tiles.
+          else:
+            # Draw solid color tile
+            ctx.drawUvRect(
+              posAt,
+              posAt + vec2(tileSize, tileSize),
+              vec2(2, 2),
+              vec2(2, 2),
+              tileInfo.oneColor * tintColor
+            )
+        else:
+          let
+            uvAt = vec2(
+              (index mod ctx.tileRun) * tileSize,
+              (index div ctx.tileRun) * tileSize
+            )
+          ctx.drawUvRect(
+            posAt,
+            posAt + vec2(tileSize, tileSize),
+            uvAt,
+            uvAt + vec2(tileSize, tileSize),
+            tintColor
           )
-        ctx.drawUvRect(
-          posAt,
-          posAt + vec2(tileSize, tileSize),
-          uvAt,
-          uvAt + vec2(tileSize, tileSize),
-          tintColor
-        )
         inc i
     assert i == tileInfo.tiles.len
 
