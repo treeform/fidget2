@@ -111,10 +111,11 @@ proc drawToScreen*(screenNode: Node) =
 
   drawToAtlas(screenNode, 0)
 
+  ctx.beginFrame(viewportSize)
+
   glClearColor(0, 0, 0, 0)
   glClear(GL_COLOR_BUFFER_BIT)
 
-  ctx.beginFrame(viewportSize)
   drawWithAtlas(screenNode)
   ctx.endFrame()
 

@@ -592,7 +592,7 @@ proc display(withEvents = true) =
 
   when not defined(cpu):
     if vSync:
-      swapBuffers(window)
+      window.swapBuffers()
       perfMark "swapBuffers"
     else:
       glFlush()
