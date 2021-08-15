@@ -5,6 +5,13 @@ var
   ctx*: context.Context
   viewportRect: Rect
 
+proc quasiEqual(a, b: Rect): bool =
+  ## Quasi equal. Equal everything except integer translation.
+  ## Used for redraw only if node changed positions in whole pixels.
+  a.w == b.w and a.h == b.h and
+    a.x.fractional == b.x.fractional and
+    a.y.fractional == b.y.fractional
+
 proc drawToAtlas(node: Node, level: int) =
   ## Draw the nodes into the atlas (and setup pixel box).
   if not node.visible or node.opacity == 0:
@@ -13,11 +20,9 @@ proc drawToAtlas(node: Node, level: int) =
   let prevMat = mat
   mat = mat * node.transform()
 
-  # TODO: Don't redraw if node only changed positions in whole pixels.
   var pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
 
-  if node.dirty or pixelBox != node.pixelBox:
-    #print "redraw: ", node.name, node.size
+  if node.dirty or not quasiEqual(pixelBox, node.pixelBox):
     node.dirty = false
     # compute bounds
     node.pixelBox = pixelBox

@@ -331,9 +331,8 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) =
     tileInfo.oneColor = image[0, 0].color
   else:
     var firstSolid = true
-    for x in 0 ..< tileInfo.tilesWidth:
-      for y in 0 ..< tileInfo.tilesHeight:
-
+    for y in 0 ..< tileInfo.tilesHeight:
+      for x in 0 ..< tileInfo.tilesWidth:
         let
           imageTile = image.superImage(x * tileSize, y * tileSize, tileSize, tileSize)
 
@@ -517,8 +516,8 @@ proc drawImage*(
       )
   else:
     var i = 0
-    for x in 0 ..< tileInfo.tilesWidth:
-      for y in 0 ..< tileInfo.tilesHeight:
+    for y in 0 ..< tileInfo.tilesHeight:
+      for x in 0 ..< tileInfo.tilesWidth:
         let
           index = tileInfo.tiles[i]
           posAt = pos + vec2(x * tileSize, y * tileSize)

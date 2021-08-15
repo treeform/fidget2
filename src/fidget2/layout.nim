@@ -50,10 +50,6 @@ proc computeLayout*(parent, node: Node) =
       else:
         at += node.itemSpacing
 
-      if n.position.y != at:
-        n.position.y = at
-        n.markTreeDirty(true)
-
       at += n.size.y
     at += node.paddingBottom
     node.size.y = at
@@ -79,10 +75,6 @@ proc computeLayout*(parent, node: Node) =
         first = false
       else:
         at += node.itemSpacing
-
-      if n.position.x != at:
-        n.position.x = at
-        n.markTreeDirty(true)
 
       at += n.size.x
     at += node.paddingRight
