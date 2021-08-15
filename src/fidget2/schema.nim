@@ -513,12 +513,14 @@ proc enumHook(s: string, v: var OverflowDirection) =
     else: raise newException(FidgetError, "Invalid overflow direction:" & s)
 
 proc parseHook(s: string, i: var int, v: var Vec2) =
-    type Vec2Obj = object
-      x: float32
-      y: float32
-    var vec2Obj: Vec2Obj
-    parseHook(s, i, vec2Obj)
-    v = vec2(vec2Obj.x, vec2Obj.y)
+  # Handle vectors some times having {x: null, y: null}.
+  type Vec2Obj = object
+    x: ref float32
+    y: ref float32
+  var vec2Obj: Vec2Obj
+  parseHook(s, i, vec2Obj)
+  if vec2Obj.x != nil and vec2Obj.y != nil:
+    v = vec2(vec2Obj.x[], vec2Obj.y[])
 
 proc parseHook(s: string, i: var int, v: var Path) =
   # Note: we parse more paths here than we use, keep this in mind
