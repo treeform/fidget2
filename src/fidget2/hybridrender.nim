@@ -1,5 +1,7 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
-  perf, context, common, cpurender, layout
+  perf, context, common, cpurender, layout, os
+
+export cpurender.underMouse
 
 var
   ctx*: context.Context
@@ -11,6 +13,28 @@ proc quasiEqual(a, b: Rect): bool =
   a.w == b.w and a.h == b.h and
     a.x.fractional == b.x.fractional and
     a.y.fractional == b.y.fractional
+
+proc willDrawSomething(node: Node): bool =
+  ## Checks if node will draw something, or its fully transparent with no fills
+  ## or strokes.
+  if not node.visible or node.opacity == 0:
+    return false
+
+  if node.pixelBox.w.int == 0 or node.pixelBox.h == 0:
+    return false
+
+  if node.collapse:
+    return true
+
+  for fill in node.fills:
+    if fill.kind != schema.PaintKind.pkSolid or fill.color.a != 0:
+      return true
+
+  for stroke in node.strokes:
+    if stroke.kind != schema.PaintKind.pkSolid or stroke.color.a != 0:
+      return true
+
+  return false
 
 proc drawToAtlas(node: Node, level: int) =
   ## Draw the nodes into the atlas (and setup pixel box).
@@ -56,7 +80,7 @@ proc drawToAtlas(node: Node, level: int) =
     if node.effects.len != 0:
       node.collapse = true
 
-    if node.pixelBox.w.int > 0 and node.pixelBox.h.int > 0:
+    if node.willDrawSomething():
       layer = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
       let prevBoundsMat = mat
       mat = translate(-node.pixelBox.xy) * mat
@@ -64,6 +88,8 @@ proc drawToAtlas(node: Node, level: int) =
       node.drawNodeInternal(withChildren=node.collapse)
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
+    # else:
+    #   echo "totally empty: ", node.name
 
   if not node.collapse:
     for child in node.children:
@@ -126,7 +152,7 @@ proc drawToScreen*(screenNode: Node) =
 
   #ctx.writeAtlas("atlas.png")
   #perfDump()
-import os
+
 proc setupWindow*(
   frameNode: Node,
   offscreen = false,
