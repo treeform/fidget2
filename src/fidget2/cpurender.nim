@@ -1,6 +1,6 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils,
-    options, layout, unicode
+    options, layout, unicode, sequtils, iterutils
 
 type Image = pixie.Image
 type Paint = schema.Paint
@@ -70,6 +70,39 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
         mat * node.transform(),
         withChildren
       )
+
+proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] =
+  ## Computes a list of nodes under the mouse.
+
+  proc visit(node: Node, mat: Mat3, mousePos: Vec2, s: var seq[Node]): bool =
+    ## Visits each node and sees if its geometry overlaps the mouse.
+
+    let mat = mat * node.transform()
+    var overlaps = false
+
+    # Visit all children first, if any of them overlaps this node overlaps too.
+    for child in node.children.reverse:
+      if child.visit(
+        mat,
+        mousePos,
+        s
+      ) and not overlaps:
+        overlaps = true
+
+    if not overlaps:
+      # Check all geometry for overlaps.
+      block all:
+        for geoms in [node.fillGeometry, node.strokeGeometry]:
+          for geom in geoms:
+            if geom.path.fillOverlaps(mousePos, mat, geom.windingRule):
+              overlaps = true
+              break all
+
+    if overlaps:
+      s.add(node)
+      return true
+
+  discard screenNode.visit(screenNode.transform().inverse(), mousePos, result)
 
 proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   let paintKind = case paint.kind:

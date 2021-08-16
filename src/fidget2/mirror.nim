@@ -540,6 +540,10 @@ proc display(withEvents = true) =
 
     #let hoverIndex = getIndexAt(thisFrame, mousePos)
     #echo "hover index", hoverIndex
+    if buttonPress[MOUSE_LEFT]:
+      echo "---"
+      for n in underMouse(thisFrame, mousePos):
+        echo n.name
 
   if windowResizable:
     # Stretch the current frame to fit the window.
