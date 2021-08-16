@@ -1,6 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, strutils, sequtils, staticglfw, strformat, tables,
-    textboxes, unicode, vmath, times, perf, common, algorithm, flatty/hashy2
+    textboxes, unicode, vmath, times, perf, common, algorithm, flatty/hashy2,
+    random
 
 export textboxes
 
@@ -600,7 +601,7 @@ proc display(withEvents = true) =
 
   inc frameNum
 
-proc findNodeById(id: string): Node =
+proc findNodeById*(id: string): Node =
   ## Finds a node by id (slow).
   proc recur(node: Node): Node =
     if node.id == id:
@@ -611,7 +612,7 @@ proc findNodeById(id: string): Node =
         return c
   return recur(figmaFile.document)
 
-proc parent(node: Node): Node =
+proc parent*(node: Node): Node =
   ## Finds node's parent (slow).
   let id = node.id
   proc recur(p: Node): Node =
@@ -622,6 +623,28 @@ proc parent(node: Node): Node =
       if c != nil:
         return c
   return recur(figmaFile.document)
+
+proc remove*(node: Node) =
+  ## Removes the node from the document.
+  let parent = node.parent
+  for i, n in parent.children:
+    if n == node:
+      parent.children.delete(i)
+      parent.markTreeDirty()
+      #rebuildGlobTree()
+      return
+
+proc copy*(node: Node): Node =
+  ## Copies a node creating new one.
+  result = deepCopy(node)
+  result.id = $rand(int.high)
+  #result.markTreeDirty()
+
+proc addChild*(parent, child: Node) =
+  ## Adds a child to a parent node.
+  parent.children.add(child)
+  parent.markTreeDirty()
+  #rebuildGlobTree()
 
 proc normalize(props: var seq[(string, string)]) =
   ## Makes sure that prop name is sorted.

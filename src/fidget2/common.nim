@@ -9,7 +9,7 @@ type Image = pixie.Image
 ## Common vars shared across renderers.
 var
   # Window stuff.
-  viewportSize*: Vec2
+  viewportSize*: Vec2 = vec2(400, 400)
   window*: Window
   offscreen* = false
   windowResizable*: bool

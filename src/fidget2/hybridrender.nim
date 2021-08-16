@@ -146,8 +146,6 @@ proc setupWindow*(
     # Disable V-Sync
     windowHint(DOUBLEBUFFER, false.cint)
 
-  viewportSize = vec2(400, 400)
-
   windowHint(VISIBLE, (not offscreen).cint)
   windowHint(RESIZABLE, resizable.cint)
   windowHint(SAMPLES, 0)
