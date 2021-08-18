@@ -24,6 +24,7 @@ proc willDrawSomething(node: Node): bool =
     return false
 
   if node.collapse:
+    # TODO do children
     return true
 
   for fill in node.fills:

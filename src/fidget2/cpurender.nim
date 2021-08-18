@@ -88,6 +88,7 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] =
         s
       ) and not overlaps:
         overlaps = true
+        break
 
     if not overlaps:
       # Check all geometry for overlaps.

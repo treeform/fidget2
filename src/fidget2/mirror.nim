@@ -1,9 +1,9 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, strutils, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, perf, common, algorithm, flatty/hashy2,
-    random
+    random, nodes
 
-export textboxes
+export textboxes, nodes
 
 when defined(cpu):
   import cpurender
@@ -538,12 +538,38 @@ proc display(withEvents = true) =
     mousePos.x = x
     mousePos.y = y
 
+    let underMouseNodes = underMouse(thisFrame, mousePos)
+
     #let hoverIndex = getIndexAt(thisFrame, mousePos)
     #echo "hover index", hoverIndex
     if buttonPress[MOUSE_LEFT]:
       echo "---"
-      for n in underMouse(thisFrame, mousePos):
+      for n in underMouseNodes:
         echo n.name
+
+    # hover feature
+
+    var hovering = false
+    if currentHoverNode != nil:
+      for n in underMouseNodes:
+        if n == currentHoverNode:
+          hovering = true
+          break
+
+    if not hovering:
+      if currentHoverNode != nil:
+        echo "rem hover: ", currentHoverNode.name
+        currentHoverNode.setVariant("State", "Default")
+        currentHoverNode = nil
+
+      for n in underMouseNodes:
+        if n.componentId != "":
+          # is an instance has potential to hover
+          if n.hasVariant("State", "Hover") and n.getVariant("State") == "Default":
+            echo "set hover: ", n.name
+            currentHoverNode = n
+            n.setVariant("State", "Hover")
+
 
   if windowResizable:
     # Stretch the current frame to fit the window.
@@ -592,6 +618,8 @@ proc display(withEvents = true) =
 
     clearInputs()
 
+  thisFrame.checkDirty()
+
   drawToScreen(thisFrame)
   perfMark "drawToScreen"
 
@@ -604,156 +632,6 @@ proc display(withEvents = true) =
       perfMark "glFlush"
 
   inc frameNum
-
-proc findNodeById*(id: string): Node =
-  ## Finds a node by id (slow).
-  proc recur(node: Node): Node =
-    if node.id == id:
-      return node
-    for n in node.children:
-      let c = recur(n)
-      if c != nil:
-        return c
-  return recur(figmaFile.document)
-
-proc parent*(node: Node): Node =
-  ## Finds node's parent (slow).
-  let id = node.id
-  proc recur(p: Node): Node =
-    for n in p.children:
-      if n.id == id:
-        return p
-      let c = recur(n)
-      if c != nil:
-        return c
-  return recur(figmaFile.document)
-
-proc remove*(node: Node) =
-  ## Removes the node from the document.
-  let parent = node.parent
-  for i, n in parent.children:
-    if n == node:
-      parent.children.delete(i)
-      parent.markTreeDirty()
-      #rebuildGlobTree()
-      return
-
-proc copy*(node: Node): Node =
-  ## Copies a node creating new one.
-  result = deepCopy(node)
-  result.id = $rand(int.high)
-  #result.markTreeDirty()
-
-proc addChild*(parent, child: Node) =
-  ## Adds a child to a parent node.
-  parent.children.add(child)
-  parent.markTreeDirty()
-  #rebuildGlobTree()
-
-proc normalize(props: var seq[(string, string)]) =
-  ## Makes sure that prop name is sorted.
-  props.sort proc(a, b: (string, string)): int = cmp(a[0], b[0])
-
-proc parseName(name: string): seq[(string, string)] =
-  ## Parses a name like "State=Off,Color=blue" into PropName.
-  for pair in name.split(","):
-    let
-      arr = pair.split("=")
-      k = arr[0]
-      v = arr[1]
-    result.add((k, v))
-  result.normalize()
-
-func `[]`*(query: seq[(string, string)], key: string): string =
-  ## Get a key out of PropName.
-  for (k, v) in query:
-    if k == key:
-      return v
-
-func `[]=`*(query: var seq[(string, string)], key, value: string) =
-  ## Sets a key in the PropName. If key is not there appends a
-  ## new key-value pair at the end.
-  for pair in query.mitems:
-    if pair[0] == key:
-      pair[1] = value
-      return
-  query.add((key, value))
-
-proc deepClone[T](a: T): T =
-  ## Deep copy of the object.
-  deepCopy(result, a)
-
-proc triMerge(current, prevMaster, currMaster: Node) =
-  ## Does a tri merge of the node trees.
-  # If current.x and prevMaster.x are same, we can change to currMaster.x
-  # TODO: changes all the way back to the original restores maybe?
-
-  template mergeField(x: untyped) =
-    if hashy(current.x) == hashy(prevMaster.x):
-      current.x = currMaster.x.deepClone()
-      current.dirty = true
-
-  # Ids
-  mergeField componentId
-  # Shape
-  mergeField fillGeometry
-  mergeField strokeWeight
-  mergeField strokeAlign
-  mergeField strokeGeometry
-  mergeField cornerRadius
-  mergeField rectangleCornerRadii
-  # Visual
-  mergeField blendMode
-  mergeField fills
-  mergeField strokes
-  mergeField effects
-  mergeField opacity
-  mergeField visible
-  # Masking
-  mergeField isMask
-  mergeField isMaskOutline
-  mergeField booleanOperation
-  mergeField clipsContent
-  # Text
-  mergeField characters
-  mergeField style
-  # Layout
-  mergeField constraints
-  mergeField layoutAlign
-  mergeField layoutGrids
-  mergeField layoutMode
-  mergeField itemSpacing
-  mergeField counterAxisSizingMode
-  mergeField paddingLeft
-  mergeField paddingRight
-  mergeField paddingTop
-  mergeField paddingBottom
-  mergeField overflowDirection
-
-  for i in 0 ..< current.children.len:
-    doAssert current.children[i].name == prevMaster.children[i].name and
-      current.children[i].name == currMaster.children[i].name
-    triMerge(
-      current.children[i],
-      prevMaster.children[i],
-      currMaster.children[i]
-    )
-
-proc setVariant*(node: Node, name, value: string) =
-  ## Changes the variant of the node.
-  var prevMaster = findNodeById(node.componentId)
-  var props = prevMaster.name.parseName()
-  props[name] = value
-  props.normalize()
-
-  var componentSet = prevMaster.parent
-  for n in componentSet.children:
-    var nProps = n.name.parseName()
-    if nProps == props:
-      var currMaster = n
-      triMerge(node, prevMaster, currMaster)
-      node.componentId = currMaster.id
-      break
 
 proc startFidget*(
   figmaUrl: string,

@@ -28,6 +28,8 @@ var
 
   defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
 
+  currentHoverNode*: Node
+
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
   result = translate(node.position) * rotate(node.rotation)
@@ -67,8 +69,7 @@ proc rectangleFillGeometry(node: Node): Geometry =
   if node.cornerRadius > 0:
     # Rectangle with common corners.
     result.path.roundedRect(
-      vec2(0, 0),
-      node.size,
+      rect(0, 0, node.size.x, node.size.y),
       nw = node.cornerRadius,
       ne = node.cornerRadius,
       se = node.cornerRadius,
@@ -78,8 +79,7 @@ proc rectangleFillGeometry(node: Node): Geometry =
     # Rectangle with different corners.
     let radii = node.rectangleCornerRadii.get()
     result.path.roundedRect(
-      vec2(0, 0),
-      node.size,
+      rect(0, 0, node.size.x, node.size.y),
       nw = radii[0],
       ne = radii[1],
       se = radii[2],
@@ -123,13 +123,11 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
     let
       r = node.cornerRadius
     result.path.roundedRect(
-      vec2(x-outer, y-outer),
-      vec2(w+outer*2, h+outer*2),
+      rect(x-outer, y-outer, w+outer*2, h+outer*2),
       r+outer, r+outer, r+outer, r+outer
     )
     result.path.roundedRect(
-      vec2(x+inner, y+inner),
-      vec2(w-inner*2, h-inner*2),
+      rect(x+inner, y+inner, w-inner*2, h-inner*2),
       r-inner, r-inner, r-inner, r-inner,
       clockwise = false
     )
@@ -142,24 +140,20 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
       se = radii[2]
       sw = radii[3]
     result.path.roundedRect(
-      vec2(x-outer, y-outer),
-      vec2(w+outer*2, h+outer*2),
+      rect(x-outer, y-outer, w+outer*2, h+outer*2),
       nw+outer, ne+outer, se+outer, sw+outer
     )
     result.path.roundedRect(
-      vec2(x+inner, y+inner),
-      vec2(w-inner*2, h-inner*2),
+      rect(x+inner, y+inner, w-inner*2, h-inner*2),
       nw-inner, ne-inner, se-inner, sw-inner,
       clockwise = false
     )
   else:
     result.path.rect(
-      vec2(x-outer, y-outer),
-      vec2(w+outer*2, h+outer*2),
+      rect(x-outer, y-outer, w+outer*2, h+outer*2),
     )
     result.path.rect(
-      vec2(x+inner, y+inner),
-      vec2(w-inner*2, h-inner*2),
+      rect(x+inner, y+inner, w-inner*2, h-inner*2),
       clockwise = false
     )
 

@@ -532,16 +532,3 @@ proc parseHook(s: string, i: var int, v: var Path) =
 
 proc parseFigmaFile*(data: string): FigmaFile =
   data.fromJson(FigmaFile)
-
-proc markTreeDirty*(node: Node, value = true) =
-  ## Marks the entire tree dirty or not dirty.
-  node.dirty = value
-  for c in node.children:
-    markTreeDirty(c, value)
-
-proc checkDirty*(node: Node) =
-  ## Makes sure if children are dirty, parents are dirty too!
-  for c in node.children:
-    checkDirty(c)
-    if c.dirty == true:
-      node.dirty = true

@@ -81,7 +81,6 @@ proc displayCb() {.cdecl.} =
 
       threadRow.children[0].characters = thread.topic
       threadRow.children[1].characters = thread.category.name
-      threadRow.children[1].characters = thread.category.name
       threadRow.children[2].characters = $thread.replies
       threadRow.children[3].characters = $thread.views
       threadRow.children[4].characters = formatActivity(thread.activity)
