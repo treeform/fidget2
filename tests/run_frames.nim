@@ -63,7 +63,7 @@ proc main(r = "", e = "", l = 10000) =
       "gpu_atlas", "gpu_atlas_full", "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
-      setupWindow(frame, offscreen = true)
+      setupWindow(frame, offscreen = true, resizable = false)
       firstTime = false
 
     proc drawFrame(frame: Node): Image =
@@ -96,10 +96,10 @@ proc main(r = "", e = "", l = 10000) =
         keep drawFrame(mainFrame)
 
     let startTime = epochTime()
-    defaultBuffer.setLen(0)
+    #defaultBuffer.setLen(0)
 
     var image = drawFrame(frame)
-    perfMark "drawFrame"
+    #perfMark "drawFrame"
     #perfDump()
 
     let frameTime = epochTime() - startTime
@@ -144,6 +144,8 @@ proc main(r = "", e = "", l = 10000) =
 
   framesHtml.add(&"<p>Total time: {renderTime*1000:0.3f}ms</p>")
   framesHtml.add(&"<p>Total diff: {totalDiff/count.float32:0.3f}%</p>")
+
+  dumpMeasures()
 
   echo &"Total time: {renderTime*1000:0.3f}ms"
   echo &"Total diff: {totalDiff/count.float32:0.3f}%"

@@ -126,7 +126,17 @@ proc drawWithAtlas(node: Node) {.measure.} =
 proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.
 
+  if windowSize != screenNode.size:
+    if windowResizable:
+      # Stretch the current frame to fit the window.
+      screenNode.size = windowSize
+    else:
+      # Stretch the window to fit the current frame.
+      window.setWindowSize(screenNode.size.x.cint, screenNode.size.y.cint)
+
   viewportSize = screenNode.size.ceil
+
+  ctx.beginFrame(viewportSize)
 
   computeLayout(nil, screenNode)
   # TODO: figure out how to call layout only once.
@@ -140,7 +150,6 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   mat = mat * screenNode.transform().inverse()
   drawToAtlas(screenNode, 0)
 
-  ctx.beginFrame(viewportSize)
   drawWithAtlas(screenNode)
   ctx.endFrame()
 

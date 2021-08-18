@@ -609,6 +609,9 @@ proc beginFrame*(ctx: Context, frameSize: Vec2, proj: Mat4) =
 
   glViewport(0, 0, ctx.frameSize.x.GLint, ctx.frameSize.y.GLint)
 
+  glClearColor(0, 0, 0, 0)
+  glClear(GL_COLOR_BUFFER_BIT)
+
   ctx.clearMask()
 
 proc beginFrame*(ctx: Context, frameSize: Vec2) =

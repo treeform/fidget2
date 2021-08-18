@@ -1,6 +1,6 @@
 import vmath, chroma, schema, staticglfw, textboxes,
     tables, print, loader, bumpy, pixie, options,
-    pixie/fontformats/opentype, print, puppy
+    pixie/fontformats/opentype, print, puppy, perf
 
 export print
 
@@ -39,6 +39,16 @@ var
 
   ## Node that currently is being hovered over.
   hoverNode*: Node
+
+  fullscreen* = false
+  running*, focused*, minimized*: bool
+  windowLogicalSize*: Vec2 ## Screen size in logical coordinates.
+  windowSize*: Vec2        ## Screen coordinates
+  windowFrame*: Vec2       ## Pixel coordinates
+  dpi*: float32
+  pixelRatio*: float32     ## Multiplier to convert from screen coords to pixels
+  pixelScale*: float32     ## Pixel multiplier user wants on the UI
+  frameNum*: int
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
@@ -163,7 +173,7 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
       clockwise = false
     )
 
-proc genFillGeometry*(node: Node) =
+proc genFillGeometry*(node: Node) {.measure.} =
   ## Either gets existing geometry (nkVector etc..)
   ## or generates it if (nkFrame, nkGroup...).
   case node.kind:
@@ -172,7 +182,7 @@ proc genFillGeometry*(node: Node) =
   else:
     discard
 
-proc genStrokeGeometry*(node: Node) =
+proc genStrokeGeometry*(node: Node) {.measure.} =
   ## Either gets existing geometry (nkVector etc..)
   ## or generates it if (nkFrame, nkGroup...).
   case node.kind:
@@ -181,7 +191,7 @@ proc genStrokeGeometry*(node: Node) =
   else:
     discard
 
-proc genHitRectGeometry*(node: Node) =
+proc genHitRectGeometry*(node: Node) {.measure.} =
   ## Generates geometry thats a simple rect over the node,
   ## no matter what kind of node it is.
   ## Used for simple mouse hit prediction
@@ -235,7 +245,7 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
 
   return font
 
-proc computeArrangement*(node: Node): Arrangement =
+proc computeArrangement*(node: Node): Arrangement {.measure.} =
   var spans: seq[pixie.Span]
   if node.characterStyleOverrides.len > 0:
     # The 0th style is node default style:

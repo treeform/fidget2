@@ -85,16 +85,6 @@ var
   thisSelector*: string
   selectorStack: seq[string]
 
-  fullscreen* = false
-  running*, focused*, minimized*: bool
-  windowLogicalSize*: Vec2 ## Screen size in logical coordinates.
-  windowSize*: Vec2        ## Screen coordinates
-  windowFrame*: Vec2       ## Pixel coordinates
-  dpi*: float32
-  pixelRatio*: float32     ## Multiplier to convert from screen coords to pixels
-  pixelScale*: float32     ## Pixel multiplier user wants on the UI
-
-  frameNum*: int
 
 proc display(withEvents=true)
 
@@ -602,17 +592,6 @@ proc processEvents() {.measure.} =
 
 proc display(withEvents = true) {.measure.} =
   ## Called every frame by main while loop.
-
-  if windowResizable:
-    # Stretch the current frame to fit the window.
-    if windowSize != thisFrame.size:
-      echo "windowSize != thisFrame.size"
-      #thisFrame.markTreeDirty()
-      thisFrame.size = windowSize
-  else:
-    # Stretch the window to fit the current frame.
-    if windowSize != thisFrame.size:
-      window.setWindowSize(thisFrame.size.x.cint, thisFrame.size.y.cint)
 
   if withEvents:
     processEvents()
