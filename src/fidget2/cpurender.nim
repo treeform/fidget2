@@ -1,5 +1,5 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
-    common, staticglfw, pixie, textboxes,
+    common, staticglfw, pixie, textboxes, perf,
     layout
 
 type Image = pixie.Image
@@ -11,7 +11,7 @@ var
   layers: seq[Image]
   maskLayer*: Mask
 
-proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
+proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measure.} =
   ## Compute self bounds of a given node.
 
   # Generate the geometry.
@@ -71,7 +71,7 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
         withChildren
       )
 
-proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] =
+proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
   ## Computes a list of nodes under the mouse.
 
   proc visit(node: Node, mat: Mat3, mousePos: Vec2, s: var seq[Node]): bool =
@@ -126,7 +126,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     color.a = color.a * paint.opacity
     result.gradientStops.add(pixie.ColorStop(color: color, position: stop.position))
 
-proc drawFill(node: Node, paint: Paint): Image =
+proc drawFill(node: Node, paint: Paint): Image {.measure.} =
   ## Creates a fill image based on the paint.
   result = newImage(layer.width, layer.height)
 
@@ -221,7 +221,7 @@ proc drawFill(node: Node, paint: Paint): Image =
   of schema.PaintKind.pkGradientDiamond:
     result.fillGradient(paint.toPixiePaint(node))
 
-proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
+proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.measure.} =
   if paints.len == 0 or geometries.len == 0:
     return
 
@@ -260,7 +260,7 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) =
       fillImage.draw(mask, blendMode = bmMask)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
-proc drawGeometry*(node: Node) =
+proc drawGeometry*(node: Node) {.measure.} =
   if node.strokeGeometry.len == 0:
     # No stroke just fill.
     node.drawPaint(node.fills, node.fillGeometry)
@@ -307,7 +307,7 @@ proc drawGeometry*(node: Node) =
       strokeLayer.draw(fillMask, blendMode = bmSubtractMask)
       layer.draw(strokeLayer)
 
-proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) =
+proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measure.} =
   ## Draws the inner shadow.
   var shadow = newMask(fillMask.width, fillMask.height)
   shadow.draw(fillMask, translate(effect.offset), blendMode = bmOverwrite)
@@ -431,7 +431,7 @@ proc drawBoolean*(node: Node) =
     fillImage.draw(maskLayer, blendMode = bmMask)
     layer.draw(fillImage)
 
-proc drawNodeInternal*(node: Node, withChildren=true) =
+proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
 
   if not node.visible or node.opacity == 0:
     return

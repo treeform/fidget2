@@ -1,5 +1,5 @@
 import buffers, chroma, pixie, hashes, opengl, os, shaders, strformat,
-    strutils, tables, textures, vmath, bumpy
+    strutils, tables, textures, vmath, bumpy, perf
 
 const
   quadLimit = 10_921
@@ -301,7 +301,7 @@ proc getFreeTile(ctx: Context): int =
   ctx.grow()
   return ctx.getFreeTile()
 
-proc putImage*(ctx: Context, imagePath: string, image: Image) =
+proc putImage*(ctx: Context, imagePath: string, image: Image) {.measure.} =
   # Reminder: This does not set mipmaps (used for text, should it?)
   if imagePath in ctx.entries:
     for index in ctx.entries[imagePath].tiles:

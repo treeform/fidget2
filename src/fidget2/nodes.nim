@@ -1,11 +1,17 @@
 import schema, loader, random, algorithm, strutils,
     flatty/hashy2
 
-proc markTreeDirty*(node: Node, value = true) =
+proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
-  node.dirty = value
+  node.dirty = true
   for c in node.children:
-    markTreeDirty(c, value)
+    markTreeDirty(c)
+
+proc markTreeClean*(node: Node) =
+  ## Marks the entire tree dirty or not dirty.
+  node.dirty = false
+  for c in node.children:
+    markTreeClean(c)
 
 proc checkDirty*(node: Node) =
   ## Makes sure if children are dirty, parents are dirty too!
@@ -13,6 +19,11 @@ proc checkDirty*(node: Node) =
     checkDirty(c)
     if c.dirty == true:
       node.dirty = true
+
+proc printDirtyStatus*(node: Node, indent = 0) =
+  echo " ".repeat(indent), node.name, ":", node.dirty
+  for child in node.children:
+    printDirtyStatus(child, indent + 1)
 
 proc findNodeById*(id: string): Node =
   ## Finds a node by id (slow).
@@ -44,7 +55,6 @@ proc remove*(node: Node) =
     if n == node:
       parent.children.delete(i)
       parent.markTreeDirty()
-      #rebuildGlobTree()
       return
 
 proc copy*(node: Node): Node =
@@ -57,7 +67,6 @@ proc addChild*(parent, child: Node) =
   ## Adds a child to a parent node.
   parent.children.add(child)
   parent.markTreeDirty()
-  #rebuildGlobTree()
 
 proc normalize(props: var seq[(string, string)]) =
   ## Makes sure that prop name is sorted.
@@ -177,7 +186,6 @@ proc setVariant*(node: Node, name, value: string) =
       triMerge(node, prevMaster, currMaster)
       node.componentId = currMaster.id
       break
-  node.markTreeDirty()
 
 proc hasVariant*(node: Node, name, value: string): bool =
   ## Checks the variant exists for the node.

@@ -1,5 +1,5 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath,
-  context, common, cpurender, layout, os
+  context, common, cpurender, layout, os, perf, nodes
 
 export cpurender.underMouse
 
@@ -36,9 +36,10 @@ proc willDrawSomething(node: Node): bool =
 
   return false
 
-proc drawToAtlas(node: Node, level: int) =
+proc drawToAtlas(node: Node, level: int) {.measure.} =
   ## Draw the nodes into the atlas (and setup pixel box).
   if not node.visible or node.opacity == 0:
+    node.markTreeClean()
     return
 
   let prevMat = mat
@@ -47,6 +48,13 @@ proc drawToAtlas(node: Node, level: int) =
   var pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
 
   if node.dirty or not quasiEqual(pixelBox, node.pixelBox):
+
+    # if not quasiEqual(pixelBox, node.pixelBox):
+    #   echo "node size changed"
+
+    # if node.dirty:
+    #   echo "drawToAtlas: ", node.name, " is dirty"
+
     node.dirty = false
     # compute bounds
     node.pixelBox = pixelBox
@@ -76,7 +84,7 @@ proc drawToAtlas(node: Node, level: int) =
     if level != 0 and node.clipsContent:
       node.collapse = true
 
-    # Can't draw effects with children.
+    # Can't draw effects on the GPU.
     if node.effects.len != 0:
       node.collapse = true
 
@@ -88,16 +96,16 @@ proc drawToAtlas(node: Node, level: int) =
       node.drawNodeInternal(withChildren=node.collapse)
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
-    # else:
-    #   echo "totally empty: ", node.name
 
   if not node.collapse:
     for child in node.children:
       drawToAtlas(child, level + 1)
+  else:
+    node.markTreeClean()
 
   mat = prevMat
 
-proc drawWithAtlas(node: Node) =
+proc drawWithAtlas(node: Node) {.measure.} =
   # Draw the nodes using atlas.
   if not node.visible or node.opacity == 0:
     return
@@ -115,7 +123,7 @@ proc drawWithAtlas(node: Node) =
     for child in node.children:
       drawWithAtlas(child)
 
-proc drawToScreen*(screenNode: Node) =
+proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.
 
   viewportSize = screenNode.size.ceil
@@ -123,6 +131,9 @@ proc drawToScreen*(screenNode: Node) =
   computeLayout(nil, screenNode)
   # TODO: figure out how to call layout only once.
   computeLayout(nil, screenNode)
+
+  # echo "before"
+  # screenNode.printDirtyStatus()
 
   # Setup proper matrix for drawing.
   mat = mat3()
@@ -132,6 +143,9 @@ proc drawToScreen*(screenNode: Node) =
   ctx.beginFrame(viewportSize)
   drawWithAtlas(screenNode)
   ctx.endFrame()
+
+  # echo "after"
+  # screenNode.printDirtyStatus()
 
 proc setupWindow*(
   frameNode: Node,

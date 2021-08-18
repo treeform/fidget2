@@ -1,7 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
-    nodes
+    nodes, perf
 
 export textboxes, nodes
 
@@ -521,48 +521,93 @@ proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   if buttonDown[MOUSE_LEFT]:
     textBoxMouseAction()
 
-proc display(withEvents = true) =
-  ## Called every frame by main while loop.
+proc swapBuffers() {.measure.} =
+  when not defined(cpu):
+    if vSync:
+      window.swapBuffers()
+    else:
+      glFlush()
 
-  block:
-    var x, y: float64
-    window.getCursorPos(addr x, addr y)
-    mousePos.x = x
-    mousePos.y = y
+proc processEvents() {.measure.} =
 
-    # Get the node list under the mouse.
-    let underMouseNodes = underMouse(thisFrame, mousePos)
+  var x, y: float64
+  window.getCursorPos(addr x, addr y)
+  mousePos.x = x
+  mousePos.y = y
 
-    if buttonPress[MOUSE_LEFT]:
-      echo "---"
-      for n in underMouseNodes:
-        echo n.name
+  # Get the node list under the mouse.
+  let underMouseNodes = underMouse(thisFrame, mousePos)
 
-    # Do hovering logic.
-    var hovering = false
+  if buttonPress[MOUSE_LEFT]:
+    echo "---"
+    for n in underMouseNodes:
+      echo n.name
+
+  # Do hovering logic.
+  var hovering = false
+  if hoverNode != nil:
+    for n in underMouseNodes:
+      if n == hoverNode:
+        hovering = true
+        break
+
+  if not hovering:
     if hoverNode != nil:
-      for n in underMouseNodes:
-        if n == hoverNode:
-          hovering = true
-          break
+      hoverNode.setVariant("State", "Default")
+      hoverNode = nil
 
-    if not hovering:
-      if hoverNode != nil:
-        hoverNode.setVariant("State", "Default")
-        hoverNode = nil
+    for n in underMouseNodes:
+      if n.isInstance:
+        # Is an instance has potential to hover.
+        if n.hasVariant("State", "Hover") and
+          n.getVariant("State") == "Default":
+            hoverNode = n
+            n.setVariant("State", "Hover")
 
-      for n in underMouseNodes:
-        if n.isInstance:
-          # Is an instance has potential to hover.
-          if n.hasVariant("State", "Hover") and
-            n.getVariant("State") == "Default":
-              hoverNode = n
-              n.setVariant("State", "Hover")
+  for cb in eventCbs:
+    thisCb = cb
+    thisSelector = thisCb.glob
+
+    case cb.kind:
+    of eOnClick:
+
+      if mouse.click:
+        for node in globTree.findAll(thisSelector):
+          if node.pixelBox.overlaps(mousePos):
+            thisNode = node
+            thisCb.handler()
+            thisNode = nil
+
+    of eOnDisplay:
+
+      for node in globTree.findAll(thisSelector):
+        thisNode = node
+        thisCb.handler()
+        thisNode = nil
+
+    of eOnFrame:
+      thisCb.handler()
+
+    else:
+      echo "not covered: ": cb.kind
+
+  thisSelector = ""
+  thisCb = nil
+
+  if buttonPress[F4]:
+    echo "writing atlas"
+    ctx.writeAtlas("atlas.png")
+
+  clearInputs()
+
+proc display(withEvents = true) {.measure.} =
+  ## Called every frame by main while loop.
 
   if windowResizable:
     # Stretch the current frame to fit the window.
     if windowSize != thisFrame.size:
-      thisFrame.markTreeDirty()
+      echo "windowSize != thisFrame.size"
+      #thisFrame.markTreeDirty()
       thisFrame.size = windowSize
   else:
     # Stretch the window to fit the current frame.
@@ -570,51 +615,13 @@ proc display(withEvents = true) =
       window.setWindowSize(thisFrame.size.x.cint, thisFrame.size.y.cint)
 
   if withEvents:
-    for cb in eventCbs:
-      thisCb = cb
-      thisSelector = thisCb.glob
-
-      case cb.kind:
-      of eOnClick:
-
-        if mouse.click:
-          for node in globTree.findAll(thisSelector):
-            if node.pixelBox.overlaps(mousePos):
-              thisNode = node
-              thisCb.handler()
-              thisNode = nil
-
-      of eOnDisplay:
-
-        for node in globTree.findAll(thisSelector):
-          thisNode = node
-          thisCb.handler()
-          thisNode = nil
-
-      of eOnFrame:
-        thisCb.handler()
-
-      else:
-        echo "not covered: ": cb.kind
-
-    thisSelector = ""
-    thisCb = nil
-
-    if buttonPress[F4]:
-      echo "writing atlas"
-      ctx.writeAtlas("atlas.png")
-
-    clearInputs()
+    processEvents()
 
   thisFrame.checkDirty()
 
   drawToScreen(thisFrame)
 
-  when not defined(cpu):
-    if vSync:
-      window.swapBuffers()
-    else:
-      glFlush()
+  swapBuffers()
 
   inc frameNum
 
@@ -663,6 +670,8 @@ proc startFidget*(
   while windowShouldClose(window) == 0 and running:
     pollEvents()
     display()
+    if buttonToggle[F8]:
+      dumpMeasures()
 
   # Destroy the window.
   window.destroyWindow()

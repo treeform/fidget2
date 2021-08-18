@@ -1,11 +1,10 @@
-import bumpy, schema, vmath, common, tables, pixie
+import bumpy, schema, vmath, common, tables, pixie, perf
 
-proc computeTextBounds(node: Node): Vec2 =
-
+proc computeTextBounds(node: Node): Vec2 {.measure.} =
   let arrangement = node.computeArrangement()
   return arrangement.computeBounds()
 
-proc computeLayout*(parent, node: Node) =
+proc computeLayout*(parent, node: Node) {.measure.} =
   ## Computes constraints and auto-layout.
 
   for n in node.children:

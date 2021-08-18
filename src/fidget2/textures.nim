@@ -1,4 +1,4 @@
-import buffers, pixie, opengl
+import buffers, pixie, opengl, perf
 
 type
   MinFilter* = enum
@@ -110,7 +110,7 @@ proc updateSubImage*(texture: Texture, x, y: int, image: Image, level: int) =
     pixels = image.data[0].addr
   )
 
-proc updateSubImage*(texture: Texture, x, y: int, image: Image) =
+proc updateSubImage*(texture: Texture, x, y: int, image: Image) {.measure.} =
   ## Update a small part of texture with a new image.
   var
     x = x
