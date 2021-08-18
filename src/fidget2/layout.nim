@@ -93,7 +93,6 @@ proc computeLayout*(parent, node: Node) {.measure.} =
       let rightSpace = parent.orgSize.x - node.orgSize.x
       node.size.x = parent.size.x - rightSpace
     of cCenter:
-
       let offset = node.orgPosition.x - round(parent.orgSize.x / 2.0)
       node.position.x = round(parent.size.x / 2.0) + offset
 
@@ -110,6 +109,5 @@ proc computeLayout*(parent, node: Node) {.measure.} =
       let bottomSpace = parent.orgSize.y - node.orgSize.y
       node.size.y = parent.size.y - bottomSpace
     of cCenter:
-
       let offset = node.orgPosition.y - round(parent.orgSize.y / 2.0)
       node.position.y = round(parent.size.y / 2.0) + offset

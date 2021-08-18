@@ -97,6 +97,10 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
 
+  else:
+    # Update pixel bounds even if no redraw was needed.
+    node.pixelBox = pixelBox
+
   if not node.collapse:
     for child in node.children:
       drawToAtlas(child, level + 1)
@@ -138,9 +142,9 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
 
   ctx.beginFrame(viewportSize)
 
-  computeLayout(nil, screenNode)
-  # TODO: figure out how to call layout only once.
-  computeLayout(nil, screenNode)
+  for i in 0 ..< 2:
+    # TODO: figure out how to call layout only once.
+    computeLayout(nil, screenNode)
 
   # echo "before"
   # screenNode.printDirtyStatus()

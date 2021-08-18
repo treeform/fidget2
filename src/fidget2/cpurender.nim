@@ -11,6 +11,12 @@ var
   layers: seq[Image]
   maskLayer*: Mask
 
+proc newImage(w, h: int): Image {.measure.} =
+  pixie.newImage(w, h)
+
+proc draw(a, b: Image) {.measure.} =
+  pixie.draw(a, b)
+
 proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measure.} =
   ## Compute self bounds of a given node.
 
@@ -324,7 +330,7 @@ proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measur
   # Draw it back.
   layer.draw(color)
 
-proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: Node) =
+proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: Node) {.measure.} =
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = bmOverwrite)
@@ -332,7 +338,16 @@ proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node
     effect.offset, effect.spread, effect.radius, effect.color.rgbx)
   lowerLayer.draw(shadow)
 
-proc maskSelfImage*(node: Node): Mask =
+proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
+  var blurLayer = lowerLayer.copy() # Maybe collapse bg?
+  var blurMask = newMask(layer)
+  blurMask.ceil()
+  blurLayer.blur(effect.radius)
+  blurLayer.draw(blurMask, blendMode = bmMask)
+  blurLayer.draw(layer)
+  layer = blurLayer
+
+proc maskSelfImage*(node: Node): Mask {.measure.} =
   ## Returns a self mask (used for clips-content).
   var mask = newMask(layer.width, layer.height)
   for geometry in node.fillGeometry:
@@ -343,7 +358,7 @@ proc maskSelfImage*(node: Node): Mask =
     )
   return mask
 
-proc drawText*(node: Node) =
+proc drawText*(node: Node) {.measure.} =
   ## Draws the text (including editing of text).
 
   var arrangement = node.computeArrangement()
@@ -419,7 +434,7 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
 
   mat = prevMat
 
-proc drawBoolean*(node: Node) =
+proc drawBoolean*(node: Node) {.measure.} =
   ## Draws boolean
   maskLayer = newMask(layer.width, layer.height)
   mat = mat * node.transform().inverse()
@@ -501,23 +516,21 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
     var lowerLayer = layers.pop()
     if node.opacity != 1.0:
       layer.applyOpacity(node.opacity)
+
     for effect in node.effects:
       if effect.kind == ekDropShadow:
         lowerLayer.drawDropShadowEffect(layer, effect, node)
       if effect.kind == ekLayerBlur:
         layer.blur(effect.radius)
       if effect.kind == ekBackgroundBlur:
-        var blurLayer = lowerLayer.copy() # Maybe collapse bg?
-        var blurMask = newMask(layer)
-        blurMask.ceil()
-        blurLayer.blur(effect.radius)
-        blurLayer.draw(blurMask, blendMode = bmMask)
-        blurLayer.draw(layer)
-        layer = blurLayer
+        drawBackgroundBlur(lowerLayer, effect)
+
+    measurePush("lowerLayer.draw") # & $node.blendMode)
     lowerLayer.draw(layer, blendMode = node.blendMode)
     layer = lowerLayer
+    measurePop()
 
-proc drawNode*(node: Node, withChildren=true) =
+proc drawNode*(node: Node, withChildren=true) {.measure.} =
 
   let prevMat = mat
   mat = mat * node.transform()
@@ -530,7 +543,7 @@ proc drawNode*(node: Node, withChildren=true) =
 
   mat = prevMat
 
-proc drawCompleteFrame*(node: Node): pixie.Image =
+proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
   let
     w = node.size.x.int
     h = node.size.y.int
