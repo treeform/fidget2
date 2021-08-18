@@ -8,27 +8,37 @@ type Image = pixie.Image
 
 ## Common vars shared across renderers.
 var
-  # Window stuff.
+  ## Window stuff.
   viewportSize*: Vec2 = vec2(400, 400)
+  ## GLFW Window.
   window*: Window
+  ## Is the app running offscreen.
   offscreen* = false
+  ## Can this app be resized by the user.
   windowResizable*: bool
-  vSync*: bool
-  framePos*: Vec2
+  ## Is the vsync enabled.
+  vSync*: bool = true
 
-  # Text edit.
+  ## Text box object
+  ## (only single text box object exists for active text box).
   textBox*: TextBox
+  ## Nodes that is focused and has the current text box.
   textBoxFocus*: Node
-  typefaceCache*: Table[string, Typeface]
-
-  mat*: Mat3
-  imageCache*: Table[string, Image]
-
-  arrangementCache*: Table[string, Arrangement]
-
+  ## Default text highlight color (blueish by default).
   defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
 
-  currentHoverNode*: Node
+  ## Cache of typefaces.
+  typefaceCache*: Table[string, Typeface]
+  ## Cache of images.
+  imageCache*: Table[string, Image]
+  ## Cache of text arguments.
+  arrangementCache*: Table[string, Arrangement]
+
+  ## Current mat during the draw cycle.
+  mat*: Mat3
+
+  ## Node that currently is being hovered over.
+  hoverNode*: Node
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.

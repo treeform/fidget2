@@ -312,14 +312,6 @@ template onFocus*(body: untyped) =
             thisNode = nil
   )
 
-proc rect*(node: Node): Rect =
-  ## Gets the nodes rectangle on screen.
-  # TODO: this might be off with rotations, use better method.
-  result.x = node.position.x + framePos.x
-  result.y = node.position.y + framePos.y
-  result.w = node.size.x
-  result.h = node.size.y
-
 proc updateWindowSize() =
   ## Handle window resize.
   requestedFrame = true
@@ -538,38 +530,34 @@ proc display(withEvents = true) =
     mousePos.x = x
     mousePos.y = y
 
+    # Get the node list under the mouse.
     let underMouseNodes = underMouse(thisFrame, mousePos)
 
-    #let hoverIndex = getIndexAt(thisFrame, mousePos)
-    #echo "hover index", hoverIndex
     if buttonPress[MOUSE_LEFT]:
       echo "---"
       for n in underMouseNodes:
         echo n.name
 
-    # hover feature
-
+    # Do hovering logic.
     var hovering = false
-    if currentHoverNode != nil:
+    if hoverNode != nil:
       for n in underMouseNodes:
-        if n == currentHoverNode:
+        if n == hoverNode:
           hovering = true
           break
 
     if not hovering:
-      if currentHoverNode != nil:
-        echo "rem hover: ", currentHoverNode.name
-        currentHoverNode.setVariant("State", "Default")
-        currentHoverNode = nil
+      if hoverNode != nil:
+        hoverNode.setVariant("State", "Default")
+        hoverNode = nil
 
       for n in underMouseNodes:
-        if n.componentId != "":
-          # is an instance has potential to hover
-          if n.hasVariant("State", "Hover") and n.getVariant("State") == "Default":
-            echo "set hover: ", n.name
-            currentHoverNode = n
-            n.setVariant("State", "Hover")
-
+        if n.isInstance:
+          # Is an instance has potential to hover.
+          if n.hasVariant("State", "Hover") and
+            n.getVariant("State") == "Default":
+              hoverNode = n
+              n.setVariant("State", "Hover")
 
   if windowResizable:
     # Stretch the current frame to fit the window.

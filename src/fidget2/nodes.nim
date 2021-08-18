@@ -198,3 +198,8 @@ proc getVariant*(node: Node, name: string): string =
   var props = prevMaster.name.parseName()
   if name in props:
     return props[name]
+
+proc isInstance*(node: Node): bool =
+  ## Checks if node is an instance node.
+  ## And can have variants.
+  node.componentId != ""
