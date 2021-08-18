@@ -224,8 +224,8 @@ proc setupTextBox(node: Node) =
     int node.pixelBox.w,
     int node.pixelBox.h,
     node.characters,
-    HAlignMode(node.style.textAlignHorizontal.int),
-    VAlignMode(node.style.textAlignVertical.int),
+    HorizontalAlignment(node.style.textAlignHorizontal.int),
+    VerticalAlignment(node.style.textAlignVertical.int),
     multiline = true, #TODO: node.multiline,
     worldWrap = true,
   )
@@ -618,6 +618,9 @@ proc display(withEvents = true) =
     else:
       glFlush()
       perfMark "glFlush"
+
+  if buttonToggle[F8]:
+    perfDumpEverySecond()
 
   inc frameNum
 

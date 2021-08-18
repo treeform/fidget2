@@ -13,36 +13,35 @@ var
 
 proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
   ## Compute self bounds of a given node.
-  ##
 
+  # Generate the geometry.
   if node.kind == nkText:
     node.genHitRectGeometry()
   else:
     node.genFillGeometry()
     node.genStrokeGeometry()
 
+  # Compute geometry bounds.
   var
     minV: Vec2
     maxV: Vec2
     first = true
   for geoms in [node.fillGeometry, node.strokeGeometry]:
     for geom in geoms:
-      for shape in geom.path.commandsToShapes():
-        for vec in shape:
-          let v = mat * vec
-          if first:
-            minV = v
-            maxV = v
-            first = false
-          else:
-            minV.x = min(minV.x, v.x)
-            minV.y = min(minV.y, v.y)
-            maxV.x = max(maxV.x, v.x)
-            maxV.y = max(maxV.y, v.y)
+      let bounds = geom.path.computeBounds(mat)
+      if first:
+        first = false
+        minV.x = bounds.x
+        minV.y = bounds.y
+        maxV.x = bounds.x + bounds.w
+        maxV.y = bounds.y + bounds.h
+      else:
+        minV.x = min(minV.x, bounds.x)
+        minV.y = min(minV.y, bounds.y)
+        maxV.x = max(maxV.x, bounds.x + bounds.w)
+        maxV.y = max(maxV.y, bounds.y + bounds.h)
 
-  minV = minV.floor
-  maxV = maxV.ceil
-
+  # Add effects to bounds.
   var borderMinV, borderMaxV: Vec2
   for effect in node.effects:
     case effect.kind
@@ -58,12 +57,13 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect =
         borderMaxV,
         effect.offset + vec2(effect.radius + effect.spread)
       )
-
   minV += borderMinV
   maxV += borderMaxV
 
-  result = rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y)
+  # Snap bounds to pixels.
+  result = rect(minV.x, minV.y, maxV.x - minV.x, maxV.y - minV.y).snapToPixels()
 
+  # Compute bounds on children.
   if withChildren:
     for child in node.children:
       result = result or child.computeIntBounds(

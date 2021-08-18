@@ -140,8 +140,8 @@ type
     textCase*: Option[TextCase]
     textDecoration*: TextDecoration
     textAutoResize*: TextAutoResize
-    textAlignHorizontal*: HAlignMode
-    textAlignVertical*: VAlignMode
+    textAlignHorizontal*: HorizontalAlignment
+    textAlignVertical*: VerticalAlignment
     letterSpacing*: float32
     fills*: seq[Paint]
     lineHeightPx*: float32
@@ -439,14 +439,14 @@ proc enumHook(s: string, v: var StrokeAlign) =
     of "CENTER": saCenter
     else: raise newException(FidgetError, "Invalid stroke align:" & s)
 
-proc enumHook(s: string, v: var HAlignMode) =
+proc enumHook(s: string, v: var HorizontalAlignment) =
   v = case s:
     of "CENTER": haCenter
     of "LEFT": haLeft
     of "RIGHT": haRight
     else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
-proc enumHook(s: string, v: var VAlignMode) =
+proc enumHook(s: string, v: var VerticalAlignment) =
   v = case s:
     of "CENTER": vaMiddle
     of "TOP": vaTop

@@ -5,7 +5,6 @@ export cpurender.underMouse
 
 var
   ctx*: context.Context
-  viewportRect: Rect
 
 proc quasiEqual(a, b: Rect): bool =
   ## Quasi equal. Equal everything except integer translation.
@@ -122,37 +121,21 @@ proc drawToScreen*(screenNode: Node) =
 
   viewportSize = screenNode.size.ceil
 
-  # Resize the window if needed.
-  if viewportRect != rect(0, 0, viewportSize.x, viewportSize.y):
-    viewportRect = rect(0, 0, viewportSize.x, viewportSize.y)
-    window.setWindowSize(viewportSize.x.cint, viewportSize.y.cint)
-    glViewport(
-      viewportRect.x.cint,
-      viewportRect.y.cint,
-      viewportRect.w.cint,
-      viewportRect.h.cint
-    )
-
+  perfMark "computeLayout"
   computeLayout(nil, screenNode)
   # TODO: figure out how to call layout only once.
   computeLayout(nil, screenNode)
 
+  perfMark "drawToAtlas"
   # Setup proper matrix for drawing.
   mat = mat3()
   mat = mat * screenNode.transform().inverse()
-
   drawToAtlas(screenNode, 0)
 
+  perfMark "drawToAtlas"
   ctx.beginFrame(viewportSize)
-
-  # glClearColor(0, 0, 0, 0)
-  # glClear(GL_COLOR_BUFFER_BIT)
-
   drawWithAtlas(screenNode)
   ctx.endFrame()
-
-  #ctx.writeAtlas("atlas.png")
-  #perfDump()
 
 proc setupWindow*(
   frameNode: Node,

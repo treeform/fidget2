@@ -41,8 +41,8 @@ type TextBox* = ref object
   runes*: seq[Rune] # The runes we are typing.
   width*: int       # Width of text box in px.
   height*: int      # Height of text box in px.
-  vAlign*: VAlignMode
-  hAling*: HAlignMode
+  vAlign*: VerticalAlignment
+  hAling*: HorizontalAlignment
   scrollable*: bool
   editable*: bool
   scroll*: Vec2     # Scroll position.
