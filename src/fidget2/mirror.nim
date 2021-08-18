@@ -1,6 +1,6 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
-    textboxes, unicode, vmath, times, perf, common, algorithm,
+    textboxes, unicode, vmath, times, common, algorithm,
     nodes
 
 export textboxes, nodes
@@ -609,18 +609,12 @@ proc display(withEvents = true) =
   thisFrame.checkDirty()
 
   drawToScreen(thisFrame)
-  perfMark "drawToScreen"
 
   when not defined(cpu):
     if vSync:
       window.swapBuffers()
-      perfMark "swapBuffers"
     else:
       glFlush()
-      perfMark "glFlush"
-
-  if buttonToggle[F8]:
-    perfDumpEverySecond()
 
   inc frameNum
 
@@ -667,12 +661,8 @@ proc startFidget*(
 
   # Run while window is open.
   while windowShouldClose(window) == 0 and running:
-    perfMark "start ----------- "
     pollEvents()
     display()
-    perfMark "display"
-    perfPixels = (viewportSize.x * viewportSize.y).int
-    #perfDumpEverySecond()
 
   # Destroy the window.
   window.destroyWindow()

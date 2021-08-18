@@ -54,19 +54,6 @@ proc vec2(x, y: SomeNumber): Vec2 =
   ## Integer short cut for creating vectors.
   vec2(x.float32, y.float32)
 
-proc isOneColor(image: Image): bool =
-  ## True if image is fully one color, false otherwise.
-  let c = image[0, 0]
-  for y in 0 ..< image.height:
-    for x in 0 ..< image.width:
-      if image[x, y] != c:
-        return false
-  return true
-
-proc isTransparent(image: Image): bool =
-  ## True if image is fully transparent, false otherwise.
-  image.isOneColor() and image[0, 0].a == 0
-
 proc readAtlasImage(ctx: Context): Image =
   # read old atlas content
   result = newImage(

@@ -1,5 +1,5 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath,
-  perf, context, common, cpurender, layout, os
+  context, common, cpurender, layout, os
 
 export cpurender.underMouse
 
@@ -99,7 +99,6 @@ proc drawToAtlas(node: Node, level: int) =
 
 proc drawWithAtlas(node: Node) =
   # Draw the nodes using atlas.
-
   if not node.visible or node.opacity == 0:
     return
 
@@ -121,18 +120,15 @@ proc drawToScreen*(screenNode: Node) =
 
   viewportSize = screenNode.size.ceil
 
-  perfMark "computeLayout"
   computeLayout(nil, screenNode)
   # TODO: figure out how to call layout only once.
   computeLayout(nil, screenNode)
 
-  perfMark "drawToAtlas"
   # Setup proper matrix for drawing.
   mat = mat3()
   mat = mat * screenNode.transform().inverse()
   drawToAtlas(screenNode, 0)
 
-  perfMark "drawToAtlas"
   ctx.beginFrame(viewportSize)
   drawWithAtlas(screenNode)
   ctx.endFrame()
