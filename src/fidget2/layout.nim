@@ -1,4 +1,4 @@
-import bumpy, schema, vmath, common, options, tables, pixie, unicode
+import bumpy, schema, vmath, common, tables, pixie
 
 proc computeTextBounds(node: Node): Vec2 =
 

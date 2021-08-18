@@ -1,4 +1,4 @@
-import math, std/monotimes, strformat, strutils, times, print
+import math, std/monotimes, strformat, strutils
 
 when defined(nimTypeNames):
   import tables

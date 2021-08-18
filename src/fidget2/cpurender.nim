@@ -1,6 +1,6 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
-    common, staticglfw, pixie, textboxes, pixie/fileformats/png, strutils,
-    options, layout, unicode, sequtils, iterutils
+    common, staticglfw, pixie, textboxes,
+    layout
 
 type Image = pixie.Image
 type Paint = schema.Paint

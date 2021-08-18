@@ -1,7 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
-    pixie, schema, strutils, sequtils, staticglfw, strformat, tables,
-    textboxes, unicode, vmath, times, perf, common, algorithm, flatty/hashy2,
-    random, nodes
+    pixie, schema, sequtils, staticglfw, strformat, tables,
+    textboxes, unicode, vmath, times, perf, common, algorithm,
+    nodes
 
 export textboxes, nodes
 

@@ -34,7 +34,6 @@ TODO:
 
 const
   LF = Rune(10)
-  SP = Rune(32)
 
 type TextBox* = ref object
   cursor*: int      # The typing cursor.

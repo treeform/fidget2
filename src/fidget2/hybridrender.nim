@@ -1,4 +1,4 @@
-import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath, times,
+import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath,
   perf, context, common, cpurender, layout, os
 
 export cpurender.underMouse
@@ -145,8 +145,8 @@ proc drawToScreen*(screenNode: Node) =
 
   ctx.beginFrame(viewportSize)
 
-  glClearColor(0, 0, 0, 0)
-  glClear(GL_COLOR_BUFFER_BIT)
+  # glClearColor(0, 0, 0, 0)
+  # glClear(GL_COLOR_BUFFER_BIT)
 
   drawWithAtlas(screenNode)
   ctx.endFrame()
