@@ -119,8 +119,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     doAssert node.pixelBox.y.fractional == 0
     ctx.drawImage(
       node.id,
-      pos = node.pixelBox.xy,
-      tintColor = color(1, 1, 1, node.opacity)
+      pos = node.pixelBox.xy
     )
 
   if not node.collapse:

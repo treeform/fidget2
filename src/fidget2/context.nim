@@ -480,6 +480,18 @@ proc `*`(a, b: Color): Color =
   result.b = a.b * b.b
   result.a = a.a * b.a
 
+proc `*`(c: Color, f: float32): Color =
+  result.r = c.r * f
+  result.g = c.g * f
+  result.b = c.b * f
+  result.a = c.a * f
+
+proc toPremultipliedAlpha(c: Color): Color =
+  result.r = c.r * c.a
+  result.g = c.g * c.a
+  result.b = c.b * c.a
+  result.a = c.a
+
 proc drawImage*(
   ctx: Context,
   imagePath: string,
@@ -499,7 +511,7 @@ proc drawImage*(
         pos + vec2(tileInfo.width, tileInfo.height),
         vec2(2, 2),
         vec2(2, 2),
-        tileInfo.oneColor * tintColor
+        (tileInfo.oneColor * tintColor).toPremultipliedAlpha
       )
   else:
     var i = 0
@@ -518,7 +530,7 @@ proc drawImage*(
               posAt + vec2(tileSize, tileSize),
               vec2(2, 2),
               vec2(2, 2),
-              tileInfo.oneColor * tintColor
+              (tileInfo.oneColor * tintColor).toPremultipliedAlpha
             )
         else:
           let
@@ -531,7 +543,7 @@ proc drawImage*(
             posAt + vec2(tileSize, tileSize),
             uvAt,
             uvAt + vec2(tileSize, tileSize),
-            tintColor
+            tintColor.toPremultipliedAlpha
           )
         inc i
     assert i == tileInfo.tiles.len

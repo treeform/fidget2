@@ -121,6 +121,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     of schema.pkGradientDiamond: pixie.pkGradientRadial
 
   result = newPaint(paintKind)
+  result.opacity = paint.opacity
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add(
       handle * node.size + mat.pos
@@ -129,7 +130,6 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     result.gradientHandlePositions.setLen(2)
   for stop in paint.gradientStops:
     var color = stop.color
-    color.a = color.a * paint.opacity
     result.gradientStops.add(pixie.ColorStop(color: color, position: stop.position))
 
 proc drawFill(node: Node, paint: Paint): Image {.measure.} =
