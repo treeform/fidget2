@@ -186,6 +186,7 @@ type
     kind*: NodeKind ## The type of the node, refer to table below for details.
     name*: string   ## The name given to the node by the user in the tool.
     children*: seq[Node]
+    parent*: Node
     prototypeStartNodeID*: string
     componentId*: string
 
@@ -264,20 +265,20 @@ type
 proc `$`*(node: Node): string =
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
-proc newHook(v: var Node) =
-  v = Node()
-  v.visible = true
-  v.opacity = 1.0
+proc newHook(node: var Node) =
+  node = Node()
+  node.visible = true
+  node.opacity = 1.0
 
-proc postHook(v: var Node) =
-  if v.relativeTransform.isSome:
-    let transform = v.relativeTransform.get()
-    v.position = vec2(transform[0][2], transform[1][2])
-    v.rotation = arctan2(transform[0][1], transform[0][0])
+proc postHook(node: var Node) =
+  if node.relativeTransform.isSome:
+    let transform = node.relativeTransform.get()
+    node.position = vec2(transform[0][2], transform[1][2])
+    node.rotation = arctan2(transform[0][1], transform[0][0])
 
     # Extract the flips from the matrix:
     let
-      actual = rotate(v.rotation)
+      actual = rotate(node.rotation)
       original = mat3(
         transform[0][0], transform[1][0], 0,
         transform[0][1], transform[1][1], 0,
@@ -285,15 +286,18 @@ proc postHook(v: var Node) =
       )
       residual = actual.inverse() * original
     if residual[0, 0] < 0:
-      v.flipHorizontal = true
+      node.flipHorizontal = true
     if residual[1, 1] < 0:
-      v.flipVertical = true
+      node.flipVertical = true
 
-  v.orgPosition = v.position
-  v.orgSize = v.size
-  v.dirty = true
+  for child in node.children:
+    child.parent = node
 
-proc renameHook(v: var Node, fieldName: var string) =
+  node.orgPosition = node.position
+  node.orgSize = node.size
+  node.dirty = true
+
+proc renameHook(node: var Node, fieldName: var string) =
   if fieldName == "type":
     fieldName = "kind"
 

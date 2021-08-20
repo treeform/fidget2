@@ -36,18 +36,6 @@ proc findNodeById*(id: string): Node =
         return c
   return recur(figmaFile.document)
 
-proc parent*(node: Node): Node =
-  ## Finds node's parent (slow).
-  let id = node.id
-  proc recur(p: Node): Node =
-    for n in p.children:
-      if n.id == id:
-        return p
-      let c = recur(n)
-      if c != nil:
-        return c
-  return recur(figmaFile.document)
-
 proc remove*(node: Node) =
   ## Removes the node from the document.
   let parent = node.parent
@@ -55,6 +43,7 @@ proc remove*(node: Node) =
     if n == node:
       parent.children.delete(i)
       parent.markTreeDirty()
+      node.parent = nil
       return
 
 proc copy*(node: Node): Node =
@@ -73,6 +62,7 @@ proc newInstance*(node: Node): Node =
 proc addChild*(parent, child: Node) =
   ## Adds a child to a parent node.
   parent.children.add(child)
+  child.parent = parent
   parent.markTreeDirty()
 
 proc normalize(props: var seq[(string, string)]) =
