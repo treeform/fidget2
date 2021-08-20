@@ -1,6 +1,6 @@
 ## Second way of perf
 
-import tables, print, macros, std/monotimes, strutils
+import tables, print, macros, std/monotimes, strutils, strformat
 
 proc getTicks*(): int =
   ## Get accurate time.
@@ -10,6 +10,7 @@ var
   measureStart: int
   measureStack: seq[string]
   measures: CountTable[string]
+  calls: CountTable[string]
 
 proc measurePush*(what: string) =
   ## Used by {.measure.} pragma to push measure section.
@@ -22,6 +23,7 @@ proc measurePush*(what: string) =
   #echo " ".repeat(measureStack.len), "{ ", what
   measureStart = now
   measureStack.add(what)
+  calls.inc(what)
 
 proc measurePop*() =
   ## Used by {.measure.} pragma to pop measure section.
@@ -43,12 +45,26 @@ macro measure*(fn: untyped) =
 
 proc dumpMeasures*() =
   ## Dumps the {.measure.} timings.
-  echo "Performance:"
-  var s: seq[(string, float)]
   measures.sort()
+  var
+    maxK = 0
+    maxV = 0
+    totalV = 0
   for k, v in measures:
-    s.add((k, v.float / 1000000.0))
-  printBarChart(s)
+    maxK = max(maxK, k.len)
+    maxV = max(maxV, v)
+    totalV += v
+
+  let n = "name ".alignLeft(maxK, padding = '.')
+  echo &"{n}.. self time    self %  # calls  relative amount"
+  for k, v in measures:
+    let
+      n = k.alignLeft(maxK)
+      bar = "#".repeat((v/maxV*40).int)
+      numCalls = calls[k]
+    echo &"{n} {v/1000000:>9.3f}ms{v/totalV*100:>9.3f}%{numCalls:>9} {bar}"
+
+  calls.clear()
   measures.clear()
 
 when isMainModule:
