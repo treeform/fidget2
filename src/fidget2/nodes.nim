@@ -1,5 +1,5 @@
 import schema, loader, random, algorithm, strutils,
-    flatty/hashy2
+    flatty/hashy2, vmath
 
 proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
@@ -60,8 +60,15 @@ proc remove*(node: Node) =
 proc copy*(node: Node): Node =
   ## Copies a node creating new one.
   result = deepCopy(node)
+  result.position = vec2(0, 0)
   result.id = $rand(int.high)
   #result.markTreeDirty()
+
+proc newInstance*(node: Node): Node =
+  ## Creates a new instance of a master node.
+  doAssert node.kind == nkComponent
+  result = node.copy()
+  result.componentId = node.id
 
 proc addChild*(parent, child: Node) =
   ## Adds a child to a parent node.

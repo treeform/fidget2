@@ -1,4 +1,4 @@
-import fidget2, puppy, jsony, print, vmath, strformat, pixie, fidget2/common, tables, chroma, times
+import fidget2, jsony, puppy, print, vmath, strformat, pixie, fidget2/common, tables, chroma, times
 
 type
   Category = ref object
@@ -61,71 +61,43 @@ var loaded: bool
 proc displayCb() {.cdecl.} =
   if loaded == false:
     loaded = true
-    var data = fetch("https://forum.nim-lang.org/threads.json")
+    var
+      data = fetch("https://forum.nim-lang.org/threads.json")
     threadPage = fromJson(data, ThreadPage)
 
     var
-      threadRow = find("/MainScreen/ThreadList/ThreadRow")
-      #threadRow = screen.find("ThreadList/ThreadRow")
-      threadList = find("/MainScreen/ThreadList")
+      threadRowMaster = find("/UI/ThreadRow")
+      threadList = find("/UI/MainScreen/ThreadList")
 
-    # for c in threadList.children:
-    #   c.remove()
-
-    for node in findAll("/MainScreen/ThreadList/ThreadRow"):
+    for node in findAll("/UI/MainScreen/ThreadList/ThreadRow"):
       node.remove()
 
-    var y = 0
     for thread in threadPage.threads:
-      threadRow = threadRow.copy()
-      threadRow.name = $thread.id
-      threadRow.position = vec2(0, y.float32)
-      y += 51
+      let threadRow = threadRowMaster.newInstance()
 
+      threadRow.find("Topic").characters = thread.topic
+      threadRow.find("Category").characters = thread.category.name
+      threadRow.find("Replies").characters = $thread.replies
+      threadRow.find("Views").characters = $thread.views
+      threadRow.find("Time").characters = formatActivity(thread.activity)
 
-      threadRow.children[0].characters = thread.topic
-      threadRow.children[1].characters = thread.category.name
-      threadRow.children[2].characters = $thread.replies
-      threadRow.children[3].characters = $thread.views
-      threadRow.children[4].characters = formatActivity(thread.activity)
-
-      var users = threadRow.children[5]
-      for i in 0 ..< 5:
+      for i, userIcon in threadRow.findAll("Users/*"):
         if i >= thread.users.len:
-          users.children[i].visible = false
+          userIcon.visible = false
         else:
-          users.children[i].visible = true
-          let
-            url = thread.users[i].avatarUrl
-            imageData = fetch(url)
-            avatarImage = decodeImage(imageData)
-          imageCache[url] = avatarImage
-          users.children[i].fills[0].imageRef = url
+          userIcon.visible = true
+          userIcon.fills[0].imageUrl = thread.users[i].avatarUrl
 
-      threadRow.children[6].fills[0].color = thread.category.getColor
-
-      threadRow.find("topFrame/Topic").characters = thread.topic
-      threadRow.find("topFrame').find("Topic").characters = thread.topic
-
-      #let topic = find(&"/MainScreen/ThreadList/{thread.id}/Topic")
-      #topic.characters = thread.topic
-
+      threadRow.find("CategoryMark").fills[0].color = thread.category.getColor
       threadList.addChild(threadRow)
 
-    print threadList.children.len
+    find("/UI/MainScreen").markTreeDirty()
 
-    var mainScreen = find("/MainScreen")
-    mainScreen.markTreeDirty()
-
-
-addCb(eOnDisplay, 100, "/MainScreen", displayCb)
-
-
-
+addCb(eOnDisplay, 100, "/UI/MainScreen", displayCb)
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/KbOeyQXdW9FzZBqy9loS7C",
   windowTitle = "Nim Forum",
-  entryFrame = "MainScreen",
+  entryFrame = "/UI/MainScreen",
   resizable = true
 )

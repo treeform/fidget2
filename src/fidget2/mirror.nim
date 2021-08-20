@@ -1,7 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
-    nodes, perf
+    nodes, perf, puppy
 
 export textboxes, nodes
 
@@ -583,6 +583,15 @@ proc processEvents() {.measure.} =
 
   clearInputs()
 
+proc `imageUrl=`*(paint: schema.Paint, url: string) =
+  # TODO: Make loading images async.
+  if url notin imageCache:
+    let
+      imageData = fetch(url)
+      avatarImage = decodeImage(imageData)
+    imageCache[url] = avatarImage
+  paint.imageRef = url
+
 proc display(withEvents = true) {.measure.} =
   ## Called every frame by main while loop.
 
@@ -608,6 +617,8 @@ proc startFidget*(
   use(figmaUrl)
 
   thisFrame = find(entryFrame)
+  if thisFrame == nil:
+    quit(entryFrame & ", not found in " & figmaUrl & ".")
   windowResizable = resizable
 
   viewportSize = thisFrame.size

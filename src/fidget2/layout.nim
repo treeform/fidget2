@@ -28,6 +28,7 @@ proc computeLayout*(parent, node: Node) {.measure.} =
 
   # Auto-layout code.
   if node.layoutMode == lmVertical:
+
     if node.counterAxisSizingMode == asAuto:
       # Resize to fit elements tightly.
       var maxW = 0.0
@@ -43,11 +44,12 @@ proc computeLayout*(parent, node: Node) {.measure.} =
     for i, n in node.children:
       if n.visible == false:
         continue
-
       if first:
         first = false
       else:
         at += node.itemSpacing
+
+      n.position.y = at
 
       at += n.size.y
     at += node.paddingBottom
@@ -69,11 +71,12 @@ proc computeLayout*(parent, node: Node) {.measure.} =
     for i, n in node.children:
       if n.visible == false:
         continue
-
       if first:
         first = false
       else:
         at += node.itemSpacing
+
+      n.position.x = at
 
       at += n.size.x
     at += node.paddingRight
