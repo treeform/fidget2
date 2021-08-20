@@ -66,7 +66,11 @@ proc displayCb() {.cdecl.} =
 
     var
       threadRow = find("/MainScreen/ThreadList/ThreadRow")
+      #threadRow = screen.find("ThreadList/ThreadRow")
       threadList = find("/MainScreen/ThreadList")
+
+    # for c in threadList.children:
+    #   c.remove()
 
     for node in findAll("/MainScreen/ThreadList/ThreadRow"):
       node.remove()
@@ -77,7 +81,7 @@ proc displayCb() {.cdecl.} =
       threadRow.name = $thread.id
       threadRow.position = vec2(0, y.float32)
       y += 51
-      threadList.addChild(threadRow)
+
 
       threadRow.children[0].characters = thread.topic
       threadRow.children[1].characters = thread.category.name
@@ -100,11 +104,13 @@ proc displayCb() {.cdecl.} =
 
       threadRow.children[6].fills[0].color = thread.category.getColor
 
-      #threadRow.find("Topic").characters = thread.topic
+      threadRow.find("topFrame/Topic").characters = thread.topic
+      threadRow.find("topFrame').find("Topic").characters = thread.topic
 
       #let topic = find(&"/MainScreen/ThreadList/{thread.id}/Topic")
       #topic.characters = thread.topic
 
+      threadList.addChild(threadRow)
 
     print threadList.children.len
 
