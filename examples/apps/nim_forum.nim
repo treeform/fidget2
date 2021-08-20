@@ -66,7 +66,7 @@ proc displayCb() {.cdecl.} =
     threadPage = fromJson(data, ThreadPage)
 
     var
-      threadRowMaster = find("/UI/ThreadRow")
+      threadRowMaster = find("/UI/ThreadRow/State=Default")
       threadList = find("/UI/MainScreen/ThreadList")
 
     for node in findAll("/UI/MainScreen/ThreadList/ThreadRow"):
