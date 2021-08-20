@@ -2,7 +2,6 @@ import globs, json, jsony, os, schema, strutils, sets, tables, puppy
 
 var
   figmaFile*: FigmaFile                ## Main figma file.
-  globTree*: GlobTree[Node]            ## Glob tree for faster find access.
 
 proc figmaHeaders(): seq[Header] =
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
@@ -182,18 +181,6 @@ proc downloadFigmaFile(fileKey: string) =
       "Error downloading Figma file: " & getCurrentExceptionMsg()
     )
 
-proc rebuildGlobTree() =
-  ## Nodes have changed rebuild the glob tree.
-  globTree = GlobTree[Node]()
-  proc walkNodes(path: string, node: Node) =
-    globTree.add(path, node)
-    for c in node.children:
-      walkNodes(path & "/" & c.name, c)
-  for c in figmaFile.document.children:
-    # Skip pages
-    for c2 in c.children:
-      walkNodes(c2.name, c2)
-
 proc use*(figmaUrl: string) =
   ## Use the figma url as a new figmaFile.
   ## Will download the full file if it needs to.
@@ -210,4 +197,3 @@ proc use*(figmaUrl: string) =
         raise newException(FidgetError, "Invalid Figma URL: '" & figmaUrl & "'")
   downloadFigmaFile(figmaFileKey)
   figmaFile = loadFigmaFile(figmaFileKey)
-  rebuildGlobTree()

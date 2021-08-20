@@ -125,7 +125,6 @@ proc addCb*(
   handler: proc() {.cdecl.},
 ) =
   ## Adds a generic call back.
-  echo "adding callback", kind, " ", glob
   eventCbs.add EventCb(
     kind: kind,
     priority: priority,
@@ -138,15 +137,14 @@ proc find*(glob: string): Node =
   var glob = glob
   if thisSelector.len > 0:
     glob = thisSelector & "/" & glob
-  globTree.find(glob)
+  figmaFile.document.find(glob)
 
-iterator findAll*(glob: string): Node =
+proc findAll*(glob: string): seq[Node] =
   ## Find all nodes matching glob pattern.
   var glob = glob
   if thisSelector.len > 0:
     glob = thisSelector & "/" & glob
-  for node in globTree.findAll(glob):
-    yield node
+  figmaFile.document.findAll(glob)
 
 proc pushSelector(glob: string) =
   # Note: used to make less code in find template, do not inline.
@@ -410,11 +408,6 @@ proc onSetKey(
       buttonRelease[key] = true
     buttonDown[key] = setKey
 
-var onClickGlobalCb: proc() {.cdecl.}
-proc onClickGlobal*(a: proc() {.cdecl.}) =
-  echo "setting onClickGlobal"
-  onClickGlobalCb = a
-
 proc onSetCharCallback(window: staticglfw.Window, character: cuint) {.cdecl.} =
   ## User typed a character, needed for unicode entry.
   requestedFrame = true
@@ -486,7 +479,7 @@ proc simulateClick*(glob: string) =
       thisCb = cb
       thisSelector = thisCb.glob
       if cb.glob == glob:
-        for node in globTree.findAll(cb.glob):
+        for node in findAll(cb.glob):
           thisNode = node
           cb.handler()
           thisNode = nil
@@ -528,10 +521,10 @@ proc processEvents() {.measure.} =
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, mousePos)
 
-  if buttonPress[MOUSE_LEFT]:
-    echo "---"
-    for n in underMouseNodes:
-      echo n.name
+  # if buttonPress[MOUSE_LEFT]:
+  #   echo "---"
+  #   for n in underMouseNodes:
+  #     echo n.name
 
   # Do hovering logic.
   var hovering = false
@@ -562,7 +555,7 @@ proc processEvents() {.measure.} =
     of eOnClick:
 
       if mouse.click:
-        for node in globTree.findAll(thisSelector):
+        for node in findAll(thisSelector):
           if node.pixelBox.overlaps(mousePos):
             thisNode = node
             thisCb.handler()
@@ -570,7 +563,7 @@ proc processEvents() {.measure.} =
 
     of eOnDisplay:
 
-      for node in globTree.findAll(thisSelector):
+      for node in findAll(thisSelector):
         thisNode = node
         thisCb.handler()
         thisNode = nil

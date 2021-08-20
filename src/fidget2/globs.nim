@@ -1,17 +1,48 @@
-import strutils
+import strutils, schema
 
 type
-  GlobError* = object of ValueError ## Raised on invalid globs.
+  GlobbyError* = object of ValueError
 
-proc globMatchOne(s, glob: string): bool =
+  # Node* = ref object
+  #   name*: string
+  #   children*: seq[Node]
+
+  Glob = seq[string]
+
+proc treeLen*(node: Node): int =
+  ## Return number of nodes in the tree.
+  inc result
+  for c in node.children:
+    result += c.treeLen()
+
+proc scan*(node: Node): seq[Node] =
+  ## Iterates the tree and returns flat list.
+  proc visit(node: Node, list: var seq[Node]) =
+    list.add(node)
+    for c in node.children:
+      c.visit(list)
+  for c in node.children:
+    c.visit(result)
+
+proc walk*(node: Node): seq[(string, Node)] =
+  ## Iterates the tree with paths:Node.
+  proc visit(node: Node, list: var seq[(string, Node)], path: string) =
+    let path = path & "/" & node.name
+    list.add((path, node))
+    for c in node.children:
+      c.visit(list, path)
+  for c in node.children:
+    c.visit(result, "")
+
+proc globMatchOne(path, glob: string, pathStart = 0, globStart = 0): bool =
   ## Match a single entry string to glob.
 
-  proc error() =
-    raise newException(GlobError, "Invalid Glob pattern: `" & glob & "`")
+  proc error(glob: string) =
+    raise newException(GlobbyError, "Invalid glob: `" & glob & "`")
 
   var
-    i = 0
-    j = 0
+    i = pathStart
+    j = globStart
   while j < glob.len:
     if glob[j] == '?':
       discard
@@ -19,129 +50,117 @@ proc globMatchOne(s, glob: string): bool =
       while true:
         if j == glob.len - 1: # At the end
           return true
-        elif glob[j+1] == '*':
+        elif glob[j + 1] == '*':
           inc j
         else:
           break
-      for k in i ..< s.len:
-        if globMatchOne(s[k..^1], glob[(j+1)..^1]):
+      for k in i ..< path.len:
+        if globMatchOne(path, glob, k, j + 1):
           i = k - 1
           return true
       return false
-
     elif glob[j] == '[':
       inc j
-      if j < glob.len and glob[j] == ']': error()
+      if j < glob.len and glob[j] == ']': error(glob)
       if j + 3 < glob.len and glob[j + 1] == '-' and glob[j + 3] == ']':
         # Do [A-z] style match.
-        if s[i].ord < glob[j].ord or s[i].ord > glob[j+2].ord:
+        if path[i].ord < glob[j].ord or path[i].ord > glob[j + 2].ord:
           return false
         j += 3
       else:
         # Do [ABC] style match.
         while true:
-          if j >= glob.len: error()
-          elif glob[j] == s[i]:
+          if j >= glob.len: error(glob)
+          elif glob[j] == path[i]:
             while glob[j] != ']':
-              if j + 1 >= glob.len: error()
+              if j + 1 >= glob.len: error(glob)
               inc j
             break
-          elif glob[j] == '[': error()
+          elif glob[j] == '[': error(glob)
           elif glob[j] == ']':
             return false
           inc j
-    elif i >= s.len:
+    elif i >= path.len:
       return false
-    elif glob[j] != s[i]:
+    elif glob[j] != path[i]:
       return false
     inc i
     inc j
 
-  if i == s.len and j == glob.len:
+  if i == path.len and j == glob.len:
     return true
 
-proc globSimplify(globArr: seq[string]): seq[string] =
-  ## Simplify backwards ".." and absolute "//" paths.
-  for glob in globArr:
-    if glob == "..":
+proc globSimplify(globParts: seq[string]): seq[string] =
+  ## Simplify backwards ".." and absolute "//".
+  for globPart in globParts:
+    if globPart == "..":
       if result.len > 0:
         discard result.pop()
-    elif glob == "":
+    elif globPart == "":
       result.setLen(0)
     else:
-      result.add glob
+      result.add globPart
 
-proc globMatch(sArr, globArr: seq[string]): bool =
-  ## Match a seq string to a seq glob pattern.
-  var
-    globArr = globSimplify(globArr)
-    i = 0
-    j = 0
-  while i < sArr.len and j < globArr.len:
-    if globArr[j] == "*":
-      discard
-    elif globArr[j] == "**":
-      if j == globArr.len - 1: # At the end
-        return true
-      for k in i ..< sArr.len:
-        if globMatch(sArr[k..^1], globArr[(j+1)..^1]):
-          i = k - 1
-          return true
-      return false
+proc parseGlob(glob: string): Glob =
+  glob.split('/').globSimplify()
+
+proc findAll*(node: Node, glob: string): seq[Node] =
+  let glob = parseGlob(glob)
+  if glob.len == 0:
+    return
+
+  proc visit(node: Node, list: var seq[Node], glob: Glob, globAt = 0) =
+    if glob[globAt] == "**":
+      if globAt + 1 == glob.len:
+        # "**" at last level means all nodes
+        list.add(node)
+        for c in node.scan:
+          list.add(c)
+      else:
+        # "**" can patch any tree level, branch out the search!
+        node.visit(list, glob, globAt + 1)
+        for c in node.children:
+          c.visit(list, glob, globAt)
     else:
-      if not globMatchOne(sArr[i], globArr[j]):
-        return false
-    inc i
-    inc j
+      if globMatchOne(node.name, glob[globAt]):
+        if globAt + 1 == glob.len:
+          # Glob end
+          list.add(node)
+        else:
+          # Glob path
+          for c in node.children:
+            c.visit(list, glob, globAt + 1)
 
-  if i == sArr.len and j == globArr.len:
-    return true
+  for c in node.children:
+    c.visit(result, glob)
 
-proc globMatch*(s, glob: string): bool =
-  ## Match a string to a glob pattern.
-  globMatch(s.split("/"), glob.split("/"))
+proc find*(node: Node, glob: string): Node =
+  let glob = parseGlob(glob)
+  proc visit(node: Node, one: var Node, glob: Glob, globAt = 0) =
+    if globMatchOne(node.name, glob[globAt]):
+      if glob[globAt] == "**":
+        if globAt + 1 == glob.len:
+          # "**" at last level means this node.
+          one = node
+        else:
+          # "**" can patch any tree level, branch out the search!
+          node.visit(one, glob, globAt + 1)
+          if one != nil:
+            return
+          for c in node.children:
+            c.visit(one, glob, globAt)
+            if one != nil:
+              return
+      else:
+        if globAt + 1 == glob.len:
+          # Glob end
+          one = node
+        else:
+          # Glob path
+          for c in node.children:
+            c.visit(one, glob, globAt + 1)
+            if one != nil:
+              return
 
-type
-  GlobTree*[T] = ref object
-    # TODO: make the fast tree part :)
-    data: seq[(string, T)]
-
-proc len*[T](tree: GlobTree[T]): int =
-  ## Return size of the tree.
-  tree.data.len
-
-proc add*[T](tree: GlobTree[T], path: string, data: T) =
-  ## Add a path to the tree.
-  tree.data.add((path, data))
-
-proc del*[T](tree: GlobTree[T], path: string, data: T) =
-  for i, entry in tree.data:
-    if entry[0] == path and entry[1] == data:
-      tree.data.del(i)
-      return
-
-proc del*[T](tree: GlobTree[T], glob: string) =
-  ## Delete a paths from a tree matching glob.
-  var i = 0
-  while i < tree.data.len:
-    let entry = tree.data[i]
-    if entry[0].globMatch(glob):
-      tree.data.del(i)
-      continue
-    inc i
-
-iterator findAll*[T](tree: GlobTree[T], glob: string): T =
-  ## Find all paths that match the glob.
-  for entry in tree.data:
-    if entry[0].globMatch(glob):
-      yield entry[1]
-
-proc find*[T](tree: GlobTree[T], glob: string): T =
-  ## Find a single path that matches the glob.
-  for data in tree.findAll(glob):
-    return data
-
-iterator keys*[T](tree: GlobTree[T]): string =
-  ## Iterate all of the keys of the tree.
-  for entry in tree.data:
-    yield entry[0]
+  for c in node.children:
+    c.visit(result, glob)
