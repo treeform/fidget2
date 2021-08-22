@@ -297,6 +297,7 @@ proc computeArrangement*(node: Node): Arrangement {.measure.} =
     hAlign = node.style.textAlignHorizontal,
     vAlign = node.style.textAlignVertical,
   )
-  #arrangementCache[node.id] = arrangement
+
+  arrangementCache[node.id] = arrangement
 
   return arrangement

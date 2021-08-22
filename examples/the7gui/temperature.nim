@@ -11,7 +11,7 @@ var
   celsius = 0.0
   fahrenheit = 32.0
 
-find "TemperatureFrame":
+find "/UI/TemperatureFrame":
 
   find "CelsiusInput/text":
     onDisplay:
@@ -50,6 +50,6 @@ find "TemperatureFrame":
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Temperature",
-  entryFrame = "TemperatureFrame",
+  entryFrame = "/UI/TemperatureFrame",
   resizable = false
 )

@@ -238,9 +238,9 @@ template onEdit*(body: untyped) =
     eOnClick,
     100,
     thisSelector,
-    proc() =
+    proc() {.cdecl.} =
       if mouse.click:
-        for node in globTree.findAll(thisSelector):
+        for node in figmaFile.document.findAll(thisSelector):
           if node.pixelBox.overlaps(mousePos):
             if textBoxFocus != node:
               setupTextBox(node)
@@ -259,9 +259,9 @@ template onEdit*(body: untyped) =
     eOnEdit,
     200,
     thisSelector,
-    proc() =
+    proc() {.cdecl.} =
       if textBoxFocus != nil and textBox != nil:
-        for node in globTree.findAll(thisSelector):
+        for node in figmaFile.document.findAll(thisSelector):
           if textBoxFocus == node and textBox.hasChange:
             thisNode = node
             textBoxFocus.characters = $textBox.runes
@@ -273,12 +273,12 @@ template onEdit*(body: untyped) =
 template onUnfocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
   addCb(
-    eOnUnFOcus,
+    eOnUnFocus,
     500,
     thisSelector,
-    proc() =
+    proc() {.cdecl.} =
       if keyboard.onUnfocusNode != nil:
-        for node in globTree.findAll(thisSelector):
+        for node in figmaFile.document.findAll(thisSelector):
           if keyboard.onUnfocusNode == node:
             thisNode = node
             body
@@ -291,9 +291,9 @@ template onFocus*(body: untyped) =
     eOnFocus,
     600,
     thisSelector,
-    proc() =
+    proc() {.cdecl.} =
       if keyboard.onFocusNode != nil:
-        for node in globTree.findAll(thisSelector):
+        for node in figmaFile.document.findAll(thisSelector):
           if keyboard.onFocusNode == node:
             thisNode = node
             body
@@ -593,6 +593,15 @@ proc processEvents() {.measure.} =
         thisNode = nil
 
     of eOnFrame:
+      thisCb.handler()
+
+    of eOnEdit:
+      thisCb.handler()
+
+    of eOnFocus:
+      thisCb.handler()
+
+    of eOnUnfocus:
       thisCb.handler()
 
     else:

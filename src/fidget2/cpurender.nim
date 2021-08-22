@@ -374,19 +374,22 @@ proc drawText*(node: Node) {.measure.} =
     # Draw the selection ranges.
     for selectionRegion in textBox.selectionRegions():
       var s = selectionRegion
-      var path: Path
+      var path = newPath()
       path.rect(s)
       layer.fillPath(path, defaultTextHighlightColor, mat)
 
     # Draw the typing cursor
     var s = textBox.cursorRect()
-    var path: Path
+    var path = newPath()
     path.rect(s)
     layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
   ## Fills the text arrangement.
   for spanIndex, (start, stop) in arrangement.spans:
     var font = arrangement.fonts[spanIndex]
+    var normalPaint = font.paint
+    var selectedPaint: type(normalPaint) = color(1, 1, 1, 1)
+
     for runeIndex in start .. stop:
       var path = font.typeface.getGlyphPath(arrangement.runes[runeIndex])
       path.transform(
@@ -394,13 +397,13 @@ proc drawText*(node: Node) {.measure.} =
         scale(vec2(font.scale))
       )
 
-      var paint = font.paint
+      var paint = normalPaint
       if textBoxFocus == node:
         # If editing text and character is in selection range,
         # draw it white.
         let s = textBox.selection()
         if runeIndex >= s.a and runeIndex < s.b:
-          paint.color = color(1, 1, 1, 1)
+          paint = selectedPaint
 
       layer.fillPath(path, paint, mat)
 
