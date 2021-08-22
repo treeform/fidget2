@@ -1,7 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
-    nodes, perf, puppy
+    nodes, perf, puppy, layout
 
 export textboxes, nodes
 
@@ -429,21 +429,24 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
   let underMouseNodes = underMouse(thisFrame, mousePos)
 
   echo "--- scroll ---"
-  for n in underMouseNodes:
-    echo n.name, ":", n.overflowDirection
-    if n.overflowDirection == odVerticalScrolling:
+  for node in underMouseNodes:
+    echo node.name, ":", node.overflowDirection
+    if node.overflowDirection == odVerticalScrolling:
       # TODO make it scroll both x and y.
-      n.scrollPos.y -= yoffset * 50
+      node.scrollPos.y -= yoffset * 50
 
-      var childMaxHight = 0f
-      for child in n.children:
-        childMaxHight = max(childMaxHight, child.position.y + child.size.y)
+      if node.collapse:
+        node.dirty = true
 
-      if n.scrollPos.y > childMaxHight - n.size.y:
-        n.scrollPos.y = childMaxHight  - n.size.y
+      var bounds = node.computeScrollBounds()
+      if node.scrollPos.y > bounds.h:
+        node.scrollPos.y = bounds.h
+        continue
+      if node.scrollPos.y < 0:
+        node.scrollPos.y = 0
+        continue
 
-      if n.scrollPos.y < 0:
-        n.scrollPos.y = 0
+      break
 
 proc onMouseButton(
   window: staticglfw.Window, button, action, modifiers: cint
