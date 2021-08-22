@@ -250,6 +250,8 @@ type
     mat*: Mat3          ## Useful to get back to the node.
     collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
 
+    scrollPos*: Vec2    ## How does it scroll it's children.
+
   FigmaFile* = ref object
     document*: Node
     components*: Table[string, Component]

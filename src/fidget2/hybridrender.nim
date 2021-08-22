@@ -162,7 +162,8 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
 proc setupWindow*(
   frameNode: Node,
   offscreen = false,
-  resizable = true
+  resizable = true,
+  decorated = true,
 ) =
   ## Opens a new glfw window that is ready to draw into.
   ## Also setups all the shaders and buffers.
@@ -183,6 +184,8 @@ proc setupWindow*(
   windowHint(SAMPLES, 0)
   windowHint(CONTEXT_VERSION_MAJOR, 4)
   windowHint(CONTEXT_VERSION_MINOR, 1)
+  windowHint(DECORATED, decorated.cint)
+
   window = createWindow(
     viewportSize.x.cint, viewportSize.y.cint,
     "run_shaders",

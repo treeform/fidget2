@@ -1,5 +1,5 @@
 import schema, loader, random, algorithm, strutils,
-    flatty/hashy2, vmath
+    flatty/hashy2, vmath, sequtils
 
 proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
@@ -36,15 +36,19 @@ proc findNodeById*(id: string): Node =
         return c
   return recur(figmaFile.document)
 
-proc remove*(node: Node) =
+proc removeChild*(parent, node: Node) =
   ## Removes the node from the document.
-  let parent = node.parent
   for i, n in parent.children:
     if n == node:
       parent.children.delete(i)
       parent.markTreeDirty()
       node.parent = nil
       return
+
+proc clearChildren*(parent: Node) =
+  ## Removes all children.
+  for node in toSeq(parent.children):
+   parent.removeChild(node)
 
 proc copy*(node: Node): Node =
   ## Copies a node creating new one.

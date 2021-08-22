@@ -1,4 +1,5 @@
-import fidget2, jsony, puppy, print, vmath, strformat, pixie, fidget2/common, tables, chroma, times
+import fidget2, jsony, puppy, print, vmath, strformat, pixie, fidget2/common,
+    tables, chroma, times, sequtils
 
 type
   Category = ref object
@@ -58,42 +59,39 @@ proc formatActivity(activity: int): string =
     $(age / 60 / 60 / 24).int & "d"
 
 var loaded: bool
-proc displayCb() {.cdecl.} =
-  if loaded == false:
-    loaded = true
-    var
-      data = fetch("https://forum.nim-lang.org/threads.json")
-    threadPage = fromJson(data, ThreadPage)
 
-    var
-      threadRowMaster = find("/UI/ThreadRow/State=Default")
-      threadList = find("/UI/MainScreen/ThreadList")
+find "/UI/MainScreen":
+  onDisplay:
+    if loaded == false:
+      loaded = true
+      var
+        data = fetch("https://forum.nim-lang.org/threads.json")
+      threadPage = fromJson(data, ThreadPage)
 
-    for node in findAll("/UI/MainScreen/ThreadList/ThreadRow"):
-      node.remove()
+      var
+        threadRowMaster = find("/UI/ThreadRow/State=Default")
+        threadList = find("/UI/MainScreen/ThreadList")
 
-    for thread in threadPage.threads:
-      let threadRow = threadRowMaster.newInstance()
+      threadList.clearChildren()
 
-      threadRow.find("Topic").characters = thread.topic
-      threadRow.find("Category").characters = thread.category.name
-      threadRow.find("Replies").characters = $thread.replies
-      threadRow.find("Views").characters = $thread.views
-      threadRow.find("Time").characters = formatActivity(thread.activity)
+      for thread in threadPage.threads:
+        let threadRow = threadRowMaster.newInstance()
 
-      for i, userIcon in threadRow.findAll("Users/*"):
-        if i >= thread.users.len:
-          userIcon.visible = false
-        else:
-          userIcon.visible = true
-          userIcon.fills[0].imageUrl = thread.users[i].avatarUrl
+        threadRow.find("Topic").characters = thread.topic
+        threadRow.find("Category").characters = thread.category.name
+        threadRow.find("Replies").characters = $thread.replies
+        threadRow.find("Views").characters = $thread.views
+        threadRow.find("Time").characters = formatActivity(thread.activity)
 
-      threadRow.find("CategoryMark").fills[0].color = thread.category.getColor
-      threadList.addChild(threadRow)
+        for i, userIcon in threadRow.findAll("Users/*"):
+          if i >= thread.users.len:
+            userIcon.visible = false
+          else:
+            userIcon.visible = true
+            userIcon.fills[0].imageUrl = thread.users[i].avatarUrl
 
-    find("/UI/MainScreen").markTreeDirty()
-
-addCb(eOnDisplay, 100, "/UI/MainScreen", displayCb)
+        threadRow.find("CategoryMark").fills[0].color = thread.category.getColor
+        threadList.addChild(threadRow)
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/KbOeyQXdW9FzZBqy9loS7C",

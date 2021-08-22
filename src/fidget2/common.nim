@@ -57,6 +57,8 @@ proc transform*(node: Node): Mat3 =
     result = result * scale(vec2(-1, 1))
   if node.flipVertical:
     result = result * scale(vec2(1, -1))
+  if node.parent != nil:
+    result = translate(-node.parent.scrollPos) * result
 
 iterator reverse*[T](a: seq[T]): T {.inline.} =
   var i = a.len - 1

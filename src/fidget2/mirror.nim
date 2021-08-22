@@ -426,6 +426,25 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
   else:
     mouse.wheelDelta += yoffset
 
+  let underMouseNodes = underMouse(thisFrame, mousePos)
+
+  echo "--- scroll ---"
+  for n in underMouseNodes:
+    echo n.name, ":", n.overflowDirection
+    if n.overflowDirection == odVerticalScrolling:
+      # TODO make it scroll both x and y.
+      n.scrollPos.y -= yoffset * 50
+
+      var childMaxHight = 0f
+      for child in n.children:
+        childMaxHight = max(childMaxHight, child.position.y + child.size.y)
+
+      if n.scrollPos.y > childMaxHight - n.size.y:
+        n.scrollPos.y = childMaxHight  - n.size.y
+
+      if n.scrollPos.y < 0:
+        n.scrollPos.y = 0
+
 proc onMouseButton(
   window: staticglfw.Window, button, action, modifiers: cint
 ) {.cdecl.} =
@@ -498,8 +517,10 @@ proc resizeWindow*(x, y: int) =
 proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
   ## Mouse moved glfw callback.
   requestedFrame = true
-  mouse.pos.x = x
-  mouse.pos.y = y
+
+  mouse.prevPos = mouse.pos
+  mouse.pos = vec2(x, y)
+  mouse.delta = mouse.pos - mouse.prevPos
 
   if buttonDown[MOUSE_LEFT]:
     textBoxMouseAction()
@@ -521,10 +542,10 @@ proc processEvents() {.measure.} =
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, mousePos)
 
-  # if buttonPress[MOUSE_LEFT]:
-  #   echo "---"
-  #   for n in underMouseNodes:
-  #     echo n.name
+  if buttonPress[MOUSE_LEFT]:
+    echo "---"
+    for n in underMouseNodes:
+      echo n.name
 
   # Do hovering logic.
   var hovering = false
@@ -610,7 +631,8 @@ proc startFidget*(
   figmaUrl: string,
   windowTitle: string,
   entryFrame: string,
-  resizable: bool
+  resizable: bool,
+  decorated = true,
 ) =
   ## Starts Fidget Main loop.
 
@@ -628,7 +650,8 @@ proc startFidget*(
 
   setupWindow(
     thisFrame,
-    resizable = resizable
+    resizable = resizable,
+    decorated = decorated
   )
 
   updateWindowSize()
