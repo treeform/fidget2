@@ -253,7 +253,6 @@ template onEdit*(body: untyped) =
         if textBox != nil:
           textBoxFocus.dirty = true
           textBox.selectParagraph(textBoxFocus.mat.inverse() * mouse.pos)
-
   )
   addCb(
     eOnEdit,
@@ -614,6 +613,11 @@ proc processEvents() {.measure.} =
     echo "writing atlas"
     ctx.writeAtlas("atlas.png")
 
+  if buttonPress[F5]:
+    echo "reloading from web"
+    use(currentFigmaUrl)
+    thisFrame = find(entryFramePath)
+
   clearInputs()
 
 proc `imageUrl=`*(paint: schema.Paint, url: string) =
@@ -647,12 +651,13 @@ proc startFidget*(
   decorated = true,
 ) =
   ## Starts Fidget Main loop.
+  currentFigmaUrl = figmaUrl
+  use(currentFigmaUrl)
 
-  use(figmaUrl)
-
-  thisFrame = find(entryFrame)
+  entryFramePath = entryFrame
+  thisFrame = find(entryFramePath)
   if thisFrame == nil:
-    quit(entryFrame & ", not found in " & figmaUrl & ".")
+    quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
   windowResizable = resizable
 
   viewportSize = thisFrame.size

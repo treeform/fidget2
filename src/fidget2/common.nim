@@ -50,6 +50,9 @@ var
   pixelScale*: float32     ## Pixel multiplier user wants on the UI
   frameNum*: int
 
+  currentFigmaUrl*: string
+  entryFramePath*: string
+
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
   result = translate(node.position) * rotate(node.rotation)

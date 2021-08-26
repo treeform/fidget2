@@ -45,6 +45,8 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
   let prevMat = mat
   mat = mat * node.transform()
 
+  node.mat = mat # needed for picking
+
   var pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
 
   if node.dirty or not quasiEqual(pixelBox, node.pixelBox):
