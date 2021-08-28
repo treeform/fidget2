@@ -465,7 +465,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
   if node.effects.len > 0:
     needsLayer = true
   for child in node.children:
-    if child.isMask:
+    if child.isMask and child.visible:
       needsLayer = true
       hasMaskedChildren = true
       maskLayer = newMask(layer.width, layer.height)
@@ -494,7 +494,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
       layer = newImage(layer.width, layer.height)
       var childLayer = layer
       for child in node.children:
-        if child.isMask:
+        if child.isMask and child.visible:
           layers.add(layer)
           layer = newImage(layer.width, layer.height)
           drawNode(child)
