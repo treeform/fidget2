@@ -55,11 +55,13 @@ var
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
-  result = translate(node.position) * rotate(node.rotation)
+  result = translate(node.position)
   if node.flipHorizontal:
     result = result * scale(vec2(-1, 1))
   if node.flipVertical:
     result = result * scale(vec2(1, -1))
+  if node.rotation != 0:
+    result = result * rotate(node.rotation)
   if node.parent != nil:
     result = translate(-node.parent.scrollPos) * result
 
