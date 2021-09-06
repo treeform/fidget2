@@ -61,13 +61,14 @@ proc readAtlasImage(ctx: Context): Image =
     ctx.atlasTexture.height.GLsizei,
   )
   glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
-  glGetTexImage(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    result.data[0].addr
-  )
+  when not defined(emscripten):
+    glGetTexImage(
+      GL_TEXTURE_2D,
+      0,
+      GL_RGBA,
+      GL_UNSIGNED_BYTE,
+      result.data[0].addr
+    )
 
 proc writeAtlas*(ctx: Context, filePath: string) =
   ## Writes the current atlas to a file, used for debugging.
@@ -177,6 +178,7 @@ proc newContext*(
   result.addMaskTexture()
 
   when defined(emscripten):
+    echo "using emscripten glsl"
     result.atlasShader = newShaderStatic("glsl/emscripten/atlas.vert", "glsl/emscripten/atlas.frag")
     result.maskShader = newShaderStatic("glsl/emscripten/atlas.vert", "glsl/emscripten/mask.frag")
   else:

@@ -1049,13 +1049,14 @@ proc readGpuPixelsFromAtlas*(name: string, crop = true): pixie.Image =
     textureAtlas.image.height.GLsizei,
   )
   glBindTexture(GL_TEXTURE_2D, textureAtlasId)
-  glGetTexImage(
-    GL_TEXTURE_2D,
-    0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    screen.data[0].addr
-  )
+  when not defined(emscripten):
+    glGetTexImage(
+      GL_TEXTURE_2D,
+      0,
+      GL_RGBA,
+      GL_UNSIGNED_BYTE,
+      screen.data[0].addr
+    )
   if crop:
     let rect = textureAtlas.entries[name]
     let cutout = screen.subImage(

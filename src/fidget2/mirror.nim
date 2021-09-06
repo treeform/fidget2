@@ -622,12 +622,13 @@ proc processEvents() {.measure.} =
 
 proc `imageUrl=`*(paint: schema.Paint, url: string) =
   # TODO: Make loading images async.
-  if url notin imageCache:
-    let
-      imageData = fetch(url)
-      avatarImage = decodeImage(imageData)
-    imageCache[url] = avatarImage
-  paint.imageRef = url
+  when not defined(emscripten):
+    if url notin imageCache:
+      let
+        imageData = fetch(url)
+        avatarImage = decodeImage(imageData)
+      imageCache[url] = avatarImage
+    paint.imageRef = url
 
 proc display(withEvents = true) {.measure.} =
   ## Called every frame by main while loop.
@@ -642,6 +643,12 @@ proc display(withEvents = true) {.measure.} =
   swapBuffers()
 
   inc frameNum
+
+proc mainLoop() {.cdecl.} =
+  pollEvents()
+  display()
+  if buttonToggle[F8]:
+    dumpMeasures()
 
 proc startFidget*(
   figmaUrl: string,
@@ -689,14 +696,16 @@ proc startFidget*(
 
   running = true
 
-  # Run while window is open.
-  while windowShouldClose(window) == 0 and running:
-    pollEvents()
-    display()
-    if buttonToggle[F8]:
-      dumpMeasures()
+  when defined(emscripten):
+    # Emscripten can't block so it will call this callback instead.
+    proc emscripten_set_main_loop(f: proc() {.cdecl.}, a: cint, b: bool) {.importc.}
+    emscripten_set_main_loop(mainLoop, 0, true);
+  else:
+    # When running native code we can block in an infinite loop.
+    while windowShouldClose(window) == 0 and running:
+      mainLoop()
 
-  # Destroy the window.
-  window.destroyWindow()
-  # Exit GLFW.
-  terminate()
+    # Destroy the window.
+    window.destroyWindow()
+    # Exit GLFW.
+    terminate()

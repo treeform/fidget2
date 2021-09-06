@@ -62,10 +62,13 @@ var loaded: bool
 
 find "/UI/MainScreen":
   onDisplay:
+    return
     if loaded == false:
       loaded = true
+      echo "fetching data"
       var
         data = fetch("https://forum.nim-lang.org/threads.json")
+      echo "have data"
       threadPage = fromJson(data, ThreadPage)
 
       var

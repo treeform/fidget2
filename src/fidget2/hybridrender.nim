@@ -196,8 +196,10 @@ proc setupWindow*(
   if window == nil:
     raise newException(Exception, "Failed to create GLFW window.")
   window.makeContextCurrent()
-  # Load opengl.
-  loadExtensions()
+
+  when not defined(emscripten):
+    # Load opengl.
+    loadExtensions()
 
   echo "GL_VERSION: ", cast[cstring](glGetString(GL_VERSION))
   echo "GL_VENDOR: ", cast[cstring](glGetString(GL_VENDOR))

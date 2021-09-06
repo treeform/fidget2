@@ -20,6 +20,7 @@ nimcache
 node_modules
 package-lock.json
 package.json
+tmp
 
 # figma tmp files
 figma

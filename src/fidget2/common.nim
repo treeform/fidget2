@@ -79,6 +79,7 @@ iterator reversePairs*[T](a: seq[T]): (int, T) {.inline.} =
 
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
+    echo "readTypeface: ", figmaFontPath(fontName)
     typefaceCache[fontName] = readTypeface(figmaFontPath(fontName))
   newFont(typefaceCache[fontName])
 
@@ -221,9 +222,12 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
   var fontName = style.fontPostScriptName
 
   if backup != nil:
-    if fontName == "" and backup.fontFamily != "":
+    if fontName == "" and backup.fontPostScriptName != "":
       fontName = backup.fontPostScriptName
 
+  # print style
+  # print backup
+  # print fontName
   var font = getFont(fontName)
 
   if style.fontSize != 0:

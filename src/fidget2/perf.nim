@@ -4,7 +4,10 @@ import tables, print, macros, std/monotimes, strutils, strformat
 
 proc getTicks*(): int =
   ## Get accurate time.
-  getMonoTime().ticks.int
+  when defined(emscripten):
+    0
+  else:
+    getMonoTime().ticks.int
 
 var
   measureStart: int
