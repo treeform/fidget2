@@ -1,7 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
-    nodes, perf, puppy, layout
+    nodes, perf, puppy, layout, os
 
 export textboxes, nodes
 
@@ -314,6 +314,8 @@ proc updateWindowSize() =
 
   viewportSize = windowFrame
 
+  thisFrame.dirty = true
+
   minimized = windowSize == vec2(0, 0)
   pixelRatio = if windowSize.x > 0: windowFrame.x / windowSize.x else: 0
 
@@ -427,15 +429,13 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
 
   let underMouseNodes = underMouse(thisFrame, mousePos)
 
-  echo "--- scroll ---"
   for node in underMouseNodes:
-    echo node.name, ":", node.overflowDirection
     if node.overflowDirection == odVerticalScrolling:
       # TODO make it scroll both x and y.
       node.scrollPos.y -= yoffset * 50
 
-      if node.collapse:
-        node.dirty = true
+      #if node.collapse:
+      node.dirty = true
 
       var bounds = node.computeScrollBounds()
       if node.scrollPos.y > bounds.h:
@@ -637,10 +637,12 @@ proc display(withEvents = true) {.measure.} =
     processEvents()
 
   thisFrame.checkDirty()
-
-  drawToScreen(thisFrame)
-
-  swapBuffers()
+  if thisFrame.dirty:
+    drawToScreen(thisFrame)
+    swapBuffers()
+  else:
+    # skip frame
+    sleep(7)
 
   inc frameNum
 
