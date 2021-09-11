@@ -19,20 +19,10 @@ var
   ## Is the vsync enabled.
   vSync*: bool = true
 
-  ## Text box object
-  ## (only single text box object exists for active text box).
-  textBox*: TextBox
-  ## Nodes that is focused and has the current text box.
-  textBoxFocus*: Node
-  ## Default text highlight color (blueish by default).
-  defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
-
   ## Cache of typefaces.
   typefaceCache*: Table[string, Typeface]
   ## Cache of images.
   imageCache*: Table[string, Image]
-  ## Cache of text arguments.
-  arrangementCache*: Table[string, Arrangement]
 
   ## Current mat during the draw cycle.
   mat*: Mat3
@@ -76,6 +66,14 @@ iterator reversePairs*[T](a: seq[T]): (int, T) {.inline.} =
   while i > -1:
     yield (a.len - 1 - i, a[i])
     dec i
+
+proc clamp*(v: Vec2, r: Rect): Vec2 =
+  ## Makes returns a vec that stays in bounds of the rectangle.
+  result = v
+  if result.x < r.x: result.x = r.x
+  if result.y < r.y: result.y = r.y
+  if result.x > r.x + r.w: result.x = r.x + r.w
+  if result.y > r.y + r.h: result.y = r.y + r.h
 
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
@@ -199,7 +197,7 @@ proc genStrokeGeometry*(node: Node) {.measure.} =
   else:
     discard
 
-proc genHitRectGeometry*(node: Node) {.measure.} =
+proc genHitTestGeometry*(node: Node) {.measure.} =
   ## Generates geometry thats a simple rect over the node,
   ## no matter what kind of node it is.
   ## Used for simple mouse hit prediction
@@ -216,7 +214,7 @@ proc genHitRectGeometry*(node: Node) {.measure.} =
   )
   node.fillGeometry = @[geom]
 
-proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
+proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font =
   ## Get the font!
 
   var fontName = style.fontPostScriptName
@@ -256,7 +254,13 @@ proc getFont(style: TypeStyle, backup: TypeStyle = nil): Font =
 
   return font
 
-proc computeArrangement*(node: Node): Arrangement {.measure.} =
+proc font*(node: Node): Font =
+  node.style.getFont()
+
+proc cursorWidth*(font: Font): float =
+  min(font.size / 12, 1)
+
+proc computeArrangement*(node: Node) {.measure.} =
   var spans: seq[pixie.Span]
   if node.characterStyleOverrides.len > 0:
     # The 0th style is node default style:
@@ -299,7 +303,7 @@ proc computeArrangement*(node: Node): Arrangement {.measure.} =
       of tarFixed, tarHeight: true
       of tarWidthAndHeight: false
 
-  var arrangement = typeset(
+  node.arrangement = typeset(
     spans,
     bounds = node.size,
     wrap = wrap,
@@ -307,6 +311,48 @@ proc computeArrangement*(node: Node): Arrangement {.measure.} =
     vAlign = node.style.textAlignVertical,
   )
 
-  arrangementCache[node.id] = arrangement
+proc genTextGeometry*(node: Node) {.measure.} =
+  ## Generates text bounds geometry, can be more or less then
+  ## nodes hit area. Effected by internal scroll.
+  var geom = Geometry()
+  geom.path = newPath()
+  geom.mat = mat3()
+  geom.windingRule = wrNonZero
 
-  return arrangement
+  node.computeArrangement()
+  let bounds = node.arrangement.computeBounds()
+  # Basic rectangle.
+  geom.path.rect(
+    x = -node.scrollPos.x,
+    y = -node.scrollPos.y,
+    w = bounds.x + node.font.cursorWidth,
+    h = bounds.y + node.font.lineHeight,
+  )
+  node.fillGeometry = @[geom]
+
+proc computeScrollBounds*(node: Node): Rect =
+  if node.kind != nkText:
+    for child in node.children:
+      #childMaxHight = max(childMaxHight, child.position.y + child.size.y)
+      result = result or rect(child.position, child.size)
+  else:
+    node.computeArrangement()
+    result.wh = node.arrangement.computeBounds()
+  result.h = max(0, result.h - node.size.y)
+
+proc overlaps*(node: Node, mouse: Vec2): bool =
+  ## Does the mouse overlap the node.
+
+  # Generate the geometry.
+  if node.kind == nkText:
+    node.genHitTestGeometry()
+  else:
+    node.genFillGeometry()
+    node.genStrokeGeometry()
+
+  for geom in node.fillGeometry:
+    if geom.path.fillOverlaps(mouse, node.mat):
+      return true
+  for geom in node.strokeGeometry:
+    if geom.path.strokeOverlaps(mouse, node.mat, strokeWidth=node.strokeWeight):
+      return true

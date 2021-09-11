@@ -11,6 +11,11 @@ var
   layers: seq[Image]
   maskLayer*: Mask
 
+  ## Nodes that is focused and has the current text box.
+  textBoxFocus*: Node
+  ## Default text highlight color (blueish by default).
+  defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
+
 proc newImage(w, h: int): Image {.measure.} =
   pixie.newImage(w, h)
 
@@ -22,7 +27,7 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
 
   # Generate the geometry.
   if node.kind == nkText:
-    node.genHitRectGeometry()
+    node.genTextGeometry()
   else:
     node.genFillGeometry()
     node.genStrokeGeometry()
@@ -361,39 +366,51 @@ proc maskSelfImage*(node: Node): Mask {.measure.} =
 proc drawText*(node: Node) {.measure.} =
   ## Draws the text (including editing of text).
 
-  var arrangement = node.computeArrangement()
+  node.computeArrangement()
+
+  # Scroll inside the text box
+  mat = mat * translate(-node.scrollPos)
 
   if textBoxFocus == node:
-    # Don't recompute the layout twice,
-    # Set the text layout to textBox layout.
-    textBox.arrangement = arrangement
 
     # TODO: Draw selection outline by using a parent focus variant?
     # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
 
+    # draw arrangement squares for debugging
+    # block:
+    #   var path = newPath()
+    #   for rect in node.arrangement.selectionRects:
+    #     path.rect(rect)
+    #   layer.strokePath(path, color(1, 0, 0, 1), mat)
+
     # Draw the selection ranges.
-    for selectionRegion in textBox.selectionRegions():
-      var s = selectionRegion
-      var path = newPath()
-      path.rect(s)
-      layer.fillPath(path, defaultTextHighlightColor, mat)
+    let selectionRegions = node.selectionRegions()
+    if selectionRegions.len > 0:
+      for selectionRegion in selectionRegions:
+        var s = selectionRegion
+        var path = newPath()
+        path.rect(s)
+        layer.fillPath(path, defaultTextHighlightColor, mat)
 
     # Draw the typing cursor
-    var s = textBox.cursorRect()
-    var path = newPath()
-    path.rect(s)
-    layer.fillPath(path, node.fills[0].color.rgbx, mat)
+    if selectionRegions.len == 0:
+      var s = node.cursorRect()
+      var path = newPath()
+      path.rect(s)
+      layer.fillPath(path, node.fills[0].color.rgbx, mat)
+
+    node.adjustScroll()
 
   ## Fills the text arrangement.
-  for spanIndex, (start, stop) in arrangement.spans:
-    var font = arrangement.fonts[spanIndex]
+  for spanIndex, (start, stop) in node.arrangement.spans:
+    var font = node.arrangement.fonts[spanIndex]
     var normalPaint = font.paint
     var selectedPaint: type(normalPaint) = color(1, 1, 1, 1)
 
     for runeIndex in start .. stop:
-      var path = font.typeface.getGlyphPath(arrangement.runes[runeIndex])
+      var path = font.typeface.getGlyphPath(node.arrangement.runes[runeIndex])
       path.transform(
-        translate(arrangement.positions[runeIndex]) *
+        translate(node.arrangement.positions[runeIndex]) *
         scale(vec2(font.scale))
       )
 
@@ -401,7 +418,7 @@ proc drawText*(node: Node) {.measure.} =
       if textBoxFocus == node:
         # If editing text and character is in selection range,
         # draw it white.
-        let s = textBox.selection()
+        let s = node.selection()
         if runeIndex >= s.a and runeIndex < s.b:
           paint = selectedPaint
 

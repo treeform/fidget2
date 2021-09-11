@@ -19,6 +19,7 @@ proc checkDirty*(node: Node) =
     checkDirty(c)
     if c.dirty == true:
       node.dirty = true
+      break
 
 proc printDirtyStatus*(node: Node, indent = 0) =
   echo " ".repeat(indent), node.name, ":", node.dirty

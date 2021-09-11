@@ -1,14 +1,8 @@
 import bumpy, schema, vmath, common, tables, pixie, perf
 
 proc computeTextBounds(node: Node): Vec2 {.measure.} =
-  let arrangement = node.computeArrangement()
-  return arrangement.computeBounds()
-
-proc computeScrollBounds*(node: Node): Rect =
-  for child in node.children:
-    #childMaxHight = max(childMaxHight, child.position.y + child.size.y)
-    result = result or rect(child.position, child.size)
-  result.h -= node.size.y
+  node.computeArrangement()
+  return node.arrangement.computeBounds()
 
 proc computeLayout*(parent, node: Node) {.measure.} =
   ## Computes constraints and auto-layout.
@@ -122,9 +116,6 @@ proc computeLayout*(parent, node: Node) {.measure.} =
       node.position.y = round(parent.size.y / 2.0) + offset
 
   # Fix scroll position when resizing.
-  if node.overflowDirection == odVerticalScrolling:
+  if node.kind == nkText or node.overflowDirection == odVerticalScrolling:
     let bounds = node.computeScrollBounds()
-    if node.scrollPos.y > bounds.h:
-      node.scrollPos.y = bounds.h
-    if node.scrollPos.y < 0:
-      node.scrollPos.y = 0
+    node.scrollPos = clamp(node.scrollPos, bounds)

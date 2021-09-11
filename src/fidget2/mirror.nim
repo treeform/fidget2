@@ -1,7 +1,7 @@
 import algorithm, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
-    nodes, perf, puppy, layout, os
+    nodes, perf, puppy, layout, os, print
 
 export textboxes, nodes
 
@@ -15,11 +15,11 @@ elif defined(nanovg):
   import nanovgrender
 
 elif defined(hyb):
-  import context, hybridrender
+  import context, hybridrender, cpurender
 
 else:
   # hybrid is default for now
-  import context, hybridrender
+  import context, hybridrender, cpurender
 
 type
   KeyState* = enum
@@ -58,6 +58,7 @@ type
 
   EventCbKind* = enum
     eOnClick
+    eOnAnyClick
     eOnFrame
     eOnEdit
     eOnDisplay
@@ -84,7 +85,6 @@ var
   thisCb*: EventCb
   thisSelector*: string
   selectorStack: seq[string]
-
 
 proc display(withEvents=true)
 
@@ -197,37 +197,26 @@ proc setupTextBox(node: Node) =
   ## Setup a the text box around this node.
   keyboard.onUnfocusNode = textBoxFocus
   textBoxFocus = node
+  node.dirty = true
   keyboard.onFocusNode = textBoxFocus
 
   if keyboard.onUnfocusNode != nil:
     keyboard.onUnfocusNode.dirty = true
   keyboard.onFocusNode.dirty = true
 
-  var font = newFont(typefaceCache[node.style.fontPostScriptName])
-  font.size = node.style.fontSize
-  font.lineHeight = node.style.lineHeightPx
-
-  textBox = newTextBox(
-    font,
-    int node.pixelBox.w,
-    int node.pixelBox.h,
-    node.characters,
-    HorizontalAlignment(node.style.textAlignHorizontal.int),
-    VerticalAlignment(node.style.textAlignVertical.int),
-    multiline = true, #TODO: node.multiline,
-    worldWrap = true,
-  )
-  textBox.arrangement = arrangementCache[node.id]
-  # TODO: add these:
-  #textBox.editable = node.editableText
-  #textBox.scrollable = true
+  # TODO: handle these properties better
+  node.multiline = true
+  node.wordWrap = false
+  node.scrollable = true
+  node.editable = true
 
 proc textBoxMouseAction() =
   ## Performs mouse stuff on the text box.
   if textBoxFocus != nil:
     textBoxFocus.dirty = true
-    textBox.mouseAction(
-      textBoxFocus.mat.inverse() * mouse.pos,
+    let mat = textBoxFocus.mat * translate(-textBoxFocus.scrollPos)
+    textBoxFocus.mouseAction(
+      mat.inverse() * mouse.pos,
       mouse.click,
       keyboard.shiftKey
     )
@@ -235,38 +224,33 @@ proc textBoxMouseAction() =
 template onEdit*(body: untyped) =
   ## When text node is display or edited.
   addCb(
-    eOnClick,
+    eOnDisplay,
     100,
     thisSelector,
     proc() {.cdecl.} =
       if mouse.click:
-        for node in figmaFile.document.findAll(thisSelector):
-          if node.pixelBox.overlaps(mousePos):
-            if textBoxFocus != node:
-              setupTextBox(node)
-            textBoxMouseAction()
-      elif mouse.doubleClick:
-        if textBox != nil:
-          textBoxFocus.dirty = true
-          textBox.selectWord(textBoxFocus.mat.inverse() * mouse.pos)
-      elif mouse.tripleClick:
-        if textBox != nil:
-          textBoxFocus.dirty = true
-          textBox.selectParagraph(textBoxFocus.mat.inverse() * mouse.pos)
+        if thisNode.parent.overlaps(mousePos):
+          if textBoxFocus != thisNode:
+            setupTextBox(thisNode)
+          textBoxMouseAction()
+        else:
+          if textBoxFocus == thisNode:
+            keyboard.onUnfocusNode = textBoxFocus
+            textBoxFocus.dirty = true
+            textBoxFocus = nil
   )
   addCb(
     eOnEdit,
     200,
     thisSelector,
     proc() {.cdecl.} =
-      if textBoxFocus != nil and textBox != nil:
+      if textBoxFocus != nil:
         for node in figmaFile.document.findAll(thisSelector):
-          if textBoxFocus == node and textBox.hasChange:
+          if textBoxFocus == node and textBoxFocus.dirty:
             thisNode = node
-            textBoxFocus.characters = $textBox.runes
+            #textBoxFocus.characters = $textBoxFocus.arrangement.runes
             body
             thisNode = nil
-            textBox.hasChange = false
   )
 
 template onUnfocus*(body: untyped) =
@@ -349,7 +333,7 @@ proc onSetKey(
   keyboard.shiftKey = setKey and ((modifiers and MOD_SHIFT) != 0)
 
   # Do the text box commands.
-  if textBox != nil and setKey:
+  if textBoxFocus != nil and setKey:
     textBoxFocus.dirty = true
     keyboard.state = ksPress
     let
@@ -358,45 +342,45 @@ proc onSetKey(
     case cast[Button](key):
       of ARROW_LEFT:
         if ctrl:
-          textBox.leftWord(shift)
+          textBoxFocus.leftWord(shift)
         else:
-          textBox.left(shift)
+          textBoxFocus.left(shift)
       of ARROW_RIGHT:
         if ctrl:
-          textBox.rightWord(shift)
+          textBoxFocus.rightWord(shift)
         else:
-          textBox.right(shift)
+          textBoxFocus.right(shift)
       of ARROW_UP:
-        textBox.up(shift)
+        textBoxFocus.up(shift)
       of ARROW_DOWN:
-        textBox.down(shift)
+        textBoxFocus.down(shift)
       of Button.HOME:
-        textBox.startOfLine(shift)
+        textBoxFocus.startOfLine(shift)
       of Button.END:
-        textBox.endOfLine(shift)
+        textBoxFocus.endOfLine(shift)
       of Button.PAGE_UP:
-        textBox.pageUp(shift)
+        textBoxFocus.pageUp(shift)
       of Button.PAGE_DOWN:
-        textBox.pageDown(shift)
+        textBoxFocus.pageDown(shift)
       of ENTER:
         #TODO: keyboard.multiline:
-        textBox.typeCharacter(Rune(10))
+        textBoxFocus.typeCharacter(Rune(10))
       of BACKSPACE:
-        textBox.backspace(shift)
+        textBoxFocus.backspace(shift)
       of DELETE:
-        textBox.delete(shift)
+        textBoxFocus.delete(shift)
       of LETTER_C: # copy
         if ctrl:
-          window.setClipboardString(textBox.copy())
+          window.setClipboardString(textBoxFocus.copyText())
       of LETTER_V: # paste
         if ctrl:
-          textBox.paste($window.getClipboardString())
+          textBoxFocus.pasteText($window.getClipboardString())
       of LETTER_X: # cut
         if ctrl:
-          window.setClipboardString(textBox.cut())
+          window.setClipboardString(textBoxFocus.cutText())
       of LETTER_A: # select all
         if ctrl:
-          textBox.selectAll()
+          textBoxFocus.selectAll()
       else:
         discard
 
@@ -412,9 +396,9 @@ proc onSetKey(
 proc onSetCharCallback(window: staticglfw.Window, character: cuint) {.cdecl.} =
   ## User typed a character, needed for unicode entry.
   requestedFrame = true
-  if textBox != nil:
+  if textBoxFocus != nil:
     keyboard.state = ksPress
-    textBox.typeCharacter(Rune(character))
+    textBoxFocus.typeCharacter(Rune(character))
   else:
     keyboard.state = ksPress
     keyboard.keyString = Rune(character).toUTF8()
@@ -423,7 +407,7 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
   ## Scroll wheel glfw callback.
   requestedFrame = true
   if textBoxFocus != nil:
-    textBox.scrollBy(-yoffset * 50)
+    textBoxFocus.scrollBy(-yoffset * 50)
   else:
     mouse.wheelDelta += yoffset
 
@@ -432,6 +416,7 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
   for node in underMouseNodes:
     if node.overflowDirection == odVerticalScrolling:
       # TODO make it scroll both x and y.
+      echo "non text scroll limit"
       node.scrollPos.y -= yoffset * 50
 
       #if node.collapse:
@@ -579,7 +564,7 @@ proc processEvents() {.measure.} =
 
       if mouse.click:
         for node in findAll(thisSelector):
-          if node.pixelBox.overlaps(mousePos):
+          if node.overlaps(mousePos):
             thisNode = node
             thisCb.handler()
             thisNode = nil

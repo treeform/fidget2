@@ -225,6 +225,13 @@ type
     style*: TypeStyle
     characterStyleOverrides*: seq[int]
     styleOverrideTable*: Table[string, TypeStyle]
+    # Non-figma text parameters:
+    arrangement*: Arrangement
+    cursor*: int      # The typing cursor.
+    selector*: int    # The selection cursor.
+    multiline*: bool  # Single line only (good for input fields).
+    wordWrap*: bool   # Should the lines wrap or not.
+    savedX*: float     # X position affinity when moving cursor up or down.
 
     # Layout
     constraints*: LayoutConstraint
@@ -239,7 +246,7 @@ type
     paddingBottom*: float32
     overflowDirection*: OverflowDirection
 
-    # Non figma parameters:
+    # Non-figma parameters:
     dirty*: bool        ## Do the pixels need redrawing?
     pixels*: Image      ## Pixel image cache.
     pixelBox*: Rect     ## Pixel position and size.
@@ -250,6 +257,7 @@ type
     mat*: Mat3          ## Useful to get back to the node.
     collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
 
+    scrollable*: bool
     scrollPos*: Vec2    ## How does it scroll it's children.
 
   FigmaFile* = ref object

@@ -3,20 +3,25 @@ import fidget2
 
 var loaded: bool
 
-find "/UI/MainScreen":
+#find "/UI/MainScreen":
+find "/UI/TextFrame":
   onDisplay:
     if loaded == false:
       loaded = true
-    #var writerBox = find("/UI/MainScreen/Writer/PlaceHolderText")
-    #writerBox.editable = true
 
-  find "Writer/PlaceHolderText":
+  find "Writer/Text":
     onEdit:
-      echo "editing"
+      discard
+      #echo "editing"
+    onFocus:
+      echo "focus node"
+    onUnfocus:
+      echo "unfocus node"
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/PRNHOO9xeHYkq5LskwDn33",
   windowTitle = "Pushbullet",
-  entryFrame = "/UI/MainScreen",
+  #entryFrame = "/UI/MainScreen",
+  entryFrame = "/UI/TextFrame",
   resizable = true
 )
