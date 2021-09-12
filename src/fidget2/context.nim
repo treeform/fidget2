@@ -303,12 +303,17 @@ proc getFreeTile(ctx: Context): int =
   ctx.grow()
   return ctx.getFreeTile()
 
-proc putImage*(ctx: Context, imagePath: string, image: Image) {.measure.} =
-  # Reminder: This does not set mipmaps (used for text, should it?)
+proc removeImage*(ctx: Context, imagePath: string) =
+  ## Removes an image, does nothing if image never added.
   if imagePath in ctx.entries:
     for index in ctx.entries[imagePath].tiles:
       if index != -1:
         ctx.takenTiles[index] = false
+    ctx.entries.del(imagePath)
+
+proc putImage*(ctx: Context, imagePath: string, image: Image) {.measure.} =
+  # Reminder: This does not set mipmaps (used for text, should it?)
+  ctx.removeImage(imagePath)
 
   var tileInfo = TileInfo()
   tileInfo.width = image.width

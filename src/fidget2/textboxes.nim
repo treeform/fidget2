@@ -153,7 +153,7 @@ proc removeSelection(node: Node) =
   ## Removes selected runes if they are selected.
   discard node.removedSelection()
 
-proc adjustScroll*(node: Node) =
+proc scrollToCursor*(node: Node) =
   ## Adjust scroll to make sure cursor is in the window.
   if node.scrollable:
     let
@@ -184,7 +184,7 @@ proc typeCharacter*(node: Node, rune: Rune) =
   node.runesChanged()
   inc node.cursor
   node.selector = node.cursor
-  node.adjustScroll()
+  node.scrollToCursor()
   node.dirty = true
 
 proc typeCharacter*(node: Node, letter: char) =
@@ -201,7 +201,7 @@ proc typeCharacters*(node: Node, s: string) =
     inc node.cursor
   node.selector = node.cursor
   node.runesChanged()
-  node.adjustScroll()
+  node.scrollToCursor()
   node.dirty = true
 
 proc copyText*(node: Node): string =
@@ -237,7 +237,7 @@ proc backspace*(node: Node, shift = false) =
   if node.cursor > 0:
     node.arrangement.runes.delete(node.cursor - 1)
     node.runesChanged()
-    node.adjustScroll()
+    node.scrollToCursor()
     dec node.cursor
     node.selector = node.cursor
     node.dirty = true
@@ -250,7 +250,7 @@ proc delete*(node: Node, shift = false) =
   if node.cursor < node.arrangement.runes.len:
     node.arrangement.runes.delete(node.cursor)
     node.runesChanged()
-    node.adjustScroll()
+    node.scrollToCursor()
     node.dirty = true
 
 proc backspaceWord*(node: Node, shift = false) =
@@ -264,7 +264,7 @@ proc backspaceWord*(node: Node, shift = false) =
       node.arrangement.runes.delete(node.cursor - 1)
       dec node.cursor
     node.runesChanged()
-    node.adjustScroll()
+    node.scrollToCursor()
     node.selector = node.cursor
     node.dirty = true
 
@@ -278,14 +278,14 @@ proc deleteWord*(node: Node, shift = false) =
       not node.arrangement.runes[node.cursor].isWhiteSpace():
       node.arrangement.runes.delete(node.cursor)
     node.runesChanged()
-    node.adjustScroll()
+    node.scrollToCursor()
     node.dirty = true
 
 proc left*(node: Node, shift = false) =
   ## Move cursor left.
   if node.cursor > 0:
     dec node.cursor
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
     node.savedX = node.cursorPos.x
@@ -294,7 +294,7 @@ proc right*(node: Node, shift = false) =
   ## Move cursor right.
   if node.cursor < node.arrangement.runes.len:
     inc node.cursor
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
     node.savedX = node.cursorPos.x
@@ -308,13 +308,13 @@ proc down*(node: Node, shift = false) =
     vec2(node.savedX, node.cursorPos.y + node.font.lineHeight * 1.5))
   if index != -1:
     node.cursor = index
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
   elif node.cursorPos.y == layout[^1].y:
     # Are we on the last line? Then jump to start location last.
     node.cursor = node.arrangement.runes.len
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
 
@@ -327,13 +327,13 @@ proc up*(node: Node, shift = false) =
     vec2(node.savedX, node.cursorPos.y - node.font.lineHeight * 0.5))
   if index != -1:
     node.cursor = index
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
   elif node.cursorPos.y == layout[0].y:
     # Are we on the first line? Then jump to start location 0.
     node.cursor = 0
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
 
@@ -344,7 +344,7 @@ proc leftWord*(node: Node, shift = false) =
   while node.cursor > 0 and
     not node.arrangement.runes[node.cursor - 1].isWhiteSpace():
     dec node.cursor
-  node.adjustScroll()
+  node.scrollToCursor()
   if not shift:
     node.selector = node.cursor
   node.savedX = node.cursorPos.x
@@ -356,7 +356,7 @@ proc rightWord*(node: Node, shift = false) =
   while node.cursor < node.arrangement.runes.len and
     not node.arrangement.runes[node.cursor].isWhiteSpace():
     inc node.cursor
-  node.adjustScroll()
+  node.scrollToCursor()
   if not shift:
     node.selector = node.cursor
   node.savedX = node.cursorPos.x
@@ -366,7 +366,7 @@ proc startOfLine*(node: Node, shift = false) =
   while node.cursor > 0 and
     node.arrangement.runes[node.cursor - 1] != Rune(10):
     dec node.cursor
-  node.adjustScroll()
+  node.scrollToCursor()
   if not shift:
     node.selector = node.cursor
   node.savedX = node.cursorPos.x
@@ -376,7 +376,7 @@ proc endOfLine*(node: Node, shift = false) =
   while node.cursor < node.arrangement.runes.len and
     node.arrangement.runes[node.cursor] != Rune(10):
     inc node.cursor
-  node.adjustScroll()
+  node.scrollToCursor()
   if not shift:
     node.selector = node.cursor
   node.savedX = node.cursorPos.x
@@ -391,13 +391,13 @@ proc pageUp*(node: Node, shift = false) =
     index = node.arrangement.pickGlyphAt(pos)
   if index != -1:
     node.cursor = index
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
   elif pos.y <= layout[0].y:
     # Above the first line? Then jump to start location 0.
     node.cursor = 0
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
 
@@ -411,13 +411,13 @@ proc pageDown*(node: Node, shift = false) =
     index = node.arrangement.pickGlyphAt(pos)
   if index != -1:
     node.cursor = index
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
   elif pos.y > layout[^1].y:
     # Bellow the last line? Then jump to start location last.
     node.cursor = node.arrangement.runes.len
-    node.adjustScroll()
+    node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
 
@@ -448,7 +448,7 @@ proc mouseAction*(
     if mousePos.y > node.innerHeight:
       node.cursor = node.arrangement.runes.len
   node.savedX = mousePos.x
-  node.adjustScroll()
+  node.scrollToCursor()
 
   if not shift and click:
     node.selector = node.cursor

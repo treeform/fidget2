@@ -98,6 +98,8 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
       node.drawNodeInternal(withChildren=node.collapse)
       ctx.putImage(node.id, layer)
       mat = prevBoundsMat
+    else:
+      ctx.removeImage(node.id)
 
   else:
     # Update pixel bounds even if no redraw was needed.
@@ -119,10 +121,12 @@ proc drawWithAtlas(node: Node) {.measure.} =
   if node.id in ctx.entries:
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0
+    doAssert node.willDrawSomething()
     ctx.drawImage(
       node.id,
       pos = node.pixelBox.xy
     )
+
 
   if not node.collapse:
     for child in node.children:

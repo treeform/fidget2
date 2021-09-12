@@ -399,8 +399,6 @@ proc drawText*(node: Node) {.measure.} =
       path.rect(s)
       layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
-    node.adjustScroll()
-
   ## Fills the text arrangement.
   for spanIndex, (start, stop) in node.arrangement.spans:
     var font = node.arrangement.fonts[spanIndex]

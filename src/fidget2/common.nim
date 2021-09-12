@@ -326,7 +326,7 @@ proc genTextGeometry*(node: Node) {.measure.} =
     x = -node.scrollPos.x,
     y = -node.scrollPos.y,
     w = bounds.x + node.font.cursorWidth,
-    h = bounds.y + node.font.lineHeight,
+    h = bounds.y,
   )
   node.fillGeometry = @[geom]
 
