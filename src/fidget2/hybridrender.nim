@@ -143,7 +143,8 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.setWindowSize(screenNode.size.x.cint, screenNode.size.y.cint)
 
-  viewportSize = screenNode.size.ceil
+  viewportSize = (screenNode.size * pixelRatio).ceil
+
 
   ctx.beginFrame(viewportSize)
 
@@ -155,8 +156,9 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   # screenNode.printDirtyStatus()
 
   # Setup proper matrix for drawing.
-  mat = mat3()
-  mat = mat * screenNode.transform().inverse()
+  mat = mat3() *
+    scale(vec2(pixelRatio, pixelRatio)) *
+    screenNode.transform().inverse()
   drawToAtlas(screenNode, 0)
 
   drawWithAtlas(screenNode)

@@ -214,7 +214,10 @@ proc textBoxMouseAction() =
   ## Performs mouse stuff on the text box.
   if textBoxFocus != nil:
     textBoxFocus.dirty = true
-    let mat = textBoxFocus.mat * translate(-textBoxFocus.scrollPos)
+    let mat = scale(vec2(1/pixelRatio, 1/pixelRatio)) *
+      textBoxFocus.mat *
+      translate(-textBoxFocus.scrollPos)
+    print mat.inverse() * mouse.pos
     textBoxFocus.mouseAction(
       mat.inverse() * mouse.pos,
       mouse.click,
