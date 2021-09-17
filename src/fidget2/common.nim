@@ -82,7 +82,9 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
     echo "readTypeface: ", figmaFontPath(fontName)
-    typefaceCache[fontName] = readTypeface(figmaFontPath(fontName))
+    var typeface = readTypeface(figmaFontPath(fontName))
+    typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansJP-Regular"))
+    typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
 
 proc rectangleFillGeometry(node: Node): Geometry =
