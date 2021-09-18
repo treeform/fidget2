@@ -594,6 +594,12 @@ proc processEvents() {.measure.} =
     else:
       echo "not covered: ": cb.kind
 
+  if textBoxFocus != nil:
+    let cursor = textBoxFocus.cursorRect()
+    var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)
+    imePos = imePos / pixelRatio
+    window.setImePos(imePos.x.cint, imePos.y.cint)
+
   thisSelector = ""
   thisCb = nil
 

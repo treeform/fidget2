@@ -83,7 +83,7 @@ proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
     echo "readTypeface: ", figmaFontPath(fontName)
     var typeface = readTypeface(figmaFontPath(fontName))
-    typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansJP-Regular"))
+    typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansSC-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
 
