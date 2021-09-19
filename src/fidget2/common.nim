@@ -1,6 +1,6 @@
-import vmath, chroma, schema, staticglfw, textboxes,
+import vmath, chroma, schema, staticglfw,
     tables, print, loader, bumpy, pixie, options,
-    pixie/fontformats/opentype, print, puppy, perf
+    pixie/fontformats/opentype, print, puppy, perf, unicode
 
 export print
 
@@ -46,6 +46,15 @@ var
 
   currentFigmaUrl*: string
   entryFramePath*: string
+
+  textImeEditLocation*: int
+  textImeEditString*: string
+
+  ## Nodes that is focused and has the current text box.
+  textBoxFocus*: Node
+  ## Default text highlight color (blueish by default).
+  defaultTextBackgroundHighlightColor* = rgbx(50, 150, 250, 255)
+  defaultTextHighlightColor* = color(1, 1, 1, 1)
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.
@@ -266,8 +275,65 @@ proc font*(node: Node): Font =
 proc cursorWidth*(font: Font): float =
   min(font.size / 12, 1)
 
+proc selection*(node: Node): HSlice[int, int] =
+  ## Returns current selection from.
+  result.a = min(node.cursor, node.selector)
+  result.b = max(node.cursor, node.selector)
+
+proc copy*(f: Font): Font =
+  result = Font()
+  result[] = f[]
+
+proc cutRunes(s: string, start, stop: int): string =
+  for i, r in s.toRunes:
+    if i >= stop:
+      break
+    if i >= start:
+      result.add r.toUTF8()
+
+
+proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
+
+  # TODO make this work for multiple spans.
+  doAssert spans.len == 1
+
+  var at = 0
+  for idx, span in spans:
+    let to = at + span.text.len
+    print at, span.text
+    # if slice.a > at and slice.a < to and slice.b >= to:
+    #   # Got to cut on half at end.
+    #   discard
+    # elif slice.a > at and slice.a < to and slice.b < to:
+      # Got to cut in two.
+    print "got cut in three"
+    let
+      start = newSpan(span.text.cutRunes(0, slice.a), span.font)
+      middle = newSpan(span.text.cutRunes(slice.a, slice.b), span.font)
+      stop = newSpan(span.text.cutRunes(slice.b, span.text.len), span.font)
+
+    middle.font = span.font.copy()
+    result.add(middle)
+
+    print start.text, middle.text, stop.text
+    spans.delete(idx)
+    spans.insert(stop, idx)
+    spans.insert(middle, idx)
+    spans.insert(start, idx)
+
+    break
+
+    #   discard
+    # elif slice.a < at and slice.b > at and slice.b < to:
+    #   # Got to cut on half at start.
+    #   discard
+
+    at = to
+
 proc computeArrangement*(node: Node) {.measure.} =
-  var spans: seq[pixie.Span]
+
+  node.runes = node.characters.toRunes()
+
   if node.characterStyleOverrides.len > 0:
     # The 0th style is node default style:
     node.styleOverrideTable["0"] = node.style
@@ -286,12 +352,12 @@ proc computeArrangement*(node: Node) {.measure.} =
           fillColor = style.fills[0].color
           fillColor.a = style.fills[0].opacity
         font.paint = fillColor.rgbx
-        spans.add(newSpan("", font))
+        node.spans.add(newSpan("", font))
 
-      spans[^1].text.add(node.characters[i])
+      node.spans[^1].text.add(node.characters[i])
       prevStyle = styleKey
 
-    # for span in spans:
+    # for span in node.spans:
     #   print "---"
     #   print span.text
     #   print span.font.typeface.filePath
@@ -302,15 +368,28 @@ proc computeArrangement*(node: Node) {.measure.} =
   else:
     var font = getFont(node.style)
     font.paint = node.fills[0].color.rgbx
-    spans = @[newSpan(node.characters, font)]
+    node.spans = @[newSpan(node.characters, font)]
 
   var wrap =
     case node.style.textAutoResize:
       of tarFixed, tarHeight: true
       of tarWidthAndHeight: false
 
+  if textBoxFocus == node:
+    # If node is being editing we might have to add highlight or ime string.
+    let selSlice = node.selection()
+    if selSlice.a != selSlice.b:
+      for modSpan in node.spans.modifySpans(node.selection()):
+        modSpan.font.paint = defaultTextHighlightColor
+
+    elif textImeEditString != "":
+      let imeSlice = HSlice[int, int](a: node.cursor, b: node.cursor)
+      for modSpan in node.spans.modifySpans(imeSlice):
+        modSpan.font.underline = true
+        modSpan.text = textImeEditString
+
   node.arrangement = typeset(
-    spans,
+    node.spans,
     bounds = node.size,
     wrap = wrap,
     hAlign = node.style.textAlignHorizontal,

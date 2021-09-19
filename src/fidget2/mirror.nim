@@ -217,7 +217,6 @@ proc textBoxMouseAction() =
     let mat = scale(vec2(1/pixelRatio, 1/pixelRatio)) *
       textBoxFocus.mat *
       translate(-textBoxFocus.scrollPos)
-    print mat.inverse() * mouse.pos
     textBoxFocus.mouseAction(
       mat.inverse() * mouse.pos,
       mouse.click,
@@ -342,50 +341,51 @@ proc onSetKey(
     let
       ctrl = keyboard.ctrlKey
       shift = keyboard.shiftKey
-    case cast[Button](key):
-      of ARROW_LEFT:
-        if ctrl:
-          textBoxFocus.leftWord(shift)
+    if textImeEditString == "":
+      case cast[Button](key):
+        of ARROW_LEFT:
+          if ctrl:
+            textBoxFocus.leftWord(shift)
+          else:
+            textBoxFocus.left(shift)
+        of ARROW_RIGHT:
+          if ctrl:
+            textBoxFocus.rightWord(shift)
+          else:
+            textBoxFocus.right(shift)
+        of ARROW_UP:
+          textBoxFocus.up(shift)
+        of ARROW_DOWN:
+          textBoxFocus.down(shift)
+        of Button.HOME:
+          textBoxFocus.startOfLine(shift)
+        of Button.END:
+          textBoxFocus.endOfLine(shift)
+        of Button.PAGE_UP:
+          textBoxFocus.pageUp(shift)
+        of Button.PAGE_DOWN:
+          textBoxFocus.pageDown(shift)
+        of ENTER:
+          #TODO: keyboard.multiline:
+          textBoxFocus.typeCharacter(Rune(10))
+        of BACKSPACE:
+          textBoxFocus.backspace(shift)
+        of DELETE:
+          textBoxFocus.delete(shift)
+        of LETTER_C: # copy
+          if ctrl:
+            window.setClipboardString(textBoxFocus.copyText())
+        of LETTER_V: # paste
+          if ctrl:
+            textBoxFocus.pasteText($window.getClipboardString())
+        of LETTER_X: # cut
+          if ctrl:
+            window.setClipboardString(textBoxFocus.cutText())
+        of LETTER_A: # select all
+          if ctrl:
+            textBoxFocus.selectAll()
         else:
-          textBoxFocus.left(shift)
-      of ARROW_RIGHT:
-        if ctrl:
-          textBoxFocus.rightWord(shift)
-        else:
-          textBoxFocus.right(shift)
-      of ARROW_UP:
-        textBoxFocus.up(shift)
-      of ARROW_DOWN:
-        textBoxFocus.down(shift)
-      of Button.HOME:
-        textBoxFocus.startOfLine(shift)
-      of Button.END:
-        textBoxFocus.endOfLine(shift)
-      of Button.PAGE_UP:
-        textBoxFocus.pageUp(shift)
-      of Button.PAGE_DOWN:
-        textBoxFocus.pageDown(shift)
-      of ENTER:
-        #TODO: keyboard.multiline:
-        textBoxFocus.typeCharacter(Rune(10))
-      of BACKSPACE:
-        textBoxFocus.backspace(shift)
-      of DELETE:
-        textBoxFocus.delete(shift)
-      of LETTER_C: # copy
-        if ctrl:
-          window.setClipboardString(textBoxFocus.copyText())
-      of LETTER_V: # paste
-        if ctrl:
-          textBoxFocus.pasteText($window.getClipboardString())
-      of LETTER_X: # cut
-        if ctrl:
-          window.setClipboardString(textBoxFocus.cutText())
-      of LETTER_A: # select all
-        if ctrl:
-          textBoxFocus.selectAll()
-      else:
-        discard
+          discard
 
   # Now do the buttons.
   if key < buttonDown.len and key >= 0:
@@ -632,6 +632,20 @@ proc display(withEvents = true) {.measure.} =
 
   thisFrame.checkDirty()
   if thisFrame.dirty:
+
+    var
+      imeEditLocation: cint
+      iemEditString = newString(256)
+    window.getIme(imeEditLocation.addr, iemEditString.cstring)
+    for i, c in iemEditString:
+      if c == '\0':
+        iemEditString.setLen(i)
+        break
+    echo "ime: ", imeEditLocation, ":'", iemEditString, "'"
+
+    textImeEditLocation = imeEditLocation
+    textImeEditString = iemEditString
+
     drawToScreen(thisFrame)
     swapBuffers()
   else:
