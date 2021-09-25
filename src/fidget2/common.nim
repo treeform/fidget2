@@ -36,6 +36,7 @@ var
   windowSize*: Vec2        ## Screen coordinates
   windowFrame*: Vec2       ## Pixel coordinates
   dpi*: float32            ## Digital pxiels per inch
+  rtl*: bool               ## Set Right-to-Left UI mode.
   ## Multiplier to convert from screen coords to pixels
   ## Mac retaina dispaly use 2.0.
   ## While windows can be any multiple.

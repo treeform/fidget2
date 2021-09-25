@@ -527,6 +527,8 @@ proc processEvents() {.measure.} =
   var x, y: float64
   window.getCursorPos(addr x, addr y)
   mousePos.x = x
+  if rtl:
+    mousePos.x = thisFrame.size.x - mousePos.x
   mousePos.y = y
 
   # Get the node list under the mouse.

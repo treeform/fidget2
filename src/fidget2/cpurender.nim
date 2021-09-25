@@ -366,6 +366,9 @@ proc drawText*(node: Node) {.measure.} =
   # Scroll inside the text box
   mat = mat * translate(-node.scrollPos)
 
+  if rtl:
+    mat = mat * scale(vec2(-1, 1)) * translate(vec2(-node.size.x, 0))
+
   if textBoxFocus == node:
 
     # TODO: Draw selection outline by using a parent focus variant?

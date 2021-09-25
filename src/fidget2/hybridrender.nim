@@ -156,9 +156,13 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   # screenNode.printDirtyStatus()
 
   # Setup proper matrix for drawing.
-  mat = mat3() *
-    scale(vec2(pixelRatio, pixelRatio)) *
-    screenNode.transform().inverse()
+  mat = scale(vec2(pixelRatio, pixelRatio))
+  if rtl:
+    mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
+  mat = mat * screenNode.transform().inverse()
+
+  #mat = mat * scale(vec2(-1, 1)) #* translate(vec2(-screenNode.size.x/2, 0))
+
   drawToAtlas(screenNode, 0)
 
   drawWithAtlas(screenNode)
