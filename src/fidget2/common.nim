@@ -92,7 +92,7 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
     echo "readTypeface: ", figmaFontPath(fontName)
-    var typeface = readTypeface(figmaFontPath(fontName))
+    let typeface = readTypeface(figmaFontPath(fontName))
     typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansSC-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
@@ -242,7 +242,7 @@ proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font =
   # print style
   # print backup
   # print fontName
-  var font = getFont(fontName)
+  let font = getFont(fontName)
 
   if style.fontSize != 0:
     font.size = style.fontSize
@@ -343,7 +343,7 @@ proc computeArrangement*(node: Node) {.measure.} =
       if i == 0 or node.characterStyleOverrides[i] != prevStyle:
         let style = node.styleOverrideTable[$styleKey]
 
-        var font = getFont(style, node.style)
+        let font = getFont(style, node.style)
 
         var fillColor: Color
         if style.fills.len == 0:
@@ -367,11 +367,11 @@ proc computeArrangement*(node: Node) {.measure.} =
     #   print span.font.lineHeight
 
   else:
-    var font = getFont(node.style)
+    let font = getFont(node.style)
     font.paint = node.fills[0].color.rgbx
     node.spans = @[newSpan(node.characters, font)]
 
-  var wrap =
+  let wrap =
     case node.style.textAutoResize:
       of tarFixed, tarHeight: true
       of tarWidthAndHeight: false

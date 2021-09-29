@@ -425,7 +425,7 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
       #if node.collapse:
       node.dirty = true
 
-      var bounds = node.computeScrollBounds()
+      let bounds = node.computeScrollBounds()
       if node.scrollPos.y > bounds.h:
         node.scrollPos.y = bounds.h
         continue
