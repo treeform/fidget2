@@ -213,6 +213,10 @@ proc setupTextBox(node: Node) =
 proc textBoxMouseAction() =
   ## Performs mouse stuff on the text box.
   if textBoxFocus != nil:
+
+    ## Close IME if something was clicked.
+    window.closeIme()
+
     textBoxFocus.dirty = true
     let mat = scale(vec2(1/pixelRatio, 1/pixelRatio)) *
       textBoxFocus.mat *
