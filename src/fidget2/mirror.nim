@@ -632,22 +632,22 @@ proc display(withEvents = true) {.measure.} =
   if withEvents:
     processEvents()
 
-  thisFrame.checkDirty()
-  if thisFrame.dirty:
-
-    var
-      imeEditLocation: cint
-      iemEditString = newString(256)
-    window.getIme(imeEditLocation.addr, iemEditString.cstring)
-    for i, c in iemEditString:
-      if c == '\0':
-        iemEditString.setLen(i)
-        break
+  var
+    imeEditLocation: cint
+    iemEditString = newString(256)
+  window.getIme(imeEditLocation.addr, iemEditString.cstring)
+  for i, c in iemEditString:
+    if c == '\0':
+      iemEditString.setLen(i)
+      break
+  if textImeEditString != iemEditString or textImeEditLocation != imeEditLocation:
     echo "ime: ", imeEditLocation, ":'", iemEditString, "'"
-
     textImeEditLocation = imeEditLocation
     textImeEditString = iemEditString
+    textBoxFocus.dirty = true
 
+  thisFrame.checkDirty()
+  if thisFrame.dirty:
     drawToScreen(thisFrame)
     swapBuffers()
   else:
