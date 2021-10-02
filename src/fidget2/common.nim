@@ -301,13 +301,13 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
   var at = 0
   for idx, span in spans:
     let to = at + span.text.len
-    print at, span.text
+    #print at, span.text
     # if slice.a > at and slice.a < to and slice.b >= to:
     #   # Got to cut on half at end.
     #   discard
     # elif slice.a > at and slice.a < to and slice.b < to:
       # Got to cut in two.
-    print "got cut in three"
+    #print "got cut in three"
     let
       start = newSpan(span.text.cutRunes(0, slice.a), span.font)
       middle = newSpan(span.text.cutRunes(slice.a, slice.b), span.font)
@@ -316,7 +316,7 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
     middle.font = span.font.copy()
     result.add(middle)
 
-    print start.text, middle.text, stop.text
+    #print start.text, middle.text, stop.text
     spans.delete(idx)
     spans.insert(stop, idx)
     spans.insert(middle, idx)
