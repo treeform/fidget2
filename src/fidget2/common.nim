@@ -40,9 +40,9 @@ var
   ## Multiplier to convert from screen coords to pixels
   ## Mac retaina dispaly use 2.0.
   ## While windows can be any multiple.
-  pixelRatio*: float32
+  pixelRatio*: float32 = 1.0
   ## Pixel multiplier user wants on the UI (used for for pixel indie games)
-  pixelScale*: float32
+  pixelScale*: float32 = 1.0
   frameNum*: int
 
   currentFigmaUrl*: string
