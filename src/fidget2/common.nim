@@ -91,7 +91,6 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
-    echo "readTypeface: ", figmaFontPath(fontName)
     let typeface = readTypeface(figmaFontPath(fontName))
     typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansSC-Regular"))
     typefaceCache[fontName] = typeface
