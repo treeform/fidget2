@@ -1,12 +1,7 @@
-import fidget2, fidget2/common
-
+import fidget2
 
 var loaded: bool
-
-rtl = true
-
 find "/UI/MainScreen":
-#find "/UI/TextFrame":
   onDisplay:
     if loaded == false:
       loaded = true
@@ -24,6 +19,5 @@ startFidget(
   figmaUrl = "https://www.figma.com/file/PRNHOO9xeHYkq5LskwDn33",
   windowTitle = "Pushbullet",
   entryFrame = "/UI/MainScreen",
-  #entryFrame = "/UI/TextFrame",
   resizable = true
 )

@@ -21,6 +21,7 @@ node_modules
 package-lock.json
 package.json
 tmp
+*.plist
 
 # figma tmp files
 figma
