@@ -11,11 +11,6 @@ var
   layers: seq[Image]
   maskLayer*: Mask
 
-  ## Nodes that is focused and has the current text box.
-  textBoxFocus*: Node
-  ## Default text highlight color (blueish by default).
-  defaultTextHighlightColor* = rgbx(50, 150, 250, 255)
-
 proc newImage(w, h: int): Image {.measure.} =
   pixie.newImage(w, h)
 
@@ -371,6 +366,9 @@ proc drawText*(node: Node) {.measure.} =
   # Scroll inside the text box
   mat = mat * translate(-node.scrollPos)
 
+  if rtl:
+    mat = mat * scale(vec2(-1, 1)) * translate(vec2(-node.size.x, 0))
+
   if textBoxFocus == node:
 
     # TODO: Draw selection outline by using a parent focus variant?
@@ -379,7 +377,7 @@ proc drawText*(node: Node) {.measure.} =
     # draw arrangement squares for debugging
     # block:
     #   var path = newPath()
-    #   for rect in node.arrangement.selectionRects:
+    #   for rect in arrangement.selectionRects:
     #     path.rect(rect)
     #   layer.strokePath(path, color(1, 0, 0, 1), mat)
 
@@ -390,7 +388,7 @@ proc drawText*(node: Node) {.measure.} =
         var s = selectionRegion
         var path = newPath()
         path.rect(s)
-        layer.fillPath(path, defaultTextHighlightColor, mat)
+        layer.fillPath(path, defaultTextBackgroundHighlightColor, mat)
 
     # Draw the typing cursor
     if selectionRegions.len == 0:
@@ -400,27 +398,7 @@ proc drawText*(node: Node) {.measure.} =
       layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
   ## Fills the text arrangement.
-  for spanIndex, (start, stop) in node.arrangement.spans:
-    var font = node.arrangement.fonts[spanIndex]
-    var normalPaint = font.paint
-    var selectedPaint: type(normalPaint) = color(1, 1, 1, 1)
-
-    for runeIndex in start .. stop:
-      var path = font.typeface.getGlyphPath(node.arrangement.runes[runeIndex])
-      path.transform(
-        translate(node.arrangement.positions[runeIndex]) *
-        scale(vec2(font.scale))
-      )
-
-      var paint = normalPaint
-      if textBoxFocus == node:
-        # If editing text and character is in selection range,
-        # draw it white.
-        let s = node.selection()
-        if runeIndex >= s.a and runeIndex < s.b:
-          paint = selectedPaint
-
-      layer.fillPath(path, paint, mat)
+  layer.fillText(node.arrangement, mat)
 
 proc drawNode*(node: Node, withChildren=true)
 

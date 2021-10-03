@@ -1,4 +1,4 @@
-import bumpy, chroma, jsony, strutils, tables, pixie, vmath, options
+import bumpy, chroma, jsony, strutils, tables, pixie, vmath, options, unicode
 
 from pixie import Image, newImage, `[]`, `[]=`, strokeSegment, draw, BlendMode,
    Path, WindingRule, PixieError, parsePath
@@ -226,6 +226,8 @@ type
     characterStyleOverrides*: seq[int]
     styleOverrideTable*: Table[string, TypeStyle]
     # Non-figma text parameters:
+    spans*: seq[Span]
+    runes*: seq[Rune]
     arrangement*: Arrangement
     cursor*: int      # The typing cursor.
     selector*: int    # The selection cursor.

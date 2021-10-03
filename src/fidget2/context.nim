@@ -72,7 +72,7 @@ proc readAtlasImage(ctx: Context): Image =
 
 proc writeAtlas*(ctx: Context, filePath: string) =
   ## Writes the current atlas to a file, used for debugging.
-  var atlas = ctx.readAtlasImage()
+  let atlas = ctx.readAtlasImage()
   atlas.writeFile(filePath)
 
 proc draw(ctx: Context)
@@ -116,7 +116,7 @@ proc createAtlasTexture(ctx: Context, size: int): Texture =
 proc addMaskTexture(ctx: Context, frameSize = vec2(1, 1)) =
   # Must be >0 for framebuffer creation below
   # Set to real value in beginFrame
-  var maskTexture = Texture()
+  let maskTexture = Texture()
   maskTexture.width = frameSize.x.int32
   maskTexture.height = frameSize.y.int32
   maskTexture.componentType = GL_UNSIGNED_BYTE
@@ -135,7 +135,7 @@ proc addMaskTexture(ctx: Context, frameSize = vec2(1, 1)) =
 
 proc addSolidTile(ctx: Context) =
   # Insert solid color tile. (don't use putImage as its a solid color)
-  var solidTile = newImage(tileSize, tileSize)
+  let solidTile = newImage(tileSize, tileSize)
   solidTile.fill(color(1, 1, 1, 1))
   updateSubImage(
     ctx.atlasTexture,

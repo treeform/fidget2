@@ -18,11 +18,11 @@ proc computeLayout*(parent, node: Node) {.measure.} =
         discard
       of tarHeight:
         # Text will grow down.
-        var bounds = computeTextBounds(node)
+        let bounds = computeTextBounds(node)
         node.size.y = bounds.y
       of tarWidthAndHeight:
         # Text will grow down and wide.
-        var bounds = computeTextBounds(node)
+        let bounds = computeTextBounds(node)
         node.size.x = bounds.x
         node.size.y = bounds.y
 
