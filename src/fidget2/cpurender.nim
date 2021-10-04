@@ -207,16 +207,17 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
       result.draw(image, mat)
 
     of smTile:
-      image = image.resize(
-        int(image.width.float32 * paint.scalingFactor),
-        int(image.height.float32 * paint.scalingFactor))
       var x = 0.0
       while x < node.size.x:
         var y = 0.0
         while y < node.size.y:
-          result.draw(image, translate(nodeOffset + vec2(x, y)))
-          y += image.height.float32
-        x += image.width.float32
+          result.draw(
+            image,
+            mat * translate(vec2(x, y)) *
+            scale(vec2(paint.scalingFactor, paint.scalingFactor))
+          )
+          y += image.height.float32 * paint.scalingFactor
+        x += image.width.float32 * paint.scalingFactor
 
   of schema.PaintKind.pkGradientLinear:
     result.fillGradient(paint.toPixiePaint(node))
