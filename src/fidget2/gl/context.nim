@@ -15,24 +15,23 @@ type
   Context* = ref object
     atlasShader, maskShader, activeShader: Shader
     atlasTexture: Texture
-    maskTextureWrite: int       ## Index into max textures for writing.
-    maskTextureRead: int        ## Index into max textures for rendering.
+    maskTextureWrite: int       ## Index into mask textures for writing.
+    maskTextureRead: int        ## Index into mask textures for rendering.
     maskTextures: seq[Texture]  ## Masks array for pushing and popping.
     atlasSize: int              ## Size x size dimensions of the atlas
-    atlasMargin: int            ## Default margin between images
     quadCount: int              ## Number of quads drawn so far
     maxQuads: int               ## Max quads to draw before issuing an OpenGL call
-    mat*: Mat4                  ## Current matrix
+    mat: Mat4                   ## Current matrix
     mats: seq[Mat4]             ## Matrix stack
     entries*: Table[string, TileInfo] ## Mapping of image name to atlas UV position
     maxTiles: int
     tileRun: int
-    takenTiles: seq[bool]        ## Height map of the free space in the atlas
-    proj*: Mat4
+    takenTiles: seq[bool]       ## Height map of the free space in the atlas
+    proj: Mat4
     frameSize: Vec2             ## Dimensions of the window frame
     vertexArrayId, maskFramebufferId: GLuint
     frameBegun, maskBegun: bool
-    pixelate*: bool             ## Makes texture look pixelated, like a pixel game.
+    pixelate: bool              ## Makes texture look pixelated, like a pixel game.
 
     # Buffer data for OpenGL
     positions: tuple[buffer: Buffer, data: seq[float32]]
