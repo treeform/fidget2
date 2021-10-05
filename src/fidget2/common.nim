@@ -336,6 +336,7 @@ proc computeArrangement*(node: Node) {.measure.} =
 
   if node.characterStyleOverrides.len > 0:
     # The 0th style is node default style:
+    node.spans.setLen(0)
     node.styleOverrideTable["0"] = node.style
     var prevStyle: int
     for i, styleKey in node.characterStyleOverrides:
