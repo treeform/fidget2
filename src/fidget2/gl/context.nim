@@ -70,9 +70,6 @@ proc writeAtlas*(ctx: Context, filePath: string) =
   let atlas = ctx.readAtlasImage()
   atlas.writeFile(filePath)
 
-proc draw(ctx: Context)
-proc putImage*(ctx: Context, imagePath: string, image: Image)
-
 proc upload(ctx: Context) =
   ## When buffers change, uploads them to GPU.
   ctx.positions.buffer.count = ctx.quadCount * 4
@@ -82,6 +79,47 @@ proc upload(ctx: Context) =
   bindBufferData(ctx.positions.buffer, ctx.positions.data[0].addr)
   bindBufferData(ctx.colors.buffer, ctx.colors.data[0].addr)
   bindBufferData(ctx.uvs.buffer, ctx.uvs.data[0].addr)
+
+proc draw(ctx: Context) =
+  ## Flips - draws current buffer and starts a new one.
+  if ctx.quadCount == 0:
+    return
+
+  ctx.upload()
+
+  glUseProgram(ctx.activeShader.programId)
+  glBindVertexArray(ctx.vertexArrayId)
+
+  if ctx.activeShader.hasUniform("windowFrame"):
+    ctx.activeShader.setUniform("windowFrame", ctx.frameSize.x, ctx.frameSize.y)
+  ctx.activeShader.setUniform("proj", ctx.proj)
+
+  glActiveTexture(GL_TEXTURE0)
+  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
+  ctx.activeShader.setUniform("atlasTex", 0)
+
+  if ctx.activeShader.hasUniform("maskTex"):
+    glActiveTexture(GL_TEXTURE1)
+    glBindTexture(
+      GL_TEXTURE_2D,
+      ctx.maskTextures[ctx.maskTextureRead].textureId
+    )
+    ctx.activeShader.setUniform("maskTex", 1)
+
+  ctx.activeShader.bindUniforms()
+
+  glBindBuffer(
+    GL_ELEMENT_ARRAY_BUFFER,
+    ctx.indices.buffer.bufferId
+  )
+  glDrawElements(
+    GL_TRIANGLES,
+    ctx.indices.buffer.count.GLint,
+    ctx.indices.buffer.componentType,
+    nil
+  )
+
+  ctx.quadCount = 0
 
 proc setUpMaskFramebuffer(ctx: Context) =
   glBindFramebuffer(GL_FRAMEBUFFER, ctx.maskFramebufferId)
@@ -353,47 +391,6 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) {.measure.} =
         )
 
   ctx.entries[imagePath] = tileInfo
-
-proc draw(ctx: Context) =
-  ## Flips - draws current buffer and starts a new one.
-  if ctx.quadCount == 0:
-    return
-
-  ctx.upload()
-
-  glUseProgram(ctx.activeShader.programId)
-  glBindVertexArray(ctx.vertexArrayId)
-
-  if ctx.activeShader.hasUniform("windowFrame"):
-    ctx.activeShader.setUniform("windowFrame", ctx.frameSize.x, ctx.frameSize.y)
-  ctx.activeShader.setUniform("proj", ctx.proj)
-
-  glActiveTexture(GL_TEXTURE0)
-  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
-  ctx.activeShader.setUniform("atlasTex", 0)
-
-  if ctx.activeShader.hasUniform("maskTex"):
-    glActiveTexture(GL_TEXTURE1)
-    glBindTexture(
-      GL_TEXTURE_2D,
-      ctx.maskTextures[ctx.maskTextureRead].textureId
-    )
-    ctx.activeShader.setUniform("maskTex", 1)
-
-  ctx.activeShader.bindUniforms()
-
-  glBindBuffer(
-    GL_ELEMENT_ARRAY_BUFFER,
-    ctx.indices.buffer.bufferId
-  )
-  glDrawElements(
-    GL_TRIANGLES,
-    ctx.indices.buffer.count.GLint,
-    ctx.indices.buffer.componentType,
-    nil
-  )
-
-  ctx.quadCount = 0
 
 proc checkBatch(ctx: Context) =
   if ctx.quadCount == ctx.maxQuads:
