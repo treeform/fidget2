@@ -53,7 +53,7 @@ proc vec2(x, y: SomeNumber): Vec2 =
   vec2(x.float32, y.float32)
 
 proc readAtlasImage(ctx: Context): Image =
-  # read old atlas content
+  ## Read the current atlas content.
   result = newImage(ctx.atlasTexture.width, ctx.atlasTexture.height)
   glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
   when not defined(emscripten):
@@ -181,12 +181,12 @@ proc newContext*(
     )
   else:
     result.atlasShader = newShaderStatic(
-      "glsl/atlas.vert",
-      "glsl/atlas.frag"
+      "glsl/410/atlas.vert",
+      "glsl/410/atlas.frag"
     )
     result.maskShader = newShaderStatic(
-      "glsl/atlas.vert",
-      "glsl/mask.frag"
+      "glsl/410/atlas.vert",
+      "glsl/410/mask.frag"
     )
 
   result.positions.buffer = Buffer()
