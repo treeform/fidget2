@@ -52,7 +52,7 @@ proc vec2(x, y: SomeNumber): Vec2 =
   ## Integer short cut for creating vectors.
   vec2(x.float32, y.float32)
 
-proc readAtlasImage(ctx: Context): Image =
+proc readAtlas(ctx: Context): Image =
   ## Read the current atlas content.
   result = newImage(ctx.atlasTexture.width, ctx.atlasTexture.height)
   glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
@@ -64,11 +64,6 @@ proc readAtlasImage(ctx: Context): Image =
       GL_UNSIGNED_BYTE,
       result.data[0].addr
     )
-
-proc writeAtlas*(ctx: Context, filePath: string) =
-  ## Writes the current atlas to a file, used for debugging.
-  let atlas = ctx.readAtlasImage()
-  atlas.writeFile(filePath)
 
 proc upload(ctx: Context) =
   ## When buffers change, uploads them to GPU.
@@ -306,7 +301,7 @@ proc grow(ctx: Context) =
 
   # read old atlas content
   let
-    oldAtlasImage = ctx.readAtlasImage()
+    oldAtlas = ctx.readAtlas()
     oldTileRun = ctx.tileRun
 
   ctx.atlasSize = ctx.atlasSize * 2
@@ -323,7 +318,7 @@ proc grow(ctx: Context) =
   for y in 0 ..< oldTileRun:
     for x in 0 ..< oldTileRun:
       let
-        imageTile = oldAtlasImage.superImage(
+        imageTile = oldAtlas.superImage(
           x * tileSize,
           y * tileSize,
           tileSize,
