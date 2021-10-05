@@ -52,7 +52,7 @@ proc vec2(x, y: SomeNumber): Vec2 =
   ## Integer short cut for creating vectors.
   vec2(x.float32, y.float32)
 
-proc readAtlasImage(ctx: Context): Image =
+proc readAtlas(ctx: Context): Image =
   ## Read the current atlas content.
   result = newImage(ctx.atlasTexture.width, ctx.atlasTexture.height)
   glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
@@ -65,14 +65,6 @@ proc readAtlasImage(ctx: Context): Image =
       result.data[0].addr
     )
 
-proc writeAtlas*(ctx: Context, filePath: string) =
-  ## Writes the current atlas to a file, used for debugging.
-  let atlas = ctx.readAtlasImage()
-  atlas.writeFile(filePath)
-
-proc draw(ctx: Context)
-proc putImage*(ctx: Context, imagePath: string, image: Image)
-
 proc upload(ctx: Context) =
   ## When buffers change, uploads them to GPU.
   ctx.positions.buffer.count = ctx.quadCount * 4
@@ -82,6 +74,47 @@ proc upload(ctx: Context) =
   bindBufferData(ctx.positions.buffer, ctx.positions.data[0].addr)
   bindBufferData(ctx.colors.buffer, ctx.colors.data[0].addr)
   bindBufferData(ctx.uvs.buffer, ctx.uvs.data[0].addr)
+
+proc draw(ctx: Context) =
+  ## Flips - draws current buffer and starts a new one.
+  if ctx.quadCount == 0:
+    return
+
+  ctx.upload()
+
+  glUseProgram(ctx.activeShader.programId)
+  glBindVertexArray(ctx.vertexArrayId)
+
+  if ctx.activeShader.hasUniform("windowFrame"):
+    ctx.activeShader.setUniform("windowFrame", ctx.frameSize.x, ctx.frameSize.y)
+  ctx.activeShader.setUniform("proj", ctx.proj)
+
+  glActiveTexture(GL_TEXTURE0)
+  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
+  ctx.activeShader.setUniform("atlasTex", 0)
+
+  if ctx.activeShader.hasUniform("maskTex"):
+    glActiveTexture(GL_TEXTURE1)
+    glBindTexture(
+      GL_TEXTURE_2D,
+      ctx.maskTextures[ctx.maskTextureRead].textureId
+    )
+    ctx.activeShader.setUniform("maskTex", 1)
+
+  ctx.activeShader.bindUniforms()
+
+  glBindBuffer(
+    GL_ELEMENT_ARRAY_BUFFER,
+    ctx.indices.buffer.bufferId
+  )
+  glDrawElements(
+    GL_TRIANGLES,
+    ctx.indices.buffer.count.GLint,
+    ctx.indices.buffer.componentType,
+    nil
+  )
+
+  ctx.quadCount = 0
 
 proc setUpMaskFramebuffer(ctx: Context) =
   glBindFramebuffer(GL_FRAMEBUFFER, ctx.maskFramebufferId)
@@ -268,7 +301,7 @@ proc grow(ctx: Context) =
 
   # read old atlas content
   let
-    oldAtlasImage = ctx.readAtlasImage()
+    oldAtlas = ctx.readAtlas()
     oldTileRun = ctx.tileRun
 
   ctx.atlasSize = ctx.atlasSize * 2
@@ -285,7 +318,7 @@ proc grow(ctx: Context) =
   for y in 0 ..< oldTileRun:
     for x in 0 ..< oldTileRun:
       let
-        imageTile = oldAtlasImage.superImage(
+        imageTile = oldAtlas.superImage(
           x * tileSize,
           y * tileSize,
           tileSize,
@@ -354,47 +387,6 @@ proc putImage*(ctx: Context, imagePath: string, image: Image) {.measure.} =
 
   ctx.entries[imagePath] = tileInfo
 
-proc draw(ctx: Context) =
-  ## Flips - draws current buffer and starts a new one.
-  if ctx.quadCount == 0:
-    return
-
-  ctx.upload()
-
-  glUseProgram(ctx.activeShader.programId)
-  glBindVertexArray(ctx.vertexArrayId)
-
-  if ctx.activeShader.hasUniform("windowFrame"):
-    ctx.activeShader.setUniform("windowFrame", ctx.frameSize.x, ctx.frameSize.y)
-  ctx.activeShader.setUniform("proj", ctx.proj)
-
-  glActiveTexture(GL_TEXTURE0)
-  glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
-  ctx.activeShader.setUniform("atlasTex", 0)
-
-  if ctx.activeShader.hasUniform("maskTex"):
-    glActiveTexture(GL_TEXTURE1)
-    glBindTexture(
-      GL_TEXTURE_2D,
-      ctx.maskTextures[ctx.maskTextureRead].textureId
-    )
-    ctx.activeShader.setUniform("maskTex", 1)
-
-  ctx.activeShader.bindUniforms()
-
-  glBindBuffer(
-    GL_ELEMENT_ARRAY_BUFFER,
-    ctx.indices.buffer.bufferId
-  )
-  glDrawElements(
-    GL_TRIANGLES,
-    ctx.indices.buffer.count.GLint,
-    ctx.indices.buffer.componentType,
-    nil
-  )
-
-  ctx.quadCount = 0
-
 proc checkBatch(ctx: Context) =
   if ctx.quadCount == ctx.maxQuads:
     # ctx is full dump the images in the ctx now and start a new batch
@@ -404,11 +396,11 @@ proc setVert2(buf: var seq[float32], i: int, v: Vec2) =
   buf[i * 2 + 0] = v.x
   buf[i * 2 + 1] = v.y
 
-proc setVertColor(buf: var seq[uint8], i: int, color: ColorRGBA) =
-  buf[i * 4 + 0] = color.r
-  buf[i * 4 + 1] = color.g
-  buf[i * 4 + 2] = color.b
-  buf[i * 4 + 3] = color.a
+proc setVertColor(buf: var seq[uint8], i: int, rgbx: ColorRGBX) =
+  buf[i * 4 + 0] = rgbx.r
+  buf[i * 4 + 1] = rgbx.g
+  buf[i * 4 + 2] = rgbx.b
+  buf[i * 4 + 3] = rgbx.a
 
 func `*`*(m: Mat4, v: Vec2): Vec2 =
   (m * vec3(v.x, v.y, 0.0)).xy
@@ -417,7 +409,7 @@ proc drawQuad*(
   ctx: Context,
   verts: array[4, Vec2],
   uvs: array[4, Vec2],
-  colors: array[4, ColorRGBA],
+  colors: array[4, Color],
 ) =
   ctx.checkBatch()
 
@@ -432,10 +424,10 @@ proc drawQuad*(
   ctx.uvs.data.setVert2(offset + 2, uvs[2])
   ctx.uvs.data.setVert2(offset + 3, uvs[3])
 
-  ctx.colors.data.setVertColor(offset + 0, colors[0])
-  ctx.colors.data.setVertColor(offset + 1, colors[1])
-  ctx.colors.data.setVertColor(offset + 2, colors[2])
-  ctx.colors.data.setVertColor(offset + 3, colors[3])
+  ctx.colors.data.setVertColor(offset + 0, colors[0].asRgbx())
+  ctx.colors.data.setVertColor(offset + 1, colors[1].asRgbx())
+  ctx.colors.data.setVertColor(offset + 2, colors[2].asRgbx())
+  ctx.colors.data.setVertColor(offset + 3, colors[3].asRgbx())
 
   inc ctx.quadCount
 
@@ -477,11 +469,11 @@ proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
   ctx.uvs.data.setVert2(offset + 2, uvQuad[2])
   ctx.uvs.data.setVert2(offset + 3, uvQuad[3])
 
-  let rgba = color.rgba()
-  ctx.colors.data.setVertColor(offset + 0, rgba)
-  ctx.colors.data.setVertColor(offset + 1, rgba)
-  ctx.colors.data.setVertColor(offset + 2, rgba)
-  ctx.colors.data.setVertColor(offset + 3, rgba)
+  let rgbx = color.rgbx()
+  ctx.colors.data.setVertColor(offset + 0, rgbx)
+  ctx.colors.data.setVertColor(offset + 1, rgbx)
+  ctx.colors.data.setVertColor(offset + 2, rgbx)
+  ctx.colors.data.setVertColor(offset + 3, rgbx)
 
   inc ctx.quadCount
 
@@ -490,18 +482,6 @@ proc `*`(a, b: Color): Color =
   result.g = a.g * b.g
   result.b = a.b * b.b
   result.a = a.a * b.a
-
-proc `*`(c: Color, f: float32): Color =
-  result.r = c.r * f
-  result.g = c.g * f
-  result.b = c.b * f
-  result.a = c.a * f
-
-proc toPremultipliedAlpha(c: Color): Color =
-  result.r = c.r * c.a
-  result.g = c.g * c.a
-  result.b = c.b * c.a
-  result.a = c.a
 
 proc drawImage*(
   ctx: Context,
@@ -522,7 +502,7 @@ proc drawImage*(
         pos + vec2(tileInfo.width, tileInfo.height),
         vec2(2, 2),
         vec2(2, 2),
-        (tileInfo.oneColor * tintColor).toPremultipliedAlpha
+        (tileInfo.oneColor * tintColor)
       )
   else:
     var i = 0
@@ -541,7 +521,7 @@ proc drawImage*(
               posAt + vec2(tileSize, tileSize),
               vec2(2, 2),
               vec2(2, 2),
-              (tileInfo.oneColor * tintColor).toPremultipliedAlpha
+              (tileInfo.oneColor * tintColor)
             )
         else:
           let
@@ -554,7 +534,7 @@ proc drawImage*(
             posAt + vec2(tileSize, tileSize),
             uvAt,
             uvAt + vec2(tileSize, tileSize),
-            tintColor.toPremultipliedAlpha
+            tintColor
           )
         inc i
     assert i == tileInfo.tiles.len
