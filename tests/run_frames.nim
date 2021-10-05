@@ -24,13 +24,13 @@ elif defined(gpu_vs_zpu):
   const w = "gpu_vs_zpu"
 elif defined(cpu_vs_hyb):
   import fidget2/cpurender
-  import fidget2/hybridrender, fidget2/context
+  import fidget2/hybridrender, fidget2/gl/context
   const w = "cpu_vs_hyb"
   proc setupWindow(frameNode: Node, offscreen: bool) =
     hybridrender.setupWindow(frameNode, offscreen)
 elif defined(hyb):
   const w = "hyb"
-  import fidget2/hybridrender, fidget2/context
+  import fidget2/hybridrender, fidget2/gl/context
 
 proc main(r = "", e = "", l = 10000) =
 
