@@ -19,7 +19,7 @@ elif defined(hyb):
 
 else:
   # hybrid is default for now
-  import context, hybridrender, cpurender
+  import gl/context, hybridrender, cpurender
 
 type
   KeyState* = enum
