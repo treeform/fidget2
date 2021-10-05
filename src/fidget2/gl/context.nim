@@ -172,21 +172,21 @@ proc newContext*(
 
   when defined(emscripten):
     result.atlasShader = newShaderStatic(
-      "../glsl/emscripten/atlas.vert",
-      "../glsl/emscripten/atlas.frag"
+      "glsl/emscripten/atlas.vert",
+      "glsl/emscripten/atlas.frag"
     )
     result.maskShader = newShaderStatic(
-      "../glsl/emscripten/atlas.vert",
-      "../glsl/emscripten/mask.frag"
+      "glsl/emscripten/atlas.vert",
+      "glsl/emscripten/mask.frag"
     )
   else:
     result.atlasShader = newShaderStatic(
-      "../glsl/atlas.vert",
-      "../glsl/atlas.frag"
+      "glsl/atlas.vert",
+      "glsl/atlas.frag"
     )
     result.maskShader = newShaderStatic(
-      "../glsl/atlas.vert",
-      "../glsl/mask.frag"
+      "glsl/atlas.vert",
+      "glsl/mask.frag"
     )
 
   result.positions.buffer = Buffer()
