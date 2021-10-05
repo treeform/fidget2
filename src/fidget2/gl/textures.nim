@@ -1,4 +1,4 @@
-import buffers, pixie, opengl, perf
+import buffers, pixie, opengl, ../perf
 
 type
   MinFilter* = enum
@@ -117,12 +117,10 @@ proc updateSubImage*(texture: Texture, x, y: int, image: Image) {.measure.} =
     y = y
     image = image
     level = 0
-
   while true:
     texture.updateSubImage(x, y, image, level)
     if image.width <= 1 or image.height <= 1:
       break
-    # TODO: We should support 1px images.
     image = image.minifyBy2()
     x = x div 2
     y = y div 2

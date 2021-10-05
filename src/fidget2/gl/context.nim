@@ -1,5 +1,5 @@
 import buffers, chroma, pixie, hashes, opengl, os, shaders, strformat,
-    strutils, tables, textures, vmath, bumpy, perf
+    strutils, tables, textures, vmath, bumpy, ../perf
 
 const
   quadLimit = 10_921
@@ -33,8 +33,6 @@ type
     vertexArrayId, maskFramebufferId: GLuint
     frameBegun, maskBegun: bool
     pixelate*: bool             ## Makes texture look pixelated, like a pixel game.
-    pixelScale*: float32        ## Multiple scaling factor.
-    compacting*: bool           ## Are we currently compacting.
 
     # Buffer data for OpenGL
     positions: tuple[buffer: Buffer, data: seq[float32]]
@@ -152,8 +150,7 @@ proc clearAtlas*(ctx: Context) =
 proc newContext*(
   atlasSize = 512,
   maxQuads = 1024,
-  pixelate = false,
-  pixelScale = 1.0
+  pixelate = false
 ): Context =
   ## Creates a new context.
   if maxQuads > quadLimit:
@@ -165,7 +162,6 @@ proc newContext*(
   result.mat = mat4()
   result.mats = newSeq[Mat4]()
   result.pixelate = pixelate
-  result.pixelScale = pixelScale
 
   result.tileRun = atlasSize div tileSize
   result.maxTiles = result.tileRun * result.tileRun
@@ -175,12 +171,23 @@ proc newContext*(
   result.addMaskTexture()
 
   when defined(emscripten):
-    echo "using emscripten glsl"
-    result.atlasShader = newShaderStatic("glsl/emscripten/atlas.vert", "glsl/emscripten/atlas.frag")
-    result.maskShader = newShaderStatic("glsl/emscripten/atlas.vert", "glsl/emscripten/mask.frag")
+    result.atlasShader = newShaderStatic(
+      "../glsl/emscripten/atlas.vert",
+      "../glsl/emscripten/atlas.frag"
+    )
+    result.maskShader = newShaderStatic(
+      "../glsl/emscripten/atlas.vert",
+      "../glsl/emscripten/mask.frag"
+    )
   else:
-    result.atlasShader = newShaderStatic("glsl/410/atlas.vert", "glsl/410/atlas.frag")
-    result.maskShader = newShaderStatic("glsl/410/atlas.vert", "glsl/410/mask.frag")
+    result.atlasShader = newShaderStatic(
+      "../glsl/atlas.vert",
+      "../glsl/atlas.frag"
+    )
+    result.maskShader = newShaderStatic(
+      "../glsl/atlas.vert",
+      "../glsl/mask.frag"
+    )
 
   result.positions.buffer = Buffer()
   result.positions.buffer.componentType = cGL_FLOAT

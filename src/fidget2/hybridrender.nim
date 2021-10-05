@@ -1,5 +1,5 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath,
-  context, common, cpurender, layout, os, perf, nodes
+  gl/context, common, cpurender, layout, os, perf, nodes
 
 export cpurender.underMouse
 
