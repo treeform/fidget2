@@ -404,11 +404,11 @@ proc setVert2(buf: var seq[float32], i: int, v: Vec2) =
   buf[i * 2 + 0] = v.x
   buf[i * 2 + 1] = v.y
 
-proc setVertColor(buf: var seq[uint8], i: int, color: ColorRGBA) =
-  buf[i * 4 + 0] = color.r
-  buf[i * 4 + 1] = color.g
-  buf[i * 4 + 2] = color.b
-  buf[i * 4 + 3] = color.a
+proc setVertColor(buf: var seq[uint8], i: int, rgbx: ColorRGBX) =
+  buf[i * 4 + 0] = rgbx.r
+  buf[i * 4 + 1] = rgbx.g
+  buf[i * 4 + 2] = rgbx.b
+  buf[i * 4 + 3] = rgbx.a
 
 func `*`*(m: Mat4, v: Vec2): Vec2 =
   (m * vec3(v.x, v.y, 0.0)).xy
@@ -417,7 +417,7 @@ proc drawQuad*(
   ctx: Context,
   verts: array[4, Vec2],
   uvs: array[4, Vec2],
-  colors: array[4, ColorRGBA],
+  colors: array[4, Color],
 ) =
   ctx.checkBatch()
 
@@ -432,10 +432,10 @@ proc drawQuad*(
   ctx.uvs.data.setVert2(offset + 2, uvs[2])
   ctx.uvs.data.setVert2(offset + 3, uvs[3])
 
-  ctx.colors.data.setVertColor(offset + 0, colors[0])
-  ctx.colors.data.setVertColor(offset + 1, colors[1])
-  ctx.colors.data.setVertColor(offset + 2, colors[2])
-  ctx.colors.data.setVertColor(offset + 3, colors[3])
+  ctx.colors.data.setVertColor(offset + 0, colors[0].asRgbx())
+  ctx.colors.data.setVertColor(offset + 1, colors[1].asRgbx())
+  ctx.colors.data.setVertColor(offset + 2, colors[2].asRgbx())
+  ctx.colors.data.setVertColor(offset + 3, colors[3].asRgbx())
 
   inc ctx.quadCount
 
@@ -477,11 +477,11 @@ proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
   ctx.uvs.data.setVert2(offset + 2, uvQuad[2])
   ctx.uvs.data.setVert2(offset + 3, uvQuad[3])
 
-  let rgba = color.rgba()
-  ctx.colors.data.setVertColor(offset + 0, rgba)
-  ctx.colors.data.setVertColor(offset + 1, rgba)
-  ctx.colors.data.setVertColor(offset + 2, rgba)
-  ctx.colors.data.setVertColor(offset + 3, rgba)
+  let rgbx = color.rgbx()
+  ctx.colors.data.setVertColor(offset + 0, rgbx)
+  ctx.colors.data.setVertColor(offset + 1, rgbx)
+  ctx.colors.data.setVertColor(offset + 2, rgbx)
+  ctx.colors.data.setVertColor(offset + 3, rgbx)
 
   inc ctx.quadCount
 
@@ -490,18 +490,6 @@ proc `*`(a, b: Color): Color =
   result.g = a.g * b.g
   result.b = a.b * b.b
   result.a = a.a * b.a
-
-proc `*`(c: Color, f: float32): Color =
-  result.r = c.r * f
-  result.g = c.g * f
-  result.b = c.b * f
-  result.a = c.a * f
-
-proc toPremultipliedAlpha(c: Color): Color =
-  result.r = c.r * c.a
-  result.g = c.g * c.a
-  result.b = c.b * c.a
-  result.a = c.a
 
 proc drawImage*(
   ctx: Context,
@@ -522,7 +510,7 @@ proc drawImage*(
         pos + vec2(tileInfo.width, tileInfo.height),
         vec2(2, 2),
         vec2(2, 2),
-        (tileInfo.oneColor * tintColor).toPremultipliedAlpha
+        (tileInfo.oneColor * tintColor)
       )
   else:
     var i = 0
@@ -541,7 +529,7 @@ proc drawImage*(
               posAt + vec2(tileSize, tileSize),
               vec2(2, 2),
               vec2(2, 2),
-              (tileInfo.oneColor * tintColor).toPremultipliedAlpha
+              (tileInfo.oneColor * tintColor)
             )
         else:
           let
@@ -554,7 +542,7 @@ proc drawImage*(
             posAt + vec2(tileSize, tileSize),
             uvAt,
             uvAt + vec2(tileSize, tileSize),
-            tintColor.toPremultipliedAlpha
+            tintColor
           )
         inc i
     assert i == tileInfo.tiles.len
