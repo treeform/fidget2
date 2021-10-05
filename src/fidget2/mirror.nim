@@ -423,7 +423,6 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
   for node in underMouseNodes:
     if node.overflowDirection == odVerticalScrolling:
       # TODO make it scroll both x and y.
-      echo "non text scroll limit"
       node.scrollPos.y -= yoffset * 50
 
       #if node.collapse:

@@ -52,7 +52,7 @@ proc vec2(x, y: SomeNumber): Vec2 =
   ## Integer short cut for creating vectors.
   vec2(x.float32, y.float32)
 
-proc readAtlas(ctx: Context): Image =
+proc readAtlas*(ctx: Context): Image =
   ## Read the current atlas content.
   result = newImage(ctx.atlasTexture.width, ctx.atlasTexture.height)
   glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
