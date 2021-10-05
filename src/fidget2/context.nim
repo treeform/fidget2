@@ -56,10 +56,7 @@ proc vec2(x, y: SomeNumber): Vec2 =
 
 proc readAtlasImage(ctx: Context): Image =
   # read old atlas content
-  result = newImage(
-    ctx.atlasTexture.width.GLsizei,
-    ctx.atlasTexture.height.GLsizei,
-  )
+  result = newImage(ctx.atlasTexture.width, ctx.atlasTexture.height)
   glBindTexture(GL_TEXTURE_2D, ctx.atlasTexture.textureId)
   when not defined(emscripten):
     glGetTexImage(
