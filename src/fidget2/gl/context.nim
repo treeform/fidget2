@@ -15,24 +15,23 @@ type
   Context* = ref object
     atlasShader, maskShader, activeShader: Shader
     atlasTexture: Texture
-    maskTextureWrite: int       ## Index into max textures for writing.
-    maskTextureRead: int        ## Index into max textures for rendering.
+    maskTextureWrite: int       ## Index into mask textures for writing.
+    maskTextureRead: int        ## Index into mask textures for rendering.
     maskTextures: seq[Texture]  ## Masks array for pushing and popping.
     atlasSize: int              ## Size x size dimensions of the atlas
-    atlasMargin: int            ## Default margin between images
     quadCount: int              ## Number of quads drawn so far
     maxQuads: int               ## Max quads to draw before issuing an OpenGL call
-    mat*: Mat4                  ## Current matrix
+    mat: Mat4                   ## Current matrix
     mats: seq[Mat4]             ## Matrix stack
     entries*: Table[string, TileInfo] ## Mapping of image name to atlas UV position
     maxTiles: int
     tileRun: int
-    takenTiles: seq[bool]        ## Height map of the free space in the atlas
-    proj*: Mat4
+    takenTiles: seq[bool]       ## Height map of the free space in the atlas
+    proj: Mat4
     frameSize: Vec2             ## Dimensions of the window frame
     vertexArrayId, maskFramebufferId: GLuint
     frameBegun, maskBegun: bool
-    pixelate*: bool             ## Makes texture look pixelated, like a pixel game.
+    pixelate: bool              ## Makes texture look pixelated, like a pixel game.
 
     # Buffer data for OpenGL
     positions: tuple[buffer: Buffer, data: seq[float32]]
@@ -40,17 +39,26 @@ type
     uvs: tuple[buffer: Buffer, data: seq[float32]]
     indices: tuple[buffer: Buffer, data: seq[uint16]]
 
-proc tilesWidth(tileInfo: TileInfo ): int =
-  ## Number of tiles wide.
-  ceil(tileInfo.width / tileSize).int
-
-proc tilesHeight(tileInfo: TileInfo ): int =
-  ## Number of tiles high.
-  ceil(tileInfo.height / tileSize).int
-
 proc vec2(x, y: SomeNumber): Vec2 =
   ## Integer short cut for creating vectors.
   vec2(x.float32, y.float32)
+
+func `*`(m: Mat4, v: Vec2): Vec2 =
+  (m * vec3(v.x, v.y, 0.0)).xy
+
+proc `*`(a, b: Color): Color =
+  result.r = a.r * b.r
+  result.g = a.g * b.g
+  result.b = a.b * b.b
+  result.a = a.a * b.a
+
+proc tilesWidth(tileInfo: TileInfo): int =
+  ## Number of tiles wide.
+  ceil(tileInfo.width / tileSize).int
+
+proc tilesHeight(tileInfo: TileInfo): int =
+  ## Number of tiles high.
+  ceil(tileInfo.height / tileSize).int
 
 proc readAtlas*(ctx: Context): Image =
   ## Read the current atlas content.
@@ -128,8 +136,8 @@ proc setUpMaskFramebuffer(ctx: Context) =
 
 proc createAtlasTexture(ctx: Context, size: int): Texture =
   result = Texture()
-  result.width = size.GLint
-  result.height = size.GLint
+  result.width = size.int32
+  result.height = size.int32
   result.componentType = GL_UNSIGNED_BYTE
   result.format = GL_RGBA
   result.internalFormat = GL_RGBA8
@@ -304,9 +312,7 @@ proc grow(ctx: Context) =
     oldAtlas = ctx.readAtlas()
     oldTileRun = ctx.tileRun
 
-  ctx.atlasSize = ctx.atlasSize * 2
-
-  echo "grow atlas: ", ctx.atlasSize
+  ctx.atlasSize *= 2
 
   ctx.tileRun = ctx.atlasSize div tileSize
   ctx.maxTiles = ctx.tileRun * ctx.tileRun
@@ -392,7 +398,7 @@ proc checkBatch(ctx: Context) =
     # ctx is full dump the images in the ctx now and start a new batch
     ctx.draw()
 
-proc setVert2(buf: var seq[float32], i: int, v: Vec2) =
+proc setVert(buf: var seq[float32], i: int, v: Vec2) =
   buf[i * 2 + 0] = v.x
   buf[i * 2 + 1] = v.y
 
@@ -401,9 +407,6 @@ proc setVertColor(buf: var seq[uint8], i: int, rgbx: ColorRGBX) =
   buf[i * 4 + 1] = rgbx.g
   buf[i * 4 + 2] = rgbx.b
   buf[i * 4 + 3] = rgbx.a
-
-func `*`*(m: Mat4, v: Vec2): Vec2 =
-  (m * vec3(v.x, v.y, 0.0)).xy
 
 proc drawQuad*(
   ctx: Context,
@@ -414,15 +417,15 @@ proc drawQuad*(
   ctx.checkBatch()
 
   let offset = ctx.quadCount * 4
-  ctx.positions.data.setVert2(offset + 0, verts[0])
-  ctx.positions.data.setVert2(offset + 1, verts[1])
-  ctx.positions.data.setVert2(offset + 2, verts[2])
-  ctx.positions.data.setVert2(offset + 3, verts[3])
+  ctx.positions.data.setVert(offset + 0, verts[0])
+  ctx.positions.data.setVert(offset + 1, verts[1])
+  ctx.positions.data.setVert(offset + 2, verts[2])
+  ctx.positions.data.setVert(offset + 3, verts[3])
 
-  ctx.uvs.data.setVert2(offset + 0, uvs[0])
-  ctx.uvs.data.setVert2(offset + 1, uvs[1])
-  ctx.uvs.data.setVert2(offset + 2, uvs[2])
-  ctx.uvs.data.setVert2(offset + 3, uvs[3])
+  ctx.uvs.data.setVert(offset + 0, uvs[0])
+  ctx.uvs.data.setVert(offset + 1, uvs[1])
+  ctx.uvs.data.setVert(offset + 2, uvs[2])
+  ctx.uvs.data.setVert(offset + 3, uvs[3])
 
   ctx.colors.data.setVertColor(offset + 0, colors[0].asRgbx())
   ctx.colors.data.setVertColor(offset + 1, colors[1].asRgbx())
@@ -431,57 +434,30 @@ proc drawQuad*(
 
   inc ctx.quadCount
 
-proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
+proc drawUvRect(ctx: Context, at, to, uvAt, uvTo: Vec2, color: Color) =
   ## Adds an image rect with a path to an ctx
   ctx.checkBatch()
-
-  assert ctx.quadCount < ctx.maxQuads
 
   let
     at = ctx.mat * at
     to = ctx.mat * to
-
     posQuad = [
       vec2(at.x, to.y),
       vec2(to.x, to.y),
       vec2(to.x, at.y),
       vec2(at.x, at.y),
     ]
-
-    uvAt = (uvAt + vec2(0.0, 0.0)) / ctx.atlasSize.float32
-    uvTo = (uvTo + vec2(0.0, 0.0)) / ctx.atlasSize.float32
-
+    uvAt = uvAt / ctx.atlasSize.float32
+    uvTo = uvTo / ctx.atlasSize.float32
     uvQuad = [
       vec2(uvAt.x, uvTo.y),
       vec2(uvTo.x, uvTo.y),
       vec2(uvTo.x, uvAt.y),
       vec2(uvAt.x, uvAt.y),
     ]
+    colorQuad = [color, color, color, color]
 
-  let offset = ctx.quadCount * 4
-  ctx.positions.data.setVert2(offset + 0, posQuad[0])
-  ctx.positions.data.setVert2(offset + 1, posQuad[1])
-  ctx.positions.data.setVert2(offset + 2, posQuad[2])
-  ctx.positions.data.setVert2(offset + 3, posQuad[3])
-
-  ctx.uvs.data.setVert2(offset + 0, uvQuad[0])
-  ctx.uvs.data.setVert2(offset + 1, uvQuad[1])
-  ctx.uvs.data.setVert2(offset + 2, uvQuad[2])
-  ctx.uvs.data.setVert2(offset + 3, uvQuad[3])
-
-  let rgbx = color.rgbx()
-  ctx.colors.data.setVertColor(offset + 0, rgbx)
-  ctx.colors.data.setVertColor(offset + 1, rgbx)
-  ctx.colors.data.setVertColor(offset + 2, rgbx)
-  ctx.colors.data.setVertColor(offset + 3, rgbx)
-
-  inc ctx.quadCount
-
-proc `*`(a, b: Color): Color =
-  result.r = a.r * b.r
-  result.g = a.g * b.g
-  result.b = a.b * b.b
-  result.a = a.a * b.a
+  ctx.drawQuad(posQuad, uvQuad, colorQuad)
 
 proc drawImage*(
   ctx: Context,
@@ -583,7 +559,6 @@ proc endMask*(ctx: Context) =
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
   ctx.maskTextureRead = ctx.maskTextureWrite
-
   ctx.activeShader = ctx.atlasShader
 
 proc popMask*(ctx: Context) =
