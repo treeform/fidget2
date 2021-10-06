@@ -430,7 +430,7 @@ proc drawQuad*(
 
   inc ctx.quadCount
 
-proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
+proc drawUvRect(ctx: Context, at, to, uvAt, uvTo: Vec2, color: Color) =
   ## Adds an image rect with a path to an ctx
   ctx.checkBatch()
 
@@ -443,8 +443,8 @@ proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
       vec2(to.x, at.y),
       vec2(at.x, at.y),
     ]
-    uvAt = (uvAt + vec2(0.0, 0.0)) / ctx.atlasSize.float32
-    uvTo = (uvTo + vec2(0.0, 0.0)) / ctx.atlasSize.float32
+    uvAt = uvAt / ctx.atlasSize.float32
+    uvTo = uvTo / ctx.atlasSize.float32
     uvQuad = [
       vec2(uvAt.x, uvTo.y),
       vec2(uvTo.x, uvTo.y),
