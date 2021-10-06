@@ -391,7 +391,7 @@ proc checkBatch(ctx: Context) =
     # ctx is full dump the images in the ctx now and start a new batch
     ctx.draw()
 
-proc setVert2(buf: var seq[float32], i: int, v: Vec2) =
+proc setVert(buf: var seq[float32], i: int, v: Vec2) =
   buf[i * 2 + 0] = v.x
   buf[i * 2 + 1] = v.y
 
@@ -413,15 +413,15 @@ proc drawQuad*(
   ctx.checkBatch()
 
   let offset = ctx.quadCount * 4
-  ctx.positions.data.setVert2(offset + 0, verts[0])
-  ctx.positions.data.setVert2(offset + 1, verts[1])
-  ctx.positions.data.setVert2(offset + 2, verts[2])
-  ctx.positions.data.setVert2(offset + 3, verts[3])
+  ctx.positions.data.setVert(offset + 0, verts[0])
+  ctx.positions.data.setVert(offset + 1, verts[1])
+  ctx.positions.data.setVert(offset + 2, verts[2])
+  ctx.positions.data.setVert(offset + 3, verts[3])
 
-  ctx.uvs.data.setVert2(offset + 0, uvs[0])
-  ctx.uvs.data.setVert2(offset + 1, uvs[1])
-  ctx.uvs.data.setVert2(offset + 2, uvs[2])
-  ctx.uvs.data.setVert2(offset + 3, uvs[3])
+  ctx.uvs.data.setVert(offset + 0, uvs[0])
+  ctx.uvs.data.setVert(offset + 1, uvs[1])
+  ctx.uvs.data.setVert(offset + 2, uvs[2])
+  ctx.uvs.data.setVert(offset + 3, uvs[3])
 
   ctx.colors.data.setVertColor(offset + 0, colors[0].asRgbx())
   ctx.colors.data.setVertColor(offset + 1, colors[1].asRgbx())
