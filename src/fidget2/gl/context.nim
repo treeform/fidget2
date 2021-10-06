@@ -127,8 +127,8 @@ proc setUpMaskFramebuffer(ctx: Context) =
 
 proc createAtlasTexture(ctx: Context, size: int): Texture =
   result = Texture()
-  result.width = size.GLint
-  result.height = size.GLint
+  result.width = size.int32
+  result.height = size.int32
   result.componentType = GL_UNSIGNED_BYTE
   result.format = GL_RGBA
   result.internalFormat = GL_RGBA8
@@ -434,47 +434,26 @@ proc drawUvRect(ctx: Context, at, to: Vec2, uvAt, uvTo: Vec2, color: Color) =
   ## Adds an image rect with a path to an ctx
   ctx.checkBatch()
 
-  assert ctx.quadCount < ctx.maxQuads
-
   let
     at = ctx.mat * at
     to = ctx.mat * to
-
     posQuad = [
       vec2(at.x, to.y),
       vec2(to.x, to.y),
       vec2(to.x, at.y),
       vec2(at.x, at.y),
     ]
-
     uvAt = (uvAt + vec2(0.0, 0.0)) / ctx.atlasSize.float32
     uvTo = (uvTo + vec2(0.0, 0.0)) / ctx.atlasSize.float32
-
     uvQuad = [
       vec2(uvAt.x, uvTo.y),
       vec2(uvTo.x, uvTo.y),
       vec2(uvTo.x, uvAt.y),
       vec2(uvAt.x, uvAt.y),
     ]
+    colorQuad = [color, color, color, color]
 
-  let offset = ctx.quadCount * 4
-  ctx.positions.data.setVert2(offset + 0, posQuad[0])
-  ctx.positions.data.setVert2(offset + 1, posQuad[1])
-  ctx.positions.data.setVert2(offset + 2, posQuad[2])
-  ctx.positions.data.setVert2(offset + 3, posQuad[3])
-
-  ctx.uvs.data.setVert2(offset + 0, uvQuad[0])
-  ctx.uvs.data.setVert2(offset + 1, uvQuad[1])
-  ctx.uvs.data.setVert2(offset + 2, uvQuad[2])
-  ctx.uvs.data.setVert2(offset + 3, uvQuad[3])
-
-  let rgbx = color.rgbx()
-  ctx.colors.data.setVertColor(offset + 0, rgbx)
-  ctx.colors.data.setVertColor(offset + 1, rgbx)
-  ctx.colors.data.setVertColor(offset + 2, rgbx)
-  ctx.colors.data.setVertColor(offset + 3, rgbx)
-
-  inc ctx.quadCount
+  ctx.drawQuad(posQuad, uvQuad, colorQuad)
 
 proc `*`(a, b: Color): Color =
   result.r = a.r * b.r
@@ -582,7 +561,6 @@ proc endMask*(ctx: Context) =
   glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
   ctx.maskTextureRead = ctx.maskTextureWrite
-
   ctx.activeShader = ctx.atlasShader
 
 proc popMask*(ctx: Context) =
