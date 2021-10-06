@@ -52,11 +52,11 @@ proc `*`(a, b: Color): Color =
   result.b = a.b * b.b
   result.a = a.a * b.a
 
-proc tilesWidth(tileInfo: TileInfo ): int =
+proc tilesWidth(tileInfo: TileInfo): int =
   ## Number of tiles wide.
   ceil(tileInfo.width / tileSize).int
 
-proc tilesHeight(tileInfo: TileInfo ): int =
+proc tilesHeight(tileInfo: TileInfo): int =
   ## Number of tiles high.
   ceil(tileInfo.height / tileSize).int
 
@@ -312,9 +312,7 @@ proc grow(ctx: Context) =
     oldAtlas = ctx.readAtlas()
     oldTileRun = ctx.tileRun
 
-  ctx.atlasSize = ctx.atlasSize * 2
-
-  echo "grow atlas: ", ctx.atlasSize
+  ctx.atlasSize *= 2
 
   ctx.tileRun = ctx.atlasSize div tileSize
   ctx.maxTiles = ctx.tileRun * ctx.tileRun
