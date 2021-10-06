@@ -39,6 +39,19 @@ type
     uvs: tuple[buffer: Buffer, data: seq[float32]]
     indices: tuple[buffer: Buffer, data: seq[uint16]]
 
+proc vec2(x, y: SomeNumber): Vec2 =
+  ## Integer short cut for creating vectors.
+  vec2(x.float32, y.float32)
+
+func `*`*(m: Mat4, v: Vec2): Vec2 =
+  (m * vec3(v.x, v.y, 0.0)).xy
+
+proc `*`(a, b: Color): Color =
+  result.r = a.r * b.r
+  result.g = a.g * b.g
+  result.b = a.b * b.b
+  result.a = a.a * b.a
+
 proc tilesWidth(tileInfo: TileInfo ): int =
   ## Number of tiles wide.
   ceil(tileInfo.width / tileSize).int
@@ -46,10 +59,6 @@ proc tilesWidth(tileInfo: TileInfo ): int =
 proc tilesHeight(tileInfo: TileInfo ): int =
   ## Number of tiles high.
   ceil(tileInfo.height / tileSize).int
-
-proc vec2(x, y: SomeNumber): Vec2 =
-  ## Integer short cut for creating vectors.
-  vec2(x.float32, y.float32)
 
 proc readAtlas*(ctx: Context): Image =
   ## Read the current atlas content.
@@ -401,9 +410,6 @@ proc setVertColor(buf: var seq[uint8], i: int, rgbx: ColorRGBX) =
   buf[i * 4 + 2] = rgbx.b
   buf[i * 4 + 3] = rgbx.a
 
-func `*`*(m: Mat4, v: Vec2): Vec2 =
-  (m * vec3(v.x, v.y, 0.0)).xy
-
 proc drawQuad*(
   ctx: Context,
   verts: array[4, Vec2],
@@ -454,12 +460,6 @@ proc drawUvRect(ctx: Context, at, to, uvAt, uvTo: Vec2, color: Color) =
     colorQuad = [color, color, color, color]
 
   ctx.drawQuad(posQuad, uvQuad, colorQuad)
-
-proc `*`(a, b: Color): Color =
-  result.r = a.r * b.r
-  result.g = a.g * b.g
-  result.b = a.b * b.b
-  result.a = a.a * b.a
 
 proc drawImage*(
   ctx: Context,
