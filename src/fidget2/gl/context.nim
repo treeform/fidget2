@@ -43,7 +43,7 @@ proc vec2(x, y: SomeNumber): Vec2 =
   ## Integer short cut for creating vectors.
   vec2(x.float32, y.float32)
 
-func `*`*(m: Mat4, v: Vec2): Vec2 =
+func `*`(m: Mat4, v: Vec2): Vec2 =
   (m * vec3(v.x, v.y, 0.0)).xy
 
 proc `*`(a, b: Color): Color =
