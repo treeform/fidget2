@@ -423,7 +423,6 @@ proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
   for node in underMouseNodes:
     if node.overflowDirection == odVerticalScrolling:
       # TODO make it scroll both x and y.
-      echo "non text scroll limit"
       node.scrollPos.y -= yoffset * 50
 
       #if node.collapse:
@@ -611,7 +610,7 @@ proc processEvents() {.measure.} =
 
   if buttonPress[F4]:
     echo "writing atlas"
-    bxy.writeAtlas("atlas.png")
+    ctx.readAtlas().writeFile("atlas.png")
 
   if buttonPress[F5]:
     echo "reloading from web"
