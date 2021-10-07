@@ -30,7 +30,7 @@ elif defined(cpu_vs_hyb):
     hybridrender.setupWindow(frameNode, offscreen)
 elif defined(hyb):
   const w = "hyb"
-  import fidget2/hybridrender, fidget2/gl/context
+  import fidget2/hybridrender, boxy
 
 proc main(r = "", e = "", l = 10000) =
 
@@ -84,7 +84,7 @@ proc main(r = "", e = "", l = 10000) =
       elif defined(cpu):
         result = drawCompleteFrame(frame)
       elif defined(hyb):
-        ctx.clearAtlas()
+        bxy.clearAtlas()
         drawToScreen(frame)
         result = readGpuPixelsFromScreen()
       elif defined(cpu_vs_hyb):
@@ -117,7 +117,7 @@ proc main(r = "", e = "", l = 10000) =
         master = drawCompleteZpuFrame(frame)
         master.writeFile("tests/frames/zpu/" & frame.name & ".png")
       elif defined(cpu_vs_hyb):
-        ctx.clearAtlas()
+        bxy.clearAtlas()
         hybridrender.drawToScreen(frame)
         master = readGpuPixelsFromScreen()
         master.writeFile("tests/frames/hyb/" & frame.name & ".png")

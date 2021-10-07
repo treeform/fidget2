@@ -1,10 +1,10 @@
 import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath,
-  gl/context, common, cpurender, layout, os, perf, nodes
+  boxy, common, cpurender, layout, os, perf, nodes
 
 export cpurender.underMouse
 
 var
-  ctx*: context.Context
+  bxy*: Boxy
 
 proc quasiEqual(a, b: Rect): bool =
   ## Quasi equal. Equal everything except integer translation.
@@ -96,10 +96,10 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
       mat = translate(-node.pixelBox.xy) * mat
 
       node.drawNodeInternal(withChildren=node.collapse)
-      ctx.putImage(node.id, layer)
+      bxy.putImage(node.id, layer)
       mat = prevBoundsMat
     else:
-      ctx.removeImage(node.id)
+      bxy.removeImage(node.id)
 
   else:
     # Update pixel bounds even if no redraw was needed.
@@ -118,11 +118,11 @@ proc drawWithAtlas(node: Node) {.measure.} =
   if not node.visible or node.opacity == 0:
     return
 
-  if node.id in ctx.entries:
+  if node.id in bxy.entries:
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0
     doAssert node.willDrawSomething()
-    ctx.drawImage(
+    bxy.drawImage(
       node.id,
       pos = node.pixelBox.xy
     )
@@ -146,7 +146,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   viewportSize = (screenNode.size * pixelRatio).ceil
 
 
-  ctx.beginFrame(viewportSize)
+  bxy.beginFrame(viewportSize)
 
   for i in 0 ..< 2:
     # TODO: figure out how to call layout only once.
@@ -166,7 +166,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   drawToAtlas(screenNode, 0)
 
   drawWithAtlas(screenNode)
-  ctx.endFrame()
+  bxy.endFrame()
 
   # echo "after"
   # screenNode.printDirtyStatus()
@@ -216,8 +216,8 @@ proc setupWindow*(
   echo "GL_RENDERER: ", cast[cstring](glGetString(GL_RENDERER))
   echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
 
-  # Setup Context
-  ctx = newContext()
+  # Setup bxy
+  bxy = newBoxy()
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Read the GPU pixels from screen.

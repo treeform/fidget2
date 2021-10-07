@@ -15,11 +15,11 @@ elif defined(nanovg):
   import nanovgrender
 
 elif defined(hyb):
-  import context, hybridrender, cpurender
+  import boxy, hybridrender, cpurender
 
 else:
   # hybrid is default for now
-  import context, hybridrender, cpurender
+  import boxy, hybridrender, cpurender
 
 type
   KeyState* = enum
@@ -611,7 +611,7 @@ proc processEvents() {.measure.} =
 
   if buttonPress[F4]:
     echo "writing atlas"
-    ctx.writeAtlas("atlas.png")
+    bxy.writeAtlas("atlas.png")
 
   if buttonPress[F5]:
     echo "reloading from web"
