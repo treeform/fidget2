@@ -610,7 +610,7 @@ proc processEvents() {.measure.} =
 
   if buttonPress[F4]:
     echo "writing atlas"
-    ctx.readAtlas().writeFile("atlas.png")
+    bxy.readAtlas().writeFile("atlas.png")
 
   if buttonPress[F5]:
     echo "reloading from web"
