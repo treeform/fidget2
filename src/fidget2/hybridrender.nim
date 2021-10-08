@@ -118,7 +118,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
   if not node.visible or node.opacity == 0:
     return
 
-  if node.id in bxy.entries:
+  if node.id in bxy:
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0
     doAssert node.willDrawSomething()
