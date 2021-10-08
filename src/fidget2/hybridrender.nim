@@ -96,7 +96,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
       mat = translate(-node.pixelBox.xy) * mat
 
       node.drawNodeInternal(withChildren=node.collapse)
-      bxy.putImage(node.id, layer)
+      bxy.addImage(node.id, layer)
       mat = prevBoundsMat
     else:
       bxy.removeImage(node.id)
