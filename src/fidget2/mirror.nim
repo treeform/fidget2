@@ -7,18 +7,8 @@ export textboxes, nodes
 
 when defined(cpu):
   import cpurender
-
-elif defined(gpu):
-  import gpurender
-
-elif defined(nanovg):
-  import nanovgrender
-
-elif defined(hyb):
-  import boxy, hybridrender, cpurender
-
 else:
-  # hybrid is default for now
+  # Hybrid is default
   import boxy, hybridrender, cpurender
 
 type
