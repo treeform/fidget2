@@ -1,4 +1,4 @@
-import algorithm, bumpy, globs, input, json, loader, math, opengl,
+import algorithm, bitty, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
     nodes, perf, puppy, layout, os, print
@@ -7,18 +7,8 @@ export textboxes, nodes
 
 when defined(cpu):
   import cpurender
-
-elif defined(gpu):
-  import gpurender
-
-elif defined(nanovg):
-  import nanovgrender
-
-elif defined(hyb):
-  import boxy, hybridrender, cpurender
-
 else:
-  # hybrid is default for now
+  # Hybrid is default
   import boxy, hybridrender, cpurender
 
 type
@@ -96,12 +86,10 @@ proc clearInputs*() =
   mouse.doubleClick = false
   mouse.tripleClick = false
 
-  # Reset key and mouse press to default state
-  for i in 0 ..< buttonPress.len:
-    buttonPress[i] = false
-    buttonRelease[i] = false
+  buttonPress.clear()
+  buttonRelease.clear()
 
-  if any(buttonDown, proc(b: bool): bool = b):
+  if buttonDown.count > 0:
     keyboard.state = ksDown
   else:
     keyboard.state = ksEmpty
