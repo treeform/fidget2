@@ -340,7 +340,7 @@ proc onSetKey(
 
   # Do the text box commands.
   if textBoxFocus != nil and setKey:
-    textBoxFocus.dirty = true
+
     keyboard.state = ksPress
     let
       ctrl = keyboard.ctrlKey
@@ -390,6 +390,8 @@ proc onSetKey(
             textBoxFocus.selectAll()
         else:
           discard
+
+    textBoxFocus.makeTextDirty()
 
   # Now do the buttons.
   if key < buttonDown.len and key >= 0:

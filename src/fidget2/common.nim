@@ -229,7 +229,7 @@ proc genHitTestGeometry*(node: Node) {.measure.} =
   )
   node.fillGeometry = @[geom]
 
-proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font =
+proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font {.measure.} =
   ## Get the font!
 
   var fontName = style.fontPostScriptName
@@ -280,8 +280,8 @@ proc selection*(node: Node): HSlice[int, int] =
   result.a = min(node.cursor, node.selector)
   result.b = max(node.cursor, node.selector)
 
-proc copy*(f: Font): Font =
-  result = Font()
+proc copy*[T](f: T): T =
+  result = T()
   result[] = f[]
 
 proc cutRunes(s: string, start, stop: int): string =
@@ -331,6 +331,9 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
     at = to
 
 proc computeArrangement*(node: Node) {.measure.} =
+
+  if node.arrangement != nil:
+    return
 
   node.runes = node.characters.toRunes()
 
@@ -389,6 +392,8 @@ proc computeArrangement*(node: Node) {.measure.} =
         modSpan.font.underline = true
         modSpan.text = textImeEditString
 
+  # var prevArrangment = node.arrangement
+
   node.arrangement = typeset(
     node.spans,
     bounds = node.size,
@@ -396,6 +401,23 @@ proc computeArrangement*(node: Node) {.measure.} =
     hAlign = node.style.textAlignHorizontal,
     vAlign = node.style.textAlignVertical,
   )
+
+  # proc similar(a, b: Arrangement): bool =
+  #   if a == nil and b == nil: return true
+  #   if a == nil: return false
+  #   if b == nil: return false
+  #   if a.lines != b.lines: return false
+  #   if a.spans != b.spans: return false
+  #   if a.runes != b.runes: return false
+  #   if a.positions != b.positions: return false
+  #   if a.selectionRects != b.selectionRects: return false
+
+  # if node.arrangement.similar(prevArrangment):
+  #   echo "BAD"
+  #   #print node.runes == prevArrangment.runes
+  #   # print node.dirty, prevArrangment != nil
+
+
 
 proc genTextGeometry*(node: Node) {.measure.} =
   ## Generates text bounds geometry, can be more or less then

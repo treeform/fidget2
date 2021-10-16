@@ -127,9 +127,14 @@ proc selectionRegions*(node: Node): seq[Rect] =
   let sel = node.selection
   node.arrangement.getSelection(sel.a, sel.b)
 
+proc makeTextDirty*(node: Node) =
+  node.dirty = true
+  node.arrangement = nil
+  node.computeArrangement()
+
 proc runesChanged(node: Node) =
   node.characters = $node.runes
-  node.computeArrangement()
+  node.makeTextDirty()
 
 proc removedSelection*(node: Node): bool =
   ## Removes selected runes if they are selected.
@@ -140,7 +145,7 @@ proc removedSelection*(node: Node): bool =
     node.runesChanged()
     node.cursor = sel.a
     node.selector = node.cursor
-    node.dirty = true
+    node.makeTextDirty()
     return true
   return false
 
@@ -156,17 +161,17 @@ proc scrollToCursor*(node: Node) =
     # is pos.y inside the window?
     if r.y < node.scrollPos.y:
       node.scrollPos.y = r.y
-      node.dirty = true
+      node.makeTextDirty()
     if r.y + r.h > node.scrollPos.y + node.size.y:
       node.scrollPos.y = r.y + r.h - node.size.y
-      node.dirty = true
+      node.makeTextDirty()
     # is pos.x inside the window?
     if r.x < node.scrollPos.x:
       node.scrollPos.x = r.x
-      node.dirty = true
+      node.makeTextDirty()
     if r.x + r.w > node.scrollPos.x + node.size.x:
       node.scrollPos.x = r.x + r.w - node.size.x
-      node.dirty = true
+      node.makeTextDirty()
 
 proc typeCharacter*(node: Node, rune: Rune) =
   ## Add a character to the text box.
@@ -184,7 +189,7 @@ proc typeCharacter*(node: Node, rune: Rune) =
   inc node.cursor
   node.selector = node.cursor
   node.scrollToCursor()
-  node.dirty = true
+  node.makeTextDirty()
 
 proc typeCharacter*(node: Node, letter: char) =
   ## Add a character to the text box.
@@ -201,7 +206,7 @@ proc typeCharacters*(node: Node, s: string) =
   node.selector = node.cursor
   node.runesChanged()
   node.scrollToCursor()
-  node.dirty = true
+  node.makeTextDirty()
 
 proc copyText*(node: Node): string =
   ## Returns the text that was copied.
@@ -237,7 +242,7 @@ proc backspace*(node: Node, shift = false) =
       node.runesChanged()
       dec node.cursor
       node.selector = node.cursor
-      node.dirty = true
+      node.makeTextDirty()
   node.scrollToCursor()
 
 proc delete*(node: Node, shift = false) =
@@ -247,7 +252,7 @@ proc delete*(node: Node, shift = false) =
     if node.cursor < node.runes.len:
       node.runes.delete(node.cursor)
       node.runesChanged()
-      node.dirty = true
+      node.makeTextDirty()
   node.scrollToCursor()
 
 proc backspaceWord*(node: Node, shift = false) =
@@ -261,7 +266,7 @@ proc backspaceWord*(node: Node, shift = false) =
         dec node.cursor
       node.runesChanged()
       node.selector = node.cursor
-      node.dirty = true
+      node.makeTextDirty()
   node.scrollToCursor()
 
 proc deleteWord*(node: Node, shift = false) =
@@ -273,7 +278,7 @@ proc deleteWord*(node: Node, shift = false) =
         not node.runes[node.cursor].isWhiteSpace():
         node.runes.delete(node.cursor)
       node.runesChanged()
-      node.dirty = true
+      node.makeTextDirty()
   node.scrollToCursor()
 
 proc left*(node: Node, shift = false) =
@@ -438,10 +443,11 @@ proc mouseAction*(
     if mousePos.y > node.innerHeight:
       node.cursor = node.runes.len
   node.savedX = mousePos.x
-  node.scrollToCursor()
-
   if not shift and click:
     node.selector = node.cursor
+
+  node.scrollToCursor()
+  node.makeTextDirty()
 
 proc selectWord*(node: Node, mousePos: Vec2, extraSpace = true) =
   ## Select word under the cursor (double click).
@@ -476,4 +482,4 @@ proc selectAll*(node: Node) =
 proc scrollBy*(node: Node, amount: float) =
   ## Scroll text box with a scroll wheel.
   node.scrollPos.y += amount
-  node.dirty = true
+  node.makeTextDirty()
