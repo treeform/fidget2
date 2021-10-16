@@ -1,3 +1,5 @@
+import bitty
+
 type
   Button* = enum
     UNBOUND = 0
@@ -137,14 +139,14 @@ type
     ALT = 0x0004
     SUPER = 0x0008
 
-var
-  buttonDown* = newSeq[bool](348)
-  buttonRelease* = newSeq[bool](348)
-  buttonToggle* = newSeq[bool](348)
-  buttonPress* = newSeq[bool](348)
+let
+  buttonDown* = newBitArray(348)
+  buttonRelease* = newBitArray(348)
+  buttonToggle* = newBitArray(348)
+  buttonPress* = newBitArray(348)
 
-proc `[]`*(buttons: seq[bool], button: Button): bool =
-  return buttons[cast[int](button)]
+proc `[]`*(buttons: BitArray, button: Button): bool =
+  buttons[cast[int](button)]
 
-proc `[]=`*(buttons: var seq[bool], button: Button, value: bool) =
+proc `[]=`*(buttons: BitArray, button: Button, value: bool) =
   buttons[cast[int](button)] = value

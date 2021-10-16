@@ -46,8 +46,7 @@ macro measure*(fn: untyped) =
       measurePop()
   return fn
 
-proc dumpMeasures*() =
-  ## Dumps the {.measure.} timings.
+proc dumpMeasures*(overTotalMs = 0.0) =
   measures.sort()
   var
     maxK = 0
@@ -58,14 +57,15 @@ proc dumpMeasures*() =
     maxV = max(maxV, v)
     totalV += v
 
-  let n = "name ".alignLeft(maxK, padding = '.')
-  echo &"{n}.. self time    self %  # calls  relative amount"
-  for k, v in measures:
-    let
-      n = k.alignLeft(maxK)
-      bar = "#".repeat((v/maxV*40).int)
-      numCalls = calls[k]
-    echo &"{n} {v/1000000:>9.3f}ms{v/totalV*100:>9.3f}%{numCalls:>9} {bar}"
+  if totalV.float32/1000000 > overTotalMs:
+    let n = "name ".alignLeft(maxK, padding = '.')
+    echo &"{n}.. self time    self %  # calls  relative amount"
+    for k, v in measures:
+      let
+        n = k.alignLeft(maxK)
+        bar = "#".repeat((v/maxV*40).int)
+        numCalls = calls[k]
+      echo &"{n} {v/1000000:>9.3f}ms{v/totalV*100:>9.3f}%{numCalls:>9} {bar}"
 
   calls.clear()
   measures.clear()

@@ -70,6 +70,14 @@ proc addChild*(parent, child: Node) =
   child.parent = parent
   parent.markTreeDirty()
 
+proc inTree*(node, other: Node): bool =
+  ## Returns true if node is a sub node of other.
+  var node = node
+  while node != nil:
+    if node.id == other.id:
+      return true
+    node = node.parent
+
 proc normalize(props: var seq[(string, string)]) =
   ## Makes sure that prop name is sorted.
   props.sort proc(a, b: (string, string)): int = cmp(a[0], b[0])
@@ -192,15 +200,16 @@ proc setVariant*(node: Node, name, value: string) =
 proc hasVariant*(node: Node, name, value: string): bool =
   ## Checks the variant exists for the node.
   var prevMaster = findNodeById(node.componentId)
-  var props = prevMaster.name.parseName()
-  props[name] = value
-  props.normalize()
+  if prevMaster != nil:
+    var props = prevMaster.name.parseName()
+    props[name] = value
+    props.normalize()
 
-  var componentSet = prevMaster.parent
-  for n in componentSet.children:
-    var nProps = n.name.parseName()
-    if nProps == props:
-      return true
+    var componentSet = prevMaster.parent
+    for n in componentSet.children:
+      var nProps = n.name.parseName()
+      if nProps == props:
+        return true
 
 proc getVariant*(node: Node, name: string): string =
   ## Gets the variant for the node.

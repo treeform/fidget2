@@ -1,4 +1,4 @@
-import algorithm, bumpy, globs, input, json, loader, math, opengl,
+import algorithm, bitty, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
     nodes, perf, puppy, layout, os, print
@@ -7,19 +7,9 @@ export textboxes, nodes
 
 when defined(cpu):
   import cpurender
-
-elif defined(gpu):
-  import gpurender
-
-elif defined(nanovg):
-  import nanovgrender
-
-elif defined(hyb):
-  import context, hybridrender, cpurender
-
 else:
-  # hybrid is default for now
-  import gl/context, hybridrender, cpurender
+  # Hybrid is default
+  import boxy, hybridrender, cpurender
 
 type
   KeyState* = enum
@@ -86,6 +76,8 @@ var
   thisSelector*: string
   selectorStack: seq[string]
 
+  navigationHistory*: seq[Node]
+
 proc display(withEvents=true)
 
 proc clearInputs*() =
@@ -96,12 +88,10 @@ proc clearInputs*() =
   mouse.doubleClick = false
   mouse.tripleClick = false
 
-  # Reset key and mouse press to default state
-  for i in 0 ..< buttonPress.len:
-    buttonPress[i] = false
-    buttonRelease[i] = false
+  buttonPress.clear()
+  buttonRelease.clear()
 
-  if any(buttonDown, proc(b: bool): bool = b):
+  if buttonDown.count > 0:
     keyboard.state = ksDown
   else:
     keyboard.state = ksEmpty
@@ -574,7 +564,7 @@ proc processEvents() {.measure.} =
 
       if mouse.click:
         for node in findAll(thisSelector):
-          if node.overlaps(mousePos):
+          if node.inTree(thisFrame) and node.overlaps(mousePos):
             thisNode = node
             thisCb.handler()
             thisNode = nil
@@ -612,7 +602,7 @@ proc processEvents() {.measure.} =
 
   if buttonPress[F4]:
     echo "writing atlas"
-    ctx.readAtlas().writeFile("atlas.png")
+    bxy.readAtlas().writeFile("atlas.png")
 
   if buttonPress[F5]:
     echo "reloading from web"
@@ -630,6 +620,24 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
         avatarImage = decodeImage(imageData)
       imageCache[url] = avatarImage
     paint.imageRef = url
+
+proc navigateTo*(fullPath: string, smart = false) =
+  ## Navigates to a new frame a new frame.
+  ## Smart will try to preserve all nodes with the same name.
+  navigationHistory.add(thisFrame)
+  thisFrame = find(fullPath)
+  if thisFrame == nil:
+    raise newException(FidgetError, &"Frame '{fullPath}' not found")
+  #bxy.clearAtlas()
+  thisFrame.markTreeDirty()
+
+proc navigateBack*() =
+  ## Navigates back the navigation history.
+  if navigationHistory.len == 0:
+    raise newException(FidgetError, &"The navigation history is empty!")
+  thisFrame = navigationHistory.pop()
+  #bxy.clearAtlas()
+  thisFrame.markTreeDirty()
 
 proc display(withEvents = true) {.measure.} =
   ## Called every frame by main while loop.
@@ -666,6 +674,9 @@ proc mainLoop() {.cdecl.} =
   display()
   if buttonToggle[F8]:
     dumpMeasures()
+
+  #if buttonToggle[F9]:
+  dumpMeasures(16)
 
 proc startFidget*(
   figmaUrl: string,
