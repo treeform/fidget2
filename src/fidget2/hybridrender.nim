@@ -161,17 +161,17 @@ proc mat4(m: Transform): Mat4 =
   result[0, 1] = m[1][0]
   result[1, 0] = m[0][1]
   result[1, 1] = m[1][1]
-  result[2, 0] = m[0][2]
-  result[2, 1] = m[1][2]
+  result[3, 0] = m[0][2]
+  result[3, 1] = m[1][2]
 
 proc mat4(m: Mat3): Mat4 =
   result = mat4()
-  result[0, 0] = m[0][0]
-  result[0, 1] = m[0][1]
-  result[1, 0] = m[1][0]
-  result[1, 1] = m[1][1]
-  result[2, 0] = m[2][0]
-  result[2, 1] = m[2][1]
+  result[0, 0] = m[0, 0]
+  result[0, 1] = m[0, 1]
+  result[1, 0] = m[1, 0]
+  result[1, 1] = m[1, 1]
+  result[3, 0] = m[2, 0]
+  result[3, 1] = m[2, 1]
 
 proc drawWithAtlas(node: Node) {.measure.} =
   # Draw the nodes using atlas.
@@ -186,13 +186,14 @@ proc drawWithAtlas(node: Node) {.measure.} =
       let image = imageCache[paint.imageRef]
       case paint.scaleMode:
       of smFill:
+        #print "fill", node.name, node.mat, node.pixelBox.xy #, paint.imageTransform
         let
           ratioW = image.width.float32 / node.size.x
           ratioH = image.height.float32 / node.size.y
           scale = min(ratioW, ratioH)
         let topRight = node.size / 2 - vec2(image.width/2, image.height/2) / scale
         bxy.saveTransform()
-        bxy.translate(node.pixelBox.xy)
+        bxy.applyTransform(node.mat.mat4)
         bxy.translate(topRight)
         bxy.scale(vec2(1/scale))
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
@@ -205,7 +206,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
           scale = max(ratioW, ratioH)
         let topRight = node.size / 2 - vec2(image.width/2, image.height/2) / scale
         bxy.saveTransform()
-        bxy.translate(node.pixelBox.xy)
+        bxy.applyTransform(node.mat.mat4)
         bxy.translate(topRight)
         bxy.scale(vec2(1/scale))
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
@@ -228,7 +229,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
           scale = min(ratioW, ratioH)
         mat = mat * scale(vec2(1/scale))
         bxy.saveTransform()
-        bxy.translate(node.pixelBox.xy)
+        bxy.applyTransform(node.mat.mat4)
         bxy.applyTransform(mat.mat4)
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
