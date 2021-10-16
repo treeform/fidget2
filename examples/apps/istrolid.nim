@@ -72,11 +72,14 @@ find "/UI/FightMenu":
 
 find "/UI/Queued":
 
-  find "Label":
+  find "Mode":
     onClick:
       echo "should go to battle?"
-      navigateTo("/UI/Battle")
+      navigateTo("/UI/GameStarting")
 
+find "/UI/GameStarting":
+  onClick:
+    navigateTo("/UI/Battle")
 
 find "/UI/Battle":
   onClick:
