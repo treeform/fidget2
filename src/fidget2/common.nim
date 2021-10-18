@@ -91,8 +91,8 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
-    let typeface = readTypeface(figmaFontPath(fontName))
-    typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansSC-Regular"))
+    let typeface = parseOtf(readFigmaFile(figmaFontPath(fontName)))
+    #typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansSC-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
 
@@ -335,8 +335,6 @@ proc computeArrangement*(node: Node) {.measure.} =
   if node.arrangement != nil:
     return
 
-  node.runes = node.characters.toRunes()
-
   if node.characterStyleOverrides.len > 0:
     # The 0th style is node default style:
     node.spans.setLen(0)
@@ -361,13 +359,7 @@ proc computeArrangement*(node: Node) {.measure.} =
       node.spans[^1].text.add(node.characters[i])
       prevStyle = styleKey
 
-    # for span in node.spans:
-    #   print "---"
-    #   print span.text
-    #   print span.font.typeface.filePath
-    #   print span.font.paint.color
-    #   print span.font.size
-    #   print span.font.lineHeight
+
 
   else:
     let font = getFont(node.style)
@@ -393,6 +385,15 @@ proc computeArrangement*(node: Node) {.measure.} =
         modSpan.text = textImeEditString
 
   # var prevArrangment = node.arrangement
+
+
+  # for span in node.spans:
+  #   print "---"
+  #   print span.text
+  #   print span.font.typeface.filePath
+  #   print span.font.paint.color
+  #   print span.font.size
+  #   print span.font.lineHeight
 
   node.arrangement = typeset(
     node.spans,

@@ -1,4 +1,4 @@
-import sequtils, pixie, unicode, vmath, bumpy, common, schema
+import sequtils, pixie, unicode, vmath, bumpy, common, schema, strutils, nodes
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about
@@ -34,6 +34,61 @@ TODO:
 
 const
   LF = Rune(10)
+
+# fancy .u unicode API that mirrors strings
+type U = distinct ptr string
+
+proc u(s: var string): U =
+  s.addr.U
+
+proc str(uu: U): var string =
+  cast[ptr string](uu)[]
+
+proc add(s: U, r: Rune) =
+  ## Like .add but for unicode runes.
+  s.str.add($r)
+
+proc runeOffsetSafe(s: var string, i: int): int =
+  result = s.runeOffset(i)
+  if result == -1 and i == s.runeLen:
+    result = s.len
+
+proc insert(s: U, r: Rune, i: int) =
+  ## Like .insert but for unicode runes.
+  s.str.insert($r, s.str.runeOffsetSafe(i))
+
+proc delete(s: U, i: int) =
+  ## Like .delete but for unicode runes.
+  let
+    loc = s.str.runeOffsetSafe(i)
+    size = s.str.runeLenAt(i)
+  s.str.delete(loc, loc + size)
+
+proc delete(s: U, a, b: int) =
+  ## Like .delete but for unicode runes.
+  let
+    aLoc = s.str.runeOffsetSafe(a)
+    bLoc = s.str.runeOffsetSafe(b)
+  s.str.delete(aLoc, bLoc)
+
+proc len(s: U): int =
+  ## Like .len but for unicode runes.
+  s.str.runeLen()
+
+proc `[]`(s: U, i: int): Rune =
+  ## Like [i] but for unicode runes.
+  s.str.runeAtPos(i)
+
+proc `[]`(s: U, i: BackwardsIndex): Rune =
+  ## Like [^i] but for unicode runes.
+  s[s.len - i.int]
+
+proc `[]`(s: U, slice: HSlice[int, int]): string =
+  ## Like [^i] but for unicode runes.
+  let
+    aLoc = s.str.runeOffsetSafe(slice.a)
+    bLoc = s.str.runeOffsetSafe(slice.b + 1)
+  s.str[aLoc ..< bLoc]
 
 proc clamp(v, a, b: int): int =
   max(a, min(b, v))
@@ -73,7 +128,8 @@ proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
 proc multilineCheck(node: Node) =
   ## Makes sure there are not new lines in a single line text box.
   if not node.multiline:
-    node.runes.keepIf(proc (r: Rune): bool = r != Rune(10))
+    echo "fix non multiline"
+    #node.characters.u.keepIf(proc (r: Rune): bool = r != Rune(10))
 
 proc layout*(node: Node): seq[Rect] =
   return node.arrangement.selectionRects
@@ -94,7 +150,7 @@ proc locationRect*(node: Node, loc: int): Rect =
     if loc >= layout.len:
       let selectRect = layout[^1]
       # if last char is a new line go to next line.
-      if node.runes[^1] == LF:
+      if node.characters.u[^1] == LF:
         result.x = 0
         result.y = selectRect.y + node.font.lineHeight
       else:
@@ -127,13 +183,8 @@ proc selectionRegions*(node: Node): seq[Rect] =
   let sel = node.selection
   node.arrangement.getSelection(sel.a, sel.b)
 
-proc makeTextDirty*(node: Node) =
-  node.dirty = true
-  node.arrangement = nil
-  node.computeArrangement()
-
 proc runesChanged(node: Node) =
-  node.characters = $node.runes
+  #node.characters = $node.characters.u
   node.makeTextDirty()
 
 proc removedSelection*(node: Node): bool =
@@ -141,7 +192,7 @@ proc removedSelection*(node: Node): bool =
   ## Returns true if anything was removed.
   let sel = node.selection
   if sel.a != sel.b:
-    node.runes.delete(sel.a, sel.b - 1)
+    node.characters.u.delete(sel.a, sel.b - 1)
     node.runesChanged()
     node.cursor = sel.a
     node.selector = node.cursor
@@ -181,10 +232,10 @@ proc typeCharacter*(node: Node, rune: Rune) =
   # don't add new lines in a single line box.
   if not node.multiline and rune == Rune(10):
     return
-  if node.cursor == node.runes.len:
-    node.runes.add(rune)
+  if node.cursor == node.characters.u.len:
+    node.characters.u.add(rune)
   else:
-    node.runes.insert(rune, node.cursor)
+    node.characters.u.insert(rune, node.cursor)
   node.runesChanged()
   inc node.cursor
   node.selector = node.cursor
@@ -201,7 +252,7 @@ proc typeCharacters*(node: Node, s: string) =
     return
   node.removeSelection()
   for rune in runes(s):
-    node.runes.insert(rune, node.cursor)
+    node.characters.u.insert(rune, node.cursor)
     inc node.cursor
   node.selector = node.cursor
   node.runesChanged()
@@ -212,7 +263,7 @@ proc copyText*(node: Node): string =
   ## Returns the text that was copied.
   let sel = node.selection
   if sel.a != sel.b:
-    return $node.runes[sel.a ..< sel.b]
+    return $node.characters.u[sel.a ..< sel.b]
 
 proc pasteText*(node: Node, s: string) =
   ## Pastes a string.
@@ -230,7 +281,7 @@ proc cutText*(node: Node): string =
   node.savedX = node.cursorPos.x
 
 proc setCursor*(node: Node, loc: int) =
-  node.cursor = clamp(loc, 0, node.runes.len + 1)
+  node.cursor = clamp(loc, 0, node.characters.u.len + 1)
   node.selector = node.cursor
 
 proc backspace*(node: Node, shift = false) =
@@ -238,7 +289,7 @@ proc backspace*(node: Node, shift = false) =
   if node.editable:
     if node.removedSelection(): return
     if node.cursor > 0:
-      node.runes.delete(node.cursor - 1)
+      node.characters.u.delete(node.cursor - 1)
       node.runesChanged()
       dec node.cursor
       node.selector = node.cursor
@@ -249,8 +300,8 @@ proc delete*(node: Node, shift = false) =
   ## Delete command.
   if node.editable:
     if node.removedSelection(): return
-    if node.cursor < node.runes.len:
-      node.runes.delete(node.cursor)
+    if node.cursor < node.characters.u.len:
+      node.characters.u.delete(node.cursor)
       node.runesChanged()
       node.makeTextDirty()
   node.scrollToCursor()
@@ -261,8 +312,8 @@ proc backspaceWord*(node: Node, shift = false) =
     if node.removedSelection(): return
     if node.cursor > 0:
       while node.cursor > 0 and
-        not node.runes[node.cursor - 1].isWhiteSpace():
-        node.runes.delete(node.cursor - 1)
+        not node.characters.u[node.cursor - 1].isWhiteSpace():
+        node.characters.u.delete(node.cursor - 1)
         dec node.cursor
       node.runesChanged()
       node.selector = node.cursor
@@ -273,10 +324,10 @@ proc deleteWord*(node: Node, shift = false) =
   ## Delete word command. (Usually ctr + delete).
   if node.editable:
     if node.removedSelection(): return
-    if node.cursor < node.runes.len:
-      while node.cursor < node.runes.len and
-        not node.runes[node.cursor].isWhiteSpace():
-        node.runes.delete(node.cursor)
+    if node.cursor < node.characters.u.len:
+      while node.cursor < node.characters.u.len and
+        not node.characters.u[node.cursor].isWhiteSpace():
+        node.characters.u.delete(node.cursor)
       node.runesChanged()
       node.makeTextDirty()
   node.scrollToCursor()
@@ -292,7 +343,7 @@ proc left*(node: Node, shift = false) =
 
 proc right*(node: Node, shift = false) =
   ## Move cursor right.
-  if node.cursor < node.runes.len:
+  if node.cursor < node.characters.u.len:
     inc node.cursor
     if not shift:
       node.selector = node.cursor
@@ -311,7 +362,7 @@ proc down*(node: Node, shift = false) =
         node.selector = node.cursor
     elif node.cursorPos.y == layout[^1].y:
       # Are we on the last line? Then jump to start location last.
-      node.cursor = node.runes.len
+      node.cursor = node.characters.u.len
       if not shift:
         node.selector = node.cursor
   node.scrollToCursor()
@@ -338,7 +389,7 @@ proc leftWord*(node: Node, shift = false) =
   if node.cursor > 0:
     dec node.cursor
   while node.cursor > 0 and
-    not node.runes[node.cursor - 1].isWhiteSpace():
+    not node.characters.u[node.cursor - 1].isWhiteSpace():
     dec node.cursor
   if not shift:
     node.selector = node.cursor
@@ -347,10 +398,10 @@ proc leftWord*(node: Node, shift = false) =
 
 proc rightWord*(node: Node, shift = false) =
   ## Move cursor right by a word (Usually ctr + right).
-  if node.cursor < node.runes.len:
+  if node.cursor < node.characters.u.len:
     inc node.cursor
-  while node.cursor < node.runes.len and
-    not node.runes[node.cursor].isWhiteSpace():
+  while node.cursor < node.characters.u.len and
+    not node.characters.u[node.cursor].isWhiteSpace():
     inc node.cursor
   if not shift:
     node.selector = node.cursor
@@ -360,7 +411,7 @@ proc rightWord*(node: Node, shift = false) =
 proc startOfLine*(node: Node, shift = false) =
   ## Move cursor left by a word.
   while node.cursor > 0 and
-    node.runes[node.cursor - 1] != Rune(10):
+    node.characters.u[node.cursor - 1] != Rune(10):
     dec node.cursor
   if not shift:
     node.selector = node.cursor
@@ -369,8 +420,8 @@ proc startOfLine*(node: Node, shift = false) =
 
 proc endOfLine*(node: Node, shift = false) =
   ## Move cursor right by a word.
-  while node.cursor < node.runes.len and
-    node.runes[node.cursor] != Rune(10):
+  while node.cursor < node.characters.u.len and
+    node.characters.u[node.cursor] != Rune(10):
     inc node.cursor
   if not shift:
     node.selector = node.cursor
@@ -411,7 +462,7 @@ proc pageDown*(node: Node, shift = false) =
       node.selector = node.cursor
   elif pos.y > layout[^1].y:
     # Bellow the last line? Then jump to start location last.
-    node.cursor = node.runes.len
+    node.cursor = node.characters.u.len
     node.scrollToCursor()
     if not shift:
       node.selector = node.cursor
@@ -428,12 +479,12 @@ proc mouseAction*(
   if index != -1:
     node.cursor = index
     node.savedX = mousePos.x
-    if node.runes[index] != LF:
+    if node.characters.u[index] != LF:
       # Select to the right or left of the character based on what is closer.
       let selectRect = node.arrangement.selectionRects[index]
       let pickOffset = mousePos - selectRect.xy
       if pickOffset.x > selectRect.w / 2 and
-          node.cursor == node.runes.len - 1:
+          node.cursor == node.characters.u.len - 1:
         inc node.cursor
   else:
     # If above the text select first character.
@@ -441,7 +492,7 @@ proc mouseAction*(
       node.cursor = 0
     # If below text select last character + 1.
     if mousePos.y > node.innerHeight:
-      node.cursor = node.runes.len
+      node.cursor = node.characters.u.len
   node.savedX = mousePos.x
   if not shift and click:
     node.selector = node.cursor
@@ -453,31 +504,31 @@ proc selectWord*(node: Node, mousePos: Vec2, extraSpace = true) =
   ## Select word under the cursor (double click).
   node.mouseAction(mousePos, click = true)
   while node.cursor > 0 and
-    not node.runes[node.cursor - 1].isWhiteSpace():
+    not node.characters.u[node.cursor - 1].isWhiteSpace():
     dec node.cursor
-  while node.selector < node.runes.len and
-    not node.runes[node.selector].isWhiteSpace():
+  while node.selector < node.characters.u.len and
+    not node.characters.u[node.selector].isWhiteSpace():
     inc node.selector
   if extraSpace:
     # Select extra space to the right if its there.
-    if node.selector < node.runes.len and
-      node.runes[node.selector] == Rune(32):
+    if node.selector < node.characters.u.len and
+      node.characters.u[node.selector] == Rune(32):
       inc node.selector
 
 proc selectParagraph*(node: Node, mousePos: Vec2) =
   ## Select paragraph under the cursor (triple click).
   node.mouseAction(mousePos, click = true)
   while node.cursor > 0 and
-    node.runes[node.cursor - 1] != Rune(10):
+    node.characters.u[node.cursor - 1] != Rune(10):
     dec node.cursor
-  while node.selector < node.runes.len and
-    node.runes[node.selector] != Rune(10):
+  while node.selector < node.characters.u.len and
+    node.characters.u[node.selector] != Rune(10):
     inc node.selector
 
 proc selectAll*(node: Node) =
   ## Select all text (quad click).
   node.cursor = 0
-  node.selector = node.runes.len
+  node.selector = node.characters.u.len
 
 proc scrollBy*(node: Node, amount: float) =
   ## Scroll text box with a scroll wheel.

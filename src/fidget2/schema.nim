@@ -227,7 +227,6 @@ type
     styleOverrideTable*: Table[string, TypeStyle]
     # Non-figma text parameters:
     spans*: seq[Span]
-    runes*: seq[Rune]
     arrangement*: Arrangement
     cursor*: int      # The typing cursor.
     selector*: int    # The selection cursor.
