@@ -547,13 +547,20 @@ proc processEvents() {.measure.} =
       hoverNode.setVariant("State", "Default")
       hoverNode = nil
 
-    for n in underMouseNodes:
-      if n.isInstance:
-        # Is an instance has potential to hover.
-        if n.hasVariant("State", "Hover") and
-          n.getVariant("State") == "Default":
+  for n in underMouseNodes:
+    if n.isInstance:
+      var stateDown = false
+      if buttonDown[MOUSE_LEFT]:
+        # Is an instance has potential to Down.
+        if n.hasVariant("State", "Down"):
+            stateDown = true
             hoverNode = n
-            n.setVariant("State", "Hover")
+            n.setVariant("State", "Down")
+
+      # Is an instance has potential to hover.
+      if not stateDown and n.hasVariant("State", "Hover"):
+          hoverNode = n
+          n.setVariant("State", "Hover")
 
   for cb in eventCbs:
     thisCb = cb
@@ -572,9 +579,10 @@ proc processEvents() {.measure.} =
     of eOnDisplay:
 
       for node in findAll(thisSelector):
-        thisNode = node
-        thisCb.handler()
-        thisNode = nil
+        if node.inTree(thisFrame):
+          thisNode = node
+          thisCb.handler()
+          thisNode = nil
 
     of eOnFrame:
       thisCb.handler()
@@ -675,8 +683,8 @@ proc mainLoop() {.cdecl.} =
   if buttonToggle[F8]:
     dumpMeasures()
 
-  #if buttonToggle[F9]:
-  dumpMeasures(16)
+  if buttonToggle[F9]:
+    dumpMeasures(16)
 
 proc startFidget*(
   figmaUrl: string,

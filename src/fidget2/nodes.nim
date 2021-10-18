@@ -1,5 +1,5 @@
 import schema, loader, random, algorithm, strutils,
-    flatty/hashy2, vmath, sequtils
+    flatty/hashy2, vmath, sequtils, common
 
 proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
@@ -25,6 +25,16 @@ proc printDirtyStatus*(node: Node, indent = 0) =
   echo " ".repeat(indent), node.name, ":", node.dirty
   for child in node.children:
     printDirtyStatus(child, indent + 1)
+
+proc makeTextDirty*(node: Node) =
+  node.dirty = true
+  node.arrangement = nil
+  node.computeArrangement()
+
+proc setText*(node: Node, text: string) =
+  if node.characters != text:
+    node.characters = text
+    node.makeTextDirty()
 
 proc findNodeById*(id: string): Node =
   ## Finds a node by id (slow).
@@ -91,7 +101,7 @@ proc parseName(name: string): seq[(string, string)] =
       let
         k = arr[0]
         v = arr[1]
-      result.add((k, v))
+      result.add((k.strip(), v.strip()))
   result.normalize()
 
 func `[]`*(query: seq[(string, string)], key: string): string =
@@ -185,6 +195,9 @@ proc setVariant*(node: Node, name, value: string) =
   ## Changes the variant of the node.
   var prevMaster = findNodeById(node.componentId)
   var props = prevMaster.name.parseName()
+  if props[name] == value:
+    # no change
+    return
   props[name] = value
   props.normalize()
 
@@ -204,7 +217,6 @@ proc hasVariant*(node: Node, name, value: string): bool =
     var props = prevMaster.name.parseName()
     props[name] = value
     props.normalize()
-
     var componentSet = prevMaster.parent
     for n in componentSet.children:
       var nProps = n.name.parseName()
