@@ -1,34 +1,34 @@
 import fidget2, strutils, sequtils
 
 type
-  TermKind = enum
+  SymbolKind = enum
     Operator
     Number
 
-  Term = object
-    kind: TermKind
+  Symbol = object
+    kind: SymbolKind
     number: string
     operator: string
 
 var
-  terms: seq[Term] ## List of currently entered terms.
-  repeat: seq[Term] ## Used to repeat prev operation
+  symbols: seq[Symbol] ## List of currently entered symbols.
+  repeat: seq[Symbol] ## Used to repeat prev operation
 
 proc inNumber() =
   ## Entering a number, make sure everything is setup for it.
   ## It always makes sense to enter in a number.
-  if terms.len == 0 or terms[^1].kind == Operator:
-    terms.add(Term(kind:Number))
+  if symbols.len == 0 or symbols[^1].kind == Operator:
+    symbols.add(Symbol(kind:Number))
 
 proc inOperator(): bool =
   ## Entering operator, make sure everything is setup for it.
   ## Returns true if operator now makes sense.
-  if terms.len == 0:
+  if symbols.len == 0:
     return false
-  if terms[^1].kind == Number:
-    if terms[^1].number == "-":
+  if symbols[^1].kind == Number:
+    if symbols[^1].number == "-":
       return false
-    terms.add(Term(kind:Operator))
+    symbols.add(Symbol(kind:Operator))
   return true
 
 proc fromFloat(number: float): string =
@@ -44,47 +44,47 @@ proc toFloat(s: string): float =
     0
 
 proc compute() =
-  ## Compute current terms and produce an answer (also a term).
+  ## Compute current symbols and produce an answer (also a symbol).
 
-  if terms.len > 2:
-    # If there is more then 2 terms remember the last operation.
-    repeat = terms[^2 .. ^1]
+  if symbols.len > 2:
+    # If there is more then 2 symbols remember the last operation.
+    repeat = symbols[^2 .. ^1]
 
-  if terms.len == 0:
+  if symbols.len == 0:
     return
-  if terms.len == 1:
-    # If there is only 1 term, repeat previous operation.
-    terms.add repeat
-  if terms[^1].kind == Operator:
+  if symbols.len == 1:
+    # If there is only 1 symbol, repeat previous operation.
+    symbols.add repeat
+  if symbols[^1].kind == Operator:
     # Not complete.
     return
 
-  var i: int # Used to count where we are in the terms array.
+  var i: int # Used to count where we are in the symbols array.
 
   proc left(): float =
     ## Grabs the left parameter for the operation.
-    toFloat(terms[i-1].number)
+    toFloat(symbols[i-1].number)
 
   proc right(): float =
     ## Grabs the right parameter for the operation.
-    toFloat(terms[i+1].number)
+    toFloat(symbols[i+1].number)
 
   proc operate(number: float) =
-    ## Saves the operation back as a term.
-    terms[i-1].number = fromFloat(number)
-    terms.delete(i, i+1)
+    ## Saves the operation back as a symbol.
+    symbols[i-1].number = fromFloat(number)
+    symbols.delete(i, i+1)
     dec i
 
-  # Runs the terms, × and ÷ first then + and -.
+  # Runs the symbols, × and ÷ first then + and -.
   i = 0
-  while i < terms.len:
-    let t = terms[i]
+  while i < symbols.len:
+    let t = symbols[i]
     if t.operator == "×": operate left() * right()
     if t.operator == "÷": operate left() / right()
     inc i
   i = 0
-  while i < terms.len:
-    let t = terms[i]
+  while i < symbols.len:
+    let t = symbols[i]
     if t.operator == "+": operate left() + right()
     if t.operator == "-": operate left() - right()
     inc i
@@ -95,45 +95,45 @@ find "/UI/Main":
     # Selects all buttons: Button0 - Button9
     onClick:
       inNumber()
-      terms[^1].number.add(thisNode.name[^1])
+      symbols[^1].number.add(thisNode.name[^1])
 
   find "ButtonPeriod":
     onClick:
       inNumber()
-      if "." notin terms[^1].number:
-        terms[^1].number.add(".")
+      if "." notin symbols[^1].number:
+        symbols[^1].number.add(".")
 
   find "ButtonAdd":
     onClick:
       if inOperator():
-        terms[^1].operator = "+"
+        symbols[^1].operator = "+"
 
   find "ButtonSubtract":
     onClick:
       # Subtract can be an operator or start of a number
       if inOperator():
-        terms[^1].operator = "-"
+        symbols[^1].operator = "-"
       else:
         inNumber()
-        if terms.len > 0 and terms[^1].number == "":
-          terms[^1].number = "-"
+        if symbols.len > 0 and symbols[^1].number == "":
+          symbols[^1].number = "-"
 
   find "ButtonMultiply":
     onClick:
       if inOperator():
-        terms[^1].operator = "×"
+        symbols[^1].operator = "×"
 
   find "ButtonDivide":
     onClick:
       if inOperator():
-        terms[^1].operator = "÷"
+        symbols[^1].operator = "÷"
 
   find "ButtonClear":
     onClick:
-      if terms.len > 0:
-        # Clear only clears the last term.
+      if symbols.len > 0:
+        # Clear only clears the last symbol.
         repeat.setLen(0)
-        terms.setLen(terms.len - 1)
+        symbols.setLen(symbols.len - 1)
 
   find "ButtonEquals":
     onClick:
@@ -141,20 +141,20 @@ find "/UI/Main":
 
   find "ButtonPercentage":
     onClick:
-      if terms.len > 0 and terms[^1].kind == Number:
-        var number = toFloat(terms[^1].number)
-        terms[^1].number = fromFloat(number / 100)
+      if symbols.len > 0 and symbols[^1].kind == Number:
+        var number = toFloat(symbols[^1].number)
+        symbols[^1].number = fromFloat(number / 100)
 
   find "ButtonPlusMinus":
     onClick:
-      if terms.len > 0 and terms[^1].kind == Number:
-        var number = toFloat(terms[^1].number)
-        terms[^1].number = fromFloat(number / -1)
+      if symbols.len > 0 and symbols[^1].kind == Number:
+        var number = toFloat(symbols[^1].number)
+        symbols[^1].number = fromFloat(number / -1)
 
   find "Display":
     onDisplay:
       var formula = ""
-      for t in terms:
+      for t in symbols:
         formula.add(t.number)
         formula.add(t.operator)
       # Fix negative numbers: [a][-][-b] and [a][+][-b]
