@@ -1,25 +1,32 @@
-import globs, json, jsony, os, schema, strutils, sets, tables, puppy
-
+import globs, json, jsony, os, schema, strutils, sets, tables, puppy,
+    zippy/ziparchives
 var
+  archive: ZipArchive
   figmaFile*: FigmaFile                ## Main figma file.
 
+proc readFigmaFile*(path: string): string =
+  when defined(fidgetUseData):
+    archive.contents[path].contents
+  else:
+    readFile(path)
+
 proc figmaHeaders(): seq[Header] =
-  result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmakey").strip()
+  result["X-FIGMA-TOKEN"] = readFigmaFile(getHomeDir() / ".figmakey").strip()
 
 proc figmaFilePath(fileKey: string): string =
-  "figma/" & fileKey & ".json"
+  "data/" & fileKey & ".json"
 
 proc lastModifiedFilePath(fileKey: string): string =
-  "figma/" & fileKey & ".lastModified"
+  "data/" & fileKey & ".lastModified"
 
 proc figmaImagePath*(imageRef: string): string =
-  "figma/images/" & imageRef & ".png"
+  "data/images/" & imageRef & ".png"
 
 proc figmaFontPath*(fontPostScriptName: string): string =
-  "figma/fonts/" & fontPostScriptName & ".ttf"
+  "data/fonts/" & fontPostScriptName & ".ttf"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
-  let data = readFile(figmaFilePath(fileKey))
+  let data = readFigmaFile(figmaFilePath(fileKey))
   parseFigmaFile(data)
 
 proc downloadImage(imageRef, url: string) =
@@ -31,8 +38,8 @@ proc downloadImage(imageRef, url: string) =
     writeFile(figmaImagePath(imageRef), data)
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
-  if not dirExists("figma/images"):
-    createDir("figma/images")
+  if not dirExists("data/images"):
+    createDir("data/images")
 
   # Walk the Figma file and find all the images used
 
@@ -82,8 +89,8 @@ proc downloadFont(fontPostScriptName: string) =
     writeFile(figmaFontPath(fontPostScriptName), data)
 
 proc downloadFonts(figmaFile: FigmaFile) =
-  if not dirExists("figma/fonts"):
-    createDir("figma/fonts")
+  if not dirExists("data/fonts"):
+    createDir("data/fonts")
 
   # Walk the Figma file and find all the fonts used
 
@@ -146,7 +153,7 @@ proc downloadFigmaFile(fileKey: string) =
       if data != "":
         try:
           let liveFile = parseFigmaFile(data)
-          if liveFile.lastModified == readFile(lastModifiedPath):
+          if liveFile.lastModified == readFigmaFile(lastModifiedPath):
             useCached = true
           else:
             echo "Cached Figma file out of date, downloading latest"
@@ -184,8 +191,7 @@ proc downloadFigmaFile(fileKey: string) =
 proc use*(figmaUrl: string) =
   ## Use the figma url as a new figmaFile.
   ## Will download the full file if it needs to.
-  if not dirExists("figma"):
-    createDir("figma")
+  ## Or used it from the data.fz archive -d:fidgetUseData
   let
     parts = figmaUrl.split("/")
     figmaFileKey =
@@ -195,5 +201,15 @@ proc use*(figmaUrl: string) =
         parts[4]
       else:
         raise newException(FidgetError, "Invalid Figma URL: '" & figmaUrl & "'")
-  downloadFigmaFile(figmaFileKey)
+
+  when defined(fidgetUseData):
+    echo "Reading archive"
+    archive = ZipArchive()
+    archive.open("data.fz")
+    for k in archive.contents.keys:
+      echo k
+  else:
+    if not dirExists("data"):
+      createDir("data")
+    downloadFigmaFile(figmaFileKey)
   figmaFile = loadFigmaFile(figmaFileKey)

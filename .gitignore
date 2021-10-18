@@ -25,6 +25,7 @@ tmp
 
 # figma tmp files
 figma
+data
 
 # test tmp
 tests/frames/index.html
