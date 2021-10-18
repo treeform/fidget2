@@ -44,16 +44,16 @@ proc toFloat(s: string): float =
     0
 
 proc compute() =
-  ## Comptue current terms and produce an answer (also a term).
+  ## Compute current terms and produce an answer (also a term).
 
   if terms.len > 2:
-    # If there is more then 2 terms remmber the last operation.
+    # If there is more then 2 terms remember the last operation.
     repeat = terms[^2 .. ^1]
 
   if terms.len == 0:
     return
   if terms.len == 1:
-    # If there is only 1 term, repeat prevous operation.
+    # If there is only 1 term, repeat previous operation.
     terms.add repeat
   if terms[^1].kind == Operator:
     # Not complete.
@@ -62,17 +62,17 @@ proc compute() =
   var i: int # Used to count where we are in the terms array.
 
   proc left(): float =
-    ## Grabs the left paramter for the operation.
+    ## Grabs the left parameter for the operation.
     toFloat(terms[i-1].number)
 
   proc right(): float =
-    ## Grabs the right paramter for the operation.
+    ## Grabs the right parameter for the operation.
     toFloat(terms[i+1].number)
 
   proc operate(number: float) =
     ## Saves the operation back as a term.
     terms[i-1].number = fromFloat(number)
-    terms.delete(i .. i+1)
+    terms.delete(i, i+1)
     dec i
 
   # Runs the terms, × and ÷ first then + and -.
@@ -115,7 +115,7 @@ find "/UI/Main":
         terms[^1].operator = "-"
       else:
         inNumber()
-        if terms[^1].number == "":
+        if terms.len > 0 and terms[^1].number == "":
           terms[^1].number = "-"
 
   find "ButtonMultiply":
@@ -141,13 +141,13 @@ find "/UI/Main":
 
   find "ButtonPercentage":
     onClick:
-      if terms.len > 0 or terms[^1].kind == Number:
+      if terms.len > 0 and terms[^1].kind == Number:
         var number = toFloat(terms[^1].number)
         terms[^1].number = fromFloat(number / 100)
 
   find "ButtonPlusMinus":
     onClick:
-      if terms.len > 0 or terms[^1].kind == Number:
+      if terms.len > 0 and terms[^1].kind == Number:
         var number = toFloat(terms[^1].number)
         terms[^1].number = fromFloat(number / -1)
 
