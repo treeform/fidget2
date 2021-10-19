@@ -192,7 +192,8 @@ type
 
     # Transform
     position*: Vec2
-    size*: Vec2
+    size*: Vec2   ## Size of the box in pixels.
+    scale*: Vec2  ## Zoom/Scale of the node.
     rotation*: float32
     flipHorizontal*: bool
     flipVertical*: bool
@@ -257,8 +258,10 @@ type
     idNum*: int         ## Integer ID of the node
     mat*: Mat3          ## Useful to get back to the node.
     collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
-
-    scrollable*: bool
+    frozen*: bool
+    frozenId*: string   ## If the node is frozen, points to its frozen image.
+    shown*: bool        ## for onShow/onHide events.
+    scrollable*: bool   ## Can this node scroll.
     scrollPos*: Vec2    ## How does it scroll it's children.
 
   FigmaFile* = ref object
@@ -286,6 +289,7 @@ proc postHook(node: var Node) =
     let transform = node.relativeTransform.get()
     node.position = vec2(transform[0][2], transform[1][2])
     node.rotation = arctan2(transform[0][1], transform[0][0])
+    node.scale = vec2(1, 1)
 
     # Extract the flips from the matrix:
     let

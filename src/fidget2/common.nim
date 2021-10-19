@@ -66,6 +66,8 @@ proc transform*(node: Node): Mat3 =
     result = result * scale(vec2(1, -1))
   if node.rotation != 0:
     result = result * rotate(node.rotation)
+  if node.scale != vec2(1, 1):
+    result = result * scale(node.scale)
   if node.parent != nil:
     result = translate(-node.parent.scrollPos) * result
 

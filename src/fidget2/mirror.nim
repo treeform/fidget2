@@ -54,6 +54,8 @@ type
     eOnDisplay
     eOnFocus
     eOnUnfocus
+    eOnShow
+    eOnHide
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -84,6 +86,7 @@ proc clearInputs*() =
   ## Clear inputs that are only valid for 1 frame.
 
   mouse.wheelDelta = 0
+  mouse.delta = vec2(0, 0)
   mouse.click = false
   mouse.doubleClick = false
   mouse.tripleClick = false
@@ -169,6 +172,24 @@ template onDisplay*(body: untyped) =
   ## When a node is displayed.
   addCb(
     eOnDisplay,
+    1000,
+    thisSelector,
+    proc() {.cdecl.} = body
+  )
+
+template onShow*(body: untyped) =
+  ## When a node is displayed.
+  addCb(
+    eOnShow,
+    1000,
+    thisSelector,
+    proc() {.cdecl.} = body
+  )
+
+template onHide*(body: untyped) =
+  ## When a node is displayed.
+  addCb(
+    eOnHide,
     1000,
     thisSelector,
     proc() {.cdecl.} = body
@@ -583,6 +604,26 @@ proc processEvents() {.measure.} =
           thisNode = node
           thisCb.handler()
           thisNode = nil
+
+    of eOnShow:
+
+      for node in findAll(thisSelector):
+        if node.inTree(thisFrame):
+          if node.shown == false:
+            node.shown = true
+            thisNode = node
+            thisCb.handler()
+            thisNode = nil
+
+    of eOnHide:
+
+      for node in findAll(thisSelector):
+        if not node.inTree(thisFrame):
+          if node.shown == true:
+            node.shown = false
+            thisNode = node
+            thisCb.handler()
+            thisNode = nil
 
     of eOnFrame:
       thisCb.handler()

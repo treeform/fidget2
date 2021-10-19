@@ -49,7 +49,6 @@ proc isSimpleImage(node: Node): bool =
 
 proc drawToAtlas(node: Node, level: int) {.measure.} =
   ## Draw the nodes into the atlas (and setup pixel box).
-  ##
 
   if not node.visible or node.opacity == 0:
     node.markTreeClean()
@@ -61,6 +60,11 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
   node.mat = mat # needed for picking
 
   var pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
+
+  if node.frozenId.len > 0:
+    node.pixelBox = pixelBox
+    mat = prevMat
+    return
 
   if node.dirty or not quasiEqual(pixelBox, node.pixelBox):
 
@@ -180,7 +184,18 @@ proc drawWithAtlas(node: Node) {.measure.} =
 
   var pushedMasks = 0
 
-  if node.isSimpleImage:
+  if node.frozen:
+    bxy.saveTransform()
+    bxy.applyTransform(node.mat.mat4)
+    let size = bxy.getImageSize(node.frozenId)
+    bxy.scale(vec2(
+      node.size.x / size.x,
+      node.size.y / size.y
+    ))
+    bxy.drawImage(node.frozenId, pos = vec2(0, 0))
+    bxy.restoreTransform()
+
+  elif node.isSimpleImage:
     let paint = node.fills[0]
     if paint.imageRef in bxy:
       let image = imageCache[paint.imageRef]
@@ -380,3 +395,17 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   )
   screen.flipVertical()
   return screen
+
+proc freeze*(node: Node, scaleFactor = 1.0f) =
+  let s = scaleFactor
+  if node.isSimpleImage:
+    return
+  if node.isInstance:
+    node.frozen = true
+    node.frozenId = node.masterComponent.id & ".frozen"
+    if node.frozenId notin bxy:
+      mat = scale(vec2(s, s))
+      layer = newImage((node.size.x * s).int, (node.size.y * s).int)
+      node.drawNodeInternal(withChildren=true)
+      #layer.writeFile("freeze." & node.name & ".png")
+      bxy.addImage(node.frozenId, layer, genMipmaps=true)

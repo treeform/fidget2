@@ -234,3 +234,7 @@ proc isInstance*(node: Node): bool =
   ## Checks if node is an instance node.
   ## And can have variants.
   node.componentId != ""
+
+proc masterComponent*(node: Node): Node =
+  ## Gets the master component if this is an instance and it exists.
+  findNodeById(node.componentId)
