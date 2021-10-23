@@ -40,7 +40,7 @@ proc willDrawSomething(node: Node): bool =
 
   return false
 
-proc isSimpleImage(node: Node): bool =
+proc isSimpleImage*(node: Node): bool =
   ## Checks if node is a simple image and can be drawn purly with GPU and
   ## not go through CPU rendering path to resize it.
   node.strokes.len == 0 and
