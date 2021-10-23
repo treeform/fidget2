@@ -1,7 +1,7 @@
 import algorithm, bitty, bumpy, globs, input, json, loader, math, opengl,
     pixie, schema, sequtils, staticglfw, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
-    nodes, perf, puppy, layout, os, print
+    nodes, perf, puppy, layout, os, print, strutils
 
 export textboxes, nodes
 
@@ -664,10 +664,19 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
   # TODO: Make loading images async.
   when not defined(emscripten):
     if url notin imageCache:
-      let
+      let fileKey = "cache/" & url.replace("/", "_").replace(":", "_").replace(".", "_")
+      #echo fileKey
+      var imageData = ""
+      if existsFile(fileKey):
+        #echo "read file"
+        imageData = readFile(fileKey)
+      else:
         imageData = fetch(url)
-        avatarImage = decodeImage(imageData)
-      imageCache[url] = avatarImage
+        echo "write file", url
+        writeFile(fileKey, imageData)
+
+      let image = decodeImage(imageData)
+      imageCache[url] = image
     paint.imageRef = url
 
 proc navigateTo*(fullPath: string, smart = false) =
