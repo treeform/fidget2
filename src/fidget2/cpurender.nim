@@ -124,7 +124,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   result.opacity = paint.opacity
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add(
-      handle * node.size + mat.pos
+      mat * (handle * node.size)
     )
   if result.kind == pixie.pkGradientLinear:
     result.gradientHandlePositions.setLen(2)
@@ -479,8 +479,9 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
     node.drawGeometry()
 
   for effect in node.effects:
-    if effect.kind == ekInnerShadow:
-      drawInnerShadowEffect(effect, node, node.maskSelfImage())
+    if effect.visible:
+      if effect.kind == ekInnerShadow:
+        drawInnerShadowEffect(effect, node, node.maskSelfImage())
 
   if withChildren:
     if hasMaskedChildren:
@@ -515,12 +516,13 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
       layer.applyOpacity(node.opacity)
 
     for effect in node.effects:
-      if effect.kind == ekDropShadow:
-        lowerLayer.drawDropShadowEffect(layer, effect, node)
-      if effect.kind == ekLayerBlur:
-        layer.blur(effect.radius)
-      if effect.kind == ekBackgroundBlur:
-        drawBackgroundBlur(lowerLayer, effect)
+      if effect.visible:
+        if effect.kind == ekDropShadow:
+          lowerLayer.drawDropShadowEffect(layer, effect, node)
+        if effect.kind == ekLayerBlur:
+          layer.blur(effect.radius)
+        if effect.kind == ekBackgroundBlur:
+          drawBackgroundBlur(lowerLayer, effect)
 
     measurePush("lowerLayer.draw") # & $node.blendMode)
     lowerLayer.draw(layer, blendMode = node.blendMode)
