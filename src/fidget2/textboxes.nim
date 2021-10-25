@@ -523,21 +523,17 @@ proc mouseAction*(
 proc selectWord*(node: Node, mousePos: Vec2, extraSpace = false) =
   ## Select word under the cursor (double click).
   node.mouseAction(mousePos, click = true)
-  echo "selectWord start ", node.cursor, " ", node.selector
   while node.cursor > 0 and
     not node.characters.u[node.cursor - 1].isWhiteSpace():
-    echo "dec"
     dec node.cursor
   while node.selector < node.characters.u.len and
     not node.characters.u[node.selector].isWhiteSpace():
-    echo "inc"
     inc node.selector
   if extraSpace:
     # Select extra space to the right if its there.
     if node.selector < node.characters.u.len and
       node.characters.u[node.selector] == Rune(32):
       inc node.selector
-  echo "selectWord end ", node.cursor, " ", node.selector
   node.makeTextDirty()
   node.dirty = true
 
