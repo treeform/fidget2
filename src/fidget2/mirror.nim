@@ -1,9 +1,9 @@
-import algorithm, bitty, bumpy, globs, input, json, loader, math, opengl,
-    pixie, schema, sequtils, staticglfw, strformat, tables,
+import algorithm, bitty, bumpy, globs, json, loader, math, opengl,
+    pixie, schema, sequtils, windy, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
     nodes, perf, puppy, layout, os, print, strutils
 
-export textboxes, nodes
+export textboxes, nodes, common, windy
 
 when defined(cpu):
   import cpurender
@@ -26,25 +26,12 @@ type
     NSResize
 
   Mouse* = ref object
-    pos*, delta*, prevPos*: Vec2
-    pixelScale*: float32
-    wheelDelta*: float32
     cursorStyle*: MouseCursorStyle ## Sets the mouse cursor icon
     prevCursorStyle*: MouseCursorStyle
-    clickTimes*: array[3, float64]
-    click*, doubleClick*, tripleClick*: bool
 
   Keyboard* = ref object
-    state*: KeyState
-    consumed*: bool ## Consumed - need to prevent default action.
-    keyString*: string
-    altKey*: bool
-    ctrlKey*: bool
-    shiftKey*: bool
-    superKey*: bool
     onFocusNode*: Node
     onUnfocusNode*: Node
-    input*: string
 
   EventCbKind* = enum
     eOnClick
@@ -65,7 +52,6 @@ type
 
 var
   windowTitle* = "Fidget"
-  mousePos*: Vec2
   eventCbs: seq[EventCb]
   requestedFrame*: bool
 
@@ -82,29 +68,29 @@ var
 
 proc display(withEvents=true)
 
-proc clearInputs*() =
-  ## Clear inputs that are only valid for 1 frame.
+# proc clearInputs*() =
+#   ## Clear inputs that are only valid for 1 frame.
 
-  mouse.wheelDelta = 0
-  mouse.delta = vec2(0, 0)
-  mouse.click = false
-  mouse.doubleClick = false
-  mouse.tripleClick = false
+#   mouse.wheelDelta = 0
+#   mouse.delta = vec2(0, 0)
+#   window.buttonPressed[MouseLeft] = false
+#   mouse.doubleClick = false
+#   mouse.tripleClick = false
 
-  buttonPress.clear()
-  buttonRelease.clear()
+#   buttonPressed.clear()
+#   buttonRelease.clear()
 
-  if buttonDown.count > 0:
-    keyboard.state = ksDown
-  else:
-    keyboard.state = ksEmpty
+#   if buttonDown.count > 0:
+#     keyboard.state = ksDown
+#   else:
+#     keyboard.state = ksEmpty
 
-  keyboard.onFocusNode = nil
-  keyboard.onUnfocusNode = nil
+#   keyboard.onFocusNode = nil
+#   keyboard.onUnfocusNode = nil
 
 proc down*(mouse: Mouse): bool =
   ## Is the ouse button pressed down?
-  buttonDown[MOUSE_LEFT]
+  window.buttonDown[MouseLeft]
 
 proc showPopup*(name: string) =
   ## Pop up a given node as a popup.
@@ -221,22 +207,135 @@ proc setupTextBox(node: Node) =
   node.scrollable = true
   node.editable = true
 
-proc textBoxMouseAction() =
-  ## Performs mouse stuff on the text box.
+proc relativeMousePos*(window: Window, node: Node): Vec2 =
+  let
+    mat = scale(vec2(1, 1) / pixelRatio) *
+      node.mat * translate(-node.scrollPos)
+  return mat.inverse() * window.mousePos.vec2
+
+proc textBoxKeyboardAction(button: Button) =
+  requestedFrame = true
+
+  # Do the text box commands.
   if textBoxFocus != nil:
+    let
+      ctrl = window.buttonDown[KeyLeftControl] or window.buttonDown[KeyRightControl]
+      shift = window.buttonDown[KeyLeftShift] or window.buttonDown[KeyRightShift]
+    if textImeEditString == "":
+      case button:
+        of KeyLeft:
+          if ctrl:
+            textBoxFocus.leftWord(shift)
+          else:
+            textBoxFocus.left(shift)
+        of KeyRight:
+          if ctrl:
+            textBoxFocus.rightWord(shift)
+          else:
+            textBoxFocus.right(shift)
+        of KeyUp:
+          textBoxFocus.up(shift)
+        of KeyDown:
+          textBoxFocus.down(shift)
+        of KeyHome:
+          textBoxFocus.startOfLine(shift)
+        of KeyEnd:
+          textBoxFocus.endOfLine(shift)
+        of KeyPageUp:
+          textBoxFocus.pageUp(shift)
+        of KeyPageDown:
+          textBoxFocus.pageDown(shift)
+        of KeyEnter:
+          #TODO: keyboard.multiline:
+          textBoxFocus.typeCharacter(Rune(10))
+        of KeyBackspace:
+          textBoxFocus.backspace(shift)
+        of KeyDelete:
+          echo "delete"
+          textBoxFocus.delete(shift)
+        of KeyZ:
+          if ctrl and shift:
+            textBoxFocus.redo()
+          elif ctrl:
+            textBoxFocus.undo()
+        of KeyC: # copy
+          if ctrl:
+            discard
+            # TODO: window.setClipboardString(textBoxFocus.copyText())
+        of KeyV: # paste
+          if ctrl:
+            discard
+            # TODO: textBoxFocus.pasteText($window.getClipboardString())
+        of KeyX: # cut
+          if ctrl:
+            discard
+            # TODO: window.setClipboardString(textBoxFocus.cutText())
+        of KeyA: # select all
+          if ctrl:
+            textBoxFocus.selectAll()
+        of MouseLeft:
+          textBoxFocus.mouseAction(
+            window.relativeMousePos(textBoxFocus),
+            true,
+            shift
+          )
+        of DoubleClick:
+          echo "DoubleClick"
+          textBoxFocus.selectWord(window.relativeMousePos(textBoxFocus))
+        of TripleClick:
+          echo "TripleClick"
+          textBoxFocus.selectParagraph(window.relativeMousePos(textBoxFocus))
+        of QuadrupleClick:
+          textBoxFocus.selectAll()
+        else:
+          discard
 
-    ## Close IME if something was clicked.
-    window.closeIme()
+    textBoxFocus.makeTextDirty()
 
-    textBoxFocus.dirty = true
-    let mat = scale(vec2(1/pixelRatio, 1/pixelRatio)) *
-      textBoxFocus.mat *
-      translate(-textBoxFocus.scrollPos)
-    textBoxFocus.mouseAction(
-      mat.inverse() * mouse.pos,
-      mouse.click,
-      keyboard.shiftKey
-    )
+proc onRune(rune: Rune) =
+  ## User typed a character, needed for unicode entry.
+  if textBoxFocus != nil:
+    echo "type:", rune
+    textBoxFocus.typeCharacter(rune)
+    requestedFrame = true
+
+proc onScroll() =
+  ## Scroll wheel glfw callback.
+  requestedFrame = true
+  if textBoxFocus != nil:
+    textBoxFocus.scrollBy(-window.scrollDelta.y * 50)
+
+  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
+
+  for node in underMouseNodes:
+    if node.overflowDirection == odVerticalScrolling:
+      # TODO make it scroll both x and y.
+      node.scrollPos.y -= window.scrollDelta.y * 50
+
+      #if node.collapse:
+      node.dirty = true
+
+      let bounds = node.computeScrollBounds()
+      if node.scrollPos.y > bounds.h:
+        node.scrollPos.y = bounds.h
+        continue
+      if node.scrollPos.y < 0:
+        node.scrollPos.y = 0
+        continue
+
+      break
+
+proc simulateClick*(glob: string) =
+  ## Simulates a mouse click on a node. Used mainly for writing tests.
+  for cb in eventCbs:
+    if cb.kind == eOnClick:
+      thisCb = cb
+      thisSelector = thisCb.glob
+      if cb.glob == glob:
+        for node in findAll(cb.glob):
+          thisNode = node
+          cb.handler()
+          thisNode = nil
 
 template onEdit*(body: untyped) =
   ## When text node is display or edited.
@@ -245,11 +344,15 @@ template onEdit*(body: untyped) =
     100,
     thisSelector,
     proc() {.cdecl.} =
-      if mouse.click:
-        if thisNode.parent.overlaps(mousePos):
+      if window.buttonPressed[MouseLeft]:
+        if thisNode.parent.overlaps(window.mousePos.vec2):
           if textBoxFocus != thisNode:
             setupTextBox(thisNode)
-          textBoxMouseAction()
+            textBoxFocus.mouseAction(
+              window.relativeMousePos(textBoxFocus),
+              true,
+              false
+            )
         else:
           if textBoxFocus == thisNode:
             keyboard.onUnfocusNode = textBoxFocus
@@ -303,211 +406,16 @@ template onFocus*(body: untyped) =
 proc updateWindowSize() =
   ## Handle window resize.
   requestedFrame = true
-
-  var cwidth, cheight: cint
-  window.getWindowSize(addr cwidth, addr cheight)
-  windowSize.x = float32(cwidth)
-  windowSize.y = float32(cheight)
-
-  window.getFramebufferSize(addr cwidth, addr cheight)
-  windowFrame.x = float32(cwidth)
-  windowFrame.y = float32(cheight)
-
-  viewportSize = windowFrame
-
   thisFrame.dirty = true
+  # windowSize = window.size.vec2  # decoratedSize ?
+  windowFrame = window.size.vec2
+  viewportSize = windowFrame
+  pixelRatio = window.contentScale()
 
-  minimized = windowSize == vec2(0, 0)
-  pixelRatio = if windowSize.x > 0: windowFrame.x / windowSize.x else: 0
-
-  let
-    monitor = getPrimaryMonitor()
-    mode = monitor.getVideoMode()
-  monitor.getMonitorPhysicalSize(addr cwidth, addr cheight)
-  dpi = mode.width.float32 / (cwidth.float32 / 25.4)
-
-  windowLogicalSize = windowSize / pixelScale * pixelRatio
-
-proc onResize(handle: staticglfw.Window, w, h: int32) {.cdecl.} =
+proc onResize() =
   ## Handle window resize glfw callback.
   updateWindowSize()
   display(withEvents = false)
-
-proc onFocus(window: staticglfw.Window, state: cint) {.cdecl.} =
-  ## Handle window focus glfw callback.
-  focused = state == 1
-
-proc onSetKey(
-  window: staticglfw.Window, key, scancode, action, modifiers: cint
-) {.cdecl.} =
-  ## Handle keyboard button glfw callback.
-  requestedFrame = true
-  let setKey = action != RELEASE
-
-  keyboard.altKey = setKey and ((modifiers and MOD_ALT) != 0)
-  keyboard.ctrlKey = setKey and
-    ((modifiers and MOD_CONTROL) != 0 or (modifiers and MOD_SUPER) != 0)
-  keyboard.shiftKey = setKey and ((modifiers and MOD_SHIFT) != 0)
-
-  # Do the text box commands.
-  if textBoxFocus != nil and setKey:
-
-    keyboard.state = ksPress
-    let
-      ctrl = keyboard.ctrlKey
-      shift = keyboard.shiftKey
-    if textImeEditString == "":
-      case cast[Button](key):
-        of ARROW_LEFT:
-          if ctrl:
-            textBoxFocus.leftWord(shift)
-          else:
-            textBoxFocus.left(shift)
-        of ARROW_RIGHT:
-          if ctrl:
-            textBoxFocus.rightWord(shift)
-          else:
-            textBoxFocus.right(shift)
-        of ARROW_UP:
-          textBoxFocus.up(shift)
-        of ARROW_DOWN:
-          textBoxFocus.down(shift)
-        of Button.HOME:
-          textBoxFocus.startOfLine(shift)
-        of Button.END:
-          textBoxFocus.endOfLine(shift)
-        of Button.PAGE_UP:
-          textBoxFocus.pageUp(shift)
-        of Button.PAGE_DOWN:
-          textBoxFocus.pageDown(shift)
-        of ENTER:
-          #TODO: keyboard.multiline:
-          textBoxFocus.typeCharacter(Rune(10))
-        of BACKSPACE:
-          textBoxFocus.backspace(shift)
-        of DELETE:
-          textBoxFocus.delete(shift)
-        of LETTER_C: # copy
-          if ctrl:
-            window.setClipboardString(textBoxFocus.copyText())
-        of LETTER_V: # paste
-          if ctrl:
-            textBoxFocus.pasteText($window.getClipboardString())
-        of LETTER_X: # cut
-          if ctrl:
-            window.setClipboardString(textBoxFocus.cutText())
-        of LETTER_A: # select all
-          if ctrl:
-            textBoxFocus.selectAll()
-        else:
-          discard
-
-    textBoxFocus.makeTextDirty()
-
-  # Now do the buttons.
-  if key < buttonDown.len and key >= 0:
-    if buttonDown[key] == false and setKey:
-      buttonToggle[key] = not buttonToggle[key]
-      buttonPress[key] = true
-    if buttonDown[key] == true and setKey == false:
-      buttonRelease[key] = true
-    buttonDown[key] = setKey
-
-proc onSetCharCallback(window: staticglfw.Window, character: cuint) {.cdecl.} =
-  ## User typed a character, needed for unicode entry.
-  requestedFrame = true
-  if textBoxFocus != nil:
-    keyboard.state = ksPress
-    textBoxFocus.typeCharacter(Rune(character))
-  else:
-    keyboard.state = ksPress
-    keyboard.keyString = Rune(character).toUTF8()
-
-proc onScroll(window: staticglfw.Window, xoffset, yoffset: float64) {.cdecl.} =
-  ## Scroll wheel glfw callback.
-  requestedFrame = true
-  if textBoxFocus != nil:
-    textBoxFocus.scrollBy(-yoffset * 50)
-  else:
-    mouse.wheelDelta += yoffset
-
-  let underMouseNodes = underMouse(thisFrame, mousePos)
-
-  for node in underMouseNodes:
-    if node.overflowDirection == odVerticalScrolling:
-      # TODO make it scroll both x and y.
-      node.scrollPos.y -= yoffset * 50
-
-      #if node.collapse:
-      node.dirty = true
-
-      let bounds = node.computeScrollBounds()
-      if node.scrollPos.y > bounds.h:
-        node.scrollPos.y = bounds.h
-        continue
-      if node.scrollPos.y < 0:
-        node.scrollPos.y = 0
-        continue
-
-      break
-
-proc onMouseButton(
-  window: staticglfw.Window, button, action, modifiers: cint
-) {.cdecl.} =
-  ## Mouse button glfw callback.
-  requestedFrame = true
-  let
-    setKey = action != 0
-    button = button + 1 # Fidget mouse buttons are +1 from staticglfw
-  if button < buttonDown.len:
-    if buttonDown[button] == false and setKey == true:
-      buttonPress[button] = true
-    buttonDown[button] = setKey
-  if buttonDown[button] == false and setKey == false:
-    buttonRelease[button] = true
-
-  # TODO: Figure out double and triple clicks.
-  # if setKey:
-  #   for i in 0 ..< 2:
-  #     mouse.clickTimes[i] = mouse.clickTimes[i + 1]
-  #   mouse.clickTimes[2] = epochTime()
-  # let doubleClickTime = mouse.clickTimes[2] - mouse.clickTimes[1]
-  # let tripleClickTime = mouse.clickTimes[1] - mouse.clickTimes[0]
-  # if doubleClickTime < 0.500 and tripleClickTime < 0.500:
-  #   if setKey:
-  #     mouse.click = false
-  #     mouse.doubleClick = false
-  #     mouse.tripleClick = true
-  # elif doubleClickTime < 0.500:
-  #   if setKey:
-  #     mouse.click = false
-  #     mouse.doubleClick = true
-  #     mouse.tripleClick = false
-  # else:
-  #   if setKey:
-  #     # regular click
-  #     mouse.click = true
-  #     mouse.doubleClick = true
-  #     mouse.tripleClick = false
-  #   else:
-  #     textBoxMouseAction()
-
-  if setKey:
-    mouse.click = true
-  else:
-    textBoxMouseAction()
-
-proc simulateClick*(glob: string) =
-  ## Simulates a mouse click on a node. Used mainly for writing tests.
-  for cb in eventCbs:
-    if cb.kind == eOnClick:
-      thisCb = cb
-      thisSelector = thisCb.glob
-      if cb.glob == glob:
-        for node in findAll(cb.glob):
-          thisNode = node
-          cb.handler()
-          thisNode = nil
 
 proc takeScreenShot*(): Image =
   ## Takes a screenshot of the current screen. Used mainly for writing tests.
@@ -518,18 +426,18 @@ proc clearAllEventHandlers*() =
   eventCbs.setLen(0)
 
 proc resizeWindow*(x, y: int) =
-  window.setWindowSize(x.cint, y.cint)
+  window.size = ivec2(x.cint, y.cint)
 
-proc onMouseMove(window: staticglfw.Window, x, y: cdouble) {.cdecl.} =
-  ## Mouse moved glfw callback.
+proc onMouseMove() =
+  ## Mouse move
   requestedFrame = true
-
-  mouse.prevPos = mouse.pos
-  mouse.pos = vec2(x, y)
-  mouse.delta = mouse.pos - mouse.prevPos
-
-  if buttonDown[MOUSE_LEFT]:
-    textBoxMouseAction()
+  if textBoxFocus != nil:
+    if window.buttonDown[MouseLeft]:
+      textBoxFocus.mouseAction(
+        window.relativeMousePos(textBoxFocus),
+        false,
+        false
+      )
 
 proc swapBuffers() {.measure.} =
   when not defined(cpu):
@@ -540,17 +448,10 @@ proc swapBuffers() {.measure.} =
 
 proc processEvents() {.measure.} =
 
-  var x, y: float64
-  window.getCursorPos(addr x, addr y)
-  mousePos.x = x
-  if rtl:
-    mousePos.x = thisFrame.size.x - mousePos.x
-  mousePos.y = y
-
   # Get the node list under the mouse.
-  let underMouseNodes = underMouse(thisFrame, mousePos)
+  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
 
-  if buttonPress[MOUSE_LEFT]:
+  if window.buttonPressed[MouseLeft]:
     echo "---"
     for n in underMouseNodes:
       echo n.name
@@ -571,7 +472,7 @@ proc processEvents() {.measure.} =
   for n in underMouseNodes:
     if n.isInstance:
       var stateDown = false
-      if buttonDown[MOUSE_LEFT]:
+      if window.buttonDown[MouseLeft]:
         # Is an instance has potential to Down.
         if n.hasVariant("State", "Down"):
             stateDown = true
@@ -590,9 +491,9 @@ proc processEvents() {.measure.} =
     case cb.kind:
     of eOnClick:
 
-      if mouse.click:
+      if window.buttonPressed[MouseLeft]:
         for node in findAll(thisSelector):
-          if node.inTree(thisFrame) and node.overlaps(mousePos):
+          if node.inTree(thisFrame) and node.overlaps(window.mousePos.vec2):
             thisNode = node
             thisCb.handler()
             thisNode = nil
@@ -644,21 +545,19 @@ proc processEvents() {.measure.} =
     let cursor = textBoxFocus.cursorRect()
     var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)
     imePos = imePos / pixelRatio
-    window.setImePos(imePos.x.cint, imePos.y.cint)
+    # TODO: window.setImePos(imePos.x.cint, imePos.y.cint)
 
   thisSelector = ""
   thisCb = nil
 
-  if buttonPress[F4]:
+  if window.buttonPressed[KeyF4]:
     echo "writing atlas"
     bxy.readAtlas().writeFile("atlas.png")
 
-  if buttonPress[F5]:
+  if window.buttonPressed[KeyF5]:
     echo "reloading from web"
     use(currentFigmaUrl)
     thisFrame = find(entryFramePath)
-
-  clearInputs()
 
 proc `imageUrl=`*(paint: schema.Paint, url: string) =
   # TODO: Make loading images async.
@@ -703,10 +602,14 @@ proc display(withEvents = true) {.measure.} =
   if withEvents:
     processEvents()
 
+  keyboard.onFocusNode = nil
+  keyboard.onUnfocusNode = nil
+
   var
     imeEditLocation: cint
     iemEditString = newString(256)
-  window.getIme(imeEditLocation.addr, iemEditString.cstring)
+
+  # TODO: window.getIme(imeEditLocation.addr, iemEditString.cstring)
   for i, c in iemEditString:
     if c == '\0':
       iemEditString.setLen(i)
@@ -730,10 +633,10 @@ proc display(withEvents = true) {.measure.} =
 proc mainLoop() {.cdecl.} =
   pollEvents()
   display()
-  if buttonToggle[F8]:
+  if window.buttonToggle[KeyF8]:
     dumpMeasures()
 
-  if buttonToggle[F9]:
+  if window.buttonToggle[KeyF9]:
     dumpMeasures(16)
 
 proc startFidget*(
@@ -766,16 +669,17 @@ proc startFidget*(
 
   updateWindowSize()
 
-  window.setWindowTitle(windowTitle)
+  window.title = windowTitle
 
-  # Setup glfw callbacks.
-  discard window.setFramebufferSizeCallback(onResize)
-  discard window.setWindowFocusCallback(onFocus)
-  discard window.setKeyCallback(onSetKey)
-  discard window.setScrollCallback(onScroll)
-  discard window.setMouseButtonCallback(onMouseButton)
-  discard window.setCursorPosCallback(onMouseMove)
-  discard window.setCharCallback(onSetCharCallback)
+  window.onResize = onResize
+  window.onScroll = onScroll
+  window.onButtonPress = proc(button: Button) =
+    textBoxKeyboardAction(button)
+  window.onMouseMove = onMouseMove
+  window.onRune = onRune
+
+  window.onCloseRequest = proc() =
+    running = false
 
   # Sort fidget user callbacks.
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
@@ -788,10 +692,8 @@ proc startFidget*(
     emscripten_set_main_loop(mainLoop, 0, true);
   else:
     # When running native code we can block in an infinite loop.
-    while windowShouldClose(window) == 0 and running:
+    while running:
       mainLoop()
 
     # Destroy the window.
-    window.destroyWindow()
-    # Exit GLFW.
-    terminate()
+    window.close()

@@ -234,6 +234,8 @@ type
     multiline*: bool  # Single line only (good for input fields).
     wordWrap*: bool   # Should the lines wrap or not.
     savedX*: float     # X position affinity when moving cursor up or down.
+    undoStack*: seq[(string, int)]
+    redoStack*: seq[(string, int)]
 
     # Layout
     constraints*: LayoutConstraint

@@ -62,14 +62,14 @@ proc delete(s: U, i: int) =
   let
     loc = s.str.runeOffsetSafe(i)
     size = s.str.runeLenAt(i)
-  s.str.delete(loc, loc + size)
+  s.str.delete(loc ..< loc + size)
 
 proc delete(s: U, a, b: int) =
   ## Like .delete but for unicode runes.
   let
     aLoc = s.str.runeOffsetSafe(a)
     bLoc = s.str.runeOffsetSafe(b)
-  s.str.delete(aLoc, bLoc)
+  s.str.delete(aLoc ..< bLoc)
 
 proc len(s: U): int =
   ## Like .len but for unicode runes.
@@ -183,6 +183,25 @@ proc selectionRegions*(node: Node): seq[Rect] =
   let sel = node.selection
   node.arrangement.getSelection(sel.a, sel.b)
 
+proc undoSave(node: Node) =
+  ## Save current state of undo.
+  node.undoStack.add((node.characters, node.cursor))
+  node.redoStack.setLen(0)
+
+proc undo*(node: Node) =
+  ## Go back in history.
+  if node.undoStack.len > 0:
+    node.redoStack.add((node.characters, node.cursor))
+    (node.characters, node.cursor) = node.undoStack.pop()
+    node.selector = node.cursor
+
+proc redo*(node: Node) =
+  ## Go forward in history.
+  if node.redoStack.len > 0:
+    node.undoStack.add((node.characters, node.cursor))
+    (node.characters, node.cursor) = node.redoStack.pop()
+    node.selector = node.cursor
+
 proc runesChanged(node: Node) =
   #node.characters = $node.characters.u
   node.makeTextDirty()
@@ -232,6 +251,7 @@ proc typeCharacter*(node: Node, rune: Rune) =
   # don't add new lines in a single line box.
   if not node.multiline and rune == Rune(10):
     return
+  node.undoSave()
   if node.cursor == node.characters.u.len:
     node.characters.u.add(rune)
   else:
@@ -500,20 +520,26 @@ proc mouseAction*(
   node.scrollToCursor()
   node.makeTextDirty()
 
-proc selectWord*(node: Node, mousePos: Vec2, extraSpace = true) =
+proc selectWord*(node: Node, mousePos: Vec2, extraSpace = false) =
   ## Select word under the cursor (double click).
   node.mouseAction(mousePos, click = true)
+  echo "selectWord start ", node.cursor, " ", node.selector
   while node.cursor > 0 and
     not node.characters.u[node.cursor - 1].isWhiteSpace():
+    echo "dec"
     dec node.cursor
   while node.selector < node.characters.u.len and
     not node.characters.u[node.selector].isWhiteSpace():
+    echo "inc"
     inc node.selector
   if extraSpace:
     # Select extra space to the right if its there.
     if node.selector < node.characters.u.len and
       node.characters.u[node.selector] == Rune(32):
       inc node.selector
+  echo "selectWord end ", node.cursor, " ", node.selector
+  node.makeTextDirty()
+  node.dirty = true
 
 proc selectParagraph*(node: Node, mousePos: Vec2) =
   ## Select paragraph under the cursor (triple click).
@@ -526,7 +552,7 @@ proc selectParagraph*(node: Node, mousePos: Vec2) =
     inc node.selector
 
 proc selectAll*(node: Node) =
-  ## Select all text (quad click).
+  ## Select all text (quad click or ctrl-a).
   node.cursor = 0
   node.selector = node.characters.u.len
 

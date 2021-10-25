@@ -1,4 +1,4 @@
-import vmath, chroma, schema, staticglfw,
+import vmath, chroma, schema, windy,
     tables, print, loader, bumpy, pixie, options,
     pixie/fontformats/opentype, print, puppy, perf, unicode
 
@@ -31,9 +31,7 @@ var
   hoverNode*: Node
 
   fullscreen* = false
-  running*, focused*, minimized*: bool
-  windowLogicalSize*: Vec2 ## Screen size in logical coordinates.
-  windowSize*: Vec2        ## Screen coordinates
+  running*: bool
   windowFrame*: Vec2       ## Pixel coordinates
   dpi*: float32            ## Digital pxiels per inch
   rtl*: bool               ## Set Right-to-Left UI mode.

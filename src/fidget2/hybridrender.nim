@@ -1,4 +1,4 @@
-import bumpy, math, opengl, pixie, schema, staticglfw, tables, vmath,
+import bumpy, math, opengl, pixie, schema, windy, tables, vmath,
   boxy, common, cpurender, layout, os, perf, nodes, loader
 
 export cpurender.underMouse
@@ -286,13 +286,13 @@ proc drawWithAtlas(node: Node) {.measure.} =
 proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.
 
-  if windowSize != screenNode.size:
+  if windowFrame != screenNode.size:
     if windowResizable:
       # Stretch the current frame to fit the window.
-      screenNode.size = windowSize
+      screenNode.size = windowFrame
     else:
       # Stretch the window to fit the current frame.
-      window.setWindowSize(screenNode.size.x.cint, screenNode.size.y.cint)
+      window.size = screenNode.size.ivec2
 
   viewportSize = (screenNode.size * pixelRatio).ceil
 
@@ -331,31 +331,35 @@ proc setupWindow*(
   ## Opens a new glfw window that is ready to draw into.
   ## Also setups all the shaders and buffers.
 
-  # Init glfw.
-  let tmp = getCurrentDir()
-  if init() == 0:
-    raise newException(Exception, "Failed to intialize GLFW")
-  setCurrentDir(tmp)
+  # # Init glfw.
+  # let tmp = getCurrentDir()
+  # if init() == 0:
+  #   raise newException(Exception, "Failed to intialize GLFW")
+  # setCurrentDir(tmp)
 
-  # Open a window.
-  if not vSync:
-    # Disable V-Sync
-    windowHint(DOUBLEBUFFER, false.cint)
+  # # Open a window.
+  # if not vSync:
+  #   # Disable V-Sync
+  #   windowHint(DOUBLEBUFFER, false.cint)
 
-  windowHint(VISIBLE, (not offscreen).cint)
-  windowHint(RESIZABLE, resizable.cint)
-  windowHint(SAMPLES, 0)
-  windowHint(CONTEXT_VERSION_MAJOR, 4)
-  windowHint(CONTEXT_VERSION_MINOR, 1)
-  windowHint(DECORATED, decorated.cint)
+  # windowHint(VISIBLE, (not offscreen).cint)
+  # windowHint(RESIZABLE, resizable.cint)
+  # windowHint(SAMPLES, 0)
+  # windowHint(CONTEXT_VERSION_MAJOR, 4)
+  # windowHint(CONTEXT_VERSION_MINOR, 1)
+  # windowHint(DECORATED, decorated.cint)
 
-  window = createWindow(
-    viewportSize.x.cint, viewportSize.y.cint,
-    "run_shaders",
-    nil,
-    nil)
-  if window == nil:
-    raise newException(Exception, "Failed to create GLFW window.")
+  # window = createWindow(
+  #   viewportSize.x.cint, viewportSize.y.cint,
+  #   "run_shaders",
+  #   nil,
+  #   nil)
+  # if window == nil:
+  #   raise newException(Exception, "Failed to create GLFW window.")
+
+
+  window = newWindow("loading...", viewportSize.ivec2)
+
   window.makeContextCurrent()
 
   when not defined(emscripten):
