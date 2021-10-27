@@ -141,6 +141,13 @@ proc triMerge(current, prevMaster, currMaster: Node) =
 
   # Ids
   mergeField componentId
+  # Transform
+  mergeField position
+  mergeField orgPosition
+  mergeField rotation
+  mergeField scale
+  mergeField flipHorizontal
+  mergeField flipVertical
   # Shape
   mergeField fillGeometry
   mergeField strokeWeight
