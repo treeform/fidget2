@@ -359,8 +359,6 @@ proc computeArrangement*(node: Node) {.measure.} =
       node.spans[^1].text.add(node.characters[i])
       prevStyle = styleKey
 
-
-
   else:
     let font = getFont(node.style)
     font.paint = node.fills[0].color.rgbx
@@ -384,8 +382,10 @@ proc computeArrangement*(node: Node) {.measure.} =
         modSpan.font.underline = true
         modSpan.text = textImeEditString
 
-  # var prevArrangment = node.arrangement
-
+    if node.spans.len == 1 and node.spans[0].text.len == 0:
+      # When the text has nothing in it "", a bunch of things become 0.
+      # To prevent this insert a fake space " ".
+      node.spans[0].text = " "
 
   # for span in node.spans:
   #   print "---"
