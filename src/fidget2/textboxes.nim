@@ -1,4 +1,5 @@
-import sequtils, pixie, unicode, vmath, bumpy, common, schema, strutils, nodes
+import sequtils, pixie, unicode, vmath, bumpy, common, schema, strutils, nodes,
+    uni
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about
@@ -34,61 +35,7 @@ TODO:
 
 const
   LF = Rune(10)
-
-# fancy .u unicode API that mirrors strings
-type U = distinct ptr string
-
-proc u(s: var string): U =
-  s.addr.U
-
-proc str(uu: U): var string =
-  cast[ptr string](uu)[]
-
-proc add(s: U, r: Rune) =
-  ## Like .add but for unicode runes.
-  s.str.add($r)
-
-proc runeOffsetSafe(s: var string, i: int): int =
-  result = s.runeOffset(i)
-  if result == -1 and i == s.runeLen:
-    result = s.len
-
-proc insert(s: U, r: Rune, i: int) =
-  ## Like .insert but for unicode runes.
-  s.str.insert($r, s.str.runeOffsetSafe(i))
-
-proc delete(s: U, i: int) =
-  ## Like .delete but for unicode runes.
-  let
-    loc = s.str.runeOffsetSafe(i)
-    size = s.str.runeLenAt(i)
-  s.str.delete(loc ..< loc + size)
-
-proc delete(s: U, a, b: int) =
-  ## Like .delete but for unicode runes.
-  let
-    aLoc = s.str.runeOffsetSafe(a)
-    bLoc = s.str.runeOffsetSafe(b)
-  s.str.delete(aLoc ..< bLoc)
-
-proc len(s: U): int =
-  ## Like .len but for unicode runes.
-  s.str.runeLen()
-
-proc `[]`(s: U, i: int): Rune =
-  ## Like [i] but for unicode runes.
-  s.str.runeAtPos(i)
-
-proc `[]`(s: U, i: BackwardsIndex): Rune =
-  ## Like [^i] but for unicode runes.
-  s[s.len - i.int]
-
-proc `[]`(s: U, slice: HSlice[int, int]): string =
-  ## Like [^i] but for unicode runes.
-  let
-    aLoc = s.str.runeOffsetSafe(slice.a)
-    bLoc = s.str.runeOffsetSafe(slice.b + 1)
-  s.str[aLoc ..< bLoc]
+  CR = Rune(13)
 
 proc clamp(v, a, b: int): int =
   max(a, min(b, v))
@@ -211,7 +158,7 @@ proc removedSelection*(node: Node): bool =
   ## Returns true if anything was removed.
   let sel = node.selection
   if sel.a != sel.b:
-    node.characters.u.delete(sel.a, sel.b - 1)
+    node.characters.u.delete(sel.a ..< sel.b)
     node.runesChanged()
     node.cursor = sel.a
     node.selector = node.cursor
@@ -272,6 +219,8 @@ proc typeCharacters*(node: Node, s: string) =
     return
   node.removeSelection()
   for rune in runes(s):
+    if rune == CR:
+      continue
     node.characters.u.insert(rune, node.cursor)
     inc node.cursor
   node.selector = node.cursor
@@ -295,7 +244,7 @@ proc pasteText*(node: Node, s: string) =
 proc cutText*(node: Node): string =
   ## Returns the text that was cut.
   result = node.copyText()
-  if not node.editable:
+  if not node.editable or result == "":
     return
   node.removeSelection()
   node.savedX = node.cursorPos.x

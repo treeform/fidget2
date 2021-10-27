@@ -15,9 +15,21 @@ find "/UI/MainScreen":
     onUnfocus:
       echo "unfocus node"
 
+find "/UI/Settings":
+  find "Settings/*/Toggle":
+    onClick:
+      proc flipValue(value: string): string =
+        if value == "Off":
+          "On"
+        else:
+          "Off"
+      let value = thisNode.getVariant("Value").flipValue()
+      echo thisNode.parent.name, " = ", value
+      thisNode.setVariant("Value", value)
+
 startFidget(
   figmaUrl = "https://www.figma.com/file/PRNHOO9xeHYkq5LskwDn33",
   windowTitle = "Pushbullet",
-  entryFrame = "/UI/MainScreen",
+  entryFrame = "/UI/Settings",
   resizable = true
 )

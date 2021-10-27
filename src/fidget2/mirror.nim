@@ -260,20 +260,18 @@ proc textBoxKeyboardAction(button: Button) =
             textBoxFocus.undo()
         of KeyC: # copy
           if ctrl:
-            discard
-            # TODO: window.setClipboardString(textBoxFocus.copyText())
+            setClipboardString(textBoxFocus.copyText())
         of KeyV: # paste
           if ctrl:
-            discard
-            # TODO: textBoxFocus.pasteText($window.getClipboardString())
+            textBoxFocus.pasteText(getClipboardString())
         of KeyX: # cut
           if ctrl:
-            discard
-            # TODO: window.setClipboardString(textBoxFocus.cutText())
+            setClipboardString(textBoxFocus.cutText())
         of KeyA: # select all
           if ctrl:
             textBoxFocus.selectAll()
         of MouseLeft:
+          echo "Click"
           textBoxFocus.mouseAction(
             window.relativeMousePos(textBoxFocus),
             true,
@@ -286,6 +284,7 @@ proc textBoxKeyboardAction(button: Button) =
           echo "TripleClick"
           textBoxFocus.selectParagraph(window.relativeMousePos(textBoxFocus))
         of QuadrupleClick:
+          echo "QuadrupleClick"
           textBoxFocus.selectAll()
         else:
           discard
@@ -451,10 +450,13 @@ proc processEvents() {.measure.} =
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
 
-  if window.buttonPressed[MouseLeft]:
-    echo "---"
-    for n in underMouseNodes:
-      echo n.name
+  # if window.buttonPressed[MouseLeft]:
+  #   echo "---"
+  #   for n in underMouseNodes:
+  #     echo n.name
+
+  if window.buttonDown[MouseLeft]:
+    window.closeIme()
 
   # Do hovering logic.
   var hovering = false
@@ -545,7 +547,7 @@ proc processEvents() {.measure.} =
     let cursor = textBoxFocus.cursorRect()
     var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)
     imePos = imePos / pixelRatio
-    # TODO: window.setImePos(imePos.x.cint, imePos.y.cint)
+    window.imePos = imePos.ivec2
 
   thisSelector = ""
   thisCb = nil
@@ -605,20 +607,7 @@ proc display(withEvents = true) {.measure.} =
   keyboard.onFocusNode = nil
   keyboard.onUnfocusNode = nil
 
-  var
-    imeEditLocation: cint
-    iemEditString = newString(256)
-
-  # TODO: window.getIme(imeEditLocation.addr, iemEditString.cstring)
-  for i, c in iemEditString:
-    if c == '\0':
-      iemEditString.setLen(i)
-      break
-  if textImeEditString != iemEditString or textImeEditLocation != imeEditLocation:
-    echo "ime: ", imeEditLocation, ":'", iemEditString, "'"
-    textImeEditLocation = imeEditLocation
-    textImeEditString = iemEditString
-    textBoxFocus.dirty = true
+  window.runeInputEnabled = textBoxFocus != nil
 
   thisFrame.checkDirty()
   if thisFrame.dirty:
@@ -677,6 +666,23 @@ proc startFidget*(
     textBoxKeyboardAction(button)
   window.onMouseMove = onMouseMove
   window.onRune = onRune
+
+  window.onImeChange = proc() =
+    var
+      imeEditLocation = window.imeCursorIndex
+      iemEditString = window.imeCompositionString
+
+    for i, c in iemEditString:
+      if c == '\0':
+        iemEditString.setLen(i)
+        break
+    if textImeEditString != iemEditString or textImeEditLocation != imeEditLocation:
+      echo "ime: ", imeEditLocation, ":'", iemEditString, "'"
+      textImeEditLocation = imeEditLocation
+      textImeEditString = iemEditString
+      if textBoxFocus != nil:
+        textBoxFocus.dirty = true
+        textBoxFocus.makeTextDirty()
 
   window.onCloseRequest = proc() =
     running = false

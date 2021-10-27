@@ -187,7 +187,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
   if node.frozen:
     bxy.saveTransform()
     bxy.applyTransform(node.mat.mat4)
-    let size = bxy.getImageSize(node.frozenId)
+    let size = bxy.getImageSize(node.frozenId).vec2
     bxy.scale(vec2(
       node.size.x / size.x,
       node.size.y / size.y

@@ -276,8 +276,6 @@ type
     version*: string
     role*: string
 
-#genDirtyGettersAndSetter(Node)
-
 proc `$`*(node: Node): string =
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
@@ -288,11 +286,11 @@ proc newHook(node: var Node) =
 
 proc postHook(node: var Node) =
   if node.relativeTransform.isSome:
+    # Take figma matrix transform and extract trs from it.
     let transform = node.relativeTransform.get()
     node.position = vec2(transform[0][2], transform[1][2])
     node.rotation = arctan2(transform[0][1], transform[0][0])
     node.scale = vec2(1, 1)
-
     # Extract the flips from the matrix:
     let
       actual = rotate(node.rotation)
@@ -307,11 +305,19 @@ proc postHook(node: var Node) =
     if residual[1, 1] < 0:
       node.flipVertical = true
 
+  # Setup the child-parent relationship.
   for child in node.children:
     child.parent = node
 
+  # Knowing original position and size is important for layout.
   node.orgPosition = node.position
   node.orgSize = node.size
+
+  # Figma API can give us \r\n -> \n
+  # TODO: that might effect styles.
+  node.characters = node.characters.replace("\r\n", "\n")
+
+  # Node has never been drawn.
   node.dirty = true
 
 proc renameHook(node: var Node, fieldName: var string) =
