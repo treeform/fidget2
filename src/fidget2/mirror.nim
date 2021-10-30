@@ -565,7 +565,7 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
   # TODO: Make loading images async.
   when not defined(emscripten):
     if url notin imageCache:
-      let fileKey = "cache/" & url.replace("/", "_").replace(":", "_").replace(".", "_")
+      let fileKey = "cache/" & url.replace("/", "_").replace(":", "_").replace(".", "_").replace("?", "_")
       #echo fileKey
       var imageData = ""
       if existsFile(fileKey):

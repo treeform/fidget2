@@ -45,7 +45,8 @@ proc isSimpleImage*(node: Node): bool =
   ## not go through CPU rendering path to resize it.
   node.strokes.len == 0 and
   node.fills.len == 1 and
-  node.fills[0].kind == schema.PaintKind.pkImage
+  node.fills[0].kind == schema.PaintKind.pkImage and
+  node.cornerRadius == 0
 
 proc drawToAtlas(node: Node, level: int) {.measure.} =
   ## Draw the nodes into the atlas (and setup pixel box).
