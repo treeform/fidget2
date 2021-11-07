@@ -79,14 +79,16 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
     downloadImage(imageRef, url)
 
 proc downloadFont(fontPostScriptName: string) =
-  if not fileExists(figmaFontPath(fontPostScriptName)):
+  let fontPath = figmaFontPath(fontPostScriptName)
+  if not fileExists(fontPath):
     const baseUrl = "https://github.com/treeform/fidgetfonts/raw/main/fonts/"
     let url = baseUrl & fontPostScriptName & ".ttf"
-    echo "Downloading ", url
+    echo "Font not found: ", fontPath
+    echo "Downloading: ", url
     let data = fetch(url)
     if data == "":
       raise newException(FidgetError, "Downloading " & url & " failed")
-    writeFile(figmaFontPath(fontPostScriptName), data)
+    writeFile(fontPath, data)
 
 proc downloadFonts(figmaFile: FigmaFile) =
   if not dirExists("data/fonts"):

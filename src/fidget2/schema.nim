@@ -539,6 +539,20 @@ proc enumHook(s: string, v: var OverflowDirection) =
     of "HORIZONTAL_AND_VERTICAL_SCROLLING": odHorizontalAndVerticalScrolling
     else: raise newException(FidgetError, "Invalid overflow direction:" & s)
 
+import parseutils
+proc parseHook(s: string, i: var int, v: var float32) =
+  if i + 3 < s.len and s[i+0] == 'n' and s[i+1] == 'u' and s[i+2] == 'l' and s[i+3] == 'l':
+    i += 4
+    return
+  var f: float
+  eatSpace(s, i)
+  let chars = parseutils.parseFloat(s, f, i)
+  if chars == 0:
+    echo s[i - 10 .. i + 10]
+    echo "float error"
+  i += chars
+  v = f
+
 proc parseHook(s: string, i: var int, v: var Vec2) =
   # Handle vectors some times having {x: null, y: null}.
   type Vec2Obj = object

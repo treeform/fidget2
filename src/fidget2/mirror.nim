@@ -609,6 +609,7 @@ proc display(withEvents = true) {.measure.} =
 
   window.runeInputEnabled = textBoxFocus != nil
 
+  thisFrame.dirty = true
   thisFrame.checkDirty()
   if thisFrame.dirty:
     drawToScreen(thisFrame)
@@ -622,6 +623,7 @@ proc display(withEvents = true) {.measure.} =
 proc mainLoop() {.cdecl.} =
   pollEvents()
   display()
+
   if window.buttonToggle[KeyF8]:
     dumpMeasures()
 
@@ -685,12 +687,12 @@ proc startFidget*(
         textBoxFocus.makeTextDirty()
 
   window.onCloseRequest = proc() =
-    running = false
+    common.running = false
 
   # Sort fidget user callbacks.
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
 
-  running = true
+  common.running = true
 
   when defined(emscripten):
     # Emscripten can't block so it will call this callback instead.
@@ -698,7 +700,7 @@ proc startFidget*(
     emscripten_set_main_loop(mainLoop, 0, true);
   else:
     # When running native code we can block in an infinite loop.
-    while running:
+    while common.running:
       mainLoop()
 
     # Destroy the window.
