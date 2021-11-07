@@ -414,3 +414,13 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       node.drawNodeInternal(withChildren=true)
       #layer.writeFile("freeze." & node.name & ".png")
       bxy.addImage(node.frozenId, layer, genMipmaps=true)
+  else:
+    echo "Warning: Freezing non instance"
+    node.frozen = true
+    node.frozenId = node.id
+    if node.frozenId notin bxy:
+      mat = scale(vec2(s, s))
+      layer = newImage((node.size.x * s).int, (node.size.y * s).int)
+      node.drawNodeInternal(withChildren=true)
+      #layer.writeFile("freeze." & node.name & ".png")
+      bxy.addImage(node.frozenId, layer, genMipmaps=true)
