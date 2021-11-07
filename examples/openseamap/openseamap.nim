@@ -1,5 +1,5 @@
-import fidget2, puppy, pixie/fileformats/png, print, vmath, fidget2/input, strformat
-import fidget2/hybridrender, bumpy, fidget2/common
+import fidget2, puppy, pixie/fileformats/png, print, vmath, strformat
+import fidget2/hybridrender, bumpy, fidget2/common, puppy/pool, tables
 
 const
   domain1 = "https://c.tile.openstreetmap.org"
@@ -9,18 +9,23 @@ var
   mapPos = vec2(0, 0)
   zoom = 1.0
 
+  nodeToHandle: Table[int, (string, RequestHandle)]
+
+openPool()
+
+
 find "/UI/Main":
 
   onDisplay:
 
-    if buttonDown[MOUSE_MIDDLE] or buttonDown[SPACE]:
-      mapPos += mouse.delta
+    if window.buttonDown[MouseMiddle] or window.buttonDown[KeySpace]:
+      mapPos += window.mouseDelta.vec2
 
-    if mouse.wheelDelta != 0:
-      var prevZoomDelta = (mouse.pos - mapPos) / zoom
-      zoom = clamp(zoom * (1.0 + mouse.wheelDelta/10), 1.0 .. 1000000.0)
+    if window.scrollDelta.y != 0:
+      var prevZoomDelta = (window.mousePos.vec2 - mapPos) / zoom
+      zoom = clamp(zoom * (1.0 + window.scrollDelta.y/10), 1.0 .. 1000000.0)
       var newZoomDelta = prevZoomDelta * zoom
-      mapPos = mouse.pos - newZoomDelta
+      mapPos = window.mousePos.vec2 - newZoomDelta
 
     var mapNode = find("/UI/Main/Map")
     mapNode.position = mapPos
@@ -54,40 +59,55 @@ find "/UI/Main":
           mapNode.addChild(newTile)
           tileNodes.add(tileNodes)
 
-        if tileNodes[i].visible != true or
-          tileNodes[i].position != tilePos or
-          tileNodes[i].scale != tileScale:
+        # if tileNodes[i].visible != true or
+        #   tileNodes[i].position != tilePos or
+        #   tileNodes[i].scale != tileScale:
 
-          let imgUrl = &"{domain1}/{level}/{x}/{y}.png"
-          echo imgUrl
-          tileNodes[i].fills[0].imageUrl = imgUrl
-          tileNodes[i].position = tilePos
-          tileNodes[i].scale = tileScale
-          tileNodes[i].visible = true
-          tileNodes[i].dirty = true
+        let imgUrl = &"{domain1}/{level}/{x}/{y}.png"
+        if imgUrl notin imageCache:
+          if i notin nodeToHandle or nodeToHandle[i][0] != imgUrl:
+            echo "fetch ", imgUrl
+            nodeToHandle[i] = (imgUrl, fetchParallel(Request(
+              url: parseUrl(imgUrl),
+              verb: "get"
+            )))
+          if nodeToHandle[i][1] != -1 and nodeToHandle[i][1].ready:
+            echo "finished ", imgUrl
+            let pngData = nodeToHandle[i][1].response.body
+            let image = decodePng(pngData)
+            imageCache[imgUrl] = image
+            nodeToHandle[i][1] = -1
+
+        tileNodes[i].fills[0].imageRef = imgUrl
+        tileNodes[i].position = tilePos
+        tileNodes[i].scale = tileScale
+        tileNodes[i].visible = true
+        tileNodes[i].dirty = true
+
         inc i
 
-        # layer two seamaps
-        if tileNodes.len == i:
-          let newTile = tileNode.copy()
-          mapNode.addChild(newTile)
-          tileNodes.add(tileNodes)
+        # # layer two seamaps
+        # if tileNodes.len == i:
+        #   let newTile = tileNode.copy()
+        #   mapNode.addChild(newTile)
+        #   tileNodes.add(tileNodes)
 
-        if tileNodes[i].visible != true or
-          tileNodes[i].position != tilePos or
-          tileNodes[i].scale != tileScale:
+        # if tileNodes[i].visible != true or
+        #   tileNodes[i].position != tilePos or
+        #   tileNodes[i].scale != tileScale:
 
-          let imgUrl = &"{domain2}/{level}/{x}/{y}.png"
-          echo imgUrl
-          tileNodes[i].fills[0].imageUrl = imgUrl
-          tileNodes[i].position = tilePos
-          tileNodes[i].scale = tileScale
-          tileNodes[i].visible = true
-          tileNodes[i].dirty = true
-        inc i
+        #   let imgUrl = &"{domain2}/{level}/{x}/{y}.png"
+        #   echo imgUrl
+        #   tileNodes[i].fills[0].imageUrl = imgUrl
+        #   tileNodes[i].position = tilePos
+        #   tileNodes[i].scale = tileScale
+        #   tileNodes[i].visible = true
+        #   tileNodes[i].dirty = true
+        # inc i
 
     for j in i ..< tileNodes.len:
       tileNodes[j].visible = false
+
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/82plYn1ClhiSfhoZrrFVn3",
