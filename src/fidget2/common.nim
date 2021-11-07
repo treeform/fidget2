@@ -1,4 +1,4 @@
-import vmath, chroma, schema, staticglfw,
+import vmath, chroma, schema, windy,
     tables, print, loader, bumpy, pixie, options,
     pixie/fontformats/opentype, print, puppy, perf, unicode
 
@@ -31,9 +31,7 @@ var
   hoverNode*: Node
 
   fullscreen* = false
-  running*, focused*, minimized*: bool
-  windowLogicalSize*: Vec2 ## Screen size in logical coordinates.
-  windowSize*: Vec2        ## Screen coordinates
+  running*: bool
   windowFrame*: Vec2       ## Pixel coordinates
   dpi*: float32            ## Digital pxiels per inch
   rtl*: bool               ## Set Right-to-Left UI mode.
@@ -94,7 +92,7 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
     let typeface = parseOtf(readFigmaFile(figmaFontPath(fontName)))
-    #typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansSC-Regular"))
+    # typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansKR-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
 
@@ -361,8 +359,6 @@ proc computeArrangement*(node: Node) {.measure.} =
       node.spans[^1].text.add(node.characters[i])
       prevStyle = styleKey
 
-
-
   else:
     let font = getFont(node.style)
     font.paint = node.fills[0].color.rgbx
@@ -386,8 +382,10 @@ proc computeArrangement*(node: Node) {.measure.} =
         modSpan.font.underline = true
         modSpan.text = textImeEditString
 
-  # var prevArrangment = node.arrangement
-
+    if node.spans.len == 1 and node.spans[0].text.len == 0:
+      # When the text has nothing in it "", a bunch of things become 0.
+      # To prevent this insert a fake space " ".
+      node.spans[0].text = " "
 
   # for span in node.spans:
   #   print "---"

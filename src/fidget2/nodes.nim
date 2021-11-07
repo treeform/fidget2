@@ -59,13 +59,19 @@ proc removeChild*(parent, node: Node) =
 proc clearChildren*(parent: Node) =
   ## Removes all children.
   for node in toSeq(parent.children):
-   parent.removeChild(node)
+    parent.removeChild(node)
+
+proc assignIdsToTree(node: Node) =
+  ## Walks the tree giving everyone a new id.
+  node.id = $rand(int.high)
+  for c in node.children:
+    c.assignIdsToTree()
 
 proc copy*(node: Node): Node =
   ## Copies a node creating new one.
   result = deepCopy(node)
   result.position = vec2(0, 0)
-  result.id = $rand(int.high)
+  result.assignIdsToTree()
   #result.markTreeDirty()
 
 proc newInstance*(node: Node): Node =
@@ -141,6 +147,13 @@ proc triMerge(current, prevMaster, currMaster: Node) =
 
   # Ids
   mergeField componentId
+  # Transform
+  mergeField position
+  mergeField orgPosition
+  mergeField rotation
+  mergeField scale
+  mergeField flipHorizontal
+  mergeField flipVertical
   # Shape
   mergeField fillGeometry
   mergeField strokeWeight

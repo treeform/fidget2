@@ -234,6 +234,8 @@ type
     multiline*: bool  # Single line only (good for input fields).
     wordWrap*: bool   # Should the lines wrap or not.
     savedX*: float     # X position affinity when moving cursor up or down.
+    undoStack*: seq[(string, int)]
+    redoStack*: seq[(string, int)]
 
     # Layout
     constraints*: LayoutConstraint
@@ -274,8 +276,6 @@ type
     version*: string
     role*: string
 
-#genDirtyGettersAndSetter(Node)
-
 proc `$`*(node: Node): string =
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
@@ -286,11 +286,11 @@ proc newHook(node: var Node) =
 
 proc postHook(node: var Node) =
   if node.relativeTransform.isSome:
+    # Take figma matrix transform and extract trs from it.
     let transform = node.relativeTransform.get()
     node.position = vec2(transform[0][2], transform[1][2])
     node.rotation = arctan2(transform[0][1], transform[0][0])
     node.scale = vec2(1, 1)
-
     # Extract the flips from the matrix:
     let
       actual = rotate(node.rotation)
@@ -305,11 +305,19 @@ proc postHook(node: var Node) =
     if residual[1, 1] < 0:
       node.flipVertical = true
 
+  # Setup the child-parent relationship.
   for child in node.children:
     child.parent = node
 
+  # Knowing original position and size is important for layout.
   node.orgPosition = node.position
   node.orgSize = node.size
+
+  # Figma API can give us \r\n -> \n
+  # TODO: that might effect styles.
+  node.characters = node.characters.replace("\r\n", "\n")
+
+  # Node has never been drawn.
   node.dirty = true
 
 proc renameHook(node: var Node, fieldName: var string) =
@@ -530,6 +538,20 @@ proc enumHook(s: string, v: var OverflowDirection) =
     of "VERTICAL_SCROLLING": odVerticalScrolling
     of "HORIZONTAL_AND_VERTICAL_SCROLLING": odHorizontalAndVerticalScrolling
     else: raise newException(FidgetError, "Invalid overflow direction:" & s)
+
+import parseutils
+proc parseHook(s: string, i: var int, v: var float32) =
+  if i + 3 < s.len and s[i+0] == 'n' and s[i+1] == 'u' and s[i+2] == 'l' and s[i+3] == 'l':
+    i += 4
+    return
+  var f: float
+  eatSpace(s, i)
+  let chars = parseutils.parseFloat(s, f, i)
+  if chars == 0:
+    echo s[i - 10 .. i + 10]
+    echo "float error"
+  i += chars
+  v = f
 
 proc parseHook(s: string, i: var int, v: var Vec2) =
   # Handle vectors some times having {x: null, y: null}.

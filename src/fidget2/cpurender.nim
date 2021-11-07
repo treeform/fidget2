@@ -1,5 +1,5 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
-    common, staticglfw, pixie, textboxes, perf,
+    common, windy, pixie, textboxes, perf,
     layout
 
 type Image = pixie.Image
@@ -563,15 +563,18 @@ proc setupWindow*(
   resizable = true
 ) =
   ## Opens a new glfw window that is ready to draw into.
-  if init() == 0:
-    raise newException(Exception, "Failed to intialize GLFW")
-  windowHint(VISIBLE, (not offscreen).cint)
-  windowHint(RESIZABLE, resizable.cint)
-  windowHint(CLIENT_API, NO_API)
-  window = createWindow(
-    viewportSize.x.cint, viewportSize.y.cint,
-    "loading...",
-    nil,
-    nil)
-  if window == nil:
-    raise newException(Exception, "Failed to create GLFW window.")
+
+  # if init() == 0:
+  #   raise newException(Exception, "Failed to intialize GLFW")
+  # windowHint(VISIBLE, (not offscreen).cint)
+  # windowHint(RESIZABLE, resizable.cint)
+  # windowHint(CLIENT_API, NO_API)
+  # window = createWindow(
+  #   viewportSize.x.cint, viewportSize.y.cint,
+  #   "loading...",
+  #   nil,
+  #   nil)
+  # if window == nil:
+  #   raise newException(Exception, "Failed to create GLFW window.")
+
+  window = newWindow("loading..", viewportSize.ivec2)
