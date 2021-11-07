@@ -335,9 +335,9 @@ proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = bmOverwrite)
-  shadow = shadow.shadow(
+  let shadow2 = shadow.shadow(
     effect.offset, effect.spread, effect.radius, effect.color.rgbx)
-  lowerLayer.draw(shadow)
+  lowerLayer.draw(shadow2)
 
 proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   var blurLayer = lowerLayer.copy() # Maybe collapse bg?

@@ -315,7 +315,7 @@ proc postHook(node: var Node) =
 
   # Figma API can give us \r\n -> \n
   # TODO: that might effect styles.
-  node.characters = node.characters.replace("\r\n", "\n")
+  # node.characters = node.characters.replace("\r\n", "\n")
 
   # Node has never been drawn.
   node.dirty = true

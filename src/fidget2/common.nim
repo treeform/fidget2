@@ -92,7 +92,7 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
     let typeface = parseOtf(readFigmaFile(figmaFontPath(fontName)))
-    # typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansKR-Regular"))
+    typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansJP-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
 
