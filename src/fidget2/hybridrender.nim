@@ -358,8 +358,9 @@ proc setupWindow*(
   # if window == nil:
   #   raise newException(Exception, "Failed to create GLFW window.")
 
-
-  window = newWindow("loading...", viewportSize.ivec2)
+  window = newWindow("loading...", viewportSize.ivec2, visible=not offscreen)
+  window.resizable = resizable
+  window.decorated = decorated
 
   window.makeContextCurrent()
 

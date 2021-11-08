@@ -267,6 +267,40 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.mea
       fillImage.draw(mask, blendMode = bmMask)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
+proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measure.} =
+  ## Draws the inner shadow.
+  var shadow = newMask(fillMask.width, fillMask.height)
+  shadow.draw(fillMask, translate(effect.offset), blendMode = bmOverwrite)
+  # Invert colors of the fill mask.
+  shadow.invert()
+  # Blur the inverted fill.
+  shadow.blur(effect.radius, outOfBounds = 255)
+  # Color the inverted blurred fill.
+  var color = newImage(shadow.width, shadow.height)
+  color.fill(effect.color.rgbx)
+  color.draw(shadow, blendMode = bmMask)
+  # Only have the shadow be on the fill.
+  color.draw(fillMask, blendMode = bmMask)
+  # Draw it back.
+  layer.draw(color)
+
+proc maskSelfImage*(node: Node): Mask {.measure.} =
+  ## Returns a self mask (used for clips-content).
+  var mask = newMask(layer.width, layer.height)
+  for geometry in node.fillGeometry:
+    mask.fillPath(
+      geometry.path,
+      mat * geometry.mat,
+      geometry.windingRule
+    )
+  return mask
+
+proc drawInnerShadow(node: Node) =
+  for effect in node.effects:
+    if effect.visible:
+      if effect.kind == ekInnerShadow:
+        drawInnerShadowEffect(effect, node, node.maskSelfImage())
+
 proc drawGeometry*(node: Node) {.measure.} =
   if node.strokeGeometry.len == 0:
     # No stroke just fill.
@@ -286,6 +320,8 @@ proc drawGeometry*(node: Node) {.measure.} =
         var fillMask = newMask(layer.width, layer.height)
         for geometry in node.fillGeometry:
           fillMask.fillPath(geometry.path, mat, geometry.windingRule)
+          node.drawInnerShadow()
+
         # Deal with stroke
         var strokeLayer = newImage(layer.width, layer.height)
         layer = strokeLayer
@@ -296,12 +332,14 @@ proc drawGeometry*(node: Node) {.measure.} =
 
     of saCenter:
       node.drawPaint(node.fills, node.fillGeometry)
+      node.drawInnerShadow()
       node.drawPaint(node.strokes, node.strokeGeometry)
 
     of saOutside:
       # Deal with fill
       var fillLayer = layer
       node.drawPaint(node.fills, node.fillGeometry)
+      node.drawInnerShadow()
       # Deal with fill mask
       var fillMask = newMask(layer.width, layer.height)
       for geometry in node.fillGeometry:
@@ -313,23 +351,6 @@ proc drawGeometry*(node: Node) {.measure.} =
       layer = fillLayer
       strokeLayer.draw(fillMask, blendMode = bmSubtractMask)
       layer.draw(strokeLayer)
-
-proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measure.} =
-  ## Draws the inner shadow.
-  var shadow = newMask(fillMask.width, fillMask.height)
-  shadow.draw(fillMask, translate(effect.offset), blendMode = bmOverwrite)
-  # Invert colors of the fill mask.
-  shadow.invert()
-  # Blur the inverted fill.
-  shadow.blur(effect.radius, outOfBounds = 255)
-  # Color the inverted blurred fill.
-  var color = newImage(shadow.width, shadow.height)
-  color.fill(effect.color.rgbx)
-  color.draw(shadow, blendMode = bmMask)
-  # Only have the shadow be on the fill.
-  color.draw(fillMask, blendMode = bmMask)
-  # Draw it back.
-  layer.draw(color)
 
 proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: Node) {.measure.} =
   ## Draws the drop shadow.
@@ -348,16 +369,6 @@ proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   blurLayer.draw(layer)
   layer = blurLayer
 
-proc maskSelfImage*(node: Node): Mask {.measure.} =
-  ## Returns a self mask (used for clips-content).
-  var mask = newMask(layer.width, layer.height)
-  for geometry in node.fillGeometry:
-    mask.fillPath(
-      geometry.path,
-      mat * geometry.mat,
-      geometry.windingRule
-    )
-  return mask
 
 proc drawText*(node: Node) {.measure.} =
   ## Draws the text (including editing of text).
@@ -477,11 +488,6 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
     node.genFillGeometry()
     node.genStrokeGeometry()
     node.drawGeometry()
-
-  for effect in node.effects:
-    if effect.visible:
-      if effect.kind == ekInnerShadow:
-        drawInnerShadowEffect(effect, node, node.maskSelfImage())
 
   if withChildren:
     if hasMaskedChildren:
