@@ -15,5 +15,5 @@ jobs:
 
     # - run: sudo apt install -y build-essential libalut-dev libasound2-dev libc6-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev mesa-utils pkg-config xorg-dev xvfb
     # - run: nimble test -y
-
+    - run: nimble develop
     - run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
