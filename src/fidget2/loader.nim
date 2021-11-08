@@ -2,6 +2,7 @@ import globs, json, jsony, os, schema, strutils, sets, tables, puppy,
     zippy/ziparchives
 var
   archive: ZipArchive
+  figmaToken: string
   figmaFile*: FigmaFile                ## Main figma file.
 
 proc readFigmaFile*(path: string): string =
@@ -10,8 +11,13 @@ proc readFigmaFile*(path: string): string =
   else:
     readFile(path)
 
+proc readFigmaToken() =
+  for path in [".figmakey", getHomeDir() / ".figmakey"]:
+    if fileExists(path):
+      figmaToken = readFigmaFile(path).strip()
+
 proc figmaHeaders(): seq[Header] =
-  result["X-FIGMA-TOKEN"] = readFigmaFile(getHomeDir() / ".figmakey").strip()
+  result["X-FIGMA-TOKEN"] = figmaToken
 
 proc figmaFilePath(fileKey: string): string =
   "data/" & fileKey & ".json"
@@ -213,5 +219,6 @@ proc use*(figmaUrl: string) =
   else:
     if not dirExists("data"):
       createDir("data")
+    readFigmaToken()
     downloadFigmaFile(figmaFileKey)
   figmaFile = loadFigmaFile(figmaFileKey)
