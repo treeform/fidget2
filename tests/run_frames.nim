@@ -35,6 +35,9 @@ elif defined(hyb):
 proc main(r = "", e = "", l = 10000) =
 
   if not existsDir("tests/frames/diffs"): createDir("tests/frames/diffs")
+  if not existsDir("data/fonts"):
+    createDir("data/fonts")
+    copyFileToDir("tests/fonts/NotoSansJP-Regular.ttf", "data/fonts")
 
   var renderTime = 0.0
   var totalDiff = 0.0
