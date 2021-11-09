@@ -7,12 +7,6 @@ when defined(benchy):
 when defined(gpu):
   import fidget2/gpurender
   const w = "gpu"
-elif defined(gpu_atlas):
-  import fidget2/gpurender
-  const w = "gpu_atlas"
-elif defined(gpu_atlas_full):
-  import fidget2/gpurender
-  const w = "gpu_atlas_full"
 elif defined(cpu):
   import fidget2/cpurender
   const w = "cpu"
@@ -65,7 +59,7 @@ proc main(r = "", e = "", l = 10000) =
     #  echo frame.name, " --------------------------------- "
 
     if firstTime and w in [
-      "gpu_atlas", "gpu_atlas_full", "gpu",
+      "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
       setupWindow(frame, offscreen = true, resizable = false)
@@ -75,12 +69,6 @@ proc main(r = "", e = "", l = 10000) =
       when defined(gpu):
         drawToScreen(frame)
         result = readGpuPixelsFromScreen()
-      elif defined(gpu_atlas):
-        drawGpuFrameToAtlas(frame, "screen")
-        result = readGpuPixelsFromAtlas("screen")
-      elif defined(gpu_atlas_full):
-        drawGpuFrameToAtlas(frame, "screen")
-        result = readGpuPixelsFromAtlas("screen", crop = false)
       elif defined(zpu):
         result = drawCompleteZpuFrame(frame)
       elif defined(gpu_vs_zpu):

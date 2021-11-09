@@ -269,9 +269,6 @@ proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font {.measure.} =
 
   return font
 
-proc font*(node: Node): Font =
-  node.style.getFont()
-
 proc cursorWidth*(font: Font): float =
   min(font.size / 12, 1)
 
@@ -418,7 +415,12 @@ proc computeArrangement*(node: Node) {.measure.} =
   #   #print node.runes == prevArrangment.runes
   #   # print node.dirty, prevArrangment != nil
 
-
+proc font*(node: Node): Font =
+  node.computeArrangement()
+  if node.spans.len > 0:
+    node.spans[0].font
+  else:
+    node.style.getFont()
 
 proc genTextGeometry*(node: Node) {.measure.} =
   ## Generates text bounds geometry, can be more or less then
