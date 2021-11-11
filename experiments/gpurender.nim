@@ -1,5 +1,5 @@
-import atlas, bumpy, chroma, glsl, gpushader, layout, loader, math, opengl,
-    pixie, print, schema, staticglfw, tables, typography, typography/textboxes,
+import bumpy, chroma, gpushader, layout, loader, math, opengl,
+    pixie, print, schema, staticglfw, tables, shady,
     vmath, times, perf, common, spacy, random
 
 type

@@ -1,6 +1,5 @@
 import vmath
 
-
 proc blendAlphaPremul*(backdrop, source: float32): float32 =
   source + (backdrop * (1.0 - source))
 
