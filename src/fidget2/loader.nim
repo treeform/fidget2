@@ -104,6 +104,11 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   var fontsUsed: HashSet[string]
 
+  # TODO Make fallback font download better:
+  fontsUsed.incl("NotoSansJP-Regular")
+  # fontsUsed.incl("NotoSansCH-Regular")
+  # fontsUsed.incl("NotoSansKR-Regular")
+
   proc incl(style: TypeStyle) =
     if style.fontPostScriptName != "":
       fontsUsed.incl(style.fontPostScriptName)

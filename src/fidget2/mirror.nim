@@ -254,9 +254,9 @@ proc textBoxKeyboardAction(button: Button) =
         of KeyDelete:
           textBoxFocus.delete(shift)
         of KeyZ:
-          if ctrl and shift:
+          if (ctrl or super) and shift:
             textBoxFocus.redo()
-          elif ctrl:
+          elif ctrl or super:
             textBoxFocus.undo()
         of KeyC: # copy
           if ctrl or super:
@@ -549,7 +549,8 @@ proc processEvents() {.measure.} =
     let cursor = textBoxFocus.cursorRect()
     var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)
     imePos = imePos / pixelRatio
-    window.imePos = imePos.ivec2
+    when compiles(window.imePos):
+      window.imePos = imePos.ivec2
 
   thisSelector = ""
   thisCb = nil
