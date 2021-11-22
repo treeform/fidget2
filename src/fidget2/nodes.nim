@@ -76,6 +76,7 @@ proc copy*(node: Node): Node =
 
 proc newInstance*(node: Node): Node =
   ## Creates a new instance of a master node.
+  doAssert node != nil
   doAssert node.kind == nkComponent
   result = node.copy()
   result.componentId = node.id
