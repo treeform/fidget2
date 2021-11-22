@@ -609,6 +609,7 @@ proc display(withEvents = true) {.measure.} =
 
   window.runeInputEnabled = textBoxFocus != nil
 
+  # thisFrame.dirty = true
   thisFrame.checkDirty()
   if thisFrame.dirty:
     drawToScreen(thisFrame)
