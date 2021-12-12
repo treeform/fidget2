@@ -1,22 +1,25 @@
-import fidget2, puppy, pixie/fileformats/png, print, vmath, strformat
-import fidget2/hybridrender, bumpy, fidget2/common, puppy/pool, tables
+import fidget2, puppy, pixie/fileformats/png, print, vmath, strformat, pixie
+import fidget2/hybridrender, bumpy, fidget2/common, puppy/requestpools, tables
 
 const
   domain1 = "https://c.tile.openstreetmap.org"
   domain2 = "https://t1.openseamap.org/seamark"
 
+type
+  Tile = ref object
+    image: Image
+    node: Node
+    handle: ResponseHandle
+
 var
   mapPos = vec2(0, 0)
   zoom = 1.0
-
-  nodeToHandle: Table[int, (string, RequestHandle)]
-
-openPool()
-
+  tiles: Table[(int, int, int), Tile]
 
 find "/UI/Main":
 
   onDisplay:
+    echo "onDisplay"
 
     if window.buttonDown[MouseMiddle] or window.buttonDown[KeySpace]:
       mapPos += window.mouseDelta.vec2
@@ -28,12 +31,13 @@ find "/UI/Main":
       mapPos = window.mousePos.vec2 - newZoomDelta
 
     var mapNode = find("/UI/Main/Map")
-    mapNode.position = mapPos
-    mapNode.scale = vec2(zoom, zoom)
-    mapNode.dirty = true
+    if mapNode.position != mapPos or mapNode.scale != vec2(zoom, zoom):
+      mapNode.position = mapPos
+      mapNode.scale = vec2(zoom, zoom)
+      mapNode.dirty = true
 
-    var tileNodes = findAll("/UI/Main/Map/*")
     var tileNode = find("/UI/Main/Map/Tile")
+    tileNode.visible = false
 
     let
       level = clamp(int(round(log2(zoom))), 0 .. 19)
@@ -46,67 +50,49 @@ find "/UI/Main":
       xe = min(size - 1, (screenRect.x + screenRect.w).int)
       ys = max(0, screenRect.y.int)
       ye = min(size - 1, (screenRect.y + screenRect.h).int)
-    var i = 0
+
+    #var i = 0
+    #echo xs, "..", xe, " x ", ys, "..", ye
     for x in xs .. xe:
       for y in ys .. ye:
-        let
-          tilePos = vec2(x.float32, y.float32) / size.float32 * 256.0
-          tileScale = vec2(1, 1) / size.float32
+        let loc = (x, y, level)
+        var tile: Tile
+        if loc notin tiles:
+          tile = Tile()
+          tiles[loc] = tile
+          tile.node = tileNode.copy()
+          mapNode.addChild(tile.node)
 
-        # layer one streamaps
-        if tileNodes.len == i:
-          let newTile = tileNode.copy()
-          mapNode.addChild(newTile)
-          tileNodes.add(tileNodes)
+          let imgUrl = &"{domain1}/{level}/{x}/{y}.png"
+          tile.handle = requestPool.fetch(Request(
+            url: parseUrl(imgUrl),
+            verb: "get"
+          ))
 
-        # if tileNodes[i].visible != true or
-        #   tileNodes[i].position != tilePos or
-        #   tileNodes[i].scale != tileScale:
+          let
+            tilePos = vec2(x.float32, y.float32) / size.float32 * 256.0
+            tileScale = vec2(1, 1) / size.float32
+          tile.node.position = tilePos
+          tile.node.scale = tileScale
+          tile.node.visible = false
+        else:
+          tile = tiles[loc]
 
-        let imgUrl = &"{domain1}/{level}/{x}/{y}.png"
-        if imgUrl notin imageCache:
-          if i notin nodeToHandle or nodeToHandle[i][0] != imgUrl:
-            echo "fetch ", imgUrl
-            nodeToHandle[i] = (imgUrl, fetchParallel(Request(
-              url: parseUrl(imgUrl),
-              verb: "get"
-            )))
-          if nodeToHandle[i][1] != -1 and nodeToHandle[i][1].ready:
-            echo "finished ", imgUrl
-            let pngData = nodeToHandle[i][1].response.body
-            let image = decodePng(pngData)
-            imageCache[imgUrl] = image
-            nodeToHandle[i][1] = -1
+        if tile.image == nil and tile.handle.ready:
+          let imgUrl = &"{domain1}/{level}/{x}/{y}.png"
+          tile.image = decodePng(tile.handle.response.body)
+          imageCache[imgUrl] = tile.image
+          tile.node.fills[0].imageRef = imgUrl
 
-        tileNodes[i].fills[0].imageRef = imgUrl
-        tileNodes[i].position = tilePos
-        tileNodes[i].scale = tileScale
-        tileNodes[i].visible = true
-        tileNodes[i].dirty = true
+          tile.node.visible = true
+          tile.node.dirty = true
 
-        inc i
 
-        # # layer two seamaps
-        # if tileNodes.len == i:
-        #   let newTile = tileNode.copy()
-        #   mapNode.addChild(newTile)
-        #   tileNodes.add(tileNodes)
-
-        # if tileNodes[i].visible != true or
-        #   tileNodes[i].position != tilePos or
-        #   tileNodes[i].scale != tileScale:
-
-        #   let imgUrl = &"{domain2}/{level}/{x}/{y}.png"
-        #   echo imgUrl
-        #   tileNodes[i].fills[0].imageUrl = imgUrl
-        #   tileNodes[i].position = tilePos
-        #   tileNodes[i].scale = tileScale
-        #   tileNodes[i].visible = true
-        #   tileNodes[i].dirty = true
-        # inc i
-
-    for j in i ..< tileNodes.len:
-      tileNodes[j].visible = false
+    for loc, tile in tiles:
+      if loc[2] != level:
+        tile.node.visible = false
+      else:
+        tile.node.visible = tile.image != nil
 
 
 startFidget(

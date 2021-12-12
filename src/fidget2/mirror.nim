@@ -1,7 +1,7 @@
 import algorithm, bitty, bumpy, globs, json, loader, math, opengl,
     pixie, schema, sequtils, windy, strformat, tables,
     textboxes, unicode, vmath, times, common, algorithm,
-    nodes, perf, puppy, layout, os, print, strutils
+    nodes, perf, puppy, layout, os, print, strutils,  puppy/requestpools
 
 export textboxes, nodes, common, windy
 
@@ -54,6 +54,7 @@ var
   windowTitle* = "Fidget"
   eventCbs: seq[EventCb]
   requestedFrame*: bool
+  redisplay*: bool
 
   mouse* = Mouse()
   keyboard* = Keyboard()
@@ -65,6 +66,8 @@ var
   selectorStack: seq[string]
 
   navigationHistory*: seq[Node]
+
+  requestPool* = newRequestPool(10)
 
 proc display(withEvents=true)
 
@@ -458,6 +461,13 @@ proc processEvents() {.measure.} =
   if window.buttonDown[MouseLeft]:
     window.closeIme()
 
+  if requestPool.requestsCompleted():
+    echo "some thing to check"
+    redisplay = true
+
+  if window.buttonDown.len > 0 or window.scrollDelta.length != 0:
+    redisplay = true
+
   # Do hovering logic.
   var hovering = false
   if hoverNode != nil:
@@ -502,11 +512,12 @@ proc processEvents() {.measure.} =
 
     of eOnDisplay:
 
-      for node in findAll(thisSelector):
-        if node.inTree(thisFrame):
-          thisNode = node
-          thisCb.handler()
-          thisNode = nil
+      if redisplay:
+        for node in findAll(thisSelector):
+          if node.inTree(thisFrame):
+            thisNode = node
+            thisCb.handler()
+            thisNode = nil
 
     of eOnShow:
 
@@ -551,6 +562,7 @@ proc processEvents() {.measure.} =
 
   thisSelector = ""
   thisCb = nil
+  redisplay = false
 
   if window.buttonPressed[KeyF4]:
     echo "writing atlas"
@@ -609,9 +621,9 @@ proc display(withEvents = true) {.measure.} =
 
   window.runeInputEnabled = textBoxFocus != nil
 
-  thisFrame.dirty = true
   thisFrame.checkDirty()
   if thisFrame.dirty:
+    echo "draw"
     drawToScreen(thisFrame)
     swapBuffers()
   else:
@@ -693,6 +705,8 @@ proc startFidget*(
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
 
   common.running = true
+
+  redisplay = true
 
   when defined(emscripten):
     # Emscripten can't block so it will call this callback instead.
