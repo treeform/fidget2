@@ -238,6 +238,10 @@ proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font {.measure.} =
     if fontName == "" and backup.fontPostScriptName != "":
       fontName = backup.fontPostScriptName
 
+  if fontName == "":
+    # if font name is still blak fall back to fall back font
+    fontName = "NotoSansJP-Regular"
+
   # print style
   # print backup
   # print fontName

@@ -223,6 +223,7 @@ proc textBoxKeyboardAction(button: Button) =
   if textBoxFocus != nil:
     let
       ctrl = window.buttonDown[KeyLeftControl] or window.buttonDown[KeyRightControl]
+      super = window.buttonDown[KeyLeftSuper] or window.buttonDown[KeyRightSuper]
       shift = window.buttonDown[KeyLeftShift] or window.buttonDown[KeyRightShift]
     if textImeEditString == "":
       case button:
@@ -254,24 +255,25 @@ proc textBoxKeyboardAction(button: Button) =
         of KeyBackspace:
           textBoxFocus.backspace(shift)
         of KeyDelete:
-          echo "delete"
           textBoxFocus.delete(shift)
         of KeyZ:
-          if ctrl and shift:
+          if (ctrl or super) and shift:
             textBoxFocus.redo()
-          elif ctrl:
+          elif ctrl or super:
             textBoxFocus.undo()
         of KeyC: # copy
-          if ctrl:
+          if ctrl or super:
             setClipboardString(textBoxFocus.copyText())
         of KeyV: # paste
-          if ctrl:
-            textBoxFocus.pasteText(getClipboardString())
+          if ctrl or super:
+            let s = getClipboardString()
+            echo s
+            textBoxFocus.pasteText(s)
         of KeyX: # cut
-          if ctrl:
+          if ctrl or super:
             setClipboardString(textBoxFocus.cutText())
         of KeyA: # select all
-          if ctrl:
+          if ctrl or super:
             textBoxFocus.selectAll()
         of MouseLeft:
           echo "Click"
@@ -558,7 +560,8 @@ proc processEvents() {.measure.} =
     let cursor = textBoxFocus.cursorRect()
     var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)
     imePos = imePos / pixelRatio
-    window.imePos = imePos.ivec2
+    when compiles(window.imePos):
+      window.imePos = imePos.ivec2
 
   thisSelector = ""
   thisCb = nil
