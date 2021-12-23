@@ -1,10 +1,8 @@
 import vmath, chroma, schema, windy,
     tables, print, loader, bumpy, pixie, options,
-    pixie/fontformats/opentype, print, puppy, perf, unicode
+    pixie/fontformats/opentype, puppy, perf, unicode
 
 export print
-
-type Image = pixie.Image
 
 ## Common vars shared across renderers.
 var
@@ -91,7 +89,7 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
-    let typeface = parseOtf(readFigmaFile(figmaFontPath(fontName)))
+    let typeface = parseOtf(readFile(figmaFontPath(fontName)))
     typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansJP-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])

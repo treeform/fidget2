@@ -1,4 +1,4 @@
-import bumpy, schema, vmath, common, tables, pixie, perf
+import bumpy, schema, vmath, internal, tables, pixie, perf
 
 proc computeTextBounds(node: Node): Vec2 {.measure.} =
   node.computeArrangement()

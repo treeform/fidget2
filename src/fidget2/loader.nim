@@ -1,14 +1,6 @@
-import globs, json, jsony, os, schema, strutils, sets, tables, puppy,
-    zippy/ziparchives
-var
-  archive: ZipArchive
-  figmaFile*: FigmaFile                ## Main figma file.
+import json, jsony, os, schema, strutils, sets, tables, puppy
 
-proc readFigmaFile*(path: string): string =
-  when defined(fidgetUseData):
-    archive.contents[path].contents
-  else:
-    readFile(path)
+var figmaFile*: FigmaFile                ## Main figma file.
 
 proc figmaHeaders(): seq[Header] =
   let figmaToken =
@@ -32,7 +24,7 @@ proc figmaFontPath*(fontPostScriptName: string): string =
   "data/fonts/" & fontPostScriptName & ".ttf"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
-  let data = readFigmaFile(figmaFilePath(fileKey))
+  let data = readFile(figmaFilePath(fileKey))
   parseFigmaFile(data)
 
 proc downloadImage(imageRef, url: string) =
@@ -146,6 +138,9 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
 proc downloadFigmaFile(fileKey: string) =
   ## Download and cache the Figma file for this file key.
+  if not dirExists("data"):
+    createDir("data")
+
   let
     figmaFilePath = figmaFilePath(fileKey)
     lastModifiedPath = lastModifiedFilePath(fileKey)
@@ -166,7 +161,7 @@ proc downloadFigmaFile(fileKey: string) =
       if data != "":
         try:
           let liveFile = parseFigmaFile(data)
-          if liveFile.lastModified == readFigmaFile(lastModifiedPath):
+          if liveFile.lastModified == readFile(lastModifiedPath):
             useCached = true
           else:
             echo "Cached Figma file out of date, downloading latest"
@@ -204,7 +199,6 @@ proc downloadFigmaFile(fileKey: string) =
 proc use*(figmaUrl: string) =
   ## Use the figma url as a new figmaFile.
   ## Will download the full file if it needs to.
-  ## Or used it from the data.fz archive -d:fidgetUseData
   var figmaFileKey: string
 
   let parsed = parseUrl(figmaUrl)
@@ -213,14 +207,5 @@ proc use*(figmaUrl: string) =
   else:
     raise newException(FidgetError, "Invalid Figma URL: " & figmaUrl)
 
-  when defined(fidgetUseData):
-    echo "Reading archive"
-    archive = ZipArchive()
-    archive.open("data.fz")
-    for k in archive.contents.keys:
-      echo k
-  else:
-    if not dirExists("data"):
-      createDir("data")
-    downloadFigmaFile(figmaFileKey)
+  downloadFigmaFile(figmaFileKey)
   figmaFile = loadFigmaFile(figmaFileKey)
