@@ -1,5 +1,5 @@
 import schema, loader, random, algorithm, strutils,
-    flatty/hashy2, vmath, sequtils, common
+    flatty/hashy2, vmath, sequtils, internal
 
 proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
