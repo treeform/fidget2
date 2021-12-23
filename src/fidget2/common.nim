@@ -1,10 +1,8 @@
 import vmath, chroma, schema, windy,
     tables, print, loader, bumpy, pixie, options,
-    pixie/fontformats/opentype, print, puppy, perf, unicode
+    pixie/fontformats/opentype, puppy, perf, unicode
 
 export print
-
-type Image = pixie.Image
 
 ## Common vars shared across renderers.
 var
