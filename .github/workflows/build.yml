@@ -5,15 +5,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
     steps:
     - uses: actions/checkout@v2
     - uses: jiro4989/setup-nim-action@v1
-
-    # - run: sudo apt install -y build-essential libalut-dev libasound2-dev libc6-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev libxxf86vm-dev mesa-utils pkg-config xorg-dev xvfb
-    # - run: nimble test -y
     - run: nimble develop -y
     - run: nim c -r --gc:arc -d:release -d:fidgetUseTestToken -d:cpu tests/run_frames.nim
