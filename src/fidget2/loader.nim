@@ -205,15 +205,13 @@ proc use*(figmaUrl: string) =
   ## Use the figma url as a new figmaFile.
   ## Will download the full file if it needs to.
   ## Or used it from the data.fz archive -d:fidgetUseData
-  let
-    parts = figmaUrl.split("/")
-    figmaFileKey =
-      if parts.len == 1:
-        parts[0]
-      elif parts.len >= 5 and parts[4].len > 0:
-        parts[4]
-      else:
-        raise newException(FidgetError, "Invalid Figma URL: '" & figmaUrl & "'")
+  var figmaFileKey: string
+
+  let parsed = parseUrl(figmaUrl)
+  if parsed.paths.len >= 2:
+    figmaFileKey = parsed.paths[1]
+  else:
+    raise newException(FidgetError, "Invalid Figma URL: " & figmaUrl)
 
   when defined(fidgetUseData):
     echo "Reading archive"
