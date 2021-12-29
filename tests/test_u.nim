@@ -1,4 +1,32 @@
-import fidget2/uni, unicode, sequtils
+import fidget2/u {.all.}, unicode, sequtils
+
+block:
+  var s = "string"
+
+  doAssert s.addr == s.u.str.addr
+
+  let u = s.u
+  doAssert s.addr == u.str.addr
+
+block:
+  var
+    s = "the quick brown fox jumps over the lazy dog"
+    r = s.toRunes()
+
+  doAssert s.u.len == r.len
+
+  for i in 0 ..< r.len:
+    doAssert s.u[i] == r[i]
+
+block:
+  var
+    s = "잠의 병사들이 작은 창과"
+    r = s.toRunes()
+
+  doAssert s.u.len == r.len
+
+  for i in 0 ..< r.len:
+    doAssert s.u[i] == r[i]
 
 block:
   var s = "잠의 병사들이 작은 창과"
