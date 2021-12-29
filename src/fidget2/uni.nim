@@ -1,13 +1,13 @@
-import unicode, strutils
+import strutils, unicode
 
-# fancy .u unicode API that mirrors strings
+## Fancy .u UTF-8 API that mirrors strings.
 
 type U = distinct ptr string
 
-proc u*(s: var string): U =
+proc u*(s: var string): U {.inline.} =
   s.addr.U
 
-proc str(u: U): var string =
+proc str(u: U): var string {.inline.} =
   cast[ptr string](u)[]
 
 proc add*(u: U, r: Rune) =
@@ -24,7 +24,7 @@ proc `[]`*(u: U, i: int): Rune =
 
 proc `[]`*(u: U, i: BackwardsIndex): Rune =
   ## Like [^i] but for unicode runes.
-  u[u.len - i.int]
+  u[u.len - i.int] # u.len is very expensive here, should instead work backwards
 
 proc `[]`*(u: U, slice: HSlice[int, int]): string =
   ## Like [i ..< j] but for unicode runes.
