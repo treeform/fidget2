@@ -46,8 +46,11 @@ block:
 
   doAssert s.u[3 .. 5] == $r[3 .. 5]
 
+  doAssertRaises(IndexDefect):
+    discard s[0 .. s.len]
+
   doAssertRaises(RangeDefect):
-    discard s.u[10 .. 13]
+    discard s.u[0 .. r.len]
 
 block:
   let rune = "창".toRunes()[0]
