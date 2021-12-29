@@ -1,5 +1,4 @@
-import sequtils, pixie, unicode, vmath, bumpy, internal, schema, strutils, nodes,
-    uni
+import sequtils, pixie, unicode, vmath, bumpy, internal, schema, strutils, nodes, u
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about
