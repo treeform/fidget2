@@ -2,6 +2,9 @@ import strutils, unicode
 
 ## Fancy .u UTF-8 API that mirrors strings.
 
+when defined(amd64) and not defined(fidgetNoSimd):
+  import nimsimd/sse2
+
 type U = distinct ptr string
 
 proc u*(s: var string): U {.inline.} =
@@ -14,9 +17,43 @@ proc add*(u: U, r: Rune) =
   ## Like .add but for unicode runes.
   u.str.add($r)
 
+when defined(release):
+  {.push checks: off.}
+
 proc len*(u: U): int =
   ## Like .len but for unicode runes.
-  u.str.runeLen()
+  let byteLen = u.str.len
+
+  var i: int
+  when defined(amd64) and not defined(fidgetNoSimd):
+    for _ in 0 ..< byteLen div 16:
+      let vec = mm_loadu_si128(u.str[i].addr)
+      if mm_movemask_epi8(vec) == 0:
+        # Fast path for ascii
+        i += 16
+        result += 16
+      else:
+        # There are some non-ascii runes present
+        break
+
+  while i < byteLen:
+    if u.str[i].uint <= 127:
+      inc i
+    elif u.str[i].uint shr 5 == 0b110:
+      i += 2
+    elif u.str[i].uint shr 4 == 0b1110:
+      i += 3
+    elif u.str[i].uint shr 3 == 0b11110:
+      i += 4
+    else:
+      inc i
+    inc result
+
+  # If the string is not valid utf-8, it is possible to return a len that is
+  # longer than the string's byte length.
+
+when defined(release):
+  {.pop.}
 
 proc `[]`*(u: U, i: int): Rune =
   ## Like [i] but for unicode runes.
