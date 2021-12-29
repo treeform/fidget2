@@ -41,7 +41,12 @@ proc runeOffsetSafe(s: var string, i: int): int =
 
 proc insert*(s: U, r: Rune, i: int) =
   ## Like .insert but for unicode runes.
-  s.str.insert($r, s.str.runeOffsetSafe(i))
+  let runeOffset =
+    if i == s.len:
+      s.str.len
+    else:
+      s.str.runeOffset(i)
+  s.str.insert($r, runeOffset)
 
 proc delete*(s: U, i: int) =
   ## Like .delete but for unicode runes.

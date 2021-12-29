@@ -40,3 +40,23 @@ block:
 
   doAssertRaises(RangeDefect):
     discard s.u[10 .. 13]
+
+block:
+  let rune = "창".toRunes()[0]
+
+  var s = "잠의병사"
+
+  s.u.insert(rune, 0)
+
+  doAssert s == "창잠의병사"
+
+  s.u.insert(rune, 1)
+
+  doAssert s == "창창잠의병사"
+
+  doAssertRaises(RangeDefect):
+    s.u.insert(rune, 7)
+
+  s.u.insert(rune, 6)
+
+  doAssert s == "창창잠의병사창"
