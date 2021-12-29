@@ -7,58 +7,58 @@ type U = distinct ptr string
 proc u*(s: var string): U =
   s.addr.U
 
-proc str(uu: U): var string =
-  cast[ptr string](uu)[]
+proc str(u: U): var string =
+  cast[ptr string](u)[]
 
-proc add*(s: U, r: Rune) =
+proc add*(u: U, r: Rune) =
   ## Like .add but for unicode runes.
-  s.str.add($r)
+  u.str.add($r)
 
-proc len*(s: U): int =
+proc len*(u: U): int =
   ## Like .len but for unicode runes.
-  s.str.runeLen()
+  u.str.runeLen()
 
-proc `[]`*(s: U, i: int): Rune =
+proc `[]`*(u: U, i: int): Rune =
   ## Like [i] but for unicode runes.
-  s.str.runeAtPos(i)
+  u.str.runeAtPos(i)
 
-proc `[]`*(s: U, i: BackwardsIndex): Rune =
+proc `[]`*(u: U, i: BackwardsIndex): Rune =
   ## Like [^i] but for unicode runes.
-  s[s.len - i.int]
+  u[u.len - i.int]
 
-proc `[]`*(s: U, slice: HSlice[int, int]): string =
+proc `[]`*(u: U, slice: HSlice[int, int]): string =
   ## Like [i ..< j] but for unicode runes.
   let
-    aStart = s.str.runeOffset(slice.a)
-    bStart = s.str.runeOffset(slice.b)
-    bLen = s.str.runeLenAt(bStart)
-  s.str[aStart ..< bStart + bLen]
+    aStart = u.str.runeOffset(slice.a)
+    bStart = u.str.runeOffset(slice.b)
+    bLen = u.str.runeLenAt(bStart)
+  u.str[aStart ..< bStart + bLen]
 
 proc runeOffsetSafe(s: var string, i: int): int =
   result = s.runeOffset(i)
   if result == -1 and i == s.runeLen:
     result = s.len
 
-proc insert*(s: U, r: Rune, i: int) =
+proc insert*(u: U, r: Rune, i: int) =
   ## Like .insert but for unicode runes.
   let runeOffset =
-    if i == s.len:
-      s.str.len
+    if i == u.len:
+      u.str.len
     else:
-      s.str.runeOffset(i)
-  s.str.insert($r, runeOffset)
+      u.str.runeOffset(i)
+  u.str.insert($r, runeOffset)
 
-proc delete*(s: U, i: int) =
+proc delete*(u: U, i: int) =
   ## Like .delete but for unicode runes.
   let
-    loc = s.str.runeOffsetSafe(i)
-    size = s.str.runeLenAt(loc)
-  s.str.delete(loc ..< loc + size)
+    loc = u.str.runeOffsetSafe(i)
+    size = u.str.runeLenAt(loc)
+  u.str.delete(loc ..< loc + size)
 
-proc delete*(s: U, slice: HSlice[int, int]) =
+proc delete*(u: U, slice: HSlice[int, int]) =
   ## Like .delete but for unicode runes.
   let
-    aLoc = s.str.runeOffsetSafe(slice.a)
-    bLoc = s.str.runeOffsetSafe(slice.b)
-    bSize = s.str.runeLenAt(bLoc)
-  s.str.delete(aLoc ..< bLoc + bSize)
+    aLoc = u.str.runeOffsetSafe(slice.a)
+    bLoc = u.str.runeOffsetSafe(slice.b)
+    bSize = u.str.runeLenAt(bLoc)
+  u.str.delete(aLoc ..< bLoc + bSize)
