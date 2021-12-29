@@ -53,6 +53,6 @@ proc `[]`*(s: U, i: BackwardsIndex): Rune =
 proc `[]`*(s: U, slice: HSlice[int, int]): string =
   ## Like [i ..< j] but for unicode runes.
   let
-    aLoc = s.str.runeOffsetSafe(slice.a)
-    bLoc = s.str.runeOffsetSafe(slice.b + 1)
-  s.str[aLoc ..< bLoc]
+    aLoc = s.str.runeOffset(slice.a)
+    bLoc = s.str.runeOffset(slice.b)
+  s.str[aLoc .. bLoc]
