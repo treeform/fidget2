@@ -1,4 +1,4 @@
-import json, jsony, os, schema, strutils, sets, tables, puppy
+import common, json, jsony, os, schema, strutils, sets, tables, puppy
 
 var figmaFile*: FigmaFile                ## Main figma file.
 
