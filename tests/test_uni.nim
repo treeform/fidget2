@@ -30,3 +30,10 @@ block:
   echo r
 
   doAssert s == $r
+
+block:
+  var
+    s = "잠의 병사들이 작은 창과"
+    r = "잠의 병사들이 작은 창과".toRunes()
+
+  doAssert s.u[3 .. 5] == $r[3 .. 5]
