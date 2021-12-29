@@ -18,6 +18,8 @@ block:
 
   doAssert s == $r
 
+  doAssertRaises(RangeDefect):
+    s.u.delete(3)
 
 block:
   var s = "잠의 병"
@@ -26,8 +28,14 @@ block:
   s.u.delete(1 .. 2)
   r.delete(1 .. 2)
 
-  echo s
-  echo r
+  doAssert s == $r
+
+block:
+  var s = "잠의 병"
+  var r = "잠의 병".toRunes()
+
+  s.u.delete(0 .. 3)
+  r.delete(0 .. 3)
 
   doAssert s == $r
 
