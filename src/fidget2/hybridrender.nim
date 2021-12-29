@@ -1,5 +1,5 @@
 import bumpy, math, opengl, pixie, schema, windy, tables, vmath,
-  boxy, common, cpurender, layout, os, perf, nodes, loader
+  boxy, internal, cpurender, layout, os, perf, nodes, loader
 
 export cpurender.underMouse
 
@@ -288,7 +288,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.
 
   if windowFrame != screenNode.size:
-    if windowResizable:
+    if windowStyle == DecoratedResizable:
       # Stretch the current frame to fit the window.
       screenNode.size = windowFrame
     else:
@@ -326,8 +326,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
 proc setupWindow*(
   frameNode: Node,
   offscreen = false,
-  resizable = true,
-  decorated = true,
+  style = DecoratedResizable
 ) =
   ## Opens a new glfw window that is ready to draw into.
   ## Also setups all the shaders and buffers.
@@ -359,8 +358,7 @@ proc setupWindow*(
   #   raise newException(Exception, "Failed to create GLFW window.")
 
   window = newWindow("loading...", viewportSize.ivec2, visible=not offscreen)
-  window.resizable = resizable
-  window.decorated = decorated
+  window.style = style
 
   window.makeContextCurrent()
 

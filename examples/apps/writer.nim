@@ -20,6 +20,5 @@ find "/UI/TextFrame":
 startFidget(
   figmaUrl = "https://www.figma.com/file/PRNHOO9xeHYkq5LskwDn33",
   windowTitle = "Writer",
-  entryFrame = "/UI/TextFrame",
-  resizable = true
+  entryFrame = "/UI/TextFrame"
 )

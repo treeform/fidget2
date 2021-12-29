@@ -1,6 +1,6 @@
 import algorithm, bumpy, globs, json, loader, math, opengl,
     pixie, schema, sequtils, windy, strformat, tables,
-    textboxes, unicode, vmath, times, common, algorithm,
+    textboxes, unicode, vmath, times, internal, algorithm,
     nodes, perf, puppy, layout, os, print, strutils,  puppy/requestpools
 
 export textboxes, nodes, common, windy
@@ -649,8 +649,7 @@ proc startFidget*(
   figmaUrl: string,
   windowTitle: string,
   entryFrame: string,
-  resizable: bool,
-  decorated = true,
+  windowStyle = DecoratedResizable
 ) =
   ## Starts Fidget Main loop.
   currentFigmaUrl = figmaUrl
@@ -660,7 +659,7 @@ proc startFidget*(
   thisFrame = find(entryFramePath)
   if thisFrame == nil:
     quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
-  windowResizable = resizable
+  internal.windowStyle = windowStyle
 
   viewportSize = thisFrame.size
 
@@ -669,8 +668,7 @@ proc startFidget*(
 
   setupWindow(
     thisFrame,
-    resizable = resizable,
-    decorated = decorated
+    style = windowStyle
   )
 
   updateWindowSize()
@@ -702,12 +700,12 @@ proc startFidget*(
         textBoxFocus.makeTextDirty()
 
   window.onCloseRequest = proc() =
-    common.running = false
+    internal.running = false
 
   # Sort fidget user callbacks.
   eventCbs.sort(proc(a, b: EventCb): int = a.priority - b.priority)
 
-  common.running = true
+  internal.running = true
 
   redisplay = true
 
@@ -717,7 +715,7 @@ proc startFidget*(
     emscripten_set_main_loop(mainLoop, 0, true);
   else:
     # When running native code we can block in an infinite loop.
-    while common.running:
+    while internal.running:
       mainLoop()
 
     # Destroy the window.

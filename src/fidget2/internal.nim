@@ -12,8 +12,7 @@ var
   window*: Window
   ## Is the app running offscreen.
   offscreen* = false
-  ## Can this app be resized by the user.
-  windowResizable*: bool
+  windowStyle*: WindowStyle
   ## Is the vsync enabled.
   vSync*: bool = true
 
