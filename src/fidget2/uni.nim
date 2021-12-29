@@ -14,6 +14,26 @@ proc add*(s: U, r: Rune) =
   ## Like .add but for unicode runes.
   s.str.add($r)
 
+proc len*(s: U): int =
+  ## Like .len but for unicode runes.
+  s.str.runeLen()
+
+proc `[]`*(s: U, i: int): Rune =
+  ## Like [i] but for unicode runes.
+  s.str.runeAtPos(i)
+
+proc `[]`*(s: U, i: BackwardsIndex): Rune =
+  ## Like [^i] but for unicode runes.
+  s[s.len - i.int]
+
+proc `[]`*(s: U, slice: HSlice[int, int]): string =
+  ## Like [i ..< j] but for unicode runes.
+  let
+    aStart = s.str.runeOffset(slice.a)
+    bStart = s.str.runeOffset(slice.b)
+    bLen = s.str.runeLenAt(bStart)
+  s.str[aStart ..< bStart + bLen]
+
 proc runeOffsetSafe(s: var string, i: int): int =
   result = s.runeOffset(i)
   if result == -1 and i == s.runeLen:
@@ -37,23 +57,3 @@ proc delete*(s: U, slice: HSlice[int, int]) =
     bLoc = s.str.runeOffsetSafe(slice.b)
     bSize = s.str.runeLenAt(bLoc)
   s.str.delete(aLoc ..< bLoc + bSize)
-
-proc len*(s: U): int =
-  ## Like .len but for unicode runes.
-  s.str.runeLen()
-
-proc `[]`*(s: U, i: int): Rune =
-  ## Like [i] but for unicode runes.
-  s.str.runeAtPos(i)
-
-proc `[]`*(s: U, i: BackwardsIndex): Rune =
-  ## Like [^i] but for unicode runes.
-  s[s.len - i.int]
-
-proc `[]`*(s: U, slice: HSlice[int, int]): string =
-  ## Like [i ..< j] but for unicode runes.
-  let
-    aStart = s.str.runeOffset(slice.a)
-    bStart = s.str.runeOffset(slice.b)
-    bLen = s.str.runeLenAt(bStart)
-  s.str[aStart ..< bStart + bLen]
