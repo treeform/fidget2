@@ -1,6 +1,10 @@
 import schema, loader, random, algorithm, strutils,
     flatty/hashy2, vmath, sequtils, internal
 
+proc deepClone[T](a: T): T =
+  ## Deep copy of the object.
+  deepCopy(result, a)
+
 proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
   node.dirty = true
@@ -69,8 +73,61 @@ proc assignIdsToTree(node: Node) =
 
 proc copy*(node: Node): Node =
   ## Copies a node creating new one.
-  result = deepCopy(node)
-  result.position = vec2(0, 0)
+  #result = deepCopy(node)
+  result = Node()
+
+  template copyField(x: untyped) =
+    result.x = node.x.deepClone()
+
+  # Ids
+  copyField componentId
+  # Transform
+  copyField position
+  copyField orgPosition
+  copyField rotation
+  copyField scale
+  copyField flipHorizontal
+  copyField flipVertical
+  # Shape
+  copyField fillGeometry
+  copyField strokeWeight
+  copyField strokeAlign
+  copyField strokeGeometry
+  copyField cornerRadius
+  copyField rectangleCornerRadii
+  # Visual
+  copyField blendMode
+  copyField fills
+  copyField strokes
+  copyField effects
+  copyField opacity
+  copyField visible
+  # Masking
+  copyField isMask
+  copyField isMaskOutline
+  copyField booleanOperation
+  copyField clipsContent
+  # Text
+  copyField characters
+  copyField style
+  # Layout
+  copyField constraints
+  copyField layoutAlign
+  copyField layoutGrids
+  copyField layoutMode
+  copyField itemSpacing
+  copyField counterAxisSizingMode
+  copyField paddingLeft
+  copyField paddingRight
+  copyField paddingTop
+  copyField paddingBottom
+  copyField overflowDirection
+
+  for child in node.children:
+    child.parent = result
+    result.children.add(child.copy())
+
+  #result.position = vec2(0, 0)
   result.assignIdsToTree()
   #result.markTreeDirty()
 
@@ -131,10 +188,6 @@ func `[]=`*(query: var seq[(string, string)], key, value: string) =
       pair[1] = value
       return
   query.add((key, value))
-
-proc deepClone[T](a: T): T =
-  ## Deep copy of the object.
-  deepCopy(result, a)
 
 proc triMerge(current, prevMaster, currMaster: Node) =
   ## Does a tri merge of the node trees.
