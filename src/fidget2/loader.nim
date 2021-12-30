@@ -1,4 +1,4 @@
-import json, jsony, os, schema, strutils, sets, tables, puppy
+import common, json, jsony, os, schema, strutils, sets, tables, puppy
 
 var figmaFile*: FigmaFile                ## Main figma file.
 
@@ -7,7 +7,7 @@ proc figmaHeaders(): seq[Header] =
     when defined(fidgetUseTestToken):
       "138746-9dc80e99-1680-4571-9bd3-49fbd6b417f4"
     else:
-      readFile(getHomeDir() / ".figmakey").strip()
+      readFile(getHomeDir() / ".figmatoken").strip()
 
   result["X-FIGMA-TOKEN"] = figmaToken
 

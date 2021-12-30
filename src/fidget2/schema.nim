@@ -1,11 +1,9 @@
-import bumpy, chroma, jsony, strutils, tables, pixie, vmath, options, unicode
+import bumpy, chroma, common, jsony, strutils, tables, pixie, vmath, options, unicode
 
 from pixie import Image, newImage, `[]`, `[]=`, strokeSegment, draw, BlendMode,
    Path, WindingRule, PixieError, parsePath
 
 type
-  FidgetError* = object of ValueError ## Raised if an operation fails.
-
   NodeKind* = enum
     nkDocument, nkCanvas
     nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance
