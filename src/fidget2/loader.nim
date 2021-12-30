@@ -3,13 +3,7 @@ import common, json, jsony, os, schema, strutils, sets, tables, puppy
 var figmaFile*: FigmaFile                ## Main figma file.
 
 proc figmaHeaders(): seq[Header] =
-  let figmaToken =
-    when defined(fidgetUseTestToken):
-      "138746-9dc80e99-1680-4571-9bd3-49fbd6b417f4"
-    else:
-      readFile(getHomeDir() / ".figmatoken").strip()
-
-  result["X-FIGMA-TOKEN"] = figmaToken
+  result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmatoken").strip()
 
 proc figmaFilePath(fileKey: string): string =
   "data/" & fileKey & ".json"
