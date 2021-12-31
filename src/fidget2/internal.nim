@@ -109,9 +109,9 @@ proc rectangleFillGeometry(node: Node): Geometry =
       se = node.cornerRadius,
       sw = node.cornerRadius
     )
-  elif node.rectangleCornerRadii.isSome:
+  elif node.rectangleCornerRadii != [0f, 0f, 0f, 0f]:
     # Rectangle with different corners.
-    let radii = node.rectangleCornerRadii.get()
+    let radii = node.rectangleCornerRadii
     result.path.roundedRect(
       rect(0, 0, node.size.x, node.size.y),
       nw = radii[0],
@@ -165,10 +165,10 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
       r-inner, r-inner, r-inner, r-inner,
       clockwise = false
     )
-  elif node.rectangleCornerRadii.isSome:
+  elif node.rectangleCornerRadii != [0f, 0f, 0f, 0f]:
     # Rectangle with different corners.
     let
-      radii = node.rectangleCornerRadii.get()
+      radii = node.rectangleCornerRadii
       nw = radii[0]
       ne = radii[1]
       se = radii[2]
