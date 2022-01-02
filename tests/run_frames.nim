@@ -4,24 +4,9 @@ import fidget2/loader, fidget2/schema, fidget2/perf, fidget2/internal
 when defined(benchy):
   import benchy
 
-when defined(gpu):
-  import fidget2/gpurender
-  const w = "gpu"
-elif defined(cpu):
+when defined(cpu):
   import fidget2/cpurender
   const w = "cpu"
-elif defined(zpu):
-  import fidget2/zpurender
-  const w = "zpu"
-elif defined(gpu_vs_zpu):
-  import fidget2/gpurender, fidget2/zpurender
-  const w = "gpu_vs_zpu"
-elif defined(cpu_vs_hyb):
-  import fidget2/cpurender
-  import fidget2/hybridrender, fidget2/gl/context
-  const w = "cpu_vs_hyb"
-  proc setupWindow(frameNode: Node, offscreen: bool) =
-    hybridrender.setupWindow(frameNode, offscreen)
 elif defined(hyb):
   const w = "hyb"
   import fidget2/hybridrender, boxy
@@ -62,19 +47,11 @@ proc main(r = "", e = "", l = 10000) =
       "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
-      setupWindow(frame, offscreen = true, style = Decorated)
+      setupWindow(frame, visible = false, style = Decorated)
       firstTime = false
 
     proc drawFrame(frame: Node): Image =
-      when defined(gpu):
-        drawToScreen(frame)
-        result = readGpuPixelsFromScreen()
-      elif defined(zpu):
-        result = drawCompleteZpuFrame(frame)
-      elif defined(gpu_vs_zpu):
-        drawGpuFrameToScreen(frame)
-        result = readGpuPixelsFromScreen()
-      elif defined(cpu):
+      when defined(cpu):
         result = drawCompleteFrame(frame)
       elif defined(hyb):
         bxy.clearAtlas()

@@ -212,7 +212,7 @@ proc setupTextBox(node: Node) =
 
 proc relativeMousePos*(window: Window, node: Node): Vec2 =
   let
-    mat = scale(vec2(1, 1) / pixelRatio) *
+    mat = scale(vec2(1, 1) / window.contentScale) *
       node.mat * translate(-node.scrollPos)
   return mat.inverse() * window.mousePos.vec2
 
@@ -412,7 +412,6 @@ proc updateWindowSize() =
   requestedFrame = true
   thisFrame.dirty = true
   viewportSize = window.size.vec2
-  pixelRatio = window.contentScale()
 
 proc onResize() =
   ## Handle window resize glfw callback.
@@ -442,11 +441,7 @@ proc onMouseMove() =
       )
 
 proc swapBuffers() {.measure.} =
-  when not defined(cpu):
-    if vSync:
-      window.swapBuffers()
-    else:
-      glFlush()
+  window.swapBuffers()
 
 proc processEvents() {.measure.} =
 
@@ -557,7 +552,7 @@ proc processEvents() {.measure.} =
   if textBoxFocus != nil:
     let cursor = textBoxFocus.cursorRect()
     var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)
-    imePos = imePos / pixelRatio
+    imePos = imePos / window.contentScale()
     when compiles(window.imePos):
       window.imePos = imePos.ivec2
 
@@ -662,7 +657,7 @@ proc startFidget*(
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
 
-  setupWindow(
+  hybridrender.setupWindow(
     thisFrame,
     style = windowStyle
   )

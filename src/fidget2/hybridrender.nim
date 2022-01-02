@@ -295,7 +295,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
-  viewportSize = (screenNode.size * pixelRatio).ceil
+  viewportSize = (screenNode.size * window.contentScale).ceil
 
   bxy.beginFrame(viewportSize.ivec2)
 
@@ -307,7 +307,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   # screenNode.printDirtyStatus()
 
   # Setup proper matrix for drawing.
-  mat = scale(vec2(pixelRatio, pixelRatio))
+  mat = scale(vec2(window.contentScale, window.contentScale))
   if rtl:
     mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
   mat = mat * screenNode.transform().inverse()
@@ -324,39 +324,10 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
 
 proc setupWindow*(
   frameNode: Node,
-  offscreen = false,
+  visible = true,
   style = DecoratedResizable
 ) =
-  ## Opens a new glfw window that is ready to draw into.
-  ## Also setups all the shaders and buffers.
-
-  # # Init glfw.
-  # let tmp = getCurrentDir()
-  # if init() == 0:
-  #   raise newException(Exception, "Failed to intialize GLFW")
-  # setCurrentDir(tmp)
-
-  # # Open a window.
-  # if not vSync:
-  #   # Disable V-Sync
-  #   windowHint(DOUBLEBUFFER, false.cint)
-
-  # windowHint(VISIBLE, (not offscreen).cint)
-  # windowHint(RESIZABLE, resizable.cint)
-  # windowHint(SAMPLES, 0)
-  # windowHint(CONTEXT_VERSION_MAJOR, 4)
-  # windowHint(CONTEXT_VERSION_MINOR, 1)
-  # windowHint(DECORATED, decorated.cint)
-
-  # window = createWindow(
-  #   viewportSize.x.cint, viewportSize.y.cint,
-  #   "run_shaders",
-  #   nil,
-  #   nil)
-  # if window == nil:
-  #   raise newException(Exception, "Failed to create GLFW window.")
-
-  window = newWindow("loading...", viewportSize.ivec2, visible=not offscreen)
+  window = newWindow("loading...", viewportSize.ivec2, visible=visible)
   window.style = style
 
   window.makeContextCurrent()
@@ -369,7 +340,6 @@ proc setupWindow*(
   echo "GL_VENDOR: ", cast[cstring](glGetString(GL_VENDOR))
   echo "GL_RENDERER: ", cast[cstring](glGetString(GL_RENDERER))
   echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
-
 
   var maxLayers: GLint
   glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, maxLayers.addr)

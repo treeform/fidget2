@@ -10,10 +10,6 @@ var
   viewportSize*: Vec2 = vec2(800, 600)
   ## GLFW Window.
   window*: Window
-  ## Is the app running offscreen.
-  offscreen* = false
-  ## Is the vsync enabled.
-  vSync*: bool = true
 
   ## Cache of typefaces.
   typefaceCache*: Table[string, Typeface]
@@ -29,12 +25,8 @@ var
   fullscreen* = false
   running*: bool
 
-  dpi*: float32            ## Digital pxiels per inch
   rtl*: bool               ## Set Right-to-Left UI mode.
-  ## Multiplier to convert from screen coords to pixels
-  ## Mac retaina dispaly use 2.0.
-  ## While windows can be any multiple.
-  pixelRatio*: float32 = 1.0
+
   ## Pixel multiplier user wants on the UI (used for for pixel indie games)
   pixelScale*: float32 = 1.0
   frameNum*: int
