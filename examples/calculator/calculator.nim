@@ -165,5 +165,5 @@ startFidget(
   figmaUrl = "https://www.figma.com/file/0R8RlgLgwX8R7cG7FczrHO",
   windowTitle = "Neumorphic Calculator",
   entryFrame = "UI/Main",
-  resizable = false
+  windowStyle = Decorated
 )

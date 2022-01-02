@@ -44,7 +44,7 @@ find "/UI/Main":
       size = 2 ^ level
       m = 0.0
       screenRect = rect(
-        -mapPos.x + m, -mapPos.y + m, windowFrame.x - m*2, windowFrame.y - m*2
+        -mapPos.x + m, -mapPos.y + m, window.size.x.float32 - m*2, window.size.y.float32 - m*2
       ) / zoom / 256.0 * size.float32
       xs = max(0, screenRect.x.int)
       xe = min(size - 1, (screenRect.x + screenRect.w).int)

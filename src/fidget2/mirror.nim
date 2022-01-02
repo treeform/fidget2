@@ -411,9 +411,7 @@ proc updateWindowSize() =
   ## Handle window resize.
   requestedFrame = true
   thisFrame.dirty = true
-  # windowSize = window.size.vec2  # decoratedSize ?
-  windowFrame = window.size.vec2
-  viewportSize = windowFrame
+  viewportSize = window.size.vec2
   pixelRatio = window.contentScale()
 
 proc onResize() =
@@ -626,7 +624,6 @@ proc display(withEvents = true) {.measure.} =
 
   thisFrame.checkDirty()
   if thisFrame.dirty:
-    echo "draw"
     drawToScreen(thisFrame)
     swapBuffers()
   else:
@@ -659,7 +656,6 @@ proc startFidget*(
   thisFrame = find(entryFramePath)
   if thisFrame == nil:
     quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
-  internal.windowStyle = windowStyle
 
   viewportSize = thisFrame.size
 

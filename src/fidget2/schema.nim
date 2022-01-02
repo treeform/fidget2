@@ -195,7 +195,6 @@ type
     rotation*: float32
     flipHorizontal*: bool
     flipVertical*: bool
-    relativeTransform: Option[Transform] # Only used during loading.
 
     # Shape
     fillGeometry*: seq[Geometry]
@@ -203,7 +202,7 @@ type
     strokeAlign*: StrokeAlign
     strokeGeometry*: seq[Geometry]
     cornerRadius*: float32                           ## For any shape.
-    rectangleCornerRadii*: Option[array[4, float32]] ## Only for rectangles.
+    rectangleCornerRadii*: array[4, float32] ## Only for rectangles.
 
     # Visual
     blendMode*: BlendMode   ## Blend modes such as darken, screen, overlay...
@@ -224,6 +223,7 @@ type
     style*: TypeStyle
     characterStyleOverrides*: seq[int]
     styleOverrideTable*: Table[string, TypeStyle]
+
     # Non-figma text parameters:
     spans*: seq[Span]
     arrangement*: Arrangement
@@ -276,51 +276,6 @@ type
 
 proc `$`*(node: Node): string =
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
-
-proc newHook(node: var Node) =
-  node = Node()
-  node.visible = true
-  node.opacity = 1.0
-
-proc postHook(node: var Node) =
-  if node.relativeTransform.isSome:
-    # Take figma matrix transform and extract trs from it.
-    let transform = node.relativeTransform.get()
-    node.position = vec2(transform[0][2], transform[1][2])
-    node.rotation = arctan2(transform[0][1], transform[0][0])
-    node.scale = vec2(1, 1)
-    # Extract the flips from the matrix:
-    let
-      actual = rotate(node.rotation)
-      original = mat3(
-        transform[0][0], transform[1][0], 0,
-        transform[0][1], transform[1][1], 0,
-        0, 0, 1,
-      )
-      residual = actual.inverse() * original
-    if residual[0, 0] < 0:
-      node.flipHorizontal = true
-    if residual[1, 1] < 0:
-      node.flipVertical = true
-
-  # Setup the child-parent relationship.
-  for child in node.children:
-    child.parent = node
-
-  # Knowing original position and size is important for layout.
-  node.orgPosition = node.position
-  node.orgSize = node.size
-
-  # Figma API can give us \r\n -> \n
-  # TODO: that might effect styles.
-  # node.characters = node.characters.replace("\r\n", "\n")
-
-  # Node has never been drawn.
-  node.dirty = true
-
-proc renameHook(node: var Node, fieldName: var string) =
-  if fieldName == "type":
-    fieldName = "kind"
 
 proc newHook(v: var Paint) =
   v = Paint()
@@ -568,6 +523,154 @@ proc parseHook(s: string, i: var int, v: var Path) =
   var pathString: string
   parseHook(s, i, pathString)
   v = parsePath(pathString)
+
+type FigmaNode = ref object
+  # Basic Node properties
+  id: string
+  kind: NodeKind
+  name: string
+  children: seq[Node]
+  parent: Node
+  prototypeStartNodeID: string
+  componentId: string
+
+  # Transform
+  size: Vec2
+  relativeTransform: Option[Transform]
+
+  # Shape
+  fillGeometry: seq[Geometry]
+  strokeWeight: float32
+  strokeAlign: StrokeAlign
+  strokeGeometry: seq[Geometry]
+  cornerRadius: float32
+  rectangleCornerRadii: Option[array[4, float32]]
+
+  # Visual
+  blendMode: BlendMode
+  fills: seq[Paint]
+  strokes: seq[Paint]
+  effects: seq[Effect]
+  opacity: Option[float32]
+  visible: Option[bool]
+
+  # Masking
+  isMask: bool
+  isMaskOutline: bool
+  booleanOperation: BooleanOperation
+  clipsContent: bool
+
+  # Text
+  characters: string
+  style: TypeStyle
+  characterStyleOverrides: seq[int]
+  styleOverrideTable: Table[string, TypeStyle]
+
+  # Layout
+  constraints: LayoutConstraint
+  layoutAlign: LayoutAlign
+  layoutGrids: seq[LayoutGrid]
+  layoutMode: LayoutMode
+  itemSpacing: float32
+  counterAxisSizingMode: AxisSizingMode
+  paddingLeft: float32
+  paddingRight: float32
+  paddingTop: float32
+  paddingBottom: float32
+  overflowDirection: OverflowDirection
+
+proc renameHook(node: var FigmaNode, fieldName: var string) =
+  if fieldName == "type":
+    fieldName = "kind"
+
+proc parseHook(s: string, i: var int, node: var Node) =
+  # Handle vectors some times having {x: null, y: null}.
+
+  var f: FigmaNode
+  parseHook(s, i, f)
+  node = Node()
+
+  node.visible = true
+  node.opacity = 1.0
+
+  node.id = f.id
+  node.kind = f.kind
+
+  node.name = f.name
+  node.children = f.children
+  node.parent = f.parent
+  node.prototypeStartNodeID = f.prototypeStartNodeID
+  node.componentId = f.componentId
+  node.fillGeometry = f.fillGeometry
+  node.strokeWeight = f.strokeWeight
+  node.strokeAlign = f.strokeAlign
+  node.strokeGeometry = f.strokeGeometry
+  node.cornerRadius = f.cornerRadius
+  if f.rectangleCornerRadii.isSome:
+    node.rectangleCornerRadii = f.rectangleCornerRadii.get()
+  node.blendMode = f.blendMode
+  node.fills = f.fills
+  node.strokes = f.strokes
+  node.effects = f.effects
+  if f.opacity.isSome:
+    node.opacity = f.opacity.get()
+  if f.visible.isSome:
+    node.visible = f.visible.get()
+  node.isMask = f.isMask
+  node.isMaskOutline = f.isMaskOutline
+  node.booleanOperation = f.booleanOperation
+  node.clipsContent = f.clipsContent
+  node.characters = f.characters
+  node.style = f.style
+  node.characterStyleOverrides = f.characterStyleOverrides
+  node.styleOverrideTable = f.styleOverrideTable
+  node.constraints = f.constraints
+  node.layoutAlign = f.layoutAlign
+  node.layoutGrids = f.layoutGrids
+  node.layoutMode = f.layoutMode
+  node.itemSpacing = f.itemSpacing
+  node.counterAxisSizingMode = f.counterAxisSizingMode
+  node.paddingLeft = f.paddingLeft
+  node.paddingRight = f.paddingRight
+  node.paddingTop = f.paddingTop
+  node.paddingBottom = f.paddingBottom
+  node.overflowDirection = f.overflowDirection
+
+  if f.relativeTransform.isSome:
+    # Take figma matrix transform and extract trs from it.
+    let transform = f.relativeTransform.get()
+    node.position = vec2(transform[0][2], transform[1][2])
+    node.rotation = arctan2(transform[0][1], transform[0][0])
+    node.scale = vec2(1, 1)
+    # Extract the flips from the matrix:
+    let
+      actual = rotate(node.rotation)
+      original = mat3(
+        transform[0][0], transform[1][0], 0,
+        transform[0][1], transform[1][1], 0,
+        0, 0, 1,
+      )
+      residual = actual.inverse() * original
+    if residual[0, 0] < 0:
+      node.flipHorizontal = true
+    if residual[1, 1] < 0:
+      node.flipVertical = true
+  node.size = f.size
+
+  # Setup the child-parent relationship.
+  for child in node.children:
+    child.parent = node
+
+  # Knowing original position and size is important for layout.
+  node.orgPosition = node.position
+  node.orgSize = node.size
+
+  # Figma API can give us \r\n -> \n
+  # TODO: that might effect styles.
+  # node.characters = node.characters.replace("\r\n", "\n")
+
+  # Node has never been drawn.
+  node.dirty = true
 
 proc parseFigmaFile*(data: string): FigmaFile =
   data.fromJson(FigmaFile)

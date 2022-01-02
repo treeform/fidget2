@@ -566,21 +566,7 @@ proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
 proc setupWindow*(
   frameNode: Node,
   offscreen = false,
-  resizable = true
+  style = Decorated
 ) =
-  ## Opens a new glfw window that is ready to draw into.
-
-  # if init() == 0:
-  #   raise newException(Exception, "Failed to intialize GLFW")
-  # windowHint(VISIBLE, (not offscreen).cint)
-  # windowHint(RESIZABLE, resizable.cint)
-  # windowHint(CLIENT_API, NO_API)
-  # window = createWindow(
-  #   viewportSize.x.cint, viewportSize.y.cint,
-  #   "loading...",
-  #   nil,
-  #   nil)
-  # if window == nil:
-  #   raise newException(Exception, "Failed to create GLFW window.")
-
-  window = newWindow("loading..", viewportSize.ivec2)
+  window = newWindow("loading..", viewportSize.ivec2, visible=not offscreen)
+  window.style = style

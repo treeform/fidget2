@@ -1,5 +1,5 @@
-import cligen, os, pixie, strformat, strutils, times
-import fidget2/loader, fidget2/schema, fidget2/perf
+import cligen, os, pixie, strformat, strutils, times, windy
+import fidget2/loader, fidget2/schema, fidget2/perf, fidget2/internal
 
 when defined(benchy):
   import benchy
@@ -62,7 +62,7 @@ proc main(r = "", e = "", l = 10000) =
       "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
-      setupWindow(frame, offscreen = true, resizable = false)
+      setupWindow(frame, offscreen = true, style = Decorated)
       firstTime = false
 
     proc drawFrame(frame: Node): Image =
