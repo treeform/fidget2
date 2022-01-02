@@ -295,7 +295,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
-  viewportSize = (screenNode.size * pixelRatio).ceil
+  viewportSize = (screenNode.size * window.contentScale).ceil
 
   bxy.beginFrame(viewportSize.ivec2)
 
@@ -307,7 +307,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   # screenNode.printDirtyStatus()
 
   # Setup proper matrix for drawing.
-  mat = scale(vec2(pixelRatio, pixelRatio))
+  mat = scale(vec2(window.contentScale, window.contentScale))
   if rtl:
     mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
   mat = mat * screenNode.transform().inverse()
