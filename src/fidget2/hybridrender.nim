@@ -291,7 +291,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
-  viewportSize = (screenNode.size * pixelRatio).ceil
+  viewportSize = (screenNode.size *  window.contentScale).ceil
 
   bxy.beginFrame(viewportSize.ivec2)
 
