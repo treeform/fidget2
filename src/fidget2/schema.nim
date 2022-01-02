@@ -277,8 +277,6 @@ type
 proc `$`*(node: Node): string =
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
-
-
 proc newHook(v: var Paint) =
   v = Paint()
   v.visible = true
@@ -537,7 +535,7 @@ type FigmaNode = ref object
   componentId: string
 
   # Transform
-  size*: Vec2   ## Size of the box in pixels.
+  size: Vec2
   relativeTransform: Option[Transform]
 
   # Shape
@@ -563,10 +561,10 @@ type FigmaNode = ref object
   clipsContent: bool
 
   # Text
-  characters*: string
-  style*: TypeStyle
-  characterStyleOverrides*: seq[int]
-  styleOverrideTable*: Table[string, TypeStyle]
+  characters: string
+  style: TypeStyle
+  characterStyleOverrides: seq[int]
+  styleOverrideTable: Table[string, TypeStyle]
 
   # Layout
   constraints: LayoutConstraint

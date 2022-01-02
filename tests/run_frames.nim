@@ -62,7 +62,7 @@ proc main(r = "", e = "", l = 10000) =
       "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
-      setupWindow(frame, offscreen = true, resizable = false)
+      setupWindow(frame)
       firstTime = false
 
     proc drawFrame(frame: Node): Image =
