@@ -287,16 +287,15 @@ proc drawWithAtlas(node: Node) {.measure.} =
 proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.
 
-  if windowFrame != screenNode.size:
-    if windowStyle == DecoratedResizable:
+  if window.size.vec2 != screenNode.size:
+    if window.style == DecoratedResizable:
       # Stretch the current frame to fit the window.
-      screenNode.size = windowFrame
+      screenNode.size = window.size.vec2
     else:
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
   viewportSize = (screenNode.size * pixelRatio).ceil
-
 
   bxy.beginFrame(viewportSize.ivec2)
 

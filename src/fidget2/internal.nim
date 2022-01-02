@@ -12,7 +12,6 @@ var
   window*: Window
   ## Is the app running offscreen.
   offscreen* = false
-  windowStyle*: WindowStyle
   ## Is the vsync enabled.
   vSync*: bool = true
 
@@ -29,7 +28,7 @@ var
 
   fullscreen* = false
   running*: bool
-  windowFrame*: Vec2       ## Pixel coordinates
+
   dpi*: float32            ## Digital pxiels per inch
   rtl*: bool               ## Set Right-to-Left UI mode.
   ## Multiplier to convert from screen coords to pixels
