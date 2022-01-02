@@ -626,7 +626,6 @@ proc display(withEvents = true) {.measure.} =
 
   thisFrame.checkDirty()
   if thisFrame.dirty:
-    echo "draw"
     drawToScreen(thisFrame)
     swapBuffers()
   else:
