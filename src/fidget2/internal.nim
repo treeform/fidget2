@@ -10,8 +10,7 @@ var
   viewportSize*: Vec2 = vec2(800, 600)
   ## GLFW Window.
   window*: Window
-  ## Is the app running offscreen.
-  offscreen* = false
+
   ## Is the vsync enabled.
   vSync*: bool = true
 

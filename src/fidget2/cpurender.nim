@@ -565,8 +565,8 @@ proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
 
 proc setupWindow*(
   frameNode: Node,
-  offscreen = false,
+  visible = true,
   style = Decorated
 ) =
-  window = newWindow("loading..", viewportSize.ivec2, visible=not offscreen)
+  window = newWindow("loading..", viewportSize.ivec2, visible=visible)
   window.style = style
