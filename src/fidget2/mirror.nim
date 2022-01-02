@@ -442,11 +442,7 @@ proc onMouseMove() =
       )
 
 proc swapBuffers() {.measure.} =
-  when not defined(cpu):
-    if vSync:
-      window.swapBuffers()
-    else:
-      glFlush()
+  window.swapBuffers()
 
 proc processEvents() {.measure.} =
 

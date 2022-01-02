@@ -11,9 +11,6 @@ var
   ## GLFW Window.
   window*: Window
 
-  ## Is the vsync enabled.
-  vSync*: bool = true
-
   ## Cache of typefaces.
   typefaceCache*: Table[string, Typeface]
   ## Cache of images.
