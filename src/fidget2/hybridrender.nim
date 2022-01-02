@@ -137,11 +137,8 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
         layer.fill(color(1,1,1,1))
         let prevBoundsMat = mat
         mat = translate(-node.pixelBox.xy) * mat
-        #print node.name
         var mask = node.maskSelfImage()
-        #layer.writeFile("mask.png")
         layer.draw(mask, blendMode = bmMask)
-        #layer.writeFile("layer.png")
 
         bxy.addImage(node.id & ".mask", layer, genMipmaps=false)
         mat = prevBoundsMat
@@ -202,7 +199,6 @@ proc drawWithAtlas(node: Node) {.measure.} =
       let image = imageCache[paint.imageRef]
       case paint.scaleMode:
       of smFill:
-        #print "fill", node.name, node.mat, node.pixelBox.xy #, paint.imageTransform
         let
           ratioW = image.width.float32 / node.size.x
           ratioH = image.height.float32 / node.size.y
@@ -295,7 +291,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
-  viewportSize = (screenNode.size * window.contentScale).ceil
+  viewportSize = (screenNode.size * pixelRatio).ceil
 
   bxy.beginFrame(viewportSize.ivec2)
 
@@ -303,24 +299,16 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
     # TODO: figure out how to call layout only once.
     computeLayout(nil, screenNode)
 
-  # echo "before"
-  # screenNode.printDirtyStatus()
-
   # Setup proper matrix for drawing.
   mat = scale(vec2(window.contentScale, window.contentScale))
   if rtl:
     mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
   mat = mat * screenNode.transform().inverse()
 
-  #mat = mat * scale(vec2(-1, 1)) #* translate(vec2(-screenNode.size.x/2, 0))
-
   drawToAtlas(screenNode, 0)
 
   drawWithAtlas(screenNode)
   bxy.endFrame()
-
-  # echo "after"
-  # screenNode.printDirtyStatus()
 
 proc setupWindow*(
   frameNode: Node,
@@ -380,7 +368,6 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       mat = scale(vec2(s, s))
       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
       node.drawNodeInternal(withChildren=true)
-      #layer.writeFile("freeze." & node.name & ".png")
       bxy.addImage(node.frozenId, layer, genMipmaps=true)
   else:
     echo "Warning: Freezing non instance"
@@ -390,5 +377,4 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       mat = scale(vec2(s, s))
       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
       node.drawNodeInternal(withChildren=true)
-      #layer.writeFile("freeze." & node.name & ".png")
       bxy.addImage(node.frozenId, layer, genMipmaps=true)

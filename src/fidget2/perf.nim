@@ -21,9 +21,7 @@ proc measurePush*(what: string) =
   if measureStack.len > 0:
     let dt = now - measureStart
     let key = measureStack[^1]
-    #echo " ".repeat(measureStack.len), "+ ", dt.float / 1000000.0, " to ", key
     measures.inc(key, dt)
-  #echo " ".repeat(measureStack.len), "{ ", what
   measureStart = now
   measureStack.add(what)
   calls.inc(what)
@@ -33,8 +31,6 @@ proc measurePop*() =
   let now = getTicks()
   let key = measureStack.pop()
   let dt = now - measureStart
-  #echo " ".repeat(measureStack.len + 1), "+ ", dt.float / 1000000.0, " to ", key
-  #echo " ".repeat(measureStack.len), "} ", key
   measures.inc(key, dt)
   measureStart = now
 

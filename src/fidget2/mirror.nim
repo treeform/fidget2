@@ -316,7 +316,6 @@ proc onScroll() =
       # TODO make it scroll both x and y.
       node.scrollPos.y -= window.scrollDelta.y * 50
 
-      #if node.collapse:
       node.dirty = true
 
       let bounds = node.computeScrollBounds()
@@ -372,7 +371,6 @@ template onEdit*(body: untyped) =
         for node in figmaFile.document.findAll(thisSelector):
           if textBoxFocus == node and textBoxFocus.dirty:
             thisNode = node
-            #textBoxFocus.characters = $textBoxFocus.arrangement.runes
             body
             thisNode = nil
   )
@@ -574,10 +572,8 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
   when not defined(emscripten):
     if url notin imageCache:
       let fileKey = "cache/" & url.replace("/", "_").replace(":", "_").replace(".", "_").replace("?", "_")
-      #echo fileKey
       var imageData = ""
       if existsFile(fileKey):
-        #echo "read file"
         imageData = readFile(fileKey)
       else:
         imageData = fetch(url)
@@ -595,7 +591,6 @@ proc navigateTo*(fullPath: string, smart = false) =
   thisFrame = find(fullPath)
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame '{fullPath}' not found")
-  #bxy.clearAtlas()
   thisFrame.markTreeDirty()
 
 proc navigateBack*() =
@@ -603,7 +598,6 @@ proc navigateBack*() =
   if navigationHistory.len == 0:
     raise newException(FidgetError, &"The navigation history is empty!")
   thisFrame = navigationHistory.pop()
-  #bxy.clearAtlas()
   thisFrame.markTreeDirty()
 
 proc display(withEvents = true) {.measure.} =

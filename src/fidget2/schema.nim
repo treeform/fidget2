@@ -328,8 +328,8 @@ proc enumHook(s: string, v: var TextCase) =
     of "LOWER": tcLower
     of "TITLE": tcTitle
     # TODO add:
-    #of "SMALL_CAPS": tcSmallCaps
-    #of "SMALL_CAPS_FORCED": tcCapsForced
+    # of "SMALL_CAPS": tcSmallCaps
+    # of "SMALL_CAPS_FORCED": tcCapsForced
     else: tcNormal
 
 proc enumHook(s: string, v: var NodeKind) =

@@ -75,7 +75,6 @@ proc multilineCheck(node: Node) =
   ## Makes sure there are not new lines in a single line text box.
   if not node.multiline:
     echo "fix non multiline"
-    #node.characters.u.keepIf(proc (r: Rune): bool = r != Rune(10))
 
 proc layout*(node: Node): seq[Rect] =
   return node.arrangement.selectionRects
@@ -149,7 +148,6 @@ proc redo*(node: Node) =
     node.selector = node.cursor
 
 proc runesChanged(node: Node) =
-  #node.characters = $node.characters.u
   node.makeTextDirty()
 
 proc removedSelection*(node: Node): bool =

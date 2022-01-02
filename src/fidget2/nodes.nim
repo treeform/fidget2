@@ -73,7 +73,6 @@ proc assignIdsToTree(node: Node) =
 
 proc copy*(node: Node): Node =
   ## Copies a node creating new one.
-  #result = deepCopy(node)
   result = Node()
 
   template copyField(x: untyped) =
@@ -127,9 +126,8 @@ proc copy*(node: Node): Node =
     child.parent = result
     result.children.add(child.copy())
 
-  #result.position = vec2(0, 0)
   result.assignIdsToTree()
-  #result.markTreeDirty()
+
 
 proc newInstance*(node: Node): Node =
   ## Creates a new instance of a master node.
