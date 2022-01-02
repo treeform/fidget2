@@ -1,8 +1,5 @@
 import bumpy, chroma, common, jsony, strutils, tables, pixie, vmath, options, unicode
 
-from pixie import Image, newImage, `[]`, `[]=`, strokeSegment, draw, BlendMode,
-   Path, WindingRule, PixieError, parsePath
-
 type
   NodeKind* = enum
     nkDocument, nkCanvas
@@ -50,11 +47,6 @@ type
     ## A 2D affine transformation matrix that can be used to calculate the
     ## affine transforms applied to a layer, including scaling,
     ## rotation, shearing, and translation.
-
-  ColorStop* = object
-    ## Color stop on a gradient curve.
-    color*: Color  ## Color of the stop
-    position*: float32 ## Gradient Stop position 0..1.
 
   Paint* = ref object
     blendMode*: BlendMode
