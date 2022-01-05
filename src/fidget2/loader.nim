@@ -6,16 +6,16 @@ proc figmaHeaders(): seq[Header] =
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmatoken").strip()
 
 proc figmaFilePath(fileKey: string): string =
-  "data/" & fileKey & ".json"
+  "data/fidget/" & fileKey & ".json"
 
 proc lastModifiedFilePath(fileKey: string): string =
-  "data/" & fileKey & ".lastModified"
+  "data/fidget/" & fileKey & ".lastModified"
 
 proc figmaImagePath*(imageRef: string): string =
-  "data/images/" & imageRef & ".png"
+  "data/fidget/images/" & imageRef & ".png"
 
 proc figmaFontPath*(fontPostScriptName: string): string =
-  "data/fonts/" & fontPostScriptName & ".ttf"
+  "data/fidget/fonts/" & fontPostScriptName & ".ttf"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
   let data = readFile(figmaFilePath(fileKey))
@@ -33,8 +33,8 @@ proc downloadImage(imageRef, url: string) =
     writeFile(imagePath, response.body)
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
-  if not dirExists("data/images"):
-    createDir("data/images")
+  if not dirExists("data/fidget/images"):
+    createDir("data/fidget/images")
 
   # Walk the Figma file and find all the images used
 
@@ -88,8 +88,8 @@ proc downloadFont(fontPostScriptName: string) =
     writeFile(fontPath, response.body)
 
 proc downloadFonts(figmaFile: FigmaFile) =
-  if not dirExists("data/fonts"):
-    createDir("data/fonts")
+  if not dirExists("data/fidget/fonts"):
+    createDir("data/fidget/fonts")
 
   # Walk the Figma file and find all the fonts used
 
@@ -137,8 +137,8 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
 proc downloadFigmaFile(fileKey: string) =
   ## Download and cache the Figma file for this file key.
-  if not dirExists("data"):
-    createDir("data")
+  if not dirExists("data/fidget"):
+    createDir("data/fidget")
 
   let
     figmaFilePath = figmaFilePath(fileKey)
