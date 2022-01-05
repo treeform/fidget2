@@ -22,12 +22,15 @@ proc loadFigmaFile(fileKey: string): FigmaFile =
   parseFigmaFile(data)
 
 proc downloadImage(imageRef, url: string) =
-  if not fileExists(figmaImagePath(imageRef)):
+  let imagePath = figmaImagePath(imageRef)
+  if not fileExists(imagePath):
     echo "Downloading ", url
-    let data = fetch(url)
-    if data == "":
+    let
+      request = newRequest(url)
+      response = fetch(request)
+    if response.code != 200:
       raise newException(FidgetError, "Downloading " & url & " failed")
-    writeFile(figmaImagePath(imageRef), data)
+    writeFile(imagePath, response.body)
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
   if not dirExists("data/images"):
@@ -76,11 +79,13 @@ proc downloadFont(fontPostScriptName: string) =
     const baseUrl = "https://github.com/treeform/fidgetfonts/raw/main/fonts/"
     let url = baseUrl & fontPostScriptName & ".ttf"
     echo "Font not found: ", fontPath
-    echo "Downloading: ", url
-    let data = fetch(url)
-    if data == "":
+    echo "Downloading ", url
+    let
+      request = newRequest(url)
+      response = fetch(request)
+    if response.code != 200:
       raise newException(FidgetError, "Downloading " & url & " failed")
-    writeFile(fontPath, data)
+    writeFile(fontPath, response.body)
 
 proc downloadFonts(figmaFile: FigmaFile) =
   if not dirExists("data/fonts"):
@@ -147,48 +152,43 @@ proc downloadFigmaFile(fileKey: string) =
       # If we have a saved Figma file, is it up to date?
       let
         url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
-        data = fetch(url, headers = figmaHeaders())
-      if data == "":
-        echo "Failed to get live Figma file: " & getCurrentExceptionMsg()
-        useCached = true
-
-      if data != "":
-        try:
-          let liveFile = parseFigmaFile(data)
-          if liveFile.lastModified == readFile(lastModifiedPath):
-            useCached = true
-          else:
-            echo "Cached Figma file out of date, downloading latest"
-        except:
-          echo "Unexpected error while validating cached Figma file: " &
-            getCurrentExceptionMsg()
+        request = newRequest(url, headers = figmaHeaders())
+        response = fetch(request)
+      if response.code == 200:
+        let liveFile = parseFigmaFile(response.body)
+        if liveFile.version == readFile(lastModifiedPath):
+          useCached = true
+        else:
+          echo "Cached Figma file out of date, downloading latest"
 
   if useCached:
     echo "Using cached Figma file"
     return
 
-  # Download and save the latest Figma file
   let
     url = "https://api.figma.com/v1/files/" & fileKey & "?geometry=paths"
-    data = fetch(url, headers = figmaHeaders())
-  if data != "":
-    let
-      liveFile = parseFigmaFile(data)
-      json = data.fromJson(JsonNode)
-    # Download images and fonts before writing the cached Figma file.
-    # This way we either do or do not have a complete valid cache if we have a
-    # lastModified file. This is important for falling back to cached data
-    # in the event the API returns an error.
-    downloadImages(fileKey, liveFile)
-    downloadFonts(liveFile)
-    writeFile(figmaFilePath, pretty(json))
-    writeFile(lastModifiedPath, liveFile.lastModified)
-    echo "Downloaded latest Figma file"
-  else:
+    request = newRequest(url, headers = figmaHeaders())
+    response = fetch(request)
+
+  if response.code != 200:
     raise newException(
       FidgetError,
-      "Error downloading Figma file: " & getCurrentExceptionMsg()
+      "Error downloading Figma file, status code: " & $response.code & "\n" &
+      response.body
     )
+
+  let
+    liveFile = parseFigmaFile(response.body)
+    json = response.body.fromJson(JsonNode)
+  # Download images and fonts before writing the cached Figma file.
+  # This way we either do or do not have a complete valid cache if we have a
+  # version file. This is important for falling back to cached data
+  # in the event the API returns an error.
+  downloadImages(fileKey, liveFile)
+  downloadFonts(liveFile)
+  writeFile(figmaFilePath, pretty(json))
+  writeFile(lastModifiedPath, liveFile.lastModified)
+  echo "Downloaded latest Figma file"
 
 proc use*(figmaUrl: string) =
   ## Use the figma url as a new figmaFile.
