@@ -52,6 +52,19 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
 
   walk(figmaFile.document)
 
+  # Walk images dir and remove any unused images
+
+  for kind, path in walkDir("data/fidget/images", relative = true):
+    case kind:
+    of pcFile:
+      let (_, imageRef, _) = splitFile(path)
+      if imageRef notin imagesUsed:
+        removeFile(figmaImagePath(imageRef))
+    of pcDir:
+      removeDir("data/fidget/images" / path)
+    of pcLinkToFile, pcLinkToDir:
+      removeFile("data/fidget/images" / path)
+
   # Check if we need to download any images
 
   var needsDownload: bool
@@ -119,6 +132,19 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   walk(figmaFile.document)
 
+  # Walk font dir and remove any unused fonts
+
+  for kind, path in walkDir("data/fidget/fonts", relative = true):
+    case kind:
+    of pcFile:
+      let (_, name, _) = splitFile(path)
+      if name notin fontsUsed:
+        removeFile(figmaFontPath(name))
+    of pcDir:
+      removeDir("data/fidget/fonts" / path)
+    of pcLinkToFile, pcLinkToDir:
+      removeFile("data/fidget/fonts" / path)
+
   # Check if we need to download any fonts
 
   var needsDownload: bool
@@ -142,13 +168,27 @@ proc downloadFigmaFile(fileKey: string) =
 
   let
     figmaFilePath = figmaFilePath(fileKey)
-    lastModifiedPath = lastModifiedFilePath(fileKey)
+    lastModifiedFilePath = lastModifiedFilePath(fileKey)
+
+  # Walk data/fidget dir and remove any unexpected entries
+
+  for kind, path in walkDir("data/fidget", relative = true):
+    case kind:
+    of pcFile:
+      let (_, name, _) = splitFile(path)
+      if name != fileKey:
+        removeFile("data/fidget" / path)
+    of pcDir:
+      if path notin ["images", "fonts"]:
+        removeDir("data/fidget" / path)
+    of pcLinkToFile, pcLinkToDir:
+      removeFile("data/fidget" / path)
 
   var useCached: bool
   when defined(fidgetUseCached):
     useCached = true
   else:
-    if fileExists(figmaFilePath) and fileExists(lastModifiedPath):
+    if fileExists(figmaFilePath) and fileExists(lastModifiedFilePath):
       # If we have a saved Figma file, is it up to date?
       let
         url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
@@ -156,7 +196,7 @@ proc downloadFigmaFile(fileKey: string) =
         response = fetch(request)
       if response.code == 200:
         let liveFile = parseFigmaFile(response.body)
-        if liveFile.lastModified == readFile(lastModifiedPath):
+        if liveFile.lastModified == readFile(lastModifiedFilePath):
           useCached = true
         else:
           echo "Cached Figma file out of date, downloading latest"
@@ -187,7 +227,7 @@ proc downloadFigmaFile(fileKey: string) =
   downloadImages(fileKey, liveFile)
   downloadFonts(liveFile)
   writeFile(figmaFilePath, pretty(json))
-  writeFile(lastModifiedPath, liveFile.lastModified)
+  writeFile(lastModifiedFilePath, liveFile.lastModified)
   echo "Downloaded latest Figma file"
 
 proc use*(figmaUrl: string) =
