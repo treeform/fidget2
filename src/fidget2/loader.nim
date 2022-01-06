@@ -156,7 +156,7 @@ proc downloadFigmaFile(fileKey: string) =
         response = fetch(request)
       if response.code == 200:
         let liveFile = parseFigmaFile(response.body)
-        if liveFile.version == readFile(lastModifiedPath):
+        if liveFile.lastModified == readFile(lastModifiedPath):
           useCached = true
         else:
           echo "Cached Figma file out of date, downloading latest"
