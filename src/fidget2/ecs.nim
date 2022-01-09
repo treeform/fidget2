@@ -24,20 +24,20 @@ proc clear*(t: typedesc[Entity]) =
 
 template attachAs*(componentType: typedesc, name: untyped, ) =
 
-  var `name Seq`* {.inject.} = newSeq[(bool, componentType)](1000)
+  var `name Seq`* = newSeq[(bool, componentType)](1000)
 
-  proc name* (entity: Entity): var componentType {.inject.} =
+  proc name* (entity: Entity): var componentType =
     `name Seq`[entity][1]
 
-  proc `name=`* (entity: Entity, component: componentType) {.inject.} =
+  proc `name=`* (entity: Entity, component: componentType) =
     if `name Seq`.len <= entity.int:
       `name Seq`.setLen(entity + 1)
     `name Seq`[entity] = (true, component)
 
-  proc `has componentType`* (entity: Entity): bool {.inject.} =
+  proc `has componentType`* (entity: Entity): bool =
     `name Seq`[entity][0]
 
-  iterator `mpairs`*(t: typedesc[componentType]): (Entity, var componentType) {.inject.} =
+  iterator `mpairs`*(t: typedesc[componentType]): (Entity, var componentType) =
     for (e, hc) in `name Seq`.mpairs:
       if hc[0]:
         yield (e.Entity, hc[1])
@@ -58,18 +58,18 @@ proc initKey*[K, V](t: var Table[K, V] , k: K): var V =
 
 template attachUncommonAs*(componentType: typedesc, name: untyped) =
 
-  var `name Hash`* {.inject.}: Table[Entity, componentType]
+  var `name Hash`*: Table[Entity, componentType]
 
-  proc name* (entity: Entity): var componentType {.inject.} =
+  proc name* (entity: Entity): var componentType =
     `name Hash`[entity]
 
-  proc `name=`* (entity: Entity, component: componentType) {.inject.} =
+  proc `name=`* (entity: Entity, component: componentType) =
     `name Hash`[entity] = component
 
-  proc `has componentType`* (entity: Entity): bool {.inject.} =
+  proc `has componentType`* (entity: Entity): bool =
     entity in `name Hash`
 
-  iterator `mpairs`*(t: typedesc[componentType]): (Entity, var componentType) {.inject.} =
+  iterator `mpairs`*(t: typedesc[componentType]): (Entity, var componentType) =
     for (e, c) in `name Hash`.mpairs():
       yield (e, c)
 
