@@ -1,5 +1,5 @@
 import bumpy, math, opengl, pixie, schema, windy, tables, vmath,
-  boxy, internal, cpurender, layout, os, perf, nodes, loader
+  boxy, internal, cpurender, layout, os, perf, nodes, loader, common
 
 export cpurender.underMouse
 

@@ -164,5 +164,5 @@ startFidget(
   figmaUrl = "https://www.figma.com/file/9tysxPLtgKmrmsrwbVSROm/Bubbleats",
   windowTitle = "Bubbleats",
   entryFrame = "Main/PlayArea",
-  resizable = false
+  windowStyle = Decorated
 )

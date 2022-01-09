@@ -4,5 +4,5 @@ startFidget(
   figmaUrl = "https://www.figma.com/file/FYpiqnazfZ2Qk4oJi9sLwa/Figma-Inspector",
   windowTitle = "Inspector",
   entryFrame = "Main/InspectorWhite",
-  resizable = true
+  windowStyle = DecoratedResizable
 )

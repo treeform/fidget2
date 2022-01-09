@@ -1,7 +1,8 @@
-import ../../fidget/mirror/mirror
+import fidget2
 
-use("https://www.figma.com/file/AzRTd8mpSIKbD8vgVg40RW")
-
-mainFrame = "Uber Light UI Kit"
-windowSizeFixed = true
-startFidget()
+startFidget(
+  figmaUrl = "https://www.figma.com/file/AzRTd8mpSIKbD8vgVg40RW",
+  windowTitle = "Uber Light UI Kit",
+  entryFrame = "/Cover/UberLightUIKit",
+  windowStyle = Decorated
+)

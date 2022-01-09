@@ -1,6 +1,6 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     internal, windy, pixie, textboxes, perf,
-    layout
+    layout, common
 
 type Image = pixie.Image
 type Paint = schema.Paint
