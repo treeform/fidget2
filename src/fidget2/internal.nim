@@ -20,23 +20,16 @@ var
   ## Node that currently is being hovered over.
   hoverNode*: Node
 
-  fullscreen* = false
   running*: bool
 
   rtl*: bool               ## Set Right-to-Left UI mode.
 
-  ## Pixel multiplier user wants on the UI (used for for pixel indie games)
-  pixelScale*: float32 = 1.0
-  frameNum*: int
-
   currentFigmaUrl*: string
   entryFramePath*: string
 
-  textImeEditLocation*: int
-  textImeEditString*: string
-
   ## Nodes that is focused and has the current text box.
   textBoxFocus*: Node
+
   ## Default text highlight color (blueish by default).
   defaultTextBackgroundHighlightColor* = rgbx(50, 150, 250, 255)
   defaultTextHighlightColor* = color(1, 1, 1, 1)
@@ -347,11 +340,11 @@ proc computeArrangement*(node: Node) {.measure.} =
       for modSpan in node.spans.modifySpans(node.selection()):
         modSpan.font.paint = defaultTextHighlightColor
 
-    elif textImeEditString != "":
+    elif window.imeCompositionString != "":
       let imeSlice = HSlice[int, int](a: node.cursor, b: node.cursor)
       for modSpan in node.spans.modifySpans(imeSlice):
         modSpan.font.underline = true
-        modSpan.text = textImeEditString
+        modSpan.text = window.imeCompositionString
 
     if node.spans.len == 1 and node.spans[0].text.len == 0:
       # When the text has nothing in it "", a bunch of things become 0.

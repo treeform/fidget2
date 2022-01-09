@@ -1,4 +1,4 @@
-import sequtils, pixie, unicode, vmath, bumpy, internal, schema, strutils, nodes, u
+import sequtils, pixie, unicode, vmath, bumpy, internal, schema, strutils, nodes, u, windy
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about
@@ -109,7 +109,7 @@ proc locationRect*(node: Node, loc: int): Rect =
 
 proc cursorRect*(node: Node): Rect =
   ## Rectangle where cursor should be drawn.
-  node.locationRect(node.cursor + textImeEditLocation)
+  node.locationRect(node.cursor + window.imeCursorIndex)
 
 proc cursorPos*(node: Node): Vec2 =
   ## Position where cursor should be drawn.
