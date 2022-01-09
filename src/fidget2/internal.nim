@@ -1,4 +1,4 @@
-import vmath, chroma, schema, windy,
+import vmath, chroma, common, schema, windy,
     tables, print, loader, bumpy, pixie, options,
     pixie/fontformats/opentype, puppy, perf, unicode
 
@@ -6,8 +6,6 @@ export print
 
 ## Common vars shared across renderers.
 var
-  window*: Window
-
   ## Cache of typefaces.
   typefaceCache*: Table[string, Typeface]
   ## Cache of images.
