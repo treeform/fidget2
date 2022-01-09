@@ -291,9 +291,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
-  viewportSize = (screenNode.size *  window.contentScale).ceil
-
-  bxy.beginFrame(viewportSize.ivec2)
+  bxy.beginFrame(window.size)
 
   for i in 0 ..< 2:
     # TODO: figure out how to call layout only once.
@@ -312,10 +310,11 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
 
 proc setupWindow*(
   frameNode: Node,
+  size: IVec2,
   visible = true,
   style = DecoratedResizable
 ) =
-  window = newWindow("loading...", viewportSize.ivec2, visible=visible)
+  window = newWindow("loading...", size, visible=visible)
   window.style = style
 
   window.makeContextCurrent()
@@ -329,25 +328,13 @@ proc setupWindow*(
   echo "GL_RENDERER: ", cast[cstring](glGetString(GL_RENDERER))
   echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
 
-  var maxLayers: GLint
-  glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, maxLayers.addr)
-  echo "GL_MAX_ARRAY_TEXTURE_LAYERS: ", maxLayers
-
-  var textureSize: GLint
-  glGetIntegerv(GL_MAX_TEXTURE_SIZE, textureSize.addr)
-  echo "GL_MAX_TEXTURE_SIZE: ", textureSize
-
-  var texture3dSize: GLint
-  glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, texture3dSize.addr)
-  echo "GL_MAX_3D_TEXTURE_SIZE: ", texture3dSize
-
   # Setup bxy
   bxy = newBoxy()
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Read the GPU pixels from screen.
   ## Use for debugging and tests only.
-  var screen = newImage(viewportSize.x.int, viewportSize.y.int)
+  var screen = newImage(window.size.x.int, window.size.y.int)
   glReadPixels(
     0, 0,
     screen.width.Glint, screen.height.Glint,

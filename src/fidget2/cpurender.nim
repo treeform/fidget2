@@ -2,9 +2,7 @@ import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     internal, windy, pixie, textboxes, perf,
     layout, common
 
-type Image = pixie.Image
 type Paint = schema.Paint
-type Font = pixie.Font
 
 var
   layer*: Image
@@ -565,8 +563,9 @@ proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
 
 proc setupWindow*(
   frameNode: Node,
+  size: IVec2,
   visible = true,
   style = Decorated
 ) =
-  window = newWindow("loading..", viewportSize.ivec2, visible=visible)
+  window = newWindow("loading..", size, visible=visible)
   window.style = style

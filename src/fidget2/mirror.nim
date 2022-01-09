@@ -51,7 +51,6 @@ type
     handler*: proc() {.cdecl.}
 
 var
-  windowTitle* = "Fidget"
   eventCbs: seq[EventCb]
   requestedFrame*: bool
   redisplay*: bool
@@ -225,7 +224,7 @@ proc textBoxKeyboardAction(button: Button) =
       ctrl = window.buttonDown[KeyLeftControl] or window.buttonDown[KeyRightControl]
       super = window.buttonDown[KeyLeftSuper] or window.buttonDown[KeyRightSuper]
       shift = window.buttonDown[KeyLeftShift] or window.buttonDown[KeyRightShift]
-    if textImeEditString == "":
+    if window.imeCompositionString == "":
       case button:
         of KeyLeft:
           if ctrl:
@@ -409,7 +408,6 @@ proc updateWindowSize() =
   ## Handle window resize.
   requestedFrame = true
   thisFrame.dirty = true
-  viewportSize = window.size.vec2
 
 proc onResize() =
   ## Handle window resize.
@@ -619,8 +617,6 @@ proc display(withEvents = true) {.measure.} =
     # skip frame
     sleep(7)
 
-  inc frameNum
-
 proc mainLoop() {.cdecl.} =
   pollEvents()
   display()
@@ -646,13 +642,12 @@ proc startFidget*(
   if thisFrame == nil:
     quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
 
-  viewportSize = thisFrame.size
-
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
 
   hybridrender.setupWindow(
     thisFrame,
+    thisFrame.size.ivec2,
     style = windowStyle
   )
 
@@ -668,21 +663,9 @@ proc startFidget*(
   window.onRune = onRune
 
   window.onImeChange = proc() =
-    var
-      imeEditLocation = window.imeCursorIndex
-      iemEditString = window.imeCompositionString
-
-    for i, c in iemEditString:
-      if c == '\0':
-        iemEditString.setLen(i)
-        break
-    if textImeEditString != iemEditString or textImeEditLocation != imeEditLocation:
-      echo "ime: ", imeEditLocation, ":'", iemEditString, "'"
-      textImeEditLocation = imeEditLocation
-      textImeEditString = iemEditString
-      if textBoxFocus != nil:
-        textBoxFocus.dirty = true
-        textBoxFocus.makeTextDirty()
+    if textBoxFocus != nil:
+      textBoxFocus.dirty = true
+      textBoxFocus.makeTextDirty()
 
   window.onCloseRequest = proc() =
     internal.running = false
