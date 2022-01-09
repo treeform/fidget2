@@ -408,7 +408,6 @@ proc updateWindowSize() =
   ## Handle window resize.
   requestedFrame = true
   thisFrame.dirty = true
-  viewportSize = window.size.vec2
 
 proc onResize() =
   ## Handle window resize.
@@ -643,13 +642,12 @@ proc startFidget*(
   if thisFrame == nil:
     quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
 
-  viewportSize = thisFrame.size
-
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
 
   hybridrender.setupWindow(
     thisFrame,
+    thisFrame.size.ivec2,
     style = windowStyle
   )
 

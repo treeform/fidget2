@@ -6,8 +6,7 @@ export print
 
 ## Common vars shared across renderers.
 var
-  ## Window stuff.
-  viewportSize*: Vec2 = vec2(800, 600)
+  window*: Window
 
   ## Cache of typefaces.
   typefaceCache*: Table[string, Typeface]
