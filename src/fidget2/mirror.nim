@@ -304,7 +304,7 @@ proc onRune(rune: Rune) =
     requestedFrame = true
 
 proc onScroll() =
-  ## Scroll wheel glfw callback.
+  ## Handle scroll wheel.
   requestedFrame = true
   if textBoxFocus != nil:
     textBoxFocus.scrollBy(-window.scrollDelta.y * 50)
@@ -412,7 +412,7 @@ proc updateWindowSize() =
   viewportSize = window.size.vec2
 
 proc onResize() =
-  ## Handle window resize glfw callback.
+  ## Handle window resize.
   updateWindowSize()
   display(withEvents = false)
 

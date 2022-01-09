@@ -1,8 +1,8 @@
-import ../../fidget/mirror/mirror
+import fidget2
 
-# Connect a figma file to the code base.
-use("https://www.figma.com/file/7leI8PHWQjsj5VwPpF7MsW")
-
-mainFrame = "Widgets"
-windowSizeFixed = true
-startFidget()
+startFidget(
+  figmaUrl = "https://www.figma.com/file/7leI8PHWQjsj5VwPpF7MsW",
+  windowTitle = "Grada UI Widgets",
+  entryFrame = "Page 1/Widgets",
+  windowStyle = DecoratedResizable
+)

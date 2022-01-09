@@ -8,7 +8,6 @@ export print
 var
   ## Window stuff.
   viewportSize*: Vec2 = vec2(800, 600)
-  ## GLFW Window.
   window*: Window
 
   ## Cache of typefaces.
