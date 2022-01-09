@@ -329,18 +329,6 @@ proc setupWindow*(
   echo "GL_RENDERER: ", cast[cstring](glGetString(GL_RENDERER))
   echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
 
-  var maxLayers: GLint
-  glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, maxLayers.addr)
-  echo "GL_MAX_ARRAY_TEXTURE_LAYERS: ", maxLayers
-
-  var textureSize: GLint
-  glGetIntegerv(GL_MAX_TEXTURE_SIZE, textureSize.addr)
-  echo "GL_MAX_TEXTURE_SIZE: ", textureSize
-
-  var texture3dSize: GLint
-  glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, texture3dSize.addr)
-  echo "GL_MAX_3D_TEXTURE_SIZE: ", texture3dSize
-
   # Setup bxy
   bxy = newBoxy()
 

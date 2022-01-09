@@ -2,9 +2,7 @@ import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
     internal, windy, pixie, textboxes, perf,
     layout, common
 
-type Image = pixie.Image
 type Paint = schema.Paint
-type Font = pixie.Font
 
 var
   layer*: Image
