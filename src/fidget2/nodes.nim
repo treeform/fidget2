@@ -78,8 +78,10 @@ proc copy*(node: Node): Node =
   template copyField(x: untyped) =
     result.x = node.x.deepClone()
 
-  # Ids
+  # Base
   copyField componentId
+  copyField name
+  copyField kind
   # Transform
   copyField position
   copyField orgPosition
@@ -87,6 +89,7 @@ proc copy*(node: Node): Node =
   copyField scale
   copyField flipHorizontal
   copyField flipVertical
+  copyFIeld size
   # Shape
   copyField fillGeometry
   copyField strokeWeight
