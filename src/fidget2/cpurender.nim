@@ -489,21 +489,28 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
 
   if withChildren:
     if hasMaskedChildren:
-      layers.add(layer)
-      layer = newImage(layer.width, layer.height)
-      var childLayer = layer
+      # Every mask creates its own pair of layer and mask layer.
+      var maskLayers: seq[Image]
+
       for child in node.children:
         if child.isMask and child.visible:
+          # A mask layer creates a new pair of layer and mask layer.s
           layers.add(layer)
           layer = newImage(layer.width, layer.height)
           drawNode(child)
-          maskLayer.draw(layer, blendMode=bmNormal)
-          layer = layers.pop()
+          maskLayers.add(layer)
+          layer = newImage(layer.width, layer.height)
         else:
+          # Regular nodes are just drawn into current layer.
           drawNode(child)
-          layer.draw(maskLayer, blendMode=bmMask)
-      layer = layers.pop()
-      layer.draw(childLayer)
+
+      while maskLayers.len > 0:
+        # Pop pair of layer and mask layer and apply them.
+        let maskLayer = maskLayers.pop()
+        layer.draw(maskLayer, blendMode=bmMask)
+        layers[^1].draw(layer)
+        layer = layers.pop()
+
     elif node.kind == nkBooleanOperation:
       discard
     else:
