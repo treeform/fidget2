@@ -1,5 +1,5 @@
 import vmath, chroma, common, schema, windy,
-    tables, print, loader, bumpy, pixie, options,
+    tables, print, loader, bumpy, pixie, os, options,
     pixie/fontformats/opentype, puppy, perf, unicode
 
 export print
@@ -67,7 +67,11 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
-    let typeface = parseOtf(readFile(figmaFontPath(fontName)))
+    var typeface: Typeface
+    if existsFile(userFontPath(fontName)):
+      typeface = parseOtf(readFile(userFontPath(fontName)))
+    else:
+      typeface = parseOtf(readFile(figmaFontPath(fontName)))
     typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansJP-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
