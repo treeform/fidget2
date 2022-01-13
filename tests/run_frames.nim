@@ -13,8 +13,11 @@ elif defined(hyb):
 
 proc main(r = "", e = "", l = 10000) =
 
-  if not existsDir("tests/frames/diffs"): createDir("tests/frames/diffs")
+  if not existsDir("tests/frames/diffs"):
+    createDir("tests/frames/diffs")
 
+  if not existsDir("tests/frames/rendered"):
+    createDir("tests/frames/rendered")
 
   var renderTime = 0.0
   var totalDiff = 0.0
@@ -45,7 +48,7 @@ proc main(r = "", e = "", l = 10000) =
       "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
-      setupWindow(frame, visible = false, style = Decorated)
+      setupWindow(frame, size = ivec2(800, 600), visible = false, style = Decorated)
       firstTime = false
 
     proc drawFrame(frame: Node): Image =
@@ -73,7 +76,7 @@ proc main(r = "", e = "", l = 10000) =
     let frameTime = epochTime() - startTime
 
     renderTime += frameTime
-    image.writeFile("tests/frames/" & frame.name & ".png")
+    image.writeFile("tests/frames/rendered/" & frame.name & ".png")
 
     var
       diffScore: float32 = -1
@@ -101,7 +104,7 @@ proc main(r = "", e = "", l = 10000) =
 
     framesHtml.add(&"<h4>{frame.name}</h4>")
     framesHTML.add(&"<p>{w} {frameTime*1000:0.3f}ms {diffScore:0.3f}% diffpx</p>")
-    framesHTML.add(&"<img src='{frame.name}.png'>")
+    framesHTML.add(&"<img src='rendered/{frame.name}.png'>")
     if w == "gpu_vs_zpu":
       framesHTML.add(&"<img src='zpu/{frame.name}.png'>")
     elif w == "cpu_vs_hyb":

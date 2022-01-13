@@ -1,14 +1,11 @@
-import vmath, chroma, schema, windy,
-    tables, print, loader, bumpy, pixie, options,
+import vmath, chroma, common, schema, windy,
+    tables, print, loader, bumpy, pixie, os, options,
     pixie/fontformats/opentype, puppy, perf, unicode
 
 export print
 
 ## Common vars shared across renderers.
 var
-  ## Window stuff.
-  viewportSize*: Vec2 = vec2(800, 600)
-
   ## Cache of typefaces.
   typefaceCache*: Table[string, Typeface]
   ## Cache of images.
@@ -20,23 +17,16 @@ var
   ## Node that currently is being hovered over.
   hoverNode*: Node
 
-  fullscreen* = false
   running*: bool
 
   rtl*: bool               ## Set Right-to-Left UI mode.
 
-  ## Pixel multiplier user wants on the UI (used for for pixel indie games)
-  pixelScale*: float32 = 1.0
-  frameNum*: int
-
   currentFigmaUrl*: string
   entryFramePath*: string
 
-  textImeEditLocation*: int
-  textImeEditString*: string
-
   ## Nodes that is focused and has the current text box.
   textBoxFocus*: Node
+
   ## Default text highlight color (blueish by default).
   defaultTextBackgroundHighlightColor* = rgbx(50, 150, 250, 255)
   defaultTextHighlightColor* = color(1, 1, 1, 1)
@@ -77,7 +67,11 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
 
 proc getFont*(fontName: string): Font =
   if fontName notin typefaceCache:
-    let typeface = parseOtf(readFile(figmaFontPath(fontName)))
+    var typeface: Typeface
+    if existsFile(userFontPath(fontName)):
+      typeface = parseOtf(readFile(userFontPath(fontName)))
+    else:
+      typeface = parseOtf(readFile(figmaFontPath(fontName)))
     typeface.fallbacks.add readTypeface(figmaFontPath("NotoSansJP-Regular"))
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
@@ -347,11 +341,11 @@ proc computeArrangement*(node: Node) {.measure.} =
       for modSpan in node.spans.modifySpans(node.selection()):
         modSpan.font.paint = defaultTextHighlightColor
 
-    elif textImeEditString != "":
+    elif window.imeCompositionString != "":
       let imeSlice = HSlice[int, int](a: node.cursor, b: node.cursor)
       for modSpan in node.spans.modifySpans(imeSlice):
         modSpan.font.underline = true
-        modSpan.text = textImeEditString
+        modSpan.text = window.imeCompositionString
 
     if node.spans.len == 1 and node.spans[0].text.len == 0:
       # When the text has nothing in it "", a bunch of things become 0.

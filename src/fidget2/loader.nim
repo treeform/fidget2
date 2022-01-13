@@ -17,6 +17,9 @@ proc figmaImagePath*(imageRef: string): string =
 proc figmaFontPath*(fontPostScriptName: string): string =
   "data/fidget/fonts/" & fontPostScriptName & ".ttf"
 
+proc userFontPath*(fontPostScriptName: string): string =
+  "data/fonts/" & fontPostScriptName & ".ttf"
+
 proc loadFigmaFile(fileKey: string): FigmaFile =
   let data = readFile(figmaFilePath(fileKey))
   parseFigmaFile(data)
@@ -88,7 +91,8 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
 
 proc downloadFont(fontPostScriptName: string) =
   let fontPath = figmaFontPath(fontPostScriptName)
-  if not fileExists(fontPath):
+  let fontUserPath = userFontPath(fontPostScriptName)
+  if not fileExists(fontPath) and not fileExists(fontUserPath):
     const baseUrl = "https://github.com/treeform/fidgetfonts/raw/main/fonts/"
     let url = baseUrl & fontPostScriptName & ".ttf"
     echo "Font not found: ", fontPath

@@ -78,7 +78,7 @@ proc copy*(node: Node): Node =
   template copyField(x: untyped) =
     result.x = node.x.deepClone()
 
-  # Ids
+  # Base
   copyField componentId
   copyField name
   copyField kind
