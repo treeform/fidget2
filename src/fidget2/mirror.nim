@@ -596,7 +596,7 @@ proc navigateTo*(fullPath: string, smart = false) =
 proc navigateBack*() =
   ## Navigates back the navigation history.
   if navigationHistory.len == 0:
-    raise newException(FidgetError, &"The navigation history is empty!")
+    return
   thisFrame = navigationHistory.pop()
   thisFrame.markTreeDirty()
 

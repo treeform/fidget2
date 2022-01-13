@@ -80,6 +80,10 @@ proc copy*(node: Node): Node =
 
   # Ids
   copyField componentId
+  copyField name
+  copyField kind
+  if node.kind == nkComponent:
+    node.kind = nkInstance
   # Transform
   copyField position
   copyField orgPosition
@@ -87,6 +91,7 @@ proc copy*(node: Node): Node =
   copyField scale
   copyField flipHorizontal
   copyField flipVertical
+  copyField size
   # Shape
   copyField fillGeometry
   copyField strokeWeight
