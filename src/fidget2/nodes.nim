@@ -32,13 +32,30 @@ proc printDirtyStatus*(node: Node, indent = 0) =
 
 proc makeTextDirty*(node: Node) =
   node.dirty = true
-  node.arrangement = nil
-  node.computeArrangement()
+  if node.kind == nkText:
+    node.arrangement = nil
+    node.computeArrangement()
 
 proc setText*(node: Node, text: string) =
   if node.characters != text:
     node.characters = text
     node.makeTextDirty()
+
+proc show*(node: Node) =
+  node.visible = true
+  node.markTreeDirty()
+
+proc hide*(node: Node) =
+  node.visible = false
+  node.markTreeDirty()
+
+proc show*(nodes: seq[Node]) =
+  for node in nodes:
+    node.show()
+
+proc hide*(nodes: seq[Node]) =
+  for node in nodes:
+    node.hide()
 
 proc findNodeById*(id: string): Node =
   ## Finds a node by id (slow).
@@ -279,6 +296,11 @@ proc setVariant*(node: Node, name, value: string) =
       triMerge(node, prevMaster, currMaster)
       node.componentId = currMaster.id
       break
+
+proc setVariant*(nodes: seq[Node], name, value: string) =
+  ## Changes the variant of the nodes.
+  for node in nodes:
+    node.setVariant(name, value)
 
 proc hasVariant*(node: Node, name, value: string): bool =
   ## Checks the variant exists for the node.

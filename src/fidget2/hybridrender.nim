@@ -314,7 +314,7 @@ proc setupWindow*(
   visible = true,
   style = DecoratedResizable
 ) =
-  window = newWindow("loading...", size, visible=visible)
+  window = newWindow("loading...", size, visible=visible, msaa=msaa8x)
   window.style = style
 
   window.makeContextCurrent()

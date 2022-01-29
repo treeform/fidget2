@@ -34,15 +34,18 @@ type
     onUnfocusNode*: Node
 
   EventCbKind* = enum
-    eOnClick
-    eOnAnyClick
-    eOnFrame
-    eOnEdit
-    eOnDisplay
-    eOnFocus
-    eOnUnfocus
-    eOnShow
-    eOnHide
+    OnClick
+    OnClickOutside
+    OnRightClick
+    OnAnyClick
+    OnFrame
+    OnEdit
+    OnDisplay
+    OnFocus
+    OnUnfocus
+    OnShow
+    OnHide
+    OnMouseMove
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -116,9 +119,14 @@ proc addCb*(
 proc find*(glob: string): Node =
   ## Find a node matching a glob pattern.
   var glob = glob
+  if glob.len == 0:
+    raise newException(FidgetError, &"Error glob can't be empty string \"\".")
   if thisSelector.len > 0:
     glob = thisSelector & "/" & glob
-  figmaFile.document.find(glob)
+  result = figmaFile.document.find(glob)
+  if result == nil:
+    raise newException(FidgetError, &"find(\"{glob}\") not found.")
+
 
 proc findAll*(glob: string): seq[Node] =
   ## Find all nodes matching glob pattern.
@@ -133,6 +141,8 @@ proc pushSelector(glob: string) =
   if thisSelector.len > 0:
     thisSelector = thisSelector & "/" & glob
   else:
+    if glob[0] != '/':
+      raise newException(FidgetError, &"Error root \"{glob}\" should start with slash \"/{glob}\".")
     thisSelector = glob
 
 proc popSelector() =
@@ -149,7 +159,7 @@ template find*(glob: string, body: untyped) =
 template onFrame*(body: untyped) =
   ## Called once for each frame drawn.
   addCb(
-    eOnFrame,
+    OnFrame,
     0,
     "",
     proc() {.cdecl.} =
@@ -159,7 +169,7 @@ template onFrame*(body: untyped) =
 template onDisplay*(body: untyped) =
   ## When a node is displayed.
   addCb(
-    eOnDisplay,
+    OnDisplay,
     1000,
     thisSelector,
     proc() {.cdecl.} = body
@@ -168,7 +178,7 @@ template onDisplay*(body: untyped) =
 template onShow*(body: untyped) =
   ## When a node is displayed.
   addCb(
-    eOnShow,
+    OnShow,
     1000,
     thisSelector,
     proc() {.cdecl.} = body
@@ -177,7 +187,7 @@ template onShow*(body: untyped) =
 template onHide*(body: untyped) =
   ## When a node is displayed.
   addCb(
-    eOnHide,
+    OnHide,
     1000,
     thisSelector,
     proc() {.cdecl.} = body
@@ -186,7 +196,34 @@ template onHide*(body: untyped) =
 template onClick*(body: untyped) =
   ## When node is clicked.
   addCb(
-    eOnClick,
+    OnClick,
+    100,
+    thisSelector,
+    proc() {.cdecl.} = body
+  )
+
+template onRightClick*(body: untyped) =
+  ## When node is clicked.
+  addCb(
+    OnRightClick,
+    100,
+    thisSelector,
+    proc() {.cdecl.} = body
+  )
+
+template onClickOutside*(body: untyped) =
+  ## When node is clicked.
+  addCb(
+    OnClickOutside,
+    100,
+    thisSelector,
+    proc() {.cdecl.} = body
+  )
+
+template onMouseMove*(body: untyped) =
+  ## When node is clicked.
+  addCb(
+    OnMouseMove,
     100,
     thisSelector,
     proc() {.cdecl.} = body
@@ -330,7 +367,7 @@ proc onScroll() =
 proc simulateClick*(glob: string) =
   ## Simulates a mouse click on a node. Used mainly for writing tests.
   for cb in eventCbs:
-    if cb.kind == eOnClick:
+    if cb.kind == OnClick:
       thisCb = cb
       thisSelector = thisCb.glob
       if cb.glob == glob:
@@ -342,7 +379,7 @@ proc simulateClick*(glob: string) =
 template onEdit*(body: untyped) =
   ## When text node is display or edited.
   addCb(
-    eOnDisplay,
+    OnDisplay,
     100,
     thisSelector,
     proc() {.cdecl.} =
@@ -362,7 +399,7 @@ template onEdit*(body: untyped) =
             textBoxFocus = nil
   )
   addCb(
-    eOnEdit,
+    OnEdit,
     200,
     thisSelector,
     proc() {.cdecl.} =
@@ -377,7 +414,7 @@ template onEdit*(body: untyped) =
 template onUnfocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
   addCb(
-    eOnUnFocus,
+    OnUnFocus,
     500,
     thisSelector,
     proc() {.cdecl.} =
@@ -392,7 +429,7 @@ template onUnfocus*(body: untyped) =
 template onFocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
   addCb(
-    eOnFocus,
+    OnFocus,
     600,
     thisSelector,
     proc() {.cdecl.} =
@@ -444,10 +481,11 @@ proc processEvents() {.measure.} =
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
 
-  # if window.buttonPressed[MouseLeft]:
-  #   echo "---"
-  #   for n in underMouseNodes:
-  #     echo n.name
+  if window.buttonPressed[MouseLeft]:
+    echo "---"
+    for n in underMouseNodes:
+      echo n.name
+    echo "---"
 
   if window.buttonDown[MouseLeft]:
     window.closeIme()
@@ -492,25 +530,8 @@ proc processEvents() {.measure.} =
     thisSelector = thisCb.glob
 
     case cb.kind:
-    of eOnClick:
 
-      if window.buttonPressed[MouseLeft]:
-        for node in findAll(thisSelector):
-          if node.inTree(thisFrame) and node.overlaps(window.mousePos.vec2):
-            thisNode = node
-            thisCb.handler()
-            thisNode = nil
-
-    of eOnDisplay:
-
-      if redisplay:
-        for node in findAll(thisSelector):
-          if node.inTree(thisFrame):
-            thisNode = node
-            thisCb.handler()
-            thisNode = nil
-
-    of eOnShow:
+    of OnShow:
 
       for node in findAll(thisSelector):
         if node.inTree(thisFrame):
@@ -520,7 +541,45 @@ proc processEvents() {.measure.} =
             thisCb.handler()
             thisNode = nil
 
-    of eOnHide:
+    of OnClick:
+
+      if window.buttonPressed[MouseLeft]:
+        for node in findAll(thisSelector):
+          if node.inTree(thisFrame) and node in underMouseNodes:
+            thisNode = node
+            echo thisNode.name
+            thisCb.handler()
+            thisNode = nil
+
+    of OnRightClick:
+
+      if window.buttonPressed[MouseRight]:
+        for node in findAll(thisSelector):
+          if node.inTree(thisFrame) and node in underMouseNodes:
+            thisNode = node
+            thisCb.handler()
+            thisNode = nil
+
+    of OnClickOutside:
+
+      if window.buttonPressed[MouseLeft]:
+        for node in findAll(thisSelector):
+          if node.inTree(thisFrame) and node notin underMouseNodes:
+            thisNode = node
+            echo thisNode.name
+            thisCb.handler()
+            thisNode = nil
+
+    of OnDisplay:
+
+      if redisplay:
+        for node in findAll(thisSelector):
+          if node.inTree(thisFrame):
+            thisNode = node
+            thisCb.handler()
+            thisNode = nil
+
+    of OnHide:
 
       for node in findAll(thisSelector):
         if not node.inTree(thisFrame):
@@ -530,16 +589,24 @@ proc processEvents() {.measure.} =
             thisCb.handler()
             thisNode = nil
 
-    of eOnFrame:
+    of OnMouseMove:
+
+      for node in findAll(thisSelector):
+        if node.inTree(thisFrame) and node in underMouseNodes:
+          thisNode = node
+          thisCb.handler()
+          thisNode = nil
+
+    of OnFrame:
       thisCb.handler()
 
-    of eOnEdit:
+    of OnEdit:
       thisCb.handler()
 
-    of eOnFocus:
+    of OnFocus:
       thisCb.handler()
 
-    of eOnUnfocus:
+    of OnUnfocus:
       thisCb.handler()
 
     else:
@@ -582,6 +649,10 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
       imageCache[url] = image
     paint.imageRef = url
 
+proc `image=`*(paint: schema.Paint, image: Image) =
+  imageCache[paint.imageRef] = image
+  bxy.addImage(paint.imageRef, image)
+
 proc navigateTo*(fullPath: string, smart = false) =
   ## Navigates to a new frame a new frame.
   ## Smart will try to preserve all nodes with the same name.
@@ -610,8 +681,9 @@ proc display(withEvents = true) {.measure.} =
   window.runeInputEnabled = textBoxFocus != nil
 
   thisFrame.checkDirty()
-  if thisFrame.dirty:
+  if true or thisFrame.dirty:
     drawToScreen(thisFrame)
+
     swapBuffers()
   else:
     # skip frame
