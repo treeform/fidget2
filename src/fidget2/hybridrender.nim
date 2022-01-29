@@ -291,7 +291,7 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
-  bxy.beginFrame(window.size)
+  bxy.beginFrame(window.size, clearFrame=clearFrame)
 
   for i in 0 ..< 2:
     # TODO: figure out how to call layout only once.

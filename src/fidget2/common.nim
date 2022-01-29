@@ -5,3 +5,4 @@ type
 
 var
   window*: Window
+  clearFrame*: bool = true
