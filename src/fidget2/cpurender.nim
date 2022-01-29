@@ -86,19 +86,24 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
 
     # Visit all children first, if any of them overlaps this node overlaps too.
     for child in node.children.reverse:
-      if child.visit(
-        mat,
-        mousePos,
-        s
-      ) and not overlaps:
-        overlaps = true
-        break
+      if child.visible:
+        if child.visit(
+          mat,
+          mousePos,
+          s
+        ) and not overlaps:
+          overlaps = true
+          break
 
     if not overlaps:
       # Check all geometry for overlaps.
       block all:
-        for geoms in [node.fillGeometry, node.strokeGeometry]:
-          for geom in geoms:
+        if node.visible:
+          for geom in node.fillGeometry:
+            if geom.path.fillOverlaps(mousePos, mat, geom.windingRule):
+              overlaps = true
+              break all
+          for geom in node.strokeGeometry:
             if geom.path.fillOverlaps(mousePos, mat, geom.windingRule):
               overlaps = true
               break all
