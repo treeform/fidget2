@@ -138,12 +138,16 @@ proc findAll*(glob: string): seq[Node] =
 proc pushSelector(glob: string) =
   # Note: used to make less code in find template, do not inline.
   selectorStack.add(thisSelector)
-  if thisSelector.len > 0:
-    thisSelector = thisSelector & "/" & glob
-  else:
-    if glob[0] != '/':
-      raise newException(FidgetError, &"Error root \"{glob}\" should start with slash \"/{glob}\".")
+  if thisSelector == "":
+    if glob.len == 0 or glob[0] != '/':
+      raise newException(FidgetError, "Root selectors must start with /")
     thisSelector = glob
+  else:
+    if glob.len > 0 and glob[0] == '/':
+      raise newException(FidgetError, "Non-root selectors cannot start with /")
+    if thisSelector[^1] != '/':
+      thisSelector &= '/'
+    thisSelector &= glob
 
 proc popSelector() =
   # Note: used to make less code in find template, do not inline.
