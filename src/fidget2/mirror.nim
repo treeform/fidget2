@@ -137,14 +137,15 @@ proc findAll*(glob: string): seq[Node] =
 
 proc pushSelector(glob: string) =
   # Note: used to make less code in find template, do not inline.
-  selectorStack.add(thisSelector)
   if thisSelector == "":
     if glob.len == 0 or glob[0] != '/':
       raise newException(FidgetError, "Root selectors must start with /")
+    selectorStack.add(thisSelector)
     thisSelector = glob
   else:
     if glob.len > 0 and glob[0] == '/':
       raise newException(FidgetError, "Non-root selectors cannot start with /")
+    selectorStack.add(thisSelector)
     if thisSelector[^1] != '/':
       thisSelector &= '/'
     thisSelector &= glob
@@ -157,8 +158,10 @@ template find*(glob: string, body: untyped) =
   ## Sets the root to the glob, everything inside will be relative to
   ## this glob pattern.
   pushSelector(glob)
-  body
-  popSelector()
+  try:
+    body
+  finally:
+    popSelector()
 
 template onFrame*(body: untyped) =
   ## Called once for each frame drawn.
