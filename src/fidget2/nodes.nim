@@ -100,7 +100,7 @@ proc copy*(node: Node): Node =
   copyField name
   copyField kind
   if node.kind == nkComponent:
-    node.kind = nkInstance
+    result.kind = nkInstance
   # Transform
   copyField position
   copyField orgPosition
@@ -277,6 +277,8 @@ proc triMerge(current, prevMaster, currMaster: Node) =
         prevMaster.children[i],
         currMaster.children[i]
       )
+    else:
+      echo "name error?"
 
 proc setVariant*(node: Node, name, value: string) =
   ## Changes the variant of the node.

@@ -495,11 +495,11 @@ proc processEvents() {.measure.} =
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
 
-  if window.buttonPressed[MouseLeft]:
-    echo "---"
-    for n in underMouseNodes:
-      echo n.name
-    echo "---"
+  # if window.buttonPressed[MouseLeft]:
+  #   echo "---"
+  #   for n in underMouseNodes:
+  #     echo n.name
+  #   echo "---"
 
   if window.buttonDown[MouseLeft]:
     window.closeIme()
@@ -571,8 +571,10 @@ proc processEvents() {.measure.} =
 
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisSelector):
-          if node.inTree(thisFrame) and node notin underMouseNodes:
-            thisCb.handler(node)
+          if node.inTree(thisFrame) and
+            node notin underMouseNodes and
+            node.visible:
+              thisCb.handler(node)
 
     of OnDisplay:
 
