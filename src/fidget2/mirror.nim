@@ -51,7 +51,7 @@ type
     kind*: EventCbKind
     priority*: int
     glob*: string
-    handler*: proc() {.cdecl.}
+    handler*: proc(thisNode: Node)
 
 var
   eventCbs: seq[EventCb]
@@ -62,7 +62,6 @@ var
   keyboard* = Keyboard()
 
   thisFrame*: Node
-  thisNode*: Node
   thisCb*: EventCb
   thisSelector*: string
   selectorStack: seq[string]
@@ -106,7 +105,7 @@ proc addCb*(
   kind: EventCbKind,
   priority: int,
   glob: string,
-  handler: proc() {.cdecl.},
+  handler: proc(thisNode: Node),
 ) =
   ## Adds a generic call back.
   eventCbs.add EventCb(
@@ -169,7 +168,7 @@ template onFrame*(body: untyped) =
     OnFrame,
     0,
     "",
-    proc() {.cdecl.} =
+    proc(thisNode {.inject.}: Node) =
       body
   )
 
@@ -179,7 +178,8 @@ template onDisplay*(body: untyped) =
     OnDisplay,
     1000,
     thisSelector,
-    proc() {.cdecl.} = body
+    proc(thisNode {.inject.}: Node) =
+      body
   )
 
 template onShow*(body: untyped) =
@@ -188,7 +188,8 @@ template onShow*(body: untyped) =
     OnShow,
     1000,
     thisSelector,
-    proc() {.cdecl.} = body
+    proc(thisNode {.inject.}: Node) =
+      body
   )
 
 template onHide*(body: untyped) =
@@ -197,7 +198,8 @@ template onHide*(body: untyped) =
     OnHide,
     1000,
     thisSelector,
-    proc() {.cdecl.} = body
+    proc(thisNode {.inject.}: Node) =
+      body
   )
 
 template onClick*(body: untyped) =
@@ -206,7 +208,8 @@ template onClick*(body: untyped) =
     OnClick,
     100,
     thisSelector,
-    proc() {.cdecl.} = body
+    proc(thisNode {.inject.}: Node) =
+      body
   )
 
 template onRightClick*(body: untyped) =
@@ -215,7 +218,8 @@ template onRightClick*(body: untyped) =
     OnRightClick,
     100,
     thisSelector,
-    proc() {.cdecl.} = body
+    proc(thisNode {.inject.}: Node) =
+      body
   )
 
 template onClickOutside*(body: untyped) =
@@ -224,7 +228,8 @@ template onClickOutside*(body: untyped) =
     OnClickOutside,
     100,
     thisSelector,
-    proc() {.cdecl.} = body
+    proc(thisNode {.inject.}: Node) =
+      body
   )
 
 template onMouseMove*(body: untyped) =
@@ -233,7 +238,8 @@ template onMouseMove*(body: untyped) =
     OnMouseMove,
     100,
     thisSelector,
-    proc() {.cdecl.} = body
+    proc(thisNode {.inject.}: Node) =
+      body
   )
 
 proc setupTextBox(node: Node) =
@@ -379,9 +385,7 @@ proc simulateClick*(glob: string) =
       thisSelector = thisCb.glob
       if cb.glob == glob:
         for node in findAll(cb.glob):
-          thisNode = node
-          cb.handler()
-          thisNode = nil
+          cb.handler(node)
 
 template onEdit*(body: untyped) =
   ## When text node is display or edited.
@@ -389,7 +393,7 @@ template onEdit*(body: untyped) =
     OnDisplay,
     100,
     thisSelector,
-    proc() {.cdecl.} =
+    proc(thisNode: Node) =
       if window.buttonPressed[MouseLeft]:
         if thisNode.parent.overlaps(window.mousePos.vec2):
           if textBoxFocus != thisNode:
@@ -405,48 +409,51 @@ template onEdit*(body: untyped) =
             textBoxFocus.dirty = true
             textBoxFocus = nil
   )
-  addCb(
-    OnEdit,
-    200,
-    thisSelector,
-    proc() {.cdecl.} =
-      if textBoxFocus != nil:
-        for node in figmaFile.document.findAll(thisSelector):
-          if textBoxFocus == node and textBoxFocus.dirty:
-            thisNode = node
-            body
-            thisNode = nil
-  )
+  block:
+    let fn = proc(thisNode {.inject.}: Node) =
+      body
+    addCb(
+      OnEdit,
+      200,
+      thisSelector,
+      proc(thisNode: Node) =
+        if textBoxFocus != nil:
+          for node in figmaFile.document.findAll(thisSelector):
+            if textBoxFocus == node and textBoxFocus.dirty:
+              fn(node)
+    )
 
 template onUnfocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
-  addCb(
-    OnUnFocus,
-    500,
-    thisSelector,
-    proc() {.cdecl.} =
-      if keyboard.onUnfocusNode != nil:
-        for node in figmaFile.document.findAll(thisSelector):
-          if keyboard.onUnfocusNode == node:
-            thisNode = node
-            body
-            thisNode = nil
-  )
+  block:
+    let fn = proc(thisNode {.inject.}: Node) =
+      body
+    addCb(
+      OnUnFocus,
+      500,
+      thisSelector,
+      proc(thisNode: Node) =
+        if keyboard.onUnfocusNode != nil:
+          for node in figmaFile.document.findAll(thisSelector):
+            if keyboard.onUnfocusNode == node:
+              fn(node)
+    )
 
 template onFocus*(body: untyped) =
   ## When a text node is displayed and will continue to update.
-  addCb(
-    OnFocus,
-    600,
-    thisSelector,
-    proc() {.cdecl.} =
-      if keyboard.onFocusNode != nil:
-        for node in figmaFile.document.findAll(thisSelector):
-          if keyboard.onFocusNode == node:
-            thisNode = node
-            body
-            thisNode = nil
-  )
+  block:
+    let fn = proc(thisNode {.inject.}: Node) =
+      body
+    addCb(
+      OnFocus,
+      600,
+      thisSelector,
+      proc(thisNode: Node)  =
+        if keyboard.onFocusNode != nil:
+          for node in figmaFile.document.findAll(thisSelector):
+            if keyboard.onFocusNode == node:
+              fn(node)
+    )
 
 proc updateWindowSize() =
   ## Handle window resize.
@@ -544,47 +551,35 @@ proc processEvents() {.measure.} =
         if node.inTree(thisFrame):
           if node.shown == false:
             node.shown = true
-            thisNode = node
-            thisCb.handler()
-            thisNode = nil
+            thisCb.handler(node)
 
     of OnClick:
 
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisSelector):
           if node.inTree(thisFrame) and node in underMouseNodes:
-            thisNode = node
-            echo thisNode.name
-            thisCb.handler()
-            thisNode = nil
+            thisCb.handler(node)
 
     of OnRightClick:
 
       if window.buttonPressed[MouseRight]:
         for node in findAll(thisSelector):
           if node.inTree(thisFrame) and node in underMouseNodes:
-            thisNode = node
-            thisCb.handler()
-            thisNode = nil
+            thisCb.handler(node)
 
     of OnClickOutside:
 
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisSelector):
           if node.inTree(thisFrame) and node notin underMouseNodes:
-            thisNode = node
-            echo thisNode.name
-            thisCb.handler()
-            thisNode = nil
+            thisCb.handler(node)
 
     of OnDisplay:
 
       if redisplay:
         for node in findAll(thisSelector):
           if node.inTree(thisFrame):
-            thisNode = node
-            thisCb.handler()
-            thisNode = nil
+            thisCb.handler(node)
 
     of OnHide:
 
@@ -592,29 +587,25 @@ proc processEvents() {.measure.} =
         if not node.inTree(thisFrame):
           if node.shown == true:
             node.shown = false
-            thisNode = node
-            thisCb.handler()
-            thisNode = nil
+            thisCb.handler(node)
 
     of OnMouseMove:
 
       for node in findAll(thisSelector):
         if node.inTree(thisFrame) and node in underMouseNodes:
-          thisNode = node
-          thisCb.handler()
-          thisNode = nil
+          thisCb.handler(node)
 
     of OnFrame:
-      thisCb.handler()
+      thisCb.handler(nil)
 
     of OnEdit:
-      thisCb.handler()
+      thisCb.handler(nil)
 
     of OnFocus:
-      thisCb.handler()
+      thisCb.handler(nil)
 
     of OnUnfocus:
-      thisCb.handler()
+      thisCb.handler(nil)
 
     else:
       echo "not covered: ": cb.kind
