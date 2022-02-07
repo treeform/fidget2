@@ -131,9 +131,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     )
   if result.kind == pixie.pkGradientLinear:
     result.gradientHandlePositions.setLen(2)
-  for stop in paint.gradientStops:
-    var color = stop.color
-    result.gradientStops.add(pixie.ColorStop(color: color, position: stop.position))
+  result.gradientStops = paint.gradientStops
 
 proc drawFill(node: Node, paint: Paint): Image {.measure.} =
   ## Creates a fill image based on the paint.
