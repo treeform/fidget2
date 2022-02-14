@@ -116,12 +116,12 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
 
 proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
   let paintKind = case paint.kind:
-    of schema.pkSolid: pixie.pkSolid
-    of schema.pkImage: pixie.pkImage
-    of schema.pkGradientLinear: pixie.pkGradientLinear
-    of schema.pkGradientRadial: pixie.pkGradientRadial
-    of schema.pkGradientAngular: pixie.pkGradientAngular
-    of schema.pkGradientDiamond: pixie.pkGradientRadial
+    of schema.pkSolid: SolidPaint
+    of schema.pkImage: ImagePaint
+    of schema.pkGradientLinear: LinearGradientPaint
+    of schema.pkGradientRadial: RadialGradientPaint
+    of schema.pkGradientAngular: AngularGradientPaint
+    of schema.pkGradientDiamond: RadialGradientPaint
 
   result = newPaint(paintKind)
   result.opacity = paint.opacity
@@ -129,7 +129,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     result.gradientHandlePositions.add(
       mat * (handle * node.size)
     )
-  if result.kind == pixie.pkGradientLinear:
+  if result.kind == LinearGradientPaint:
     result.gradientHandlePositions.setLen(2)
   for stop in paint.gradientStops:
     var color = stop.color
@@ -245,7 +245,7 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.mea
     if color.a == 0:
       return
     for geometry in geometries:
-      var paint = newPaint(pixie.PaintKind.pkSolid)
+      var paint = newPaint(SolidPaint)
       paint.color = color
       paint.blendMode = paint.blendMode
       layer.fillPath(
@@ -267,13 +267,13 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.mea
       if not paint.visible or paint.opacity == 0:
         continue
       var fillImage = drawFill(node, paint)
-      fillImage.draw(mask, blendMode = bmMask)
+      fillImage.draw(mask, blendMode = MaskBlend)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
 proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measure.} =
   ## Draws the inner shadow.
   var shadow = newMask(fillMask.width, fillMask.height)
-  shadow.draw(fillMask, translate(effect.offset), blendMode = bmOverwrite)
+  shadow.draw(fillMask, translate(effect.offset), blendMode = OverwriteBlend)
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
@@ -281,9 +281,9 @@ proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measur
   # Color the inverted blurred fill.
   var color = newImage(shadow.width, shadow.height)
   color.fill(effect.color.rgbx)
-  color.draw(shadow, blendMode = bmMask)
+  color.draw(shadow, blendMode = MaskBlend)
   # Only have the shadow be on the fill.
-  color.draw(fillMask, blendMode = bmMask)
+  color.draw(fillMask, blendMode = MaskBlend)
   # Draw it back.
   layer.draw(color)
 
@@ -330,7 +330,7 @@ proc drawGeometry*(node: Node) {.measure.} =
         layer = strokeLayer
         node.drawPaint(node.strokes, node.strokeGeometry)
         layer = fillLayer
-        strokeLayer.draw(fillMask, blendMode = bmMask)
+        strokeLayer.draw(fillMask, blendMode = MaskBlend)
         layer.draw(strokeLayer)
 
     of saCenter:
@@ -352,13 +352,13 @@ proc drawGeometry*(node: Node) {.measure.} =
       layer = strokeLayer
       node.drawPaint(node.strokes, node.strokeGeometry)
       layer = fillLayer
-      strokeLayer.draw(fillMask, blendMode = bmSubtractMask)
+      strokeLayer.draw(fillMask, blendMode = SubtractMaskBlend)
       layer.draw(strokeLayer)
 
 proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: Node) {.measure.} =
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
-  shadow.draw(layer, blendMode = bmOverwrite)
+  shadow.draw(layer, blendMode = OverwriteBlend)
   let shadow2 = shadow.shadow(
     effect.offset, effect.spread, effect.radius, effect.color.rgbx)
   lowerLayer.draw(shadow2)
@@ -368,7 +368,7 @@ proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   var blurMask = newMask(layer)
   blurMask.ceil()
   blurLayer.blur(effect.radius)
-  blurLayer.draw(blurMask, blendMode = bmMask)
+  blurLayer.draw(blurMask, blendMode = MaskBlend)
   blurLayer.draw(layer)
   layer = blurLayer
 
@@ -434,13 +434,13 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
   for i, child in node.children:
     let blendMode =
       if i == 0:
-        bmNormal
+        NormalBlend
       else:
         case node.booleanOperation:
-          of boUnion: bmNormal
-          of boSubtract: bmSubtractMask
-          of boIntersect: bmMask
-          of boExclude: bmExcludeMask
+          of boUnion: NormalBlend
+          of boSubtract: SubtractMaskBlend
+          of boIntersect: MaskBlend
+          of boExclude: ExcludeMaskBlend
     drawBooleanNode(child, blendMode)
 
   mat = prevMat
@@ -449,12 +449,12 @@ proc drawBoolean*(node: Node) {.measure.} =
   ## Draws boolean
   maskLayer = newMask(layer.width, layer.height)
   mat = mat * node.transform().inverse()
-  drawBooleanNode(node, bmNormal)
+  drawBooleanNode(node, NormalBlend)
   for paint in node.fills:
     if not paint.visible or paint.opacity == 0:
       continue
     var fillImage = drawFill(node, paint)
-    fillImage.draw(maskLayer, blendMode = bmMask)
+    fillImage.draw(maskLayer, blendMode = MaskBlend)
     layer.draw(fillImage)
 
 proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
@@ -466,7 +466,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
   var needsLayer = false
   if node.opacity != 1.0:
     needsLayer = true
-  if node.blendMode != bmNormal:
+  if node.blendMode != NormalBlend:
     needsLayer = true
   if node.clipsContent:
     needsLayer = true
@@ -512,7 +512,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
       while maskLayers.len > 0:
         # Pop pair of layer and mask layer and apply them.
         let maskLayer = maskLayers.pop()
-        layer.draw(maskLayer, blendMode=bmMask)
+        layer.draw(maskLayer, blendMode = MaskBlend)
         layers[^1].draw(layer)
         layer = layers.pop()
 
@@ -524,7 +524,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
 
   if node.clipsContent:
     var mask = node.maskSelfImage()
-    layer.draw(mask, blendMode = bmMask)
+    layer.draw(mask, blendMode = MaskBlend)
 
   if needsLayer:
     var lowerLayer = layers.pop()

@@ -90,7 +90,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
 
     # Can't draw blending layers on the GPU.
     for child in node.children:
-      if child.blendMode != bmNormal:
+      if child.blendMode != NormalBlend:
         node.collapse = true
         break
 
@@ -138,7 +138,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
         let prevBoundsMat = mat
         mat = translate(-node.pixelBox.xy) * mat
         var mask = node.maskSelfImage()
-        layer.draw(mask, blendMode = bmMask)
+        layer.draw(mask, blendMode = MaskBlend)
 
         bxy.addImage(node.id & ".mask", layer, genMipmaps=false)
         mat = prevBoundsMat

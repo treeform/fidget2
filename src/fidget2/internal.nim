@@ -81,7 +81,7 @@ proc rectangleFillGeometry(node: Node): Geometry =
   result = Geometry()
   result.path = newPath()
   result.mat = mat3()
-  result.windingRule = wrNonZero
+  result.windingRule = NonZero
 
   if node.cornerRadius > 0:
     # Rectangle with common corners.
@@ -116,7 +116,7 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
   result = Geometry()
   result.path = newPath()
   result.mat = mat3()
-  result.windingRule = wrNonZero
+  result.windingRule = NonZero
 
   let
     x = 0.0
@@ -199,7 +199,7 @@ proc genHitTestGeometry*(node: Node) {.measure.} =
   var geom = Geometry()
   geom.path = newPath()
   geom.mat = mat3()
-  geom.windingRule = wrNonZero
+  geom.windingRule = NonZero
   # Basic rectangle.
   geom.path.rect(
     x = 0,
@@ -396,7 +396,7 @@ proc genTextGeometry*(node: Node) {.measure.} =
   var geom = Geometry()
   geom.path = newPath()
   geom.mat = mat3()
-  geom.windingRule = wrNonZero
+  geom.windingRule = NonZero
 
   node.computeArrangement()
   let bounds = node.arrangement.computeBounds()

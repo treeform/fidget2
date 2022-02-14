@@ -301,36 +301,36 @@ proc renameHook(v: var Rect, fieldName: var string) =
 
 proc enumHook(s: string, v: var BlendMode) =
   v = case s:
-    of "PASS_THROUGH": bmNormal
-    of "NORMAL": bmNormal
-    of "DARKEN": bmDarken
-    of "MULTIPLY": bmMultiply
+    of "PASS_THROUGH": NormalBlend
+    of "NORMAL": NormalBlend
+    of "DARKEN": DarkenBlend
+    of "MULTIPLY": MultiplyBlend
     # of "LINEAR_BURN": bmLinearBurn
-    of "COLOR_BURN": bmColorBurn
-    of "LIGHTEN": bmLighten
-    of "SCREEN": bmScreen
+    of "COLOR_BURN": ColorBurnBlend
+    of "LIGHTEN": LightenBlend
+    of "SCREEN": ScreenBlend
     # of "LINEAR_DODGE": bmLinearDodge
-    of "COLOR_DODGE": bmColorDodge
-    of "OVERLAY": bmOverlay
-    of "SOFT_LIGHT": bmSoftLight
-    of "HARD_LIGHT": bmHardLight
-    of "DIFFERENCE": bmDifference
-    of "EXCLUSION": bmExclusion
-    of "HUE": bmHue
-    of "SATURATION": bmSaturation
-    of "COLOR": bmColor
-    of "LUMINOSITY": bmLuminosity
+    of "COLOR_DODGE": ColorDodgeBlend
+    of "OVERLAY": OverlayBlend
+    of "SOFT_LIGHT": SoftLightBlend
+    of "HARD_LIGHT": HardLightBlend
+    of "DIFFERENCE": DifferenceBlend
+    of "EXCLUSION": ExclusionBlend
+    of "HUE": HueBlend
+    of "SATURATION": SaturationBlend
+    of "COLOR": ColorBlend
+    of "LUMINOSITY": LuminosityBlend
     else: raise newException(PixieError, "Unsupported blend mode: " & s)
 
 proc enumHook(s: string, v: var TextCase) =
   v = case s:
-    of "UPPER": tcUpper
-    of "LOWER": tcLower
-    of "TITLE": tcTitle
+    of "UPPER": UpperCase
+    of "LOWER": LowerCase
+    of "TITLE": TitleCase
     # TODO add:
     # of "SMALL_CAPS": tcSmallCaps
     # of "SMALL_CAPS_FORCED": tcCapsForced
-    else: tcNormal
+    else: NormalCase
 
 proc enumHook(s: string, v: var NodeKind) =
   v = case s:
@@ -413,22 +413,22 @@ proc enumHook(s: string, v: var StrokeAlign) =
 
 proc enumHook(s: string, v: var HorizontalAlignment) =
   v = case s:
-    of "CENTER": haCenter
-    of "LEFT": haLeft
-    of "RIGHT": haRight
+    of "CENTER": CenterAlign
+    of "LEFT": LeftAlign
+    of "RIGHT": RightAlign
     else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var VerticalAlignment) =
   v = case s:
-    of "CENTER": vaMiddle
-    of "TOP": vaTop
-    of "BOTTOM": vaBottom
+    of "CENTER": MiddleAlign
+    of "TOP": TopAlign
+    of "BOTTOM": BottomAlign
     else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var WindingRule) =
   v = case s:
-    of "EVENODD": wrEvenOdd
-    of "NONZERO": wrNonZero
+    of "EVENODD": EvenOdd
+    of "NONZERO": NonZero
     else: raise newException(FidgetError, "Invalid winding rule:" & s)
 
 proc enumHook(s: string, v: var ConstraintKind) =
