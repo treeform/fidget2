@@ -60,7 +60,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
 
   node.mat = mat # needed for picking
 
-  var pixelBox = computeIntBounds(node, mat, node.kind == nkBooleanOperation)
+  var pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
 
   if node.frozenId.len > 0:
     node.pixelBox = pixelBox
@@ -85,7 +85,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
     ## more things away from CPU and give them to GPU
 
     # Can't draw booleans on the GPU.
-    if node.kind == nkBooleanOperation:
+    if node.kind == BooleanOperationNode:
       node.collapse = true
 
     # Can't draw blending layers on the GPU.
@@ -198,7 +198,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     if paint.imageRef in bxy:
       let image = imageCache[paint.imageRef]
       case paint.scaleMode:
-      of smFill:
+      of FillScaleMode:
         let
           ratioW = image.width.float32 / node.size.x
           ratioH = image.height.float32 / node.size.y
@@ -211,7 +211,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
 
-      of smFit:
+      of FitScaleMode:
         let
           ratioW = image.width.float32 / node.size.x
           ratioH = image.height.float32 / node.size.y
@@ -223,7 +223,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
         bxy.scale(vec2(1/scale))
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
-      of smStretch:
+      of StretchScaleMode:
         var mat: Mat3
         mat[0, 0] = paint.imageTransform[0][0]
         mat[0, 1] = paint.imageTransform[0][1]
@@ -245,7 +245,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
         bxy.applyTransform(mat.mat4)
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
-      of smTile:
+      of TileScaleMode:
         discard
         # bxy.saveTransform()
         # bxy.translate(node.pixelBox.xy)

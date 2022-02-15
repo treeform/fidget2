@@ -12,23 +12,6 @@ else:
   import boxy, hybridrender, cpurender
 
 type
-  KeyState* = enum
-    ksEmpty  ## Nothing.
-    ksUp     ## Key was help this frame..
-    ksDown   ## Key was just held down this frame.
-    ksRepeat ## Os wants the key to repeat (while typing and holding).
-    ksPress  ## The key is held down right now.
-
-  MouseCursorStyle* = enum
-    Default
-    Pointer
-    Grab
-    NSResize
-
-  Mouse* = ref object
-    cursorStyle*: MouseCursorStyle ## Sets the mouse cursor icon
-    prevCursorStyle*: MouseCursorStyle
-
   Keyboard* = ref object
     onFocusNode*: Node
     onUnfocusNode*: Node
@@ -58,7 +41,6 @@ var
   requestedFrame*: bool
   redisplay*: bool
 
-  mouse* = Mouse()
   keyboard* = Keyboard()
 
   thisFrame*: Node
@@ -71,30 +53,6 @@ var
   requestPool* = newRequestPool(10)
 
 proc display(withEvents=true)
-
-# proc clearInputs*() =
-#   ## Clear inputs that are only valid for 1 frame.
-
-#   mouse.wheelDelta = 0
-#   mouse.delta = vec2(0, 0)
-#   window.buttonPressed[MouseLeft] = false
-#   mouse.doubleClick = false
-#   mouse.tripleClick = false
-
-#   buttonPressed.clear()
-#   buttonRelease.clear()
-
-#   if buttonDown.count > 0:
-#     keyboard.state = ksDown
-#   else:
-#     keyboard.state = ksEmpty
-
-#   keyboard.onFocusNode = nil
-#   keyboard.onUnfocusNode = nil
-
-proc down*(mouse: Mouse): bool =
-  ## Is the ouse button pressed down?
-  window.buttonDown[MouseLeft]
 
 proc showPopup*(name: string) =
   ## Pop up a given node as a popup.
@@ -361,7 +319,7 @@ proc onScroll() =
   let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
 
   for node in underMouseNodes:
-    if node.overflowDirection == odVerticalScrolling:
+    if node.overflowDirection == VerticalScrolling:
       # TODO make it scroll both x and y.
       node.scrollPos.y -= window.scrollDelta.y * 50
 

@@ -127,11 +127,11 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
     inner = 0.0
     outer = 0.0
   case node.strokeAlign
-  of saInside:
+  of InsideStroke:
     inner = node.strokeWeight
-  of saOutside:
+  of OutsideStroke:
     outer = node.strokeWeight
-  of saCenter:
+  of CenterStroke:
     inner = node.strokeWeight / 2
     outer = node.strokeWeight / 2
 
@@ -175,19 +175,19 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
     )
 
 proc genFillGeometry*(node: Node) {.measure.} =
-  ## Either gets existing geometry (nkVector etc..)
-  ## or generates it if (nkFrame, nkGroup...).
+  ## Either gets existing geometry (VectorNode etc..)
+  ## or generates it if (FrameNode, GroupNode...).
   case node.kind:
-  of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
+  of RectangleNode, FrameNode, GroupNode, ComponentNode, InstanceNode:
     node.fillGeometry = @[node.rectangleFillGeometry()]
   else:
     discard
 
 proc genStrokeGeometry*(node: Node) {.measure.} =
-  ## Either gets existing geometry (nkVector etc..)
-  ## or generates it if (nkFrame, nkGroup...).
+  ## Either gets existing geometry (VectorNode etc..)
+  ## or generates it if (FrameNode, GroupNode...).
   case node.kind:
-  of nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance:
+  of RectangleNode, FrameNode, GroupNode, ComponentNode, InstanceNode:
     node.strokeGeometry = @[node.rectangleStrokeGeometry()]
   else:
     discard
@@ -237,11 +237,11 @@ proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font {.measure.} =
     lineStyle = backup
 
   case lineStyle.lineHeightUnit.get()
-  of lhuPixels:
+  of PixelUnit:
     font.lineHeight = round(lineStyle.lineHeightPx)
-  of lhuFontSizePercent:
+  of FontSizePercentUnit:
     font.lineHeight = round(lineStyle.lineHeightPx)
-  of lhuIntrinsicPercent:
+  of IntrinsicPercentUnit:
     font.lineHeight = round(font.defaultLineHeight * lineStyle.lineHeightPercent / 100)
 
   font.noKerningAdjustments = not(style.opentypeFlags.KERN != 0)
@@ -331,8 +331,8 @@ proc computeArrangement*(node: Node) {.measure.} =
 
   let wrap =
     case node.style.textAutoResize:
-      of tarFixed, tarHeight: true
-      of tarWidthAndHeight: false
+      of FixedTextResize, HeightTextResize: true
+      of WidthAndHeightTextResize: false
 
   if textBoxFocus == node:
     # If node is being editing we might have to add highlight or ime string.
@@ -410,7 +410,7 @@ proc genTextGeometry*(node: Node) {.measure.} =
   node.fillGeometry = @[geom]
 
 proc computeScrollBounds*(node: Node): Rect =
-  if node.kind != nkText:
+  if node.kind != TextNode:
     for child in node.children:
       result = result or rect(child.position, child.size)
   else:
@@ -422,7 +422,7 @@ proc overlaps*(node: Node, mouse: Vec2): bool =
   ## Does the mouse overlap the node.
 
   # Generate the geometry.
-  if node.kind == nkText:
+  if node.kind == TextNode:
     node.genHitTestGeometry()
   else:
     node.genFillGeometry()

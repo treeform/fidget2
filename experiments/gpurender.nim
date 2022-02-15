@@ -288,11 +288,11 @@ proc strokeInnerOuter(node: Node): (float32, float32) =
     inner: float32 = 0
     outer: float32 = 0
   case node.strokeAlign
-  of saInside:
+  of InsideStroke:
     inner = node.strokeWeight
-  of saOutside:
+  of OutsideStroke:
     outer = node.strokeWeight
-  of saCenter:
+  of CenterStroke:
     inner = node.strokeWeight / 2
     outer = node.strokeWeight / 2
   return (inner, outer)
@@ -568,20 +568,20 @@ proc drawPaint(node: Node, paint: Paint) =
 
     case paint.scaleMode
 
-    of smFill, smFit:
+    of FillScaleMode, FitScaleMode:
       let
         ratioW = rect.w / node.size.x
         ratioH = rect.h / node.size.y
       var scalePx: float32
-      if paint.scaleMode == smFill:
+      if paint.scaleMode == FillScaleMode:
         scalePx = min(ratioW, ratioH)
-      if paint.scaleMode == smFit:
+      if paint.scaleMode == FitScaleMode:
         scalePx = max(ratioW, ratioH)
       let topRight = node.size / 2.0 - rect.wh / 2.0 / scalePx
       tMat = scale(vec2(s)) * translate(rect.xy) *
         (mat * translate(topRight) * scale(vec2(1/scalePx))).inverse()
 
-    of smStretch: # Figma ui calls this "crop".
+    of StretchScaleMode: # Figma ui calls this "crop".
       var sMat: Mat3
       sMat[0, 0] = paint.imageTransform[0][0]
       sMat[0, 1] = paint.imageTransform[0][1]
@@ -605,7 +605,7 @@ proc drawPaint(node: Node, paint: Paint) =
       tMat = scale(vec2(s)) * translate(rect.xy) *
         (mat * sMat).inverse()
 
-    of smTile:
+    of TileScaleMode:
       tileImage = 1.0
       tMat = scale(vec2(s)) * translate(rect.xy) *
         (mat * scale(vec2(paint.scalingFactor))).inverse()
@@ -687,7 +687,7 @@ proc computePixelBox*(node: Node) =
 
   # Take drop shadow into account:
   for effect in node.effects:
-    if effect.kind in {ekDropShadow, ekInnerShadow, ekLayerBlur}:
+    if effect.kind in {DropShadow, InnerShadow, LayerBlur}:
       # Note: INNER_SHADOW needs just as much area around as drop shadow
       # because it needs to blur in.
       s = max(
@@ -801,10 +801,10 @@ proc collectNode*(node: Node, level: int, rootMat = mat3()) =
   #   dataBufferSeq.add 0
 
   # for effect in node.effects:
-  #   if effect.kind == ekLayerBlur:
+  #   if effect.kind == LayerBlur:
   #     dataBufferSeq.add cmdLayerBlur.float32
   #     dataBufferSeq.add effect.radius
-  #   if effect.kind == ekDropShadow:
+  #   if effect.kind == DropShadow:
   #     dataBufferSeq.add @[
   #       cmdDropShadow.float32,
   #       effect.color.r,
@@ -828,7 +828,7 @@ proc collectNode*(node: Node, level: int, rootMat = mat3()) =
   # if hasBoundsCheck:
   #   dataBufferSeq[jmpOffset] = dataBufferSeq.len.float32
 
-  if node.kind != nkBooleanOperation:
+  if node.kind != BooleanOperationNode:
     # Draw the child nodes normally
     for c in node.children:
       collectNode(c, level + 1)

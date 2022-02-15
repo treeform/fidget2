@@ -32,7 +32,7 @@ proc printDirtyStatus*(node: Node, indent = 0) =
 
 proc makeTextDirty*(node: Node) =
   node.dirty = true
-  if node.kind == nkText:
+  if node.kind == TextNode:
     node.arrangement = nil
     node.computeArrangement()
 
@@ -99,8 +99,8 @@ proc copy*(node: Node): Node =
   copyField componentId
   copyField name
   copyField kind
-  if node.kind == nkComponent:
-    result.kind = nkInstance
+  if node.kind == ComponentNode:
+    result.kind = InstanceNode
   # Transform
   copyField position
   copyField orgPosition
@@ -154,7 +154,7 @@ proc copy*(node: Node): Node =
 proc newInstance*(node: Node): Node =
   ## Creates a new instance of a master node.
   doAssert node != nil
-  doAssert node.kind == nkComponent
+  doAssert node.kind == ComponentNode
   result = node.copy()
   result.componentId = node.id
 

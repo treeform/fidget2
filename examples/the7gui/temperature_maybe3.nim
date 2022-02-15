@@ -2,35 +2,35 @@ import chroma, fidget2, strformat, strutils
 
 type
   InputState = enum
-    isEmpty, isNumber, isError,
+    EmptyState, NumberState, ErrorState,
 
 var
   # TODO empty state?
-  celsiusState = isEmpty
+  celsiusState = EmptyState
   celsius = 0.0
-  fahrenheitState = isEmpty
+  fahrenheitState = EmptyState
   fahrenheit = 0.0
 
 at CelsiusInput:
   at text:
     onDisplay:
-      if celsiusState == isEmpty:
+      if celsiusState == EmptyState:
         thisNode.characters = ""
-      elif celsiusState == isNumber:
+      elif celsiusState == NumberState:
         thisNode.characters = &"{celsius:0.2f}"
     onFocus:
       textBox.endOfLine()
     onEdit:
       if thisNode.characters == "":
-        celsiusState = isEmpty
+        celsiusState = EmptyState
       else:
         try:
           celsius = parseFloat(thisNode.characters)
-          celsiusState = isNumber
+          celsiusState = NumberState
           fahrenheit = celsius * (9/5) + 32.0
-          fahrenheitState = isNumber
+          fahrenheitState = NumberState
         except ValueError:
-          celsiusState = isError
+          celsiusState = ErrorState
 
 ...
 

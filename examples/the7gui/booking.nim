@@ -2,10 +2,10 @@ import chroma, chrono, fidget2, print
 
 type
   FlightType = enum
-    ftReturn, ftOneWay
+    ReturnFlight, OneWayFlight
 
 var
-  flightType = ftOneWay
+  flightType = OneWayFlight
   departStr = "02.09.2021"
   departCal: Calendar
   returnStr = "03.09.2021"
@@ -26,7 +26,7 @@ find "BookingFrame":
     find "Return":
       onClick:
         if find("/BookingFrame/Picker").visible:
-          flightType = ftReturn
+          flightType = ReturnFlight
           find("..").visible = false
 
           var n = find("/BookingFrame/Inner/ReturnInput/bg")
@@ -35,7 +35,7 @@ find "BookingFrame":
     find "OneWay":
       onClick:
         if find("/BookingFrame/Picker").visible:
-          flightType = ftOneWay
+          flightType = OneWayFlight
           find("..").visible = false
 
           var n = find("/BookingFrame/Inner/ReturnInput/bg")
@@ -45,7 +45,7 @@ find "BookingFrame":
     find "FlightType":
       find "text":
         onDisplay:
-          if flightType == ftOneWay:
+          if flightType == OneWayFlight:
             thisNode.characters = "one-way flight"
           else:
             thisNode.characters = "return flight"
@@ -76,7 +76,7 @@ find "BookingFrame":
       onClick:
         echo "book: ", flightType
         echo "depart: ", departCal
-        if flightType == ftReturn:
+        if flightType == ReturnFlight:
           echo "return:", returnCal
 
 startFidget(

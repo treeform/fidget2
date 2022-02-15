@@ -11,29 +11,29 @@ proc computeLayout*(parent, node: Node) {.measure.} =
     computeLayout(node, n)
 
   # Typeset text
-  if node.kind == nkText:
+  if node.kind == TextNode:
     case node.style.textAutoResize:
-      of tarFixed:
+      of FixedTextResize:
         # Fixed sized text node.
         discard
-      of tarHeight:
+      of HeightTextResize:
         # Text will grow down.
         let bounds = computeTextBounds(node)
         node.size.y = bounds.y
-      of tarWidthAndHeight:
+      of WidthAndHeightTextResize:
         # Text will grow down and wide.
         let bounds = computeTextBounds(node)
         node.size.x = bounds.x
         node.size.y = bounds.y
 
   # Auto-layout code.
-  if node.layoutMode == lmVertical:
+  if node.layoutMode == VerticalLayout:
 
-    if node.counterAxisSizingMode == asAuto:
+    if node.counterAxisSizingMode == AutoAxis:
       # Resize to fit elements tightly.
       var maxW = 0.0
       for n in node.children:
-        if n.layoutAlign != laStretch:
+        if n.layoutAlign != StretchLayout:
           maxW = max(maxW, n.size.x)
       node.size.x = maxW + node.paddingLeft + node.paddingRight
 
@@ -55,12 +55,12 @@ proc computeLayout*(parent, node: Node) {.measure.} =
     at += node.paddingBottom
     node.size.y = at
 
-  if node.layoutMode == lmHorizontal:
-    if node.counterAxisSizingMode == asAuto:
+  if node.layoutMode == HorizontalLayout:
+    if node.counterAxisSizingMode == AutoAxis:
       # Resize to fit elements tightly.
       var maxH = 0.0
       for n in node.children:
-        if n.layoutAlign != laStretch:
+        if n.layoutAlign != StretchLayout:
           maxH = max(maxH, n.size.y)
       node.size.y = maxH + node.paddingTop + node.paddingBottom
 
@@ -84,38 +84,38 @@ proc computeLayout*(parent, node: Node) {.measure.} =
 
   # Constraints code.
   case node.constraints.horizontal:
-    of cMin: discard
-    of cMax:
+    of MinConstraint: discard
+    of MaxConstraint:
       let rightSpace = parent.orgSize.x - node.orgPosition.x
       node.position.x = parent.size.x - rightSpace
-    of cScale:
+    of ScaleConstraint:
       let xScale = parent.size.x / parent.orgSize.x
       node.position.x = node.orgPosition.x * xScale
       node.size.x = node.orgSize.x * xScale
-    of cStretch:
+    of StretchConstraint:
       let rightSpace = parent.orgSize.x - node.orgSize.x
       node.size.x = parent.size.x - rightSpace
-    of cCenter:
+    of CenterConstraint:
       let offset = node.orgPosition.x - round(parent.orgSize.x / 2.0)
       node.position.x = round(parent.size.x / 2.0) + offset
 
   case node.constraints.vertical:
-    of cMin: discard
-    of cMax:
+    of MinConstraint: discard
+    of MaxConstraint:
       let bottomSpace = parent.orgSize.y - node.orgPosition.y
       node.position.y = parent.size.y - bottomSpace
-    of cScale:
+    of ScaleConstraint:
       let yScale = parent.size.y / parent.orgSize.y
       node.position.y = node.orgPosition.y * yScale
       node.size.y = node.orgSize.y * yScale
-    of cStretch:
+    of StretchConstraint:
       let bottomSpace = parent.orgSize.y - node.orgSize.y
       node.size.y = parent.size.y - bottomSpace
-    of cCenter:
+    of CenterConstraint:
       let offset = node.orgPosition.y - round(parent.orgSize.y / 2.0)
       node.position.y = round(parent.size.y / 2.0) + offset
 
   # Fix scroll position when resizing.
-  if node.kind == nkText or node.overflowDirection == odVerticalScrolling:
+  if node.kind == TextNode or node.overflowDirection == VerticalScrolling:
     let bounds = node.computeScrollBounds()
     node.scrollPos = clamp(node.scrollPos, bounds)

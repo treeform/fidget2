@@ -2,12 +2,12 @@ import bumpy, chroma, common, jsony, strutils, tables, pixie, vmath, options, un
 
 type
   NodeKind* = enum
-    nkDocument, nkCanvas
-    nkRectangle, nkFrame, nkGroup, nkComponent, nkInstance
-    nkVector, nkStar, nkEllipse, nkLine, nkRegularPolygon
-    nkText
-    nkBooleanOperation
-    nkComponentSet
+    DocumentNode, CanvasNode
+    RectangleNode, FrameNode, GroupNode, ComponentNode, InstanceNode
+    VectorNode, StarNode, EllipseNode, LineNode, RegularPolygonNode
+    TextNode
+    BooleanOperationNode
+    ComponentSetNode
 
   Component* = ref object
     key*: string
@@ -15,19 +15,19 @@ type
     description*: string
 
   ConstraintKind* = enum
-    cMin
-    cMax
-    cScale
-    cStretch
-    cCenter
+    MinConstraint
+    MaxConstraint
+    ScaleConstraint
+    StretchConstraint
+    CenterConstraint
 
   LayoutConstraint* = ref object
     vertical*: ConstraintKind
     horizontal*: ConstraintKind
 
   LayoutAlign* = enum
-    laInherit
-    laStretch
+    InheritLayout
+    StretchLayout
 
   PaintKind* = enum
     pkSolid
@@ -38,10 +38,10 @@ type
     pkGradientDiamond
 
   ScaleMode* = enum
-    smFill
-    smFit
-    smStretch
-    smTile
+    FillScaleMode
+    FitScaleMode
+    StretchScaleMode
+    TileScaleMode
 
   Transform* = array[2, array[3, float32]]
     ## A 2D affine transformation matrix that can be used to calculate the
@@ -63,10 +63,10 @@ type
     gradientStops*: seq[ColorStop]
 
   EffectKind* = enum
-    ekDropShadow
-    ekInnerShadow
-    ekLayerBlur
-    ekBackgroundBlur
+    DropShadow
+    InnerShadow
+    LayerBlur
+    BackgroundBlur
 
   Effect* = object
     kind*: EffectKind
@@ -78,19 +78,19 @@ type
     spread*: float32
 
   LayoutMode* = enum
-    lmNone
-    lmHorizontal
-    lmVertical
+    NoneLayout
+    HorizontalLayout
+    VerticalLayout
 
   LayoutPattern* = enum
-    lpColumns
-    lpRows
-    lpGrid
+    ColumnsLayoutPattern
+    RowsLayoutPattern
+    GridLayoutPattern
 
   GridAlign* = enum
-    gaMin
-    gaStretch
-    gaCenter
+    MinGridAlign
+    StretchGridAlign
+    CenterGridAlign
 
   LayoutGrid* = object
     pattern*: LayoutPattern
@@ -106,18 +106,18 @@ type
     KERN*: int
 
   TextAutoResize* = enum
-    tarFixed
-    tarHeight
-    tarWidthAndHeight
+    FixedTextResize
+    HeightTextResize
+    WidthAndHeightTextResize
 
   TextDecoration* = enum
-    tdStrikethrough
-    tdUnderline
+    Strikethrough
+    Underline
 
   LineHeightUnit* = enum
-    lhuPixels
-    lhuFontSizePercent
-    lhuIntrinsicPercent
+    PixelUnit
+    FontSizePercentUnit
+    IntrinsicPercentUnit
 
   TypeStyle* = ref object
     fontFamily*: string
@@ -150,25 +150,25 @@ type
     shapesBounds*: Rect
 
   BooleanOperation* = enum
-    boUnion
-    boSubtract
-    boIntersect
-    boExclude
+    UnionOperation
+    SubtractOperation
+    IntersectOperation
+    ExcludeOperation
 
   StrokeAlign* = enum
-    saInside
-    saOutside
-    saCenter
+    InsideStroke
+    OutsideStroke
+    CenterStroke
 
   AxisSizingMode* = enum
-    asAuto
-    asFixed
+    AutoAxis
+    FixedAxis
 
   OverflowDirection* = enum
-    odNone
-    odHorizontalScrolling
-    odVerticalScrolling
-    odHorizontalAndVerticalScrolling
+    NoScrolling
+    HorizontalScrolling
+    VerticalScrolling
+    HorizontalAndVerticalScrolling
 
   Node* = ref object
     # Basic Node properties
@@ -334,21 +334,21 @@ proc enumHook(s: string, v: var TextCase) =
 
 proc enumHook(s: string, v: var NodeKind) =
   v = case s:
-    of "DOCUMENT": nkDocument
-    of "CANVAS": nkCanvas
-    of "RECTANGLE": nkRectangle
-    of "FRAME": nkFrame
-    of "GROUP": nkGroup
-    of "COMPONENT": nkComponent
-    of "INSTANCE": nkInstance
-    of "VECTOR": nkVector
-    of "STAR": nkStar
-    of "ELLIPSE": nkEllipse
-    of "LINE": nkLine
-    of "REGULAR_POLYGON": nkRegularPolygon
-    of "TEXT": nkText
-    of "BOOLEAN_OPERATION": nkBooleanOperation
-    of "COMPONENT_SET": nkComponentSet
+    of "DOCUMENT": DocumentNode
+    of "CANVAS": CanvasNode
+    of "RECTANGLE": RectangleNode
+    of "FRAME": FrameNode
+    of "GROUP": GroupNode
+    of "COMPONENT": ComponentNode
+    of "INSTANCE": InstanceNode
+    of "VECTOR": VectorNode
+    of "STAR": StarNode
+    of "ELLIPSE": EllipseNode
+    of "LINE": LineNode
+    of "REGULAR_POLYGON": RegularPolygonNode
+    of "TEXT": TextNode
+    of "BOOLEAN_OPERATION": BooleanOperationNode
+    of "COMPONENT_SET": ComponentSetNode
     else: raise newException(FidgetError, "Invalid node type:" & s)
 
 proc enumHook(s: string, v: var PaintKind) =
@@ -363,52 +363,52 @@ proc enumHook(s: string, v: var PaintKind) =
 
 proc enumHook(s: string, v: var EffectKind) =
   v = case s:
-    of "DROP_SHADOW": ekDropShadow
-    of "INNER_SHADOW": ekInnerShadow
-    of "LAYER_BLUR": ekLayerBlur
-    of "BACKGROUND_BLUR": ekBackgroundBlur
+    of "DROP_SHADOW": DropShadow
+    of "INNER_SHADOW": InnerShadow
+    of "LAYER_BLUR": LayerBlur
+    of "BACKGROUND_BLUR": BackgroundBlur
     else: raise newException(FidgetError, "Invalid effect type:" & s)
 
 proc enumHook(s: string, v: var BooleanOperation) =
   v = case s:
-    of "SUBTRACT": boSubtract
-    of "INTERSECT": boIntersect
-    of "EXCLUDE": boExclude
-    of "UNION": boUnion
+    of "SUBTRACT": SubtractOperation
+    of "INTERSECT": IntersectOperation
+    of "EXCLUDE": ExcludeOperation
+    of "UNION": UnionOperation
     else: raise newException(FidgetError, "Invalid boolean operation:" & s)
 
 proc enumHook(s: string, v: var ScaleMode) =
   v = case s:
-    of "FILL": smFill
-    of "FIT": smFit
-    of "STRETCH": smStretch
-    of "TILE": smTile
+    of "FILL": FillScaleMode
+    of "FIT": FitScaleMode
+    of "STRETCH": StretchScaleMode
+    of "TILE": TileScaleMode
     else: raise newException(FidgetError, "Invalid scale mode:" & s)
 
 proc enumHook(s: string, v: var TextAutoResize) =
   v = case s:
-    of "HEIGHT": tarHeight
-    of "WIDTH_AND_HEIGHT": tarWidthAndHeight
+    of "HEIGHT": HeightTextResize
+    of "WIDTH_AND_HEIGHT": WidthAndHeightTextResize
     else: raise newException(FidgetError, "Invalid text auto resize:" & s)
 
 proc enumHook(s: string, v: var TextDecoration) =
   v = case s:
-    of "STRIKETHROUGH": tdStrikethrough
-    of "UNDERLINE": tdUnderline
+    of "STRIKETHROUGH": Strikethrough
+    of "UNDERLINE": Underline
     else: raise newException(FidgetError, "Invalid text decoration:" & s)
 
 proc enumHook(s: string, v: var LineHeightUnit) =
   v = case s:
-    of "PIXELS": lhuPixels
-    of "FONT_SIZE_%": lhuFontSizePercent
-    of "INTRINSIC_%": lhuIntrinsicPercent
+    of "PIXELS": PixelUnit
+    of "FONT_SIZE_%": FontSizePercentUnit
+    of "INTRINSIC_%": IntrinsicPercentUnit
     else: raise newException(FidgetError, "Invalid text line height unit:" & s)
 
 proc enumHook(s: string, v: var StrokeAlign) =
   v = case s:
-    of "INSIDE": saInside
-    of "OUTSIDE": saOutside
-    of "CENTER": saCenter
+    of "INSIDE": InsideStroke
+    of "OUTSIDE": OutsideStroke
+    of "CENTER": CenterStroke
     else: raise newException(FidgetError, "Invalid stroke align:" & s)
 
 proc enumHook(s: string, v: var HorizontalAlignment) =
@@ -433,55 +433,55 @@ proc enumHook(s: string, v: var WindingRule) =
 
 proc enumHook(s: string, v: var ConstraintKind) =
   v = case s:
-    of "TOP": cMin
-    of "BOTTOM": cMax
-    of "CENTER": cCenter
-    of "TOP_BOTTOM": cStretch
-    of "SCALE": cScale
-    of "LEFT": cMin
-    of "RIGHT": cMax
-    of "LEFT_RIGHT": cStretch
+    of "TOP": MinConstraint
+    of "BOTTOM": MaxConstraint
+    of "CENTER": CenterConstraint
+    of "TOP_BOTTOM": StretchConstraint
+    of "SCALE": ScaleConstraint
+    of "LEFT": MinConstraint
+    of "RIGHT": MaxConstraint
+    of "LEFT_RIGHT": StretchConstraint
     else: raise newException(FidgetError, "Invalid constraint kind:" & s)
 
 proc enumHook(s: string, v: var GridAlign) =
   v = case s:
-    of "STRETCH": gaStretch
-    of "MIN": gaMin
-    of "CENTER": gaCenter
+    of "STRETCH": StretchGridAlign
+    of "MIN": MinGridAlign
+    of "CENTER": CenterGridAlign
     else: raise newException(FidgetError, "Invalid grid align:" & s)
 
 proc enumHook(s: string, v: var LayoutAlign) =
   v = case s:
-    of "INHERIT": laInherit
-    of "STRETCH": laStretch
+    of "INHERIT": InheritLayout
+    of "STRETCH": StretchLayout
     else: raise newException(FidgetError, "Invalid layout align:" & s)
 
 proc enumHook(s: string, v: var LayoutPattern) =
   v = case s:
-    of "COLUMNS": lpColumns
-    of "ROWS": lpRows
-    of "GRID": lpGrid
+    of "COLUMNS": ColumnsLayoutPattern
+    of "ROWS": RowsLayoutPattern
+    of "GRID": GridLayoutPattern
     else: raise newException(FidgetError, "Invalid layout pattern:" & s)
 
 proc enumHook(s: string, v: var LayoutMode) =
   v = case s:
-    of "NONE": lmNone
-    of "HORIZONTAL": lmHorizontal
-    of "VERTICAL": lmVertical
+    of "NONE": NoneLayout
+    of "HORIZONTAL": HorizontalLayout
+    of "VERTICAL": VerticalLayout
     else: raise newException(FidgetError, "Invalid layout mode:" & s)
 
 proc enumHook(s: string, v: var AxisSizingMode) =
   v = case s:
-    of "AUTO": asAuto
-    of "FIXED": asFixed
+    of "AUTO": AutoAxis
+    of "FIXED": FixedAxis
     else: raise newException(FidgetError, "Invalid axis sizing mode:" & s)
 
 proc enumHook(s: string, v: var OverflowDirection) =
   v = case s:
-    of "NONE": odNone
-    of "HORIZONTAL_SCROLLING": odHorizontalScrolling
-    of "VERTICAL_SCROLLING": odVerticalScrolling
-    of "HORIZONTAL_AND_VERTICAL_SCROLLING": odHorizontalAndVerticalScrolling
+    of "NONE": NoScrolling
+    of "HORIZONTAL_SCROLLING": HorizontalScrolling
+    of "VERTICAL_SCROLLING": VerticalScrolling
+    of "HORIZONTAL_AND_VERTICAL_SCROLLING": HorizontalAndVerticalScrolling
     else: raise newException(FidgetError, "Invalid overflow direction:" & s)
 
 import parseutils

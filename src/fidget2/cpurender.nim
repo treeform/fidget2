@@ -19,7 +19,7 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
   ## Compute self bounds of a given node.
 
   # Generate the geometry.
-  if node.kind == nkText:
+  if node.kind == TextNode:
     node.genTextGeometry()
   else:
     node.genFillGeometry()
@@ -49,10 +49,10 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
   var borderMinV, borderMaxV: Vec2
   for effect in node.effects:
     case effect.kind
-    of ekLayerBlur, ekBackgroundBlur:
+    of LayerBlur, BackgroundBlur:
       borderMinV = min(borderMinV, vec2(-effect.radius))
       borderMaxV = max(borderMaxV, vec2(effect.radius))
-    of ekDropShadow, ekInnerShadow:
+    of DropShadow, InnerShadow:
       borderMinV = min(
         borderMinV,
         effect.offset - vec2(effect.radius+effect.spread)
@@ -163,7 +163,7 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
       image = imageCache[paint.imageRef]
 
     case paint.scaleMode
-    of smFill:
+    of FillScaleMode:
       let
         ratioW = image.width.float32 / node.size.x
         ratioH = image.height.float32 / node.size.y
@@ -174,7 +174,7 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
         mat * translate(topRight) * scale(vec2(1/scale))
       )
 
-    of smFit:
+    of FitScaleMode:
       let
         ratioW = image.width.float32 / node.size.x
         ratioH = image.height.float32 / node.size.y
@@ -185,7 +185,7 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
         mat * translate(topRight) * scale(vec2(1/scale))
       )
 
-    of smStretch: # Figma ui calls this "crop".
+    of StretchScaleMode: # Figma ui calls this "crop".
       var mat: Mat3
       mat[0, 0] = paint.imageTransform[0][0]
       mat[0, 1] = paint.imageTransform[0][1]
@@ -207,7 +207,7 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
       mat = mat * scale(vec2(1/scale))
       result.draw(image, mat)
 
-    of smTile:
+    of TileScaleMode:
       var x = 0.0
       while x < node.size.x:
         var y = 0.0
@@ -299,7 +299,7 @@ proc maskSelfImage*(node: Node): Mask {.measure.} =
 proc drawInnerShadow(node: Node) =
   for effect in node.effects:
     if effect.visible:
-      if effect.kind == ekInnerShadow:
+      if effect.kind == InnerShadow:
         drawInnerShadowEffect(effect, node, node.maskSelfImage())
 
 proc drawGeometry*(node: Node) {.measure.} =
@@ -309,7 +309,7 @@ proc drawGeometry*(node: Node) {.measure.} =
   else:
     # Draw stroke depending on stroke align.
     case node.strokeAlign
-    of saInside:
+    of InsideStroke:
       if node.fillGeometry.len == 0:
         node.drawPaint(node.strokes, node.strokeGeometry)
 
@@ -331,12 +331,12 @@ proc drawGeometry*(node: Node) {.measure.} =
         strokeLayer.draw(fillMask, blendMode = MaskBlend)
         layer.draw(strokeLayer)
 
-    of saCenter:
+    of CenterStroke:
       node.drawPaint(node.fills, node.fillGeometry)
       node.drawInnerShadow()
       node.drawPaint(node.strokes, node.strokeGeometry)
 
-    of saOutside:
+    of OutsideStroke:
       # Deal with fill
       var fillLayer = layer
       node.drawPaint(node.fills, node.fillGeometry)
@@ -435,10 +435,10 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
         NormalBlend
       else:
         case node.booleanOperation:
-          of boUnion: NormalBlend
-          of boSubtract: SubtractMaskBlend
-          of boIntersect: MaskBlend
-          of boExclude: ExcludeMaskBlend
+          of UnionOperation: NormalBlend
+          of SubtractOperation: SubtractMaskBlend
+          of IntersectOperation: MaskBlend
+          of ExcludeOperation: ExcludeMaskBlend
     drawBooleanNode(child, blendMode)
 
   mat = prevMat
@@ -481,9 +481,9 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
     layers.add(layer)
     layer = newImage(layer.width, layer.height)
 
-  if node.kind == nkText:
+  if node.kind == TextNode:
     node.drawText()
-  elif node.kind == nkBooleanOperation:
+  elif node.kind == BooleanOperationNode:
     node.drawBoolean()
   else:
     node.genFillGeometry()
@@ -514,7 +514,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
         layers[^1].draw(layer)
         layer = layers.pop()
 
-    elif node.kind == nkBooleanOperation:
+    elif node.kind == BooleanOperationNode:
       discard
     else:
       for child in node.children:
@@ -531,11 +531,11 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
 
     for effect in node.effects:
       if effect.visible:
-        if effect.kind == ekDropShadow:
+        if effect.kind == DropShadow:
           lowerLayer.drawDropShadowEffect(layer, effect, node)
-        if effect.kind == ekLayerBlur:
+        if effect.kind == LayerBlur:
           layer.blur(effect.radius)
-        if effect.kind == ekBackgroundBlur:
+        if effect.kind == BackgroundBlur:
           drawBackgroundBlur(lowerLayer, effect)
 
     measurePush("lowerLayer.draw") # & $node.blendMode)

@@ -4,25 +4,25 @@ use("https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa")
 
 type
   InputState = enum
-    isEmpty, isNumber, isError, isGray
+    EmptyState, NumberState, ErrorState, GrayState
 
 var
   # TODO empty state?
-  celsiusState = isEmpty
+  celsiusState = EmptyState
   celsius = 0.0
-  fahrenheitState = isEmpty
+  fahrenheitState = EmptyState
   fahrenheit = 0.0
 
 onDisplay "CelsiusInput/text":
-  if celsiusState == isEmpty:
+  if celsiusState == EmptyState:
     thisNode.characters = ""
-  elif celsiusState == isNumber:
+  elif celsiusState == NumberState:
     thisNode.characters = $celsius.int
 onDisplay "CelsiusInput/bg":
   # thisNode.setVariation("State", $celsiusState)
-  if celsiusState == isError:
+  if celsiusState == ErrorState:
     thisNode.fills[0].color = parseHtmlColor("#FFDAC5")
-  elif celsiusState == isGray:
+  elif celsiusState == GrayState:
     thisNode.fills[0].color = parseHtmlColor("#E0E0E0")
   else:
     thisNode.fills[0].color = parseHtmlColor("#FFFFFF")
@@ -31,27 +31,27 @@ onDisplay "CelsiusInput/bg":
 onEdit "CelsiusInput/text":
   # only call when text characters change
   if thisNode.characters == "":
-    celsiusState = isEmpty
-    fahrenheitState = isGray
+    celsiusState = EmptyState
+    fahrenheitState = GrayState
   else:
     try:
       celsius = parseFloat(thisNode.characters)
-      celsiusState = isNumber
+      celsiusState = NumberState
       fahrenheit = celsius * (9/5) + 32.0
-      fahrenheitState = isNumber
+      fahrenheitState = NumberState
     except ValueError:
-      celsiusState = isError
-      fahrenheitState = isGray
+      celsiusState = ErrorState
+      fahrenheitState = GrayState
 
 onDisplay "FahrenheitInput/text":
-  if fahrenheitState == isEmpty:
+  if fahrenheitState == EmptyState:
     thisNode.characters = ""
-  elif fahrenheitState == isNumber:
+  elif fahrenheitState == NumberState:
     thisNode.characters = $fahrenheit.int
 onDisplay "FahrenheitInput/bg":
-  if fahrenheitState == isError:
+  if fahrenheitState == ErrorState:
     thisNode.fills[0].color = parseHtmlColor("#FFDAC5")
-  elif fahrenheitState == isGray:
+  elif fahrenheitState == GrayState:
     thisNode.fills[0].color = parseHtmlColor("#E0E0E0")
   else:
     thisNode.fills[0].color = parseHtmlColor("#FFFFFF")
@@ -59,17 +59,17 @@ onFocus "FahrenheitInput/text":
   textBox.endOfLine()
 onEdit "FahrenheitInput/text":
   if thisNode.characters == "":
-    fahrenheitState = isEmpty
-    celsiusState = isGray
+    fahrenheitState = EmptyState
+    celsiusState = GrayState
   else:
     try:
       fahrenheit = parseFloat(thisNode.characters)
-      fahrenheitState = isNumber
+      fahrenheitState = NumberState
       celsius = (fahrenheit - 32.0) * (5/9)
-      celsiusState = isNumber
+      celsiusState = NumberState
     except ValueError:
-      fahrenheitState = isError
-      celsiusState = isGray
+      fahrenheitState = ErrorState
+      celsiusState = GrayState
 
 startFidget(
   windowTitle = "Temperature",
