@@ -399,7 +399,7 @@ proc genTextGeometry*(node: Node) {.measure.} =
   geom.windingRule = NonZero
 
   node.computeArrangement()
-  let bounds = node.arrangement.computeBounds()
+  let bounds = node.arrangement.layoutBounds()
   # Basic rectangle.
   geom.path.rect(
     x = -node.scrollPos.x,
@@ -415,7 +415,7 @@ proc computeScrollBounds*(node: Node): Rect =
       result = result or rect(child.position, child.size)
   else:
     node.computeArrangement()
-    result.wh = node.arrangement.computeBounds()
+    result.wh = node.arrangement.layoutBounds()
   result.h = max(0, result.h - node.size.y)
 
 proc overlaps*(node: Node, mouse: Vec2): bool =

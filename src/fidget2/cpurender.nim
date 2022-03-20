@@ -20,7 +20,12 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
 
   # Generate the geometry.
   if node.kind == TextNode:
-    node.genTextGeometry()
+    #node.genTextGeometry()
+    node.computeArrangement()
+    var bounds = node.arrangement.computeBounds()
+    bounds.x += mat.pos.x
+    bounds.y += mat.pos.y
+    return bounds.snapToPixels()
   else:
     node.genFillGeometry()
     node.genStrokeGeometry()

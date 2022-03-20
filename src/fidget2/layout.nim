@@ -2,7 +2,7 @@ import bumpy, schema, vmath, internal, tables, pixie, perf
 
 proc computeTextBounds(node: Node): Vec2 {.measure.} =
   node.computeArrangement()
-  return node.arrangement.computeBounds()
+  return node.arrangement.layoutBounds()
 
 proc computeLayout*(parent, node: Node) {.measure.} =
   ## Computes constraints and auto-layout.
