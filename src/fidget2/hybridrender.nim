@@ -258,27 +258,41 @@ proc drawWithAtlas(node: Node) {.measure.} =
     doAssert node.pixelBox.x.fractional == 0
     doAssert node.pixelBox.y.fractional == 0
     doAssert node.willDrawSomething()
-
-    if node.clipsContent:
-      bxy.beginMask()
-      bxy.drawImage(node.id & ".mask", pos = node.pixelBox.xy)
-      bxy.endMask()
-      inc pushedMasks
-
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
+  var hasMask = false
+  for child in node.children:
+    if child.isMask:
+      hasMask = true
+
+  if node.clipsContent or node.opacity < 1.0 or hasMask:
+    bxy.pushLayer()
+    inc pushedMasks
+
   if not node.collapse:
+    var needsMask: seq[Node]
     for child in node.children:
       if child.isMask:
-        bxy.beginMask()
-        drawWithAtlas(child)
-        bxy.endMask()
-        inc pushedMasks
+        needsMask.add(child)
       else:
-        drawWithAtlas(child)
+        if needsMask.len == 0:
+          drawWithAtlas(child)
+        else:
+          bxy.pushLayer()
+          drawWithAtlas(child)
+          bxy.pushLayer()
+          for mask in needsMask:
+            drawWithAtlas(mask)
+          bxy.popLayer(blendMode = MaskBlend)
+          bxy.popLayer()
+
+  if node.clipsContent:
+    bxy.pushLayer()
+    bxy.drawImage(node.id & ".mask", pos = node.pixelBox.xy)
+    bxy.popLayer(blendMode = MaskBlend)
 
   for i in 0 ..< pushedMasks:
-    bxy.popMask()
+    bxy.popLayer(tintColor = color(1, 1, 1, node.opacity))
 
 proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.
