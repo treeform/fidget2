@@ -89,10 +89,10 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
       node.collapse = true
 
     # Can't draw blending layers on the GPU.
-    for child in node.children:
-      if child.blendMode != NormalBlend:
-        node.collapse = true
-        break
+    # for child in node.children:
+    #   if child.blendMode != NormalBlend:
+    #     node.collapse = true
+    #     break
 
     # Can't draw masks on the GPU.
     # for child in node.children:
@@ -182,6 +182,18 @@ proc drawWithAtlas(node: Node) {.measure.} =
 
   var pushedMasks = 0
 
+  var hasMask = false
+  for child in node.children:
+    if child.isMask:
+      hasMask = true
+
+  if node.clipsContent or
+    node.opacity < 1.0 or
+    hasMask or
+    node.blendMode != NormalBlend:
+      bxy.pushLayer()
+      inc pushedMasks
+
   if node.frozen:
     bxy.saveTransform()
     bxy.applyTransform(node.mat.mat4)
@@ -260,15 +272,6 @@ proc drawWithAtlas(node: Node) {.measure.} =
     doAssert node.willDrawSomething()
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
-  var hasMask = false
-  for child in node.children:
-    if child.isMask:
-      hasMask = true
-
-  if node.clipsContent or node.opacity < 1.0 or hasMask:
-    bxy.pushLayer()
-    inc pushedMasks
-
   if not node.collapse:
     var needsMask: seq[Node]
     for child in node.children:
@@ -292,7 +295,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.popLayer(blendMode = MaskBlend)
 
   for i in 0 ..< pushedMasks:
-    bxy.popLayer(tintColor = color(1, 1, 1, node.opacity))
+    bxy.popLayer(tintColor = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
 
 proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.
