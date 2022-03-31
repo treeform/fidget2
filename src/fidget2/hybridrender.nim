@@ -41,11 +41,12 @@ proc willDrawSomething(node: Node): bool =
   return false
 
 proc isSimpleImage*(node: Node): bool =
-  ## Checks if node is a simple image and can be drawn purly with GPU and
+  ## Checks if node is a simple image and can be drawn purely with GPU and
   ## not go through CPU rendering path to resize it.
   node.strokes.len == 0 and
   node.fills.len == 1 and
   node.fills[0].kind == schema.PaintKind.pkImage and
+  node.fills[0].scaleMode == FitScaleMode and
   node.cornerRadius == 0
 
 proc drawToAtlas(node: Node, level: int) {.measure.} =
@@ -235,6 +236,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
         bxy.scale(vec2(1/scale))
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
+
       of StretchScaleMode:
         var mat: Mat3
         mat[0, 0] = paint.imageTransform[0][0]
@@ -257,14 +259,22 @@ proc drawWithAtlas(node: Node) {.measure.} =
         bxy.applyTransform(mat.mat4)
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
+
       of TileScaleMode:
-        discard
-        # bxy.saveTransform()
-        # bxy.translate(node.pixelBox.xy)
-        # bxy.applyTransform(paint.imageTransform.mat4)
-        # print node.name, node.pixelBox, paint.imageTransform
-        # bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
-        # bxy.restoreTransform()
+        var x = 0.0
+        while x < node.size.x:
+          var y = 0.0
+          while y < node.size.y:
+            bxy.saveTransform()
+            bxy.applyTransform(
+              (node.mat * translate(vec2(x, y)) *
+              scale(vec2(paint.scalingFactor, paint.scalingFactor))).mat4
+            )
+            bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
+            bxy.restoreTransform()
+            y += image.height.float32 * paint.scalingFactor
+          x += image.width.float32 * paint.scalingFactor
+
 
   elif node.id in bxy:
     doAssert node.pixelBox.x.fractional == 0
