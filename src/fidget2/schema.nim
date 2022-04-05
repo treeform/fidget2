@@ -8,6 +8,7 @@ type
     TextNode
     BooleanOperationNode
     ComponentSetNode
+    SliceNode
 
   Component* = ref object
     key*: string
@@ -349,6 +350,7 @@ proc enumHook(s: string, v: var NodeKind) =
     of "TEXT": TextNode
     of "BOOLEAN_OPERATION": BooleanOperationNode
     of "COMPONENT_SET": ComponentSetNode
+    of "SLICE": SliceNode
     else: raise newException(FidgetError, "Invalid node type:" & s)
 
 proc enumHook(s: string, v: var PaintKind) =
