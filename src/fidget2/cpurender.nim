@@ -85,33 +85,29 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
     ## Visits each node and sees if its geometry overlaps the mouse.
 
     let mat = mat * node.transform()
-    var overlaps = false
 
+    var overlapsNode = false
+    # Check all geometry for overlaps.
+    if node.kind == TextNode:
+      node.genHitTestGeometry()
+    for geom in node.fillGeometry & node.strokeGeometry:
+      if geom.path.fillOverlaps(mousePos, mat, geom.windingRule):
+        overlapsNode = true
+        break
+
+    if node.clipsContent:
+      if not overlapsNode:
+        return
+
+    var overlapsChild = false
     # Visit all children first, if any of them overlaps this node overlaps too.
     for child in node.children.reverse:
       if child.visible:
-        if child.visit(
-          mat,
-          mousePos,
-          s
-        ) and not overlaps:
-          overlaps = true
+        if child.visit(mat, mousePos, s):
+          overlapsChild = true
           break
 
-    if not overlaps:
-      # Check all geometry for overlaps.
-      block all:
-        if node.visible:
-          for geom in node.fillGeometry:
-            if geom.path.fillOverlaps(mousePos, mat, geom.windingRule):
-              overlaps = true
-              break all
-          for geom in node.strokeGeometry:
-            if geom.path.fillOverlaps(mousePos, mat, geom.windingRule):
-              overlaps = true
-              break all
-
-    if overlaps:
+    if overlapsNode or overlapsChild:
       s.add(node)
       return true
 
