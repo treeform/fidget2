@@ -181,6 +181,18 @@ proc drawWithAtlas(node: Node) {.measure.} =
   if not node.visible or node.opacity == 0:
     return
 
+  if node.frozen:
+    bxy.saveTransform()
+    bxy.applyTransform(node.mat.mat4)
+    let size = bxy.getImageSize(node.frozenId).vec2
+    bxy.scale(vec2(
+      node.size.x / size.x,
+      node.size.y / size.y
+    ))
+    bxy.drawImage(node.frozenId, pos = vec2(0, 0))
+    bxy.restoreTransform()
+    return
+
   var pushedMasks = 0
 
   var hasMask = false
@@ -195,18 +207,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
       bxy.pushLayer()
       inc pushedMasks
 
-  if node.frozen:
-    bxy.saveTransform()
-    bxy.applyTransform(node.mat.mat4)
-    let size = bxy.getImageSize(node.frozenId).vec2
-    bxy.scale(vec2(
-      node.size.x / size.x,
-      node.size.y / size.y
-    ))
-    bxy.drawImage(node.frozenId, pos = vec2(0, 0))
-    bxy.restoreTransform()
-
-  elif node.isSimpleImage:
+  if node.isSimpleImage:
     let paint = node.fills[0]
     if paint.imageRef in bxy:
       let image = imageCache[paint.imageRef]
@@ -384,7 +385,7 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       node.drawNodeInternal(withChildren=true)
       bxy.addImage(node.frozenId, layer, genMipmaps=true)
   else:
-    echo "Warning: Freezing non instance"
+    echo "Warning: Freezing non instance: ", node.path
     node.frozen = true
     node.frozenId = node.id
     if node.frozenId notin bxy:

@@ -1,6 +1,13 @@
 import schema, loader, random, algorithm, strutils,
     flatty/hashy2, vmath, sequtils, internal
 
+proc path*(node: Node): string =
+  ## Returns that full path of the node back to the root.
+  var walkNode = node
+  while walkNode != nil and walkNode.kind != DocumentNode:
+    result = "/" & walkNode.name & result
+    walkNode = walkNode.parent
+
 proc deepClone[T](a: T): T =
   ## Deep copy of the object.
   deepCopy(result, a)
@@ -145,8 +152,9 @@ proc copy*(node: Node): Node =
   copyField overflowDirection
 
   for child in node.children:
-    child.parent = result
-    result.children.add(child.copy())
+    let childNode = child.copy()
+    childNode.parent = result
+    result.children.add(childNode)
 
   result.assignIdsToTree()
 
@@ -270,7 +278,12 @@ proc triMerge(current, prevMaster, currMaster: Node) =
   )
 
   for i in 0 ..< minChildLen:
-    if current.children[i].name == prevMaster.children[i].name and
+    if current.children[i].kind == InstanceNode and
+      prevMaster.children[i].kind == InstanceNode and
+      currMaster.children[i].kind == InstanceNode:
+      # Don't do anything with instance nodes.
+      continue
+    elif current.children[i].name == prevMaster.children[i].name and
       current.children[i].name == currMaster.children[i].name:
       triMerge(
         current.children[i],
@@ -278,7 +291,11 @@ proc triMerge(current, prevMaster, currMaster: Node) =
         currMaster.children[i]
       )
     else:
-      echo "name error?"
+      echo "name error?", current.children[i].path
+      echo "node.kind ", current.children[i].kind
+      echo "current name     ", current.children[i].name
+      echo "name prev master ", prevMaster.children[i].name
+      echo "name curr master ", currMaster.children[i].name
 
 proc setVariant*(node: Node, name, value: string) =
   ## Changes the variant of the node.
