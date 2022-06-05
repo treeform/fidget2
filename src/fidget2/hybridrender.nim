@@ -183,7 +183,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
 
   if node.frozen:
     bxy.saveTransform()
-    bxy.applyTransform(node.mat.mat4)
+    bxy.applyTransform(node.mat)
     let size = bxy.getImageSize(node.frozenId).vec2
     bxy.scale(vec2(
       node.size.x / size.x,
@@ -219,7 +219,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
           scale = min(ratioW, ratioH)
         let topRight = node.size / 2 - vec2(image.width/2, image.height/2) / scale
         bxy.saveTransform()
-        bxy.applyTransform(node.mat.mat4)
+        bxy.applyTransform(node.mat)
         bxy.translate(topRight)
         bxy.scale(vec2(1/scale))
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
@@ -232,7 +232,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
           scale = max(ratioW, ratioH)
         let topRight = node.size / 2 - vec2(image.width/2, image.height/2) / scale
         bxy.saveTransform()
-        bxy.applyTransform(node.mat.mat4)
+        bxy.applyTransform(node.mat)
         bxy.translate(topRight)
         bxy.scale(vec2(1/scale))
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
@@ -256,8 +256,8 @@ proc drawWithAtlas(node: Node) {.measure.} =
           scale = min(ratioW, ratioH)
         mat = mat * scale(vec2(1/scale))
         bxy.saveTransform()
-        bxy.applyTransform(node.mat.mat4)
-        bxy.applyTransform(mat.mat4)
+        bxy.applyTransform(node.mat)
+        bxy.applyTransform(mat)
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
 
@@ -269,7 +269,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
             bxy.saveTransform()
             bxy.applyTransform(
               (node.mat * translate(vec2(x, y)) *
-              scale(vec2(paint.scalingFactor, paint.scalingFactor))).mat4
+              scale(vec2(paint.scalingFactor, paint.scalingFactor)))
             )
             bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
             bxy.restoreTransform()
