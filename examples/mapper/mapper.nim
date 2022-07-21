@@ -1,9 +1,13 @@
 import fidget2, puppy, pixie/fileformats/png, print, vmath, strformat, pixie
-import fidget2/hybridrender, bumpy, fidget2/common, puppy/requestpools, tables
+import fidget2/hybridrender, bumpy, fidget2/common, puppy/requestpools, tables,
+  strutils
+
+import fidget2/internal # to access imageCache
 
 const
-  domain1 = "https://c.tile.openstreetmap.org"
-  domain2 = "https://t1.openseamap.org/seamark"
+  #domain = "https://c.tile.openstreetmap.org/$LEVEL/$X/$Y.png"
+  #domain = "https://t1.openseamap.org/seamark/$LEVEL/$X/$Y.png"
+  domain = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/$LEVEL/$Y/$X.jpeg"
 
 type
   Tile = ref object
@@ -19,7 +23,6 @@ var
 find "/UI/Main":
 
   onDisplay:
-    echo "onDisplay"
 
     if window.buttonDown[MouseMiddle] or window.buttonDown[KeySpace]:
       mapPos += window.mouseDelta.vec2
@@ -45,14 +48,12 @@ find "/UI/Main":
       m = 0.0
       screenRect = rect(
         -mapPos.x + m, -mapPos.y + m, window.size.x.float32 - m*2, window.size.y.float32 - m*2
-      ) / zoom / 256.0 * size.float32
+      ) / zoom / 255.0 * size.float32
       xs = max(0, screenRect.x.int)
       xe = min(size - 1, (screenRect.x + screenRect.w).int)
       ys = max(0, screenRect.y.int)
       ye = min(size - 1, (screenRect.y + screenRect.h).int)
 
-    #var i = 0
-    #echo xs, "..", xe, " x ", ys, "..", ye
     for x in xs .. xe:
       for y in ys .. ye:
         let loc = (x, y, level)
@@ -63,15 +64,20 @@ find "/UI/Main":
           tile.node = tileNode.copy()
           mapNode.addChild(tile.node)
 
-          let imgUrl = &"{domain1}/{level}/{x}/{y}.png"
+          let imgUrl = domain
+            .replace("$LEVEL", $level)
+            .replace("$X", $x)
+            .replace("$Y", $y)
+
           tile.handle = requestPool.fetch(Request(
             url: parseUrl(imgUrl),
             verb: "get"
           ))
 
           let
-            tilePos = vec2(x.float32, y.float32) / size.float32 * 256.0
+            tilePos = vec2(x.float32, y.float32) / size.float32 * 255.0
             tileScale = vec2(1, 1) / size.float32
+
           tile.node.position = tilePos
           tile.node.scale = tileScale
           tile.node.visible = false
@@ -79,14 +85,21 @@ find "/UI/Main":
           tile = tiles[loc]
 
         if tile.image == nil and tile.handle.ready:
-          let imgUrl = &"{domain1}/{level}/{x}/{y}.png"
-          tile.image = decodePng(tile.handle.response.body)
+          let imgUrl = domain
+            .replace("$LEVEL", $level)
+            .replace("$X", $x)
+            .replace("$Y", $y)
+          let data = tile.handle.response.body
+          try:
+            tile.image = decodeImage(data)
+          except PixieError:
+            echo imgUrl
+            echo data
           imageCache[imgUrl] = tile.image
           tile.node.fills[0].imageRef = imgUrl
 
           tile.node.visible = true
           tile.node.dirty = true
-
 
     for loc, tile in tiles:
       if loc[2] != level:
@@ -94,10 +107,8 @@ find "/UI/Main":
       else:
         tile.node.visible = tile.image != nil
 
-
 startFidget(
   figmaUrl = "https://www.figma.com/file/82plYn1ClhiSfhoZrrFVn3",
   windowTitle = "Open Sea Map",
-  entryFrame = "/UI/Main",
-  resizable = true
+  entryFrame = "/UI/Main"
 )

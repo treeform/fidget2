@@ -463,7 +463,6 @@ proc processEvents() {.measure.} =
     window.closeIme()
 
   if requestPool.requestsCompleted():
-    echo "some thing to check"
     redisplay = true
 
   if window.buttonDown.len > 0 or window.scrollDelta.length != 0:
