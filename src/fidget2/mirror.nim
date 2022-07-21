@@ -125,7 +125,7 @@ template onFrame*(body: untyped) =
   addCb(
     OnFrame,
     0,
-    "",
+    thisSelector,
     proc(thisNode {.inject.}: Node) =
       body
   )
@@ -499,13 +499,12 @@ proc processEvents() {.measure.} =
 
   for cb in eventCbs:
     thisCb = cb
-    thisSelector = thisCb.glob
 
     case cb.kind:
 
     of OnShow:
 
-      for node in findAll(thisSelector):
+      for node in findAll(thisCb.glob):
         if node.inTree(thisFrame):
           if node.shown == false:
             node.shown = true
@@ -514,21 +513,21 @@ proc processEvents() {.measure.} =
     of OnClick:
 
       if window.buttonPressed[MouseLeft]:
-        for node in findAll(thisSelector):
+        for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node in underMouseNodes:
             thisCb.handler(node)
 
     of OnRightClick:
 
       if window.buttonPressed[MouseRight]:
-        for node in findAll(thisSelector):
+        for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node in underMouseNodes:
             thisCb.handler(node)
 
     of OnClickOutside:
 
       if window.buttonPressed[MouseLeft]:
-        for node in findAll(thisSelector):
+        for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and
             node notin underMouseNodes and
             node.visible:
@@ -537,13 +536,13 @@ proc processEvents() {.measure.} =
     of OnDisplay:
 
       if redisplay:
-        for node in findAll(thisSelector):
+        for node in findAll(thisCb.glob):
           if node.inTree(thisFrame):
             thisCb.handler(node)
 
     of OnHide:
 
-      for node in findAll(thisSelector):
+      for node in findAll(thisCb.glob):
         if not node.inTree(thisFrame):
           if node.shown == true:
             node.shown = false
@@ -551,12 +550,14 @@ proc processEvents() {.measure.} =
 
     of OnMouseMove:
 
-      for node in findAll(thisSelector):
+      for node in findAll(thisCb.glob):
         if node.inTree(thisFrame) and node in underMouseNodes:
           thisCb.handler(node)
 
     of OnFrame:
-      thisCb.handler(nil)
+      for node in findAll(thisCb.glob):
+        if node.inTree(thisFrame):
+          thisCb.handler(node)
 
     of OnEdit:
       thisCb.handler(nil)
