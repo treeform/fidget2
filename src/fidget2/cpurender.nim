@@ -7,7 +7,7 @@ type Paint = schema.Paint
 var
   layer*: Image
   layers: seq[Image]
-  maskLayer*: Mask
+  maskLayer*: Image
 
 proc newImage(w, h: int): Image {.measure.} =
   pixie.newImage(w, h)
@@ -253,10 +253,13 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.mea
       )
   else:
     # Mask + fill based on paint.
-    var mask = newMask(layer.width, layer.height)
+    var mask = newImage(layer.width, layer.height)
+    let paint = newPaint(SolidPaint)
+    paint.color = color(1, 1, 1, 1)
     for geometry in geometries:
       mask.fillPath(
         geometry.path,
+        paint,
         mat * geometry.mat,
         geometry.windingRule
       )
@@ -267,14 +270,14 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.mea
       fillImage.draw(mask, blendMode = MaskBlend)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
-proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measure.} =
+proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Image) {.measure.} =
   ## Draws the inner shadow.
-  var shadow = newMask(fillMask.width, fillMask.height)
+  var shadow = newImage(fillMask.width, fillMask.height)
   shadow.draw(fillMask, translate(effect.offset), blendMode = OverwriteBlend)
   # Invert colors of the fill mask.
   shadow.invert()
   # Blur the inverted fill.
-  shadow.blur(effect.radius, outOfBounds = 255)
+  shadow.blur(effect.radius, outOfBounds = color(1, 1, 1, 1))
   # Color the inverted blurred fill.
   var color = newImage(shadow.width, shadow.height)
   color.fill(effect.color.rgbx)
@@ -284,12 +287,15 @@ proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Mask) {.measur
   # Draw it back.
   layer.draw(color)
 
-proc maskSelfImage*(node: Node): Mask {.measure.} =
+proc maskSelfImage*(node: Node): Image {.measure.} =
   ## Returns a self mask (used for clips-content).
-  var mask = newMask(layer.width, layer.height)
+  var mask = newImage(layer.width, layer.height)
+  let paint = newPaint(SolidPaint)
+  paint.color = color(1, 1, 1, 1)
   for geometry in node.fillGeometry:
     mask.fillPath(
       geometry.path,
+      paint,
       mat * geometry.mat,
       geometry.windingRule
     )
@@ -317,9 +323,11 @@ proc drawGeometry*(node: Node) {.measure.} =
         var fillLayer = layer
         node.drawPaint(node.fills, node.fillGeometry)
         # Deal with fill mask
-        var fillMask = newMask(layer.width, layer.height)
+        var fillMask = newImage(layer.width, layer.height)
+        let paint = newPaint(SolidPaint)
+        paint.color = color(1, 1, 1, 1)
         for geometry in node.fillGeometry:
-          fillMask.fillPath(geometry.path, mat, geometry.windingRule)
+          fillMask.fillPath(geometry.path, paint, mat, geometry.windingRule)
           node.drawInnerShadow()
 
         # Deal with stroke
@@ -341,9 +349,11 @@ proc drawGeometry*(node: Node) {.measure.} =
       node.drawPaint(node.fills, node.fillGeometry)
       node.drawInnerShadow()
       # Deal with fill mask
-      var fillMask = newMask(layer.width, layer.height)
+      var fillMask = newImage(layer.width, layer.height)
+      let paint = newPaint(SolidPaint)
+      paint.color = color(1, 1, 1, 1)
       for geometry in node.fillGeometry:
-        fillMask.fillPath(geometry.path, mat, geometry.windingRule)
+        fillMask.fillPath(geometry.path, paint, mat, geometry.windingRule)
       # Deal with stroke
       var strokeLayer = newImage(layer.width, layer.height)
       layer = strokeLayer
@@ -362,7 +372,7 @@ proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node
 
 proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   var blurLayer = lowerLayer.copy() # Maybe collapse bg?
-  var blurMask = newMask(layer)
+  var blurMask = layer.copy()
   blurMask.ceil()
   blurLayer.blur(effect.radius)
   blurLayer.draw(blurMask, blendMode = MaskBlend)
@@ -420,12 +430,15 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
 
   if node.children.len == 0:
     node.genFillGeometry()
+    let paint = newPaint(SolidPaint)
+    paint.color = color(1, 1, 1, 1)
+    paint.blendMode = blendMode
     for geometry in node.fillGeometry:
       maskLayer.fillPath(
         geometry.path,
+        paint,
         mat,
-        geometry.windingRule,
-        blendMode
+        geometry.windingRule
       )
 
   for i, child in node.children:
@@ -444,7 +457,7 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
 
 proc drawBoolean*(node: Node) {.measure.} =
   ## Draws boolean
-  maskLayer = newMask(layer.width, layer.height)
+  maskLayer = newImage(layer.width, layer.height)
   mat = mat * node.transform().inverse()
   drawBooleanNode(node, NormalBlend)
   for paint in node.fills:
@@ -473,7 +486,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
     if child.isMask and child.visible:
       needsLayer = true
       hasMaskedChildren = true
-      maskLayer = newMask(layer.width, layer.height)
+      maskLayer = newImage(layer.width, layer.height)
       break
 
   if needsLayer:
