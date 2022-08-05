@@ -41,3 +41,4 @@ tests/files/diffs/*.png
 tests/frames/rendered/*.png
 tests/shots/*
 cacert.pem
+tmp
