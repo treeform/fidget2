@@ -306,7 +306,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.popLayer(blendMode = MaskBlend)
 
   for i in 0 ..< pushedMasks:
-    bxy.popLayer(tintColor = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
+    bxy.popLayer(tint = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
 
 proc drawToScreen*(screenNode: Node) {.measure.} =
   ## Draw the current node onto the screen.

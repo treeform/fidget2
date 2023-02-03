@@ -2,7 +2,7 @@ import common, json, jsony, os, schema, strutils, sets, tables, puppy
 
 var figmaFile*: FigmaFile                ## Main figma file.
 
-proc figmaHeaders(): seq[Header] =
+proc figmaHeaders(): HttpHeaders =
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmatoken").strip()
 
 proc figmaFilePath(fileKey: string): string =

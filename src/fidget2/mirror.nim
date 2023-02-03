@@ -1,7 +1,7 @@
 import algorithm, bumpy, common, globs, json, loader, math, opengl,
     pixie, schema, sequtils, windy, strformat, tables,
     textboxes, unicode, vmath, times, internal, algorithm,
-    nodes, perf, puppy, layout, os, print, strutils,  puppy/requestpools
+    nodes, perf, puppy, layout, os, print, strutils
 
 export textboxes, nodes, common, windy
 
@@ -50,7 +50,7 @@ var
 
   navigationHistory*: seq[Node]
 
-  requestPool* = newRequestPool(10)
+  #requestPool* = newRequestPool(10)
 
 proc display(withEvents=true)
 
@@ -462,8 +462,8 @@ proc processEvents() {.measure.} =
   if window.buttonDown[MouseLeft]:
     window.closeIme()
 
-  if requestPool.requestsCompleted():
-    redisplay = true
+  # if requestPool.requestsCompleted():
+  #   redisplay = true
 
   if window.buttonDown.len > 0 or window.scrollDelta.length != 0:
     redisplay = true
