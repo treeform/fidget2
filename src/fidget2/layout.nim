@@ -7,6 +7,9 @@ proc computeTextBounds(node: Node): Vec2 {.measure.} =
 proc computeLayout*(parent, node: Node) {.measure.} =
   ## Computes constraints and auto-layout.
 
+  doAssert not node.position.x.isNan
+  doAssert not node.position.y.isNan
+
   for n in node.children:
     computeLayout(node, n)
 
@@ -89,6 +92,7 @@ proc computeLayout*(parent, node: Node) {.measure.} =
       let rightSpace = parent.orgSize.x - node.orgPosition.x
       node.position.x = parent.size.x - rightSpace
     of ScaleConstraint:
+      doAssert parent.orgSize.x != 0
       let xScale = parent.size.x / parent.orgSize.x
       node.position.x = node.orgPosition.x * xScale
       node.size.x = node.orgSize.x * xScale
@@ -105,6 +109,7 @@ proc computeLayout*(parent, node: Node) {.measure.} =
       let bottomSpace = parent.orgSize.y - node.orgPosition.y
       node.position.y = parent.size.y - bottomSpace
     of ScaleConstraint:
+      doAssert parent.orgSize.y != 0
       let yScale = parent.size.y / parent.orgSize.y
       node.position.y = node.orgPosition.y * yScale
       node.size.y = node.orgSize.y * yScale
@@ -119,3 +124,6 @@ proc computeLayout*(parent, node: Node) {.measure.} =
   if node.kind == TextNode or node.overflowDirection == VerticalScrolling:
     let bounds = node.computeScrollBounds()
     node.scrollPos = clamp(node.scrollPos, bounds)
+
+  doAssert not node.position.x.isNan
+  doAssert not node.position.y.isNan

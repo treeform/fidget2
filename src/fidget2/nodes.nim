@@ -44,6 +44,8 @@ proc makeTextDirty*(node: Node) =
     node.computeArrangement()
 
 proc setText*(node: Node, text: string) =
+  if node.kind != TextNode:
+    echo "trying to set text of non text node: " & node.path
   if node.characters != text:
     node.characters = text
     node.makeTextDirty()
@@ -84,10 +86,12 @@ proc removeChild*(parent, node: Node) =
       node.parent = nil
       return
 
-proc clearChildren*(parent: Node) =
-  ## Removes all children.
-  for node in toSeq(parent.children):
-    parent.removeChild(node)
+proc delete*(node: Node) =
+  node.parent.removeChild(node)
+
+proc delete*(nodes: seq[Node]) =
+  for node in toSeq(nodes):
+    node.delete()
 
 proc assignIdsToTree(node: Node) =
   ## Walks the tree giving everyone a new id.
@@ -111,6 +115,8 @@ proc copy*(node: Node): Node =
   # Transform
   copyField position
   copyField orgPosition
+  copyField size
+  copyField orgSize
   copyField rotation
   copyField scale
   copyField flipHorizontal
@@ -157,7 +163,6 @@ proc copy*(node: Node): Node =
     result.children.add(childNode)
 
   result.assignIdsToTree()
-
 
 proc newInstance*(node: Node): Node =
   ## Creates a new instance of a master node.

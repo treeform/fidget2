@@ -91,6 +91,8 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
     if node.kind == TextNode:
       node.genHitTestGeometry()
     for geom in node.fillGeometry & node.strokeGeometry:
+      if node.fills.len == 0 and node.strokes.len == 0:
+        continue
       if geom.path.fillOverlaps(mousePos, mat, geom.windingRule):
         overlapsNode = true
         break

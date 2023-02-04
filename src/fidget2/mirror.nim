@@ -78,12 +78,11 @@ proc find*(glob: string): Node =
   var glob = glob
   if glob.len == 0:
     raise newException(FidgetError, &"Error glob can't be empty string \"\".")
-  if thisSelector.len > 0:
+  if thisSelector.len > 0 and not glob.startsWith("/"):
     glob = thisSelector & "/" & glob
   result = figmaFile.document.find(glob)
   if result == nil:
     raise newException(FidgetError, &"find(\"{glob}\") not found.")
-
 
 proc findAll*(glob: string): seq[Node] =
   ## Find all nodes matching glob pattern.
@@ -507,6 +506,7 @@ proc processEvents() {.measure.} =
         if node.inTree(thisFrame):
           if node.shown == false:
             node.shown = true
+            thisSelector = thisCb.glob
             thisCb.handler(node)
 
     of OnClick:
