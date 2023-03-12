@@ -585,6 +585,7 @@ proc processEvents() {.measure.} =
     echo "writing atlas"
     bxy.readAtlas().writeFile("atlas.png")
 
+
   if window.buttonPressed[KeyF5]:
     echo "reloading from web"
     use(currentFigmaUrl)
@@ -632,6 +633,9 @@ proc display(withEvents = true) {.measure.} =
 
   if withEvents:
     processEvents()
+
+  if window.minimized:
+    return
 
   keyboard.onFocusNode = nil
   keyboard.onUnfocusNode = nil

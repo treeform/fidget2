@@ -123,6 +123,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
             imageCache[paint.imageRef] = image
           else:
             image = imageCache[paint.imageRef]
+          echo "addImage paint.imageRef ", paint.imageRef
           bxy.addImage(paint.imageRef, image)
 
       else:
@@ -393,3 +394,14 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
       node.drawNodeInternal(withChildren=true)
       bxy.addImage(node.frozenId, layer, genMipmaps=true)
+
+deleteNodeHook = proc(node: Node) =
+  if node.id in bxy:
+    #echo "remove ", node.id
+    bxy.removeImage(node.id)
+  if node.id & ".mask" in bxy:
+    #echo "remove ", node.id  & ".mask"
+    bxy.removeImage(node.id & ".mask")
+  if node.frozenId in bxy:
+    #echo "remove frozenId ", node.frozenId
+    bxy.removeImage(node.frozenId)

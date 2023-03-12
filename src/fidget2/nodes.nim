@@ -77,13 +77,17 @@ proc findNodeById*(id: string): Node =
         return c
   return recur(figmaFile.document)
 
+var deleteNodeHook*: proc(node: Node)
 proc removeChild*(parent, node: Node) =
   ## Removes the node from the document.
   for i, n in parent.children:
     if n == node:
       parent.children.delete(i)
+      for child in toSeq(node.children):
+        node.removeChild(child)
       parent.markTreeDirty()
       node.parent = nil
+      deleteNodeHook(node)
       return
 
 proc delete*(node: Node) =
