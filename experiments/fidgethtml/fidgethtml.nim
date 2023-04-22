@@ -113,11 +113,49 @@ proc prettyPrint(css: seq[Selector]): string =
     result.add "\n"
 
 proc px(num: float32): string =
+  ## Format 123.00 -> 123px nicely
+  if num == 0: return "0"
   result = $num
   result.removeSuffix(".0")
   result.add("px")
 
+proc pr(num: float32): string =
+  ## Format 123.00 -> 123% nicely
+  if num == 0: return "0"
+  result = $num
+  result.removeSuffix(".0")
+  result.add("%")
+
+proc htmlNaming(e: Element, node: Node) =
+  if node.kind == TextNode and " " in node.name:
+    # If the node is a text node and name contains spaces
+    # it probably contains a copy of the content string so
+    # just name it "text"
+    e.attributes["class"] = "text"
+  elif node.name.startsWith("#") or
+    node.name.startsWith(".") or
+    node.name.startsWith("<"):
+    # appears to be css selectors ... expand them!
+    var classes: seq[string]
+    for s in node.name.replace(" ", "-").toLowerAscii().split("."):
+      if s == "":
+        continue
+      elif s.startsWith("#"):
+        # its an id
+        e.attributes["id"] = s[1 .. ^1]
+      elif s.startsWith("<"):
+        # its an tag
+        e.tagName = s[1 .. ^1].replace(">", "")
+      else:
+        classes.add(s)
+    if classes.len > 0:
+      echo classes
+      e.attributes["class"] = classes.join(" ")
+  else:
+    e.attributes["class"] = node.name.replace(" ", "-").toLowerAscii()
+
 proc htmlFills(e: Element, node: Node) =
+  ## Do background fills
   for fill in node.fills:
     if fill.visible:
       case fill.kind:
@@ -142,7 +180,7 @@ proc htmlFills(e: Element, node: Node) =
               let image = readImage(imagePath)
               let imageScaledWidth = image.width.float32 * fill.scalingFactor
               let scalingFactor = imageScaledWidth / node.size.x
-              e.style["background-size"] = $(scalingFactor * 100) & "%"
+              e.style["background-size"] = (scalingFactor * 100).pr
             else:
               echo node.path, ": can't find image ", imagePath
           else:
@@ -151,12 +189,28 @@ proc htmlFills(e: Element, node: Node) =
           echo node.path, ": not implemented ", fill.kind
 
 proc htmlBorders(e: Element, node: Node) =
+  ## Borders and Strokes and corner radius.
+
+  if node.cornerRadius != 0:
+    e.style["border-radius"] = node.cornerRadius.px
+
+  if node.rectangleCornerRadii[0] != 0 or
+    node.rectangleCornerRadii[1] != 0 or
+    node.rectangleCornerRadii[2] != 0 or
+    node.rectangleCornerRadii[3] != 0:
+    e.style["border-radius"] = $node.rectangleCornerRadii[0].px & " " &
+      $node.rectangleCornerRadii[1].px & " " &
+      $node.rectangleCornerRadii[2].px & " " &
+      $node.rectangleCornerRadii[3].px
+
+  # Only add border if there are strokes
   var hasStrokes = false
   for stroke in node.strokes:
     if stroke.visible:
       hasStrokes = true
+
   if hasStrokes and node.strokeWeight > 0:
-    e.style["border-width"] = $node.strokeWeight & "px"
+    e.style["border-width"] = node.strokeWeight.px
     e.style["border-style"] = "solid"
     for stroke in node.strokes:
       if stroke.visible:
@@ -167,8 +221,8 @@ proc htmlBorders(e: Element, node: Node) =
             echo node.path, ": not implemented border ", stroke.kind
 
 proc htmlAutoLayout(e: Element, node: Node) =
+  # Auto Layout
 
-  # auto layout:
   case node.layoutMode:
     of NoneLayout:
       discard
@@ -181,11 +235,11 @@ proc htmlAutoLayout(e: Element, node: Node) =
       else:
         e.style["flex-direction"] = "column"
 
-      e.style["padding-left"] = $node.paddingLeft & "px"
-      e.style["padding-right"] = $node.paddingRight & "px"
-      e.style["padding-top"] = $node.paddingTop & "px"
-      e.style["padding-bottom"] = $node.paddingBottom & "px"
-      e.style["gap"] = $node.itemSpacing & "px"
+      e.style["padding-left"] = node.paddingLeft.px
+      e.style["padding-right"] = node.paddingRight.px
+      e.style["padding-top"] = node.paddingTop.px
+      e.style["padding-bottom"] = node.paddingBottom.px
+      e.style["gap"] = node.itemSpacing.px
 
       case node.counterAxisAlignItems:
         of MinAxisAlign:
@@ -197,14 +251,109 @@ proc htmlAutoLayout(e: Element, node: Node) =
         else:
           echo node.path, ": not implemented ", node.counterAxisAlignItems
 
-proc cssNodeStyle(e: Element, style: TypeStyle) =
+proc htmlLayout(e: Element, node: Node) =
+  # Constraint Layout, Child Auto Layout and Parent Auto Layout
+
+  if node.name.startsWith("size"):
+    # Responsive layout based on media queries
+    # NOT PART OF FIGMA
+    if node.layoutMode == NoneLayout:
+      e.style["height"] = node.size.y.px
+
+  elif node.parent.layoutMode != NoneLayout:
+    # Parent Auto Layout
+
+    if node.layoutPositioning == LayoutPositioningAbsolute:
+      e.style["position"] = "absolute"
+      e.style["left"] = node.position.x.px
+      e.style["top"] = node.position.y.px
+    else:
+      e.style["position"] = "relative"
+
+    case node.layoutAlign:
+      of InheritLayout:
+        e.style["width"] = node.size.x.px
+        e.style["height"] = node.size.y.px
+      of StretchLayout:
+        if node.parent.layoutMode == HorizontalLayout:
+          if node.layoutMode == NoneLayout:
+            e.style["width"] = node.size.x.px
+          e.style["height"] = "100%"
+        elif node.parent.layoutMode == VerticalLayout:
+          e.style["width"] = "100%"
+          if node.layoutMode == NoneLayout and
+            not (node.kind == TextNode and node.style.textAutoResize in {HeightTextResize, WidthAndHeightTextResize}):
+            e.style["height"] = node.size.y.px
+        else:
+          echo "auto layout missmatch?"
+          e.style["width"] = node.size.x.px
+          e.style["height"] = node.size.y.px
+
+    if node.parent.itemReverseZIndex:
+      e.style["z-index"] = $(node.parent.children.len - node.parent.children.find(node))
+
+  else:
+    # Constraints based layout
+    e.style["position"] = "absolute"
+    var
+      translatePx: Vec2
+      translatePr: Vec2
+
+    case node.constraints.vertical:
+      of MinConstraint:
+        e.style["top"] = node.position.y.px
+        e.style["height"] = node.size.y.px
+      of MaxConstraint:
+        e.style["bottom"] = (node.parent.size.y - node.position.y - node.size.y).px
+        e.style["height"] = node.size.y.px
+      of StretchConstraint:
+        e.style["top"] = node.position.y.px
+        e.style["bottom"] = (node.parent.size.y - node.position.y - node.size.y).px
+      of CenterConstraint:
+        e.style["top"] = "50%"
+        translatePx.y = node.position.y - node.parent.size.y / 2
+        e.style["height"] = node.size.y.px
+      of ScaleConstraint:
+        e.style["top"] = ((node.position.y + node.size.y / 2) / node.parent.size.y * 100).pr
+        translatePr.y = -50
+        e.style["height"] = (node.size.y / node.parent.size.y * 100).pr
+
+    case node.constraints.horizontal:
+      of MinConstraint:
+        e.style["left"] = node.position.x.px
+        e.style["width"] = node.size.x.px
+      of MaxConstraint:
+        e.style["right"] = (node.parent.size.x - node.position.x - node.size.x).px
+        e.style["width"] = node.size.x.px
+      of StretchConstraint:
+        e.style["left"] = node.position.x.px
+        e.style["right"] = (node.parent.size.x - node.position.x - node.size.x).px
+      of CenterConstraint:
+        e.style["left"] = "50%"
+        translatePx.x = node.position.x - node.parent.size.x / 2
+        e.style["width"] = node.size.x.px
+      of ScaleConstraint:
+        e.style["left"] = ((node.position.x + node.size.x / 2) / node.parent.size.x * 100).pr
+        translatePr.x = -50
+        e.style["width"] = (node.size.x / node.parent.size.x * 100).pr
+
+    if translatePx != vec2(0, 0):
+      e.style["transform"] = "translate(" & translatePx.x.px & " ," & translatePx.y.px & ")"
+    if translatePr != vec2(0, 0):
+      e.style["transform"] = "translate(" & translatePr.x.pr & " ," & translatePr.y.pr & ")"
+
+  e.htmlAutoLayout(node)
+
+proc htmlTypeStyle(e: Element, style: TypeStyle) =
+  ## Apply the TypeStyle node to the element.
+
   e.style["font-family"] = style.fontFamily
   if style.fontSize != 0:
-    e.style["font-size"] = $style.fontSize & "px"
+    e.style["font-size"] = style.fontSize.px
   e.style["font-weight"] = $style.fontWeight
 
   if style.lineHeightPx != 0:
-    e.style["line-height"] = $style.lineHeightPx  & "px"
+    e.style["line-height"] = style.lineHeightPx.px
 
   if style.textDecoration == Underline:
     e.style["text-decoration"] = "underline"
@@ -220,7 +369,7 @@ proc cssNodeStyle(e: Element, style: TypeStyle) =
     of RightAlign:
       e.style["text-align"] = "right"
 
-proc htmlNodeText(e: Element, node: Node) =
+proc htmlRichText(e: Element, node: Node) =
 
   type
     TagSpan = object
@@ -294,7 +443,7 @@ proc htmlNodeText(e: Element, node: Node) =
         let typeStyle = node.styleOverrideTable[$tagSpan.styleId]
         if typeStyle.hyperlink != nil:
           let a = Element(tagName: "a")
-          cssNodeStyle(a, typeStyle)
+          a.htmlTypeStyle(typeStyle)
           a.attributes["href"] = typeStyle.hyperlink.url
           let textNode = Element(tagName: "")
           textNode.content = tagSpan.text
@@ -302,7 +451,7 @@ proc htmlNodeText(e: Element, node: Node) =
           p.children.add(a)
         else:
           let span = Element(tagName: "span")
-          cssNodeStyle(span, typeStyle)
+          span.htmlTypeStyle(typeStyle)
           let textNode = Element(tagName: "")
           textNode.content = tagSpan.text
           span.children.add(textNode)
@@ -310,186 +459,70 @@ proc htmlNodeText(e: Element, node: Node) =
 
     e.children.add(p)
 
-proc shouldLinkTo(node: Node): string =
-    if node.transitionNodeID != "":
-      let transitionNode = figmaFile.findById(node.transitionNodeID)
-      if transitionNode.name.endsWith("html") or
-        transitionNode.name.startsWith("http"):
-          return transitionNode.name
+proc htmlTextNode(e: Element, node: Node) =
+  ## Process TextNode
+  e.htmlTypeStyle(node.style)
+  if node.fills.len > 0:
+    # TODO: Its odd that both node fills and style fills can effect text
+    e.style["color"] = node.fills[0].color.toHtmlRgba()
+  e.htmlRichText(node)
 
 proc isIcon(node: Node): bool =
+  ## Does this node qualifies to be an icon?
+  ## Icons are components that point to exported master component.
   if node.kind == InstanceNode:
     let component = figmaFile.findById(node.componentId)
     if component != nil and component.exportSettings.len > 0:
         return true
 
-proc htmlNode(node: Node): Element =
-
-  var tagName = "div"
-
-  if node.shouldLinkTo != "":
-    tagName = "a"
-
-  let e = Element(tagName: tagName)
-  if node.kind == TextNode and " " in node.name:
-    e.attributes["class"] = "text"
+proc htmlIcon(e: Element, node: Node) =
+  ## Process this node as an Icon.
+  let component = figmaFile.findById(node.componentId)
+  if component == nil:
+    echo node.path, ": can't find component ", node.componentId
   else:
-    e.attributes["class"] = node.name.replace(" ", "-").toLowerAscii()
-
-  if node.name.startsWith("size"):
-    if node.layoutMode == NoneLayout:
-      e.style["height"] = node.size.y.px
-
-  else:
-
-    if node.parent.layoutMode != NoneLayout:
-      if node.layoutPositioning == LayoutPositioningAbsolute:
-        e.style["position"] = "absolute"
-        e.style["left"] = node.position.x.px
-        e.style["top"] = node.position.y.px
-      else:
-        e.style["position"] = "relative"
-
-      case node.layoutAlign:
-        of InheritLayout:
-          e.style["width"] = node.size.x.px
-          e.style["height"] = node.size.y.px
-        of StretchLayout:
-          if node.parent.layoutMode == HorizontalLayout:
-            if node.layoutMode == NoneLayout:
-              e.style["width"] = node.size.x.px
-            e.style["height"] = "100%"
-          elif node.parent.layoutMode == VerticalLayout:
-            e.style["width"] = "100%"
-            if node.layoutMode == NoneLayout and
-              not (node.kind == TextNode and node.style.textAutoResize in {HeightTextResize, WidthAndHeightTextResize}):
-              e.style["height"] = node.size.y.px
-          else:
-            echo "auto layout missmatch?"
-            e.style["width"] = node.size.x.px
-            e.style["height"] = node.size.y.px
-
-      if node.parent.itemReverseZIndex:
-        e.style["z-index"] = $(node.parent.children.len - node.parent.children.find(node))
-
-    else:
-      e.style["position"] = "absolute"
-
-      var
-        translatePx: Vec2
-        translatePr: Vec2
-
-      case node.constraints.vertical:
-        of MinConstraint:
-          e.style["top"] = node.position.y.px
-          e.style["height"] = node.size.y.px
-        of MaxConstraint:
-          e.style["bottom"] = (node.parent.size.y - node.position.y - node.size.y).px
-          e.style["height"] = node.size.y.px
-        of StretchConstraint:
-          e.style["top"] = node.position.y.px
-          e.style["bottom"] = (node.parent.size.y - node.position.y - node.size.y).px
-        of CenterConstraint:
-          e.style["top"] = "50%"
-          translatePx.y = node.position.y - node.parent.size.y / 2
-          e.style["height"] = node.size.y.px
-        of ScaleConstraint:
-          e.style["top"] = $((node.position.y + node.size.y / 2) / node.parent.size.y * 100) & "%"
-          translatePr.y = -50
-          e.style["height"] = $(node.size.y / node.parent.size.y * 100) & "%"
-
-      case node.constraints.horizontal:
-        of MinConstraint:
-          e.style["left"] = node.position.x.px
-          e.style["width"] = node.size.x.px
-        of MaxConstraint:
-          e.style["right"] = (node.parent.size.x - node.position.x - node.size.x).px
-          e.style["width"] = node.size.x.px
-        of StretchConstraint:
-          e.style["left"] = node.position.x.px
-          e.style["right"] = (node.parent.size.x - node.position.x - node.size.x).px
-        of CenterConstraint:
-          e.style["left"] = "50%"
-          translatePx.x = node.position.x - node.parent.size.x / 2
-          e.style["width"] = node.size.x.px
-        of ScaleConstraint:
-          e.style["left"] = $((node.position.x + node.size.x / 2) / node.parent.size.x * 100) & "%"
-          translatePr.x = -50
-          e.style["width"] = $(node.size.x / node.parent.size.x * 100) & "%"
-
-      if translatePx != vec2(0, 0):
-        e.style["transform"] = "translate(" & $translatePx.x & "px ," & $translatePx.y & "px)"
-      if translatePr != vec2(0, 0):
-        e.style["transform"] = "translate(" & $translatePr.x & "% ," & $translatePr.y & "%)"
-
-  e.htmlAutoLayout(node)
-
-  if not node.visible:
-    e.style["display"] = "none"
-  if node.opacity != 1.0:
-    e.style["opacity"] = $node.opacity
-
-  if node.cornerRadius != 0:
-    e.style["border-radius"] = node.cornerRadius.px
-  if node.rectangleCornerRadii[0] != 0 or
-    node.rectangleCornerRadii[1] != 0 or
-    node.rectangleCornerRadii[2] != 0 or
-    node.rectangleCornerRadii[3] != 0:
-    e.style["border-radius"] = $node.rectangleCornerRadii[0].px & " " &
-      $node.rectangleCornerRadii[1].px & " " &
-      $node.rectangleCornerRadii[2].px & " " &
-      $node.rectangleCornerRadii[3].px
-
-  # fills
-  if node.kind == InstanceNode:
-    let component = figmaFile.findById(node.componentId)
-    if component != nil and component.exportSettings.len > 0:
-      echo "", node.path
+    if component.exportSettings.len > 0:
       let masterComponent = figmaFile.findById(node.componentId)
       let imagePath = masterComponent.name & ".png"
       e.style["background-image"] = "url(images/" & imagePath & ")"
+
+proc isImage(node: Node): bool =
+  ## Does this node qualifies to be an image?
+  ## Images are exported nodes
+  ## TODO: Nodes too complex to be rendered in HTML.
+  node.exportSettings.len > 0
+
+proc htmlImage(e: Element, node: Node) =
+  ## This node is exported so we should treat it as an frozen flat image
+
+  let imagePath = "img" / node.name.replace(" ", "-").replace("/", "--") & ".png"
+  e.style["background-image"] = "url(" & imagePath & ")"
+
+  if not dirExists(rootPath / "img"):
+    createDir(rootPath / "img")
+
+  if not fileExists(rootPath / imagePath):
+    # Ask figma to render it for us:
+    # TODO: This is really slow and needs caching.
+    let urlPath = "https://api.figma.com/v1/images/" & figmaFileKey
+    var url = parseUrl(urlPath)
+    url.query["ids"] = node.id
+    url.query["format"] = "png"
+    url.query["scale"] = "1"
+    let response = newRequest($url, headers = figmaHeaders()).fetch()
+    if response.code != 200:
+      echo "failed!"
+      echo response.body
     else:
-      echo node.path, ": can't find component ", node.componentId
+      let imageData = fromJson(response.body)
+      for k, v in imageData["images"]:
+        if v.getStr() != "":
+          let imageResponse = newRequest(v.getStr()).fetch()
+          writeFile(rootPath / imagePath, imageResponse.body)
 
-  if node.exportSettings.len > 0:
-    let imagePath = "img" / node.name.replace(" ", "-").replace("/", "--") & ".png"
-    e.style["background-image"] = "url(" & imagePath & ")"
-
-    if not dirExists(rootPath / "img"):
-      createDir(rootPath / "img")
-
-    if not fileExists(rootPath / imagePath):
-      let urlPath = "https://api.figma.com/v1/images/" & figmaFileKey
-      var url = parseUrl(urlPath)
-      url.query["ids"] = node.id
-      url.query["format"] = "png"
-      url.query["scale"] = "1"
-      let response = newRequest($url, headers = figmaHeaders()).fetch()
-      if response.code != 200:
-        echo "failed!"
-        echo response.body
-      else:
-        let imageData = fromJson(response.body)
-        for k, v in imageData["images"]:
-          if v.getStr() != "":
-            let imageResponse = newRequest(v.getStr()).fetch()
-            writeFile(rootPath / imagePath, imageResponse.body)
-
-  else:
-
-    if node.kind == TextNode:
-      e.cssNodeStyle(node.style)
-
-      if node.fills.len > 0:
-        e.style["color"] = node.fills[0].color.toHtmlRgba()
-
-    else:
-      e.htmlFills(node)
-      e.htmlBorders(node)
-
-  # shadows
+proc htmlShadows(e: Element, node: Node) =
+  ## Shadows
   var boxShadows: string
-
   for effect in node.effects:
     case effect.kind:
       of DropShadow:
@@ -504,23 +537,58 @@ proc htmlNode(node: Node): Element =
         )
       else:
         echo node.path, ": not implemented ", effect.kind
-
   if boxShadows != "":
     boxShadows.removeSuffix(",")
     e.style["box-shadow"] = boxShadows
 
-  if node.kind == TextNode:
-    e.htmlNodeText(node)
+proc htmlVisibility(e: Element, node: Node) =
+  ## Sets visible and opacity
+  if not node.visible:
+    e.style["display"] = "none"
+  if node.opacity != 1.0:
+    e.style["opacity"] = $node.opacity
 
-  if node.shouldLinkTo != "":
-    e.attributes["href"] = node.shouldLinkTo()
+proc shouldLinkTo(node: Node): string =
+  ## Where should this node link to?
+  if node.transitionNodeID != "":
+    let transitionNode = figmaFile.findById(node.transitionNodeID)
+    if transitionNode.name.endsWith("html") or
+      transitionNode.name.startsWith("http"):
+        return transitionNode.name
+
+proc isLink(node: Node): bool =
+  ## Is this node a link?
+  node.shouldLinkTo != ""
+
+proc htmlLinking(e: Element, node: Node) =
+  ## Process this node as a link.
+  ## Will change tag type to "a"
+  e.tagName = "a"
+  e.attributes["href"] = node.shouldLinkTo()
+
+proc htmlNode(node: Node): Element =
+
+  let e = Element(tagName: "div")
+
+  e.htmlNaming(node)
+  e.htmlLayout(node)
+  e.htmlVisibility(node)
+
+  if node.isLink():
+    e.htmlLinking(node)
 
   if node.isIcon():
-    discard
-  elif node.exportSettings.len > 0:
-    # node is an image
-    discard
+    e.htmlIcon(node)
+  elif node.isImage():
+    e.htmlImage(node)
+  elif node.kind == TextNode:
+    e.htmlTextNode(node)
   else:
+    e.htmlFills(node)
+    e.htmlBorders(node)
+    e.htmlShadows(node)
+    # TODO: other effects
+
     for c in node.children:
       e.children.add(htmlNode(c))
 
@@ -534,14 +602,14 @@ proc scanForHtml(node: Node) =
     let head = Element(tagName: "head")
     html.children.add(head)
     let title = Element(tagName: "title")
-    title.content = node.name
+    title.children.add(Element(content: node.name))
     head.children.add(title)
     let link = Element(tagName: "link")
     link.attributes["rel"] = "stylesheet"
     link.attributes["href"] = "style.css"
     head.children.add(link)
 
-    # add media queries CSS
+    # Look for media queries CSS
     var sizes: seq[(int, Node)]
     for c in node.children:
       if c.name.startsWith("size"):
@@ -549,6 +617,7 @@ proc scanForHtml(node: Node) =
     sizes.sort(proc(a, b: (int, Node)): int = cmp(a[0], b[0]))
 
     if sizes.len > 0:
+      # Add media queries
       let meta = Element(tagName: "meta")
       meta.attributes["name"] = "viewport"
       meta.attributes["content"] = "width=device-width, initial-scale=1"
@@ -572,7 +641,8 @@ proc scanForHtml(node: Node) =
       head.children.add(style)
 
     let body = Element(tagName: "body")
-
+    # Body is a special node as it gets some fills and layout from regular nodes
+    # but more limited.
     body.htmlFills(node)
     body.htmlAutoLayout(node)
 
@@ -596,6 +666,7 @@ proc generate(fileUrl: string) =
 
   scanForHtml(figmaFile.document)
 
+  # Setup common "reset-css-style".
   var css: seq[Selector]
 
   let star = Selector(cssName: "*")
@@ -613,7 +684,7 @@ proc generate(fileUrl: string) =
   aHover.style["text-decoration"] = "underline"
   css.add(aHover)
 
-  # add fonts to CSS
+  # Add fonts to CSS.
   var usedFonts: HashSet[string]
   proc walkFonts(node: Node) =
     if node.kind == TextNode:
