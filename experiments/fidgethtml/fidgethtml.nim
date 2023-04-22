@@ -465,6 +465,8 @@ proc htmlTextNode(e: Element, node: Node) =
   if node.fills.len > 0:
     # TODO: Its odd that both node fills and style fills can effect text
     e.style["color"] = node.fills[0].color.toHtmlRgba()
+  #TODO: effects
+  #TODO: strokes
   e.htmlRichText(node)
 
 proc isIcon(node: Node): bool =
