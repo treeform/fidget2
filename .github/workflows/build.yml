@@ -2,7 +2,6 @@ name: Github Actions
 on: [push, pull_request]
 jobs:
   build:
-    environment: CI
     strategy:
       fail-fast: false
       matrix:
