@@ -1,30 +1,41 @@
 import common, json, jsony, os, schema, strutils, sets, tables, puppy
 
+# Loader is responsible for loading the figma file.
+# It also downloads images and fonts and manages the cache.
+
 var figmaFile*: FigmaFile                ## Main figma file.
 
 proc figmaHeaders(): HttpHeaders =
+  ## Gets the figma headers.
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmatoken").strip()
 
 proc figmaFilePath(fileKey: string): string =
+  ## Gets the figma file path.
   "data/fidget/" & fileKey & ".json"
 
 proc lastModifiedFilePath(fileKey: string): string =
+  ## Gets the last modified file path.
   "data/fidget/" & fileKey & ".lastModified"
 
 proc figmaImagePath*(imageRef: string): string =
+  ## Gets the figma image path.
   "data/fidget/images/" & imageRef & ".png"
 
 proc figmaFontPath*(fontPostScriptName: string): string =
+  ## Gets the figma font path.
   "data/fidget/fonts/" & fontPostScriptName & ".ttf"
 
 proc userFontPath*(fontPostScriptName: string): string =
+  ## Gets the user font path.
   "data/fonts/" & fontPostScriptName & ".ttf"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
+  ## Loads the figma file.
   let data = readFile(figmaFilePath(fileKey))
   parseFigmaFile(data)
 
 proc downloadImage(imageRef, url: string) =
+  ## Downloads an image.
   let imagePath = figmaImagePath(imageRef)
   if not fileExists(imagePath):
     echo "Downloading ", url
@@ -36,13 +47,12 @@ proc downloadImage(imageRef, url: string) =
     writeFile(imagePath, response.body)
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
+  ## Downloads all the images used in the figma file.
   if not dirExists("data/fidget/images"):
     createDir("data/fidget/images")
 
   # Walk the Figma file and find all the images used
-
   var imagesUsed: HashSet[string]
-
   proc walk(node: Node) =
     for fill in node.fills:
       if fill.imageRef != "":
@@ -52,11 +62,9 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
         imagesUsed.incl(stroke.imageRef)
     for c in node.children:
       walk(c)
-
   walk(figmaFile.document)
 
   # Walk images dir and remove any unused images
-
   for kind, path in walkDir("data/fidget/images", relative = true):
     case kind:
     of pcFile:
@@ -69,7 +77,6 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
       removeFile("data/fidget/images" / path)
 
   # Check if we need to download any images
-
   var needsDownload: bool
   for imageRef in imagesUsed:
     if not fileExists(figmaImagePath(imageRef)):
@@ -90,6 +97,7 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
     downloadImage(imageRef, url)
 
 proc downloadFont(fontPostScriptName: string) =
+  ## Downloads a font.
   let fontPath = figmaFontPath(fontPostScriptName).replace(" ", "")
   let fontUserPath = userFontPath(fontPostScriptName)
   if not fileExists(fontPath) and not fileExists(fontUserPath):
@@ -105,6 +113,7 @@ proc downloadFont(fontPostScriptName: string) =
     writeFile(fontPath, response.body)
 
 proc downloadFonts(figmaFile: FigmaFile) =
+  ## Downloads all the fonts used in the figma file.
   if not dirExists("data/fidget/fonts"):
     createDir("data/fidget/fonts")
 
@@ -112,7 +121,7 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   var fontsUsed: HashSet[string]
 
-  # TODO Make fallback font downlopqrad better:
+  # TODO Make fallback font download better:
   fontsUsed.incl("NotoSansJP-Regular")
   # fontsUsed.incl("NotoSansCH-Regular")
   # fontsUsed.incl("NotoSansKR-Regular")

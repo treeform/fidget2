@@ -1,6 +1,10 @@
 import bumpy, schema, vmath, internal, tables, pixie, perf
 
+# Layout tries to match figma's layout engine.
+# It is responsible for computing the layout of a node, both constraints and auto-layout.
+
 proc computeTextBounds(node: Node): Vec2 {.measure.} =
+  ## Computes the text bounds of a node.
   node.computeArrangement()
   return node.arrangement.layoutBounds()
 
