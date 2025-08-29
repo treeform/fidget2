@@ -15,3 +15,24 @@ jobs:
     - run: nimble develop -y
     - run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
     - run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
+
+    # Make sure the examples compile:f
+    - run: cd examples/bubbleats && nim c bubbleats.nim
+    - run: cd examples/calculator && nim c calculator.nim
+    - run: cd examples/colorpicker && nim c colorpicker.nim
+    - run: cd examples/dragon && nim c dragon.nim
+    - run: cd examples/gradaui && nim c gradaui.nim
+    - run: cd examples/hackernews && nim c hackernews.nim
+    - run: cd examples/inspector && nim c inspector.nim
+    - run: cd examples/layouts && nim c layouts.nim
+    - run: cd examples/nimforum && nim c nimforum.nim
+    - run: cd examples/scifi && nim c scifi.nim
+    - run: cd examples/the7gui && nim c booking.nim
+    - run: cd examples/the7gui && nim c cells.nim
+    - run: cd examples/the7gui && nim c circles.nim
+    - run: cd examples/the7gui && nim c counter.nim
+    - run: cd examples/the7gui && nim c crud.nim
+    - run: cd examples/the7gui && nim c temperature.nim
+    - run: cd examples/the7gui && nim c timer.nim
+    - run: cd examples/uberlight && nim c uberlight.nim
+    - run: cd examples/writer && nim c writer.nim
