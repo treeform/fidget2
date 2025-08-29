@@ -90,7 +90,7 @@ proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
     downloadImage(imageRef, url)
 
 proc downloadFont(fontPostScriptName: string) =
-  let fontPath = figmaFontPath(fontPostScriptName)
+  let fontPath = figmaFontPath(fontPostScriptName).replace(" ", "")
   let fontUserPath = userFontPath(fontPostScriptName)
   if not fileExists(fontPath) and not fileExists(fontUserPath):
     const baseUrl = "https://github.com/treeform/fidgetfonts/raw/main/fonts/"
@@ -112,7 +112,7 @@ proc downloadFonts(figmaFile: FigmaFile) =
 
   var fontsUsed: HashSet[string]
 
-  # TODO Make fallback font download better:
+  # TODO Make fallback font downlopqrad better:
   fontsUsed.incl("NotoSansJP-Regular")
   # fontsUsed.incl("NotoSansCH-Regular")
   # fontsUsed.incl("NotoSansKR-Regular")
