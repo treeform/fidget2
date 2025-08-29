@@ -8,9 +8,11 @@ when defined(amd64) and not defined(fidgetNoSimd):
 type U = distinct ptr string
 
 proc u*(s: var string): U {.inline.} =
+  ## Crates a uncode view for a string.
   s.addr.U
 
 proc str(u: U): var string {.inline.} =
+  ## Gets the string from a unicode view.
   cast[ptr string](u)[]
 
 proc add*(u: U, r: Rune) =
