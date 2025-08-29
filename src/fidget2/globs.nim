@@ -1,11 +1,11 @@
 import strutils, schema
 
+# Globs are used to match paths in the tree.
+# Globs style paths are central to the fidget2 library.
+# They sort of resemble unix paths or CSS selectors.
+
 type
   GlobbyError* = object of ValueError
-
-  # Node* = ref object
-  #   name*: string
-  #   children*: seq[Node]
 
   Glob = seq[string]
 
@@ -102,9 +102,11 @@ proc globSimplify(globParts: seq[string]): seq[string] =
       result.add globPart
 
 proc parseGlob(glob: string): Glob =
+  ## Parses a glob string into a glob object.
   glob.split('/').globSimplify()
 
 proc findAll*(node: Node, glob: string): seq[Node] =
+  ## Finds all nodes that match a glob.
   let glob = parseGlob(glob)
   if glob.len == 0:
     return
@@ -135,6 +137,9 @@ proc findAll*(node: Node, glob: string): seq[Node] =
     c.visit(result, glob)
 
 proc find*(node: Node, glob: string): Node =
+  ## Finds the first node that matches a glob.
+  ## It is not an error for glob to not match any nodes.
+  ## But only one node is returned.
   let glob = parseGlob(glob)
   proc visit(node: Node, one: var Node, glob: Glob, globAt = 0) =
     if globMatchOne(node.name, glob[globAt]):

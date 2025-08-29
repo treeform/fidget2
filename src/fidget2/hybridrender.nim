@@ -3,6 +3,10 @@ import bumpy, math, opengl, pixie, schema, windy, tables, vmath,
 
 export cpurender.underMouse
 
+# Hybrid renderer is a renderer that uses the GPU for some things and the CPU for others.
+# It tries to do fast work on the GPU and slow work on the CPU.
+# It has a bunch of dirty flags to track what is dirty and needs to be redrawn.
+
 var
   bxy*: Boxy
 
@@ -23,11 +27,11 @@ proc willDrawSomething(node: Node): bool =
     return false
 
   if node.collapse:
-    # TODO do children
+    # TODO: Do children.
     return true
 
   if node.clipsContent:
-    # draws clipping mask
+    # Draws clipping mask.
     return true
 
   for fill in node.fills:
@@ -59,7 +63,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
   let prevMat = mat
   mat = mat * node.transform()
 
-  node.mat = mat # needed for picking
+  node.mat = mat # Needed for picking.
 
   var pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
 
@@ -69,12 +73,6 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
     return
 
   if node.dirty or not quasiEqual(pixelBox, node.pixelBox):
-
-    # if not quasiEqual(pixelBox, node.pixelBox):
-    #   echo "node size changed"
-
-    # if node.dirty:
-    #   echo "drawToAtlas: ", node.name, " is dirty"
 
     node.dirty = false
     # compute bounds
@@ -343,6 +341,7 @@ proc setupWindow*(
   visible = true,
   style = DecoratedResizable
 ) =
+  ## Sets up the window.
   window = newWindow("loading...", size, visible=visible, msaa=msaa8x)
   window.style = style
 
@@ -374,6 +373,10 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   return screen
 
 proc freeze*(node: Node, scaleFactor = 1.0f) =
+  ## Freezes a node.
+  ## This is used to speed up rendering by caching the node as an image.
+  ## It is not a good idea to freeze nodes that are animated or that are
+  ## being edited.
   let s = scaleFactor
   if node.isSimpleImage:
     return
@@ -396,12 +399,10 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       bxy.addImage(node.frozenId, layer, genMipmaps=true)
 
 deleteNodeHook = proc(node: Node) =
+  ## Hook to delete a node from the atlas.
   if node.id in bxy:
-    #echo "remove ", node.id
     bxy.removeImage(node.id)
   if node.id & ".mask" in bxy:
-    #echo "remove ", node.id  & ".mask"
     bxy.removeImage(node.id & ".mask")
   if node.frozenId in bxy:
-    #echo "remove frozenId ", node.frozenId
     bxy.removeImage(node.frozenId)
