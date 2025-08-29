@@ -10,8 +10,8 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
     - uses: actions/checkout@v2
     - uses: jiro4989/setup-nim-action@v1
     - run: nimble develop -y
-    - run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
     - run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
