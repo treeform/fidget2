@@ -231,9 +231,6 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
     result.fillGradient(paint.toPixiePaint(node))
 
 proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.measure.} =
-
-  echo "draw paint", node.path
-
   if paints.len == 0 or geometries.len == 0:
     return
 

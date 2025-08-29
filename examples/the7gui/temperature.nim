@@ -51,5 +51,5 @@ startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Temperature",
   entryFrame = "/UI/TemperatureFrame",
-  resizable = false
+  windowStyle = Decorated
 )

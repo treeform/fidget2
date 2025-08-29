@@ -8,18 +8,16 @@ find "/UI/CounterFrame":
   find "Count1Up":
     onClick:
       inc count
-      echo count
 
   # When text is displayed it grabs the value from the count variable.
   find "CounterDisplay/text":
     onDisplay:
-      thisNode.characters = $count
-      thisNode.dirty = true
+      thisNode.setText($count)
 
 # Starts the fidget main loop.
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Counter",     # The title of the window.
   entryFrame = "/UI/CounterFrame", # Frame to use as the entry from.
-  resizable = false,           # We want the window to resize to frame size.
+  windowStyle = Decorated
 )

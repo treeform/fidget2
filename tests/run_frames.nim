@@ -10,6 +10,8 @@ when defined(cpu):
 elif defined(hyb):
   const w = "hyb"
   import fidget2/hybridrender, boxy
+else:
+  {.error: "Unsupported backend define -d:cpu or -d:hyb".}
 
 proc main(r = "", e = "", l = 10000) =
 
@@ -44,7 +46,7 @@ proc main(r = "", e = "", l = 10000) =
     #when not defined(benchy):
     #  echo frame.name, " --------------------------------- "
 
-    if firstTime and w in [
+    if firstTime and w in @[
       "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:

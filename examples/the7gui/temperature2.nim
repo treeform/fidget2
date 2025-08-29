@@ -74,5 +74,5 @@ onEdit "FahrenheitInput/text":
 startFidget(
   windowTitle = "Temperature",
   entryFrame = "Temperature",
-  resizable = false
+  windowStyle = Decorated
 )

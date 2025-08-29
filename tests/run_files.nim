@@ -27,6 +27,19 @@ var files = @[
   )
 ]
 
+when defined(hyb):
+  import fidget2/hybridrender, boxy
+
+proc drawScreen(frame: Node): Image =
+  when defined(cpu):
+    result = drawCompleteFrame(frame)
+  elif defined(hyb):
+    #bxy.clearAtlas()
+    drawToScreen(frame)
+    result = readGpuPixelsFromScreen()
+  else:
+    {.error: "Unsupported backend define -d:cpu or -d:hyb".}
+
 var framesHtml = """
 <style>
 img { border: 2px solid gray; max-height: 500px; max-width: 500px}
@@ -39,9 +52,9 @@ proc main(r = "", l = 10000) =
     if r != "" and not mainFrame.startsWith(r): continue
 
     use(url)
-    let frame = figmaFile.document.children[0].findByName(mainFrame)
+    let frame = figmaFile.document.children[0].find(mainFrame)
     let start = epochTime()
-    let image = drawCompleteFrame(frame)
+    let image = drawScreen(frame)
     echo epochTime() - start
     image.writeFile("tests/files/" & frame.name & ".png")
     echo " *** ", frame.name, " *** "
@@ -49,20 +62,8 @@ proc main(r = "", l = 10000) =
 
     if fileExists(&"tests/files/masters/{frame.name}.png"):
       var master = readImage(&"tests/files/masters/{frame.name}.png")
-      for x in 0 ..< master.width:
-        for y in 0 ..< master.height:
-          let
-            m = master.getRgbaUnsafe(x, y)
-            u = image.getRgbaUnsafe(x, y)
-          var
-            c: ColorRGBA
-          let diff = (m.r.int - u.r.int) + (m.g.int - u.g.int) + (m.b.int - u.b.int)
-          c.r = abs(m.a.int - u.a.int).clamp(0, 255).uint8
-          c.g = (diff/3).clamp(0, 255).uint8
-          c.b = (-diff/3).clamp(0, 255).uint8
-          c.a = 255
-          image.setRgbaUnsafe(x, y, c)
-      image.writeFile("tests/files/diffs/" & frame.name & ".png")
+      let (diffScore, diffImage) = diff(master, image)
+      diffImage.writeFile("tests/files/diffs/" & frame.name & ".png")
     else:
       echo &"tests/files/masters/{frame.name}.png does not exist!"
 
