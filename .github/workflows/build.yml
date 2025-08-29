@@ -13,5 +13,5 @@ jobs:
     - uses: actions/checkout@v2
     - uses: jiro4989/setup-nim-action@v1
     - run: nimble develop -y
-    - run: echo 138746-9dc80e99-1680-4571-9bd3-49fbd6b417f4 > ~/.figmatoken
+    - run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
     - run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
