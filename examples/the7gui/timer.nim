@@ -16,7 +16,7 @@ proc currentTime(): float64 =
   else:
     result = stoppedTime - startTime
 
-find "TimerFrame":
+find "/UI/TimerFrame":
   find "TimeGroup/ProgressBar/progress":
     onDisplay:
       thisNode.size.x = currentTime() / duration * 272
@@ -44,6 +44,6 @@ find "TimerFrame":
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Timer",
-  entryFrame = "TimerFrame",
+  entryFrame = "/UI/TimerFrame",
   windowStyle = Decorated
 )

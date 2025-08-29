@@ -603,8 +603,12 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
       if existsFile(fileKey):
         imageData = readFile(fileKey)
       else:
+        # Make cache directory if it doesn't exist.
+        if not existsDir("cache"):
+          echo "Creating cache directory"
+          createDir("cache")
         imageData = fetch(url)
-        echo "write file", url
+        echo "Writing file: ", fileKey
         writeFile(fileKey, imageData)
 
       let image = decodeImage(imageData)

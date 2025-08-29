@@ -70,7 +70,7 @@ find "/UI/MainScreen":
       threadRowMaster = find("/UI/ThreadRow/State=Default")
       threadList = find("/UI/MainScreen/ThreadList")
 
-    threadList.clearChildren()
+    threadList.removeChildren()
 
     for thread in threadPage.threads:
       let threadRow = threadRowMaster.newInstance()

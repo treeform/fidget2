@@ -1,5 +1,8 @@
 import os, pixie, strformat, strutils, times, windy,
-    fidget2/loader, fidget2/schema, fidget2/perf, fidget2/internal, xrays
+    fidget2/loader, fidget2/schema, fidget2/perf, fidget2/internal
+
+# This test is similar to run_frames.nim but it does not
+# save the frames to disk or does any diffing, so it is much faster to run.
 
 import fidget2/hybridrender, boxy
 
@@ -14,10 +17,7 @@ setupWindow(
 )
 
 for frame in figmaFile.document.children[0].children:
-  echo frame.name
-
   bxy.clearAtlas()
   drawToScreen(frame)
   let screenImage = readGpuPixelsFromScreen()
-
-  screenImage.xray("tests/frames/masters/" & frame.name & ".png")
+  echo frame.name, " ", screenImage.width, " ", screenImage.height

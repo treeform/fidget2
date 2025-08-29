@@ -262,10 +262,6 @@ proc selection*(node: Node): HSlice[int, int] =
   result.a = min(node.cursor, node.selector)
   result.b = max(node.cursor, node.selector)
 
-proc copy*[T](f: T): T =
-  ## Copies a value.
-  result = T()
-  result[] = f[]
 
 proc cutRunes(s: string, start, stop: int): string =
   ## Cuts runes from a string.

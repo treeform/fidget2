@@ -1,6 +1,6 @@
 import chroma, chrono, fidget2
 
-find "CirclesFrame":
+find "/UI/CirclesFrame":
 
   find "Circles/Circle":
     onClick:
@@ -19,6 +19,6 @@ find "CirclesFrame":
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Circles",
-  entryFrame = "CirclesFrame",
-  resizable = false
+  entryFrame = "/UI/CirclesFrame",
+  windowStyle = Decorated
 )

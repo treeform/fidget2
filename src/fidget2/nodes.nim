@@ -1,5 +1,7 @@
-import schema, loader, random, algorithm, strutils,
-    flatty/hashy2, vmath, sequtils, internal
+import
+  chroma,
+  schema, loader, random, algorithm, strutils,
+  flatty, flatty/hashy2, vmath, sequtils, internal
 
 proc path*(node: Node): string =
   ## Returns the full path of the node back to the root.
@@ -7,10 +9,6 @@ proc path*(node: Node): string =
   while walkNode != nil and walkNode.kind != DocumentNode:
     result = "/" & walkNode.name & result
     walkNode = walkNode.parent
-
-proc deepClone[T](a: T): T =
-  ## Deep copy of the object.
-  deepCopy(result, a)
 
 proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
@@ -97,18 +95,27 @@ proc delete*(nodes: seq[Node]) =
   for node in toSeq(nodes):
     node.delete()
 
+proc removeChildren*(node: Node) =
+  for child in toSeq(node.children):
+    node.removeChild(child)
+
 proc assignIdsToTree(node: Node) =
   ## Walks the tree giving everyone a new ID.
   node.id = $rand(int.high)
   for c in node.children:
     c.assignIdsToTree()
 
+
+proc copy[T](a: T): T =
+  ## Copies a value.
+  toFlatty(a).fromFlatty(T)
+
 proc copy*(node: Node): Node =
   ## Copies a node creating a new one.
   result = Node()
 
   template copyField(x: untyped) =
-    result.x = node.x.deepClone()
+    result.x = node.x.copy()
 
   # Base
   copyField componentId
@@ -233,7 +240,7 @@ proc triMerge(current, previousMaster, currentMaster: Node) =
 
   template mergeField(x: untyped) =
     if hashy(current.x) == hashy(previousMaster.x):
-      current.x = currentMaster.x.deepClone()
+      current.x = currentMaster.x.copy()
       current.dirty = true
 
   # Ids
