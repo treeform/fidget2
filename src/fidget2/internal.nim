@@ -14,18 +14,18 @@ var
   ## Current mat during the draw cycle.
   mat*: Mat3
 
-  ## Node that currently is being hovered over.
+  ## Node that is currently being hovered over.
   hoverNode*: Node
 
   running*: bool
 
-  ## Set Right-to-Left UI mode.
+  ## Sets Right-to-Left UI mode.
   rtl*: bool
 
   currentFigmaUrl*: string
   entryFramePath*: string
 
-  ## Nodes that is focused and has the current text box.
+  ## Node that is focused and has the current text box.
   textBoxFocus*: Node
 
   ## Default text highlight color (blueish by default).
@@ -61,7 +61,7 @@ iterator reversePairs*[T](a: seq[T]): (int, T) {.inline.} =
     dec i
 
 proc clamp*(v: Vec2, r: Rect): Vec2 =
-  ## Makes returns a vec that stays in bounds of the rectangle.
+  ## Returns a vec that stays in bounds of the rectangle.
   result = v
   if result.x < r.x: result.x = r.x
   if result.y < r.y: result.y = r.y
@@ -81,7 +81,7 @@ proc getFont*(fontName: string): Font =
   newFont(typefaceCache[fontName])
 
 proc rectangleFillGeometry(node: Node): Geometry =
-  ## Creates a fill geometry from a rectangle like node.
+  ## Creates a fill geometry from a rectangle-like node.
   result = Geometry()
   result.path = newPath()
   result.mat = mat3()
@@ -116,7 +116,7 @@ proc rectangleFillGeometry(node: Node): Geometry =
     )
 
 proc rectangleStrokeGeometry(node: Node): Geometry =
-  ## Creates a fill geometry from a rectangle like node.
+  ## Creates a stroke geometry from a rectangle-like node.
   result = Geometry()
   result.path = newPath()
   result.mat = mat3()
@@ -258,7 +258,7 @@ proc cursorWidth*(font: Font): float =
   min(font.size / 12, 1)
 
 proc selection*(node: Node): HSlice[int, int] =
-  ## Returns current selection from node.
+  ## Returns the current selection from the node.
   result.a = min(node.cursor, node.selector)
   result.b = max(node.cursor, node.selector)
 
@@ -402,7 +402,7 @@ proc computeScrollBounds*(node: Node): Rect =
   result.h = max(0, result.h - node.size.y)
 
 proc overlaps*(node: Node, mouse: Vec2): bool =
-  ## Does the mouse overlap the node.
+  ## Does the mouse overlap the node?
   # Generates the geometry.
   if node.kind == TextNode:
     node.genHitTestGeometry()

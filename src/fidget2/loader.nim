@@ -6,11 +6,11 @@ import common, json, jsony, os, schema, strutils, sets, tables, puppy
 var figmaFile*: FigmaFile                ## Main figma file.
 
 proc figmaHeaders(): HttpHeaders =
-  ## Gets the figma headers.
+  ## Gets the Figma headers.
   result["X-FIGMA-TOKEN"] = readFile(getHomeDir() / ".figmatoken").strip()
 
 proc figmaFilePath(fileKey: string): string =
-  ## Gets the figma file path.
+  ## Gets the Figma file path.
   "data/fidget/" & fileKey & ".json"
 
 proc lastModifiedFilePath(fileKey: string): string =
@@ -18,11 +18,11 @@ proc lastModifiedFilePath(fileKey: string): string =
   "data/fidget/" & fileKey & ".lastModified"
 
 proc figmaImagePath*(imageRef: string): string =
-  ## Gets the figma image path.
+  ## Gets the Figma image path.
   "data/fidget/images/" & imageRef & ".png"
 
 proc figmaFontPath*(fontPostScriptName: string): string =
-  ## Gets the figma font path.
+  ## Gets the Figma font path.
   "data/fidget/fonts/" & fontPostScriptName & ".ttf"
 
 proc userFontPath*(fontPostScriptName: string): string =
@@ -30,7 +30,7 @@ proc userFontPath*(fontPostScriptName: string): string =
   "data/fonts/" & fontPostScriptName & ".ttf"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
-  ## Loads the figma file.
+  ## Loads the Figma file.
   let data = readFile(figmaFilePath(fileKey))
   parseFigmaFile(data)
 
@@ -47,7 +47,7 @@ proc downloadImage(imageRef, url: string) =
     writeFile(imagePath, response.body)
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
-  ## Downloads all the images used in the figma file.
+  ## Downloads all the images used in the Figma file.
   if not dirExists("data/fidget/images"):
     createDir("data/fidget/images")
 
@@ -113,7 +113,7 @@ proc downloadFont(fontPostScriptName: string) =
     writeFile(fontPath, response.body)
 
 proc downloadFonts(figmaFile: FigmaFile) =
-  ## Downloads all the fonts used in the figma file.
+  ## Downloads all the fonts used in the Figma file.
   if not dirExists("data/fidget/fonts"):
     createDir("data/fidget/fonts")
 
@@ -175,7 +175,7 @@ proc downloadFonts(figmaFile: FigmaFile) =
     downloadFont(fontPostScriptName)
 
 proc downloadFigmaFile(fileKey: string) =
-  ## Download and cache the Figma file for this file key.
+  ## Downloads and caches the Figma file for this file key.
   if not dirExists("data/fidget"):
     createDir("data/fidget")
 

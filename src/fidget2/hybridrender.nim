@@ -11,14 +11,14 @@ var
   bxy*: Boxy
 
 proc quasiEqual(a, b: Rect): bool =
-  ## Quasi equal. Equal everything except integer translation.
+  ## Quasi-equal. Equals everything except integer translation.
   ## Used for redraw only if node changed positions in whole pixels.
   a.w == b.w and a.h == b.h and
     a.x.fractional == b.x.fractional and
     a.y.fractional == b.y.fractional
 
 proc willDrawSomething(node: Node): bool =
-  ## Checks if node will draw something, or its fully transparent with no fills
+  ## Checks if node will draw something, or it's fully transparent with no fills
   ## or strokes.
   if not node.visible or node.opacity == 0:
     return false
@@ -54,7 +54,7 @@ proc isSimpleImage*(node: Node): bool =
   node.cornerRadius == 0
 
 proc drawToAtlas(node: Node, level: int) {.measure.} =
-  ## Draw the nodes into the atlas (and setup pixel box).
+  ## Draws the nodes into the atlas (and sets up the pixel box).
 
   if not node.visible or node.opacity == 0:
     node.markTreeClean()
@@ -176,7 +176,7 @@ proc mat4(m: Mat3): Mat4 =
   result[3, 1] = m[2, 1]
 
 proc drawWithAtlas(node: Node) {.measure.} =
-  # Draw the nodes using atlas.
+  # Draws the nodes using the atlas.
   if not node.visible or node.opacity == 0:
     return
 
@@ -308,7 +308,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.popLayer(tint = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
 
 proc drawToScreen*(screenNode: Node) {.measure.} =
-  ## Draw the current node onto the screen.
+  ## Draws the current node onto the screen.
 
   if window.size.vec2 != screenNode.size:
     if window.style == DecoratedResizable:
@@ -360,7 +360,7 @@ proc setupWindow*(
   bxy = newBoxy()
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
-  ## Read the GPU pixels from screen.
+  ## Reads the GPU pixels from the screen.
   ## Use for debugging and tests only.
   var screen = newImage(window.size.x.int, window.size.y.int)
   glReadPixels(

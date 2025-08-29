@@ -4,9 +4,9 @@ import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
 
 # CPU Renderer renders objects in a single thread using the CPU.
 # It serves as a backing to the hybrid renderer.
-# Its much easier to get CPU rendering exactly the same as the master figma renderer,
+# It's much easier to get CPU rendering exactly the same as the master Figma renderer,
 # then work on the GPU or hybrid implementation.
-# This sort of acts as first step beyond figma's "reference" renderer, and then as the leaf renderer for the hybrid renderer.
+# This sort of acts as a first step beyond Figma's "reference" renderer, and then as the leaf renderer for the hybrid renderer.
 
 type Paint = schema.Paint
 
@@ -87,7 +87,7 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
   ## Computes a list of nodes under the mouse.
 
   proc visit(node: Node, mat: Mat3, mousePos: Vec2, s: var seq[Node]): bool =
-    ## Visits each node and sees if its geometry overlaps the mouse.
+    ## Visits each node and checks if its geometry overlaps the mouse.
 
     let mat = mat * node.transform()
 
@@ -121,7 +121,7 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
   discard screenNode.visit(screenNode.transform().inverse(), mousePos, result)
 
 proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
-  ## Converts a figma paint to a pixie paint.
+  ## Converts a Figma paint to a pixie paint.
   let paintKind = case paint.kind:
     of schema.pkSolid: SolidPaint
     of schema.pkImage: ImagePaint
@@ -467,7 +467,7 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
   mat = prevMat
 
 proc drawBoolean*(node: Node) {.measure.} =
-  ## Draws boolean node..
+  ## Draws a boolean node.
   maskLayer = newImage(layer.width, layer.height)
   mat = mat * node.transform().inverse()
   drawBooleanNode(node, NormalBlend)

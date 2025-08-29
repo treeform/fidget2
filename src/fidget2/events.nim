@@ -55,7 +55,7 @@ var
 proc display(withEvents=true)
 
 proc showPopup*(name: string) =
-  ## Pop up a given node as a popup.
+  ## Pops up a given node as a popup.
   ## TODO: implement.
   discard
 
@@ -65,7 +65,7 @@ proc addCb*(
   glob: string,
   handler: proc(thisNode: Node),
 ) =
-  ## Adds a generic call back.
+  ## Adds a generic callback.
   eventCbs.add EventCb(
     kind: kind,
     priority: priority,
@@ -74,7 +74,7 @@ proc addCb*(
   )
 
 proc find*(glob: string): Node =
-  ## Find a node matching a glob pattern.
+  ## Finds a node matching a glob pattern.
   var glob = glob
   if glob.len == 0:
     raise newException(FidgetError, &"Error glob can't be empty string \"\".")
@@ -85,7 +85,7 @@ proc find*(glob: string): Node =
     raise newException(FidgetError, &"find(\"{glob}\") not found.")
 
 proc findAll*(glob: string): seq[Node] =
-  ## Find all nodes matching glob pattern.
+  ## Finds all nodes matching a glob pattern.
   var glob = glob
   if thisSelector.len > 0:
     glob = thisSelector & "/" & glob
@@ -140,7 +140,7 @@ template onDisplay*(body: untyped) =
   )
 
 template onShow*(body: untyped) =
-  ## When a node is displayed.
+  ## When a node is shown.
   addCb(
     OnShow,
     1000,
@@ -150,7 +150,7 @@ template onShow*(body: untyped) =
   )
 
 template onHide*(body: untyped) =
-  ## When a node is displayed.
+  ## When a node is hidden.
   addCb(
     OnHide,
     1000,
@@ -160,7 +160,7 @@ template onHide*(body: untyped) =
   )
 
 template onClick*(body: untyped) =
-  ## When node is clicked.
+  ## When a node is clicked.
   addCb(
     OnClick,
     100,
@@ -170,7 +170,7 @@ template onClick*(body: untyped) =
   )
 
 template onRightClick*(body: untyped) =
-  ## When node is clicked.
+  ## When a node is right-clicked.
   addCb(
     OnRightClick,
     100,
@@ -180,7 +180,7 @@ template onRightClick*(body: untyped) =
   )
 
 template onClickOutside*(body: untyped) =
-  ## When node is clicked.
+  ## When clicked outside a node.
   addCb(
     OnClickOutside,
     100,
@@ -190,7 +190,7 @@ template onClickOutside*(body: untyped) =
   )
 
 template onMouseMove*(body: untyped) =
-  ## When node is clicked.
+  ## When the mouse moves over a node.
   addCb(
     OnMouseMove,
     100,
@@ -200,7 +200,7 @@ template onMouseMove*(body: untyped) =
   )
 
 proc setupTextBox(node: Node) =
-  ## Setup a the text box around this node.
+  ## Sets up this node as a text box.
   keyboard.onUnfocusNode = textBoxFocus
   textBoxFocus = node
   node.dirty = true
@@ -303,14 +303,14 @@ proc textBoxKeyboardAction(button: Button) =
     textBoxFocus.makeTextDirty()
 
 proc onRune(rune: Rune) =
-  ## User typed a character, needed for unicode entry.
+  ## The user typed a character, needed for unicode entry.
   if textBoxFocus != nil:
     echo "type:", rune
     textBoxFocus.typeCharacter(rune)
     requestedFrame = true
 
 proc onScroll() =
-  ## Handle scroll wheel.
+  ## Handles the scroll wheel.
   requestedFrame = true
   if textBoxFocus != nil:
     textBoxFocus.scrollBy(-window.scrollDelta.y * 50)
@@ -335,7 +335,8 @@ proc onScroll() =
       break
 
 proc simulateClick*(glob: string) =
-  ## Simulates a mouse click on a node. Used mainly for writing tests.
+  ## Simulates a mouse click on a node.
+  ## Used mainly for writing tests.
   for cb in eventCbs:
     if cb.kind == OnClick:
       thisCb = cb
@@ -345,7 +346,7 @@ proc simulateClick*(glob: string) =
           cb.handler(node)
 
 template onEdit*(body: untyped) =
-  ## When text node is display or edited.
+  ## When a text node is displayed or edited.
   addCb(
     OnDisplay,
     100,
@@ -413,28 +414,30 @@ template onFocus*(body: untyped) =
     )
 
 proc updateWindowSize() =
-  ## Handle window resize.
+  ## Handles window resize.
   requestedFrame = true
   thisFrame.dirty = true
 
 proc onResize() =
-  ## Handle window resize.
+  ## Handles window resize.
   updateWindowSize()
   display(withEvents = false)
 
 proc takeScreenShot*(): Image =
-  ## Takes a screenshot of the current screen. Used mainly for writing tests.
+  ## Takes a screenshot of the current screen.
+  ## Used mainly for writing tests.
   readGpuPixelsFromScreen()
 
 proc clearAllEventHandlers*() =
-  ## Clears all handlers.  Used mainly for writing tests.
+  ## Clears all handlers.
+  ## Used mainly for writing tests.
   eventCbs.setLen(0)
 
 proc resizeWindow*(x, y: int) =
   window.size = ivec2(x.cint, y.cint)
 
 proc onMouseMove() =
-  ## Mouse move
+  ## Handles mouse movement.
   requestedFrame = true
   if textBoxFocus != nil:
     if window.buttonDown[MouseLeft]:
@@ -613,7 +616,7 @@ proc `image=`*(paint: schema.Paint, image: Image) =
   bxy.addImage(paint.imageRef, image)
 
 proc navigateTo*(fullPath: string, smart = false) =
-  ## Navigates to a new frame a new frame.
+  ## Navigates to a new frame.
   ## Smart will try to preserve all nodes with the same name.
   navigationHistory.add(thisFrame)
   thisFrame = find(fullPath)
@@ -622,14 +625,14 @@ proc navigateTo*(fullPath: string, smart = false) =
   thisFrame.markTreeDirty()
 
 proc navigateBack*() =
-  ## Navigates back the navigation history.
+  ## Navigates back through the navigation history.
   if navigationHistory.len == 0:
     return
   thisFrame = navigationHistory.pop()
   thisFrame.markTreeDirty()
 
 proc display(withEvents = true) {.measure.} =
-  ## Called every frame by main while loop.
+  ## Called every frame by the main while loop.
 
   if withEvents:
     processEvents()
@@ -668,7 +671,7 @@ proc startFidget*(
   entryFrame: string,
   windowStyle = DecoratedResizable
 ) =
-  ## Starts Fidget Main loop.
+  ## Starts the Fidget main loop.
   currentFigmaUrl = figmaUrl
   use(currentFigmaUrl)
 

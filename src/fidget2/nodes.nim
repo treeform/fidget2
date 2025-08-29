@@ -2,7 +2,7 @@ import schema, loader, random, algorithm, strutils,
     flatty/hashy2, vmath, sequtils, internal
 
 proc path*(node: Node): string =
-  ## Returns that full path of the node back to the root.
+  ## Returns the full path of the node back to the root.
   var walkNode = node
   while walkNode != nil and walkNode.kind != DocumentNode:
     result = "/" & walkNode.name & result
@@ -25,7 +25,7 @@ proc markTreeClean*(node: Node) =
     markTreeClean(c)
 
 proc checkDirty*(node: Node) =
-  ## Makes sure if children are dirty, parents are dirty too!
+  ## Makes sure that if children are dirty, parents are dirty too.
   for c in node.children:
     checkDirty(c)
     if c.dirty == true:
@@ -67,7 +67,7 @@ proc hide*(nodes: seq[Node]) =
     node.hide()
 
 proc findNodeById*(id: string): Node =
-  ## Finds a node by id (slow).
+  ## Finds a node by ID (slow).
   proc recur(node: Node): Node =
     if node.id == id:
       return node
@@ -98,13 +98,13 @@ proc delete*(nodes: seq[Node]) =
     node.delete()
 
 proc assignIdsToTree(node: Node) =
-  ## Walks the tree giving everyone a new id.
+  ## Walks the tree giving everyone a new ID.
   node.id = $rand(int.high)
   for c in node.children:
     c.assignIdsToTree()
 
 proc copy*(node: Node): Node =
-  ## Copies a node creating new one.
+  ## Copies a node creating a new one.
   result = Node()
 
   template copyField(x: untyped) =
@@ -182,7 +182,7 @@ proc addChild*(parent, child: Node) =
   parent.markTreeDirty()
 
 proc inTree*(node, other: Node): bool =
-  ## Returns true if node is a sub node of other.
+  ## Returns true if node is a subnode of the other.
   var node = node
   while node != nil:
     if node.id == other.id:
@@ -190,7 +190,7 @@ proc inTree*(node, other: Node): bool =
     node = node.parent
 
 proc normalize(props: var seq[(string, string)]) =
-  ## Makes sure that prop name is sorted.
+  ## Makes sure that prop names are sorted.
   props.sort proc(a, b: (string, string)): int = cmp(a[0], b[0])
 
 proc parseName(name: string): seq[(string, string)] =
@@ -206,13 +206,13 @@ proc parseName(name: string): seq[(string, string)] =
   result.normalize()
 
 func `[]`*(query: seq[(string, string)], key: string): string =
-  ## Get a key out of PropName.
+  ## Gets a key out of PropName.
   for (k, v) in query:
     if k == key:
       return v
 
 func contains*(query: seq[(string, string)], key: string): bool =
-  ## Does the query contains this key.
+  ## Does the query contain this key?
   for (k, v) in query:
     if k == key:
       return true
@@ -227,7 +227,7 @@ func `[]=`*(query: var seq[(string, string)], key, value: string) =
   query.add((key, value))
 
 proc triMerge(current, prevMaster, currMaster: Node) =
-  ## Does a tri merge of the node trees.
+  ## Does a tri-merge of the node trees.
   # If current.x and prevMaster.x are same, we can change to currMaster.x
   # TODO: changes all the way back to the original restores maybe?
 
@@ -331,7 +331,7 @@ proc setVariant*(nodes: seq[Node], name, value: string) =
     node.setVariant(name, value)
 
 proc hasVariant*(node: Node, name, value: string): bool =
-  ## Checks the variant exists for the node.
+  ## Checks if the variant exists for the node.
   var prevMaster = findNodeById(node.componentId)
   if prevMaster != nil:
     var props = prevMaster.name.parseName()

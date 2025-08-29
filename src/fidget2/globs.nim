@@ -10,13 +10,13 @@ type
   Glob = seq[string]
 
 proc treeLen*(node: Node): int =
-  ## Return number of nodes in the tree.
+  ## Returns the number of nodes in the tree.
   inc result
   for c in node.children:
     result += c.treeLen()
 
 proc scan*(node: Node): seq[Node] =
-  ## Iterates the tree and returns flat list.
+  ## Iterates the tree and returns a flat list.
   proc visit(node: Node, list: var seq[Node]) =
     list.add(node)
     for c in node.children:
@@ -35,7 +35,7 @@ proc walk*(node: Node): seq[(string, Node)] =
     c.visit(result, "")
 
 proc globMatchOne(path, glob: string, pathStart = 0, globStart = 0): bool =
-  ## Match a single entry string to glob.
+  ## Matches a single entry string to glob.
 
   proc error(glob: string) =
     raise newException(GlobbyError, "Invalid glob: `" & glob & "`")
@@ -91,7 +91,7 @@ proc globMatchOne(path, glob: string, pathStart = 0, globStart = 0): bool =
     return true
 
 proc globSimplify(globParts: seq[string]): seq[string] =
-  ## Simplify backwards ".." and absolute "//".
+  ## Simplifies backwards ".." and absolute "//".
   for globPart in globParts:
     if globPart == "..":
       if result.len > 0:
