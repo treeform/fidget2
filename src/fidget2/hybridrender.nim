@@ -192,7 +192,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.restoreTransform()
     return
 
-  var pushedMasks = 0
+  var pushedLayers = 0
 
   var hasMask = false
   for child in node.children:
@@ -204,7 +204,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     hasMask or
     node.blendMode != NormalBlend:
       bxy.pushLayer()
-      inc pushedMasks
+      inc pushedLayers
 
   if node.isSimpleImage:
     let paint = node.fills[0]
@@ -283,18 +283,18 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
   if not node.collapse:
-    var needsMask: seq[Node]
+    var masks: seq[Node]
     for child in node.children:
       if child.isMask:
-        needsMask.add(child)
+        masks.add(child)
       else:
-        if needsMask.len == 0:
+        if masks.len == 0:
           drawWithAtlas(child)
         else:
           bxy.pushLayer()
           drawWithAtlas(child)
           bxy.pushLayer()
-          for mask in needsMask:
+          for mask in masks:
             drawWithAtlas(mask)
           bxy.popLayer(blendMode = MaskBlend)
           bxy.popLayer()
@@ -304,7 +304,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.drawImage(node.id & ".mask", pos = node.pixelBox.xy)
     bxy.popLayer(blendMode = MaskBlend)
 
-  for i in 0 ..< pushedMasks:
+  for i in 0 ..< pushedLayers:
     bxy.popLayer(tint = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
 
 proc drawToScreen*(screenNode: Node) {.measure.} =

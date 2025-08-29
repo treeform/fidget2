@@ -58,18 +58,18 @@ proc getSelection*(arrangement: Arrangement, start, stop: int): seq[Rect] =
 proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
   ## Given X,Y coordinate, return the GlyphPosition picked.
   ## If direct click not happened finds closest to the right.
-  var minG = -1
-  var minDist = -1.0
+  var minGlyph = -1
+  var minDistance = -1.0
   for i, selectRect in arrangement.selectionRects:
     if selectRect.y <= pos.y and pos.y < selectRect.y + selectRect.h:
       # on same line
       let dist = abs(pos.x - (selectRect.x))
       # closet character
-      if minDist < 0 or dist < minDist:
+      if minDistance < 0 or dist < minDistance:
         # min distance here
-        minDist = dist
-        minG = i
-  return minG
+        minDistance = dist
+        minGlyph = i
+  return minGlyph
 
 proc multilineCheck(node: Node) =
   ## Makes sure there are no new lines in a single line text box.

@@ -283,7 +283,7 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
   doAssert spans.len == 1
 
   var at = 0
-  for idx, span in spans:
+  for i, span in spans:
     let to = at + span.text.len
     let
       start = newSpan(span.text.cutRunes(0, slice.a), span.font)
@@ -293,10 +293,10 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
     middle.font = span.font.copy()
     result.add(middle)
 
-    spans.delete(idx)
-    spans.insert(stop, idx)
-    spans.insert(middle, idx)
-    spans.insert(start, idx)
+    spans.delete(i)
+    spans.insert(stop, i)
+    spans.insert(middle, i)
+    spans.insert(start, i)
     break
 
 proc computeArrangement*(node: Node) {.measure.} =
@@ -308,9 +308,9 @@ proc computeArrangement*(node: Node) {.measure.} =
     # The 0th style is node default style:
     node.spans.setLen(0)
     node.styleOverrideTable["0"] = node.style
-    var prevStyle: int
+    var previousStyle: int
     for i, styleKey in node.characterStyleOverrides:
-      if i == 0 or node.characterStyleOverrides[i] != prevStyle:
+      if i == 0 or node.characterStyleOverrides[i] != previousStyle:
         let style = node.styleOverrideTable[$styleKey]
 
         let font = getFont(style, node.style)
@@ -326,7 +326,7 @@ proc computeArrangement*(node: Node) {.measure.} =
         node.spans.add(newSpan("", font))
 
       node.spans[^1].text.add(node.characters[i])
-      prevStyle = styleKey
+      previousStyle = styleKey
 
   else:
     let font = getFont(node.style)
@@ -340,16 +340,16 @@ proc computeArrangement*(node: Node) {.measure.} =
 
   if textBoxFocus == node:
     # If node is being editing we might have to add highlight or ime string.
-    let selSlice = node.selection()
-    if selSlice.a != selSlice.b:
-      for modSpan in node.spans.modifySpans(node.selection()):
-        modSpan.font.paint = defaultTextHighlightColor
+    let selection = node.selection()
+    if selection.a != selection.b:
+      for span in node.spans.modifySpans(node.selection()):
+        span.font.paint = defaultTextHighlightColor
 
     elif window.imeCompositionString != "":
       let imeSlice = HSlice[int, int](a: node.cursor, b: node.cursor)
-      for modSpan in node.spans.modifySpans(imeSlice):
-        modSpan.font.underline = true
-        modSpan.text = window.imeCompositionString
+      for span in node.spans.modifySpans(imeSlice):
+        span.font.underline = true
+        span.text = window.imeCompositionString
 
     if node.spans.len == 1 and node.spans[0].text.len == 0:
       # When the text has nothing in it "", a bunch of things become 0.

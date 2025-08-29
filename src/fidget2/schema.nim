@@ -246,8 +246,8 @@ type
     pixels*: Image      ## Pixel image cache.
     pixelBox*: Rect     ## Pixel position and size.
     editable*: bool     ## Can the user edit the text?
-    orgPosition*: Vec2  ## Original position used by constraints.
-    orgSize*: Vec2      ## Original size used by constraints.
+    origPosition*: Vec2  ## Original position used by constraints.
+    origSize*: Vec2      ## Original size used by constraints.
     idNum*: int         ## Integer ID of the node
     mat*: Mat3          ## Useful to get back to the node.
     collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
@@ -656,8 +656,8 @@ proc parseHook(s: string, i: var int, node: var Node) =
     child.parent = node
 
   # Knowing original position and size is important for layout.
-  node.orgPosition = node.position
-  node.orgSize = node.size
+  node.origPosition = node.position
+  node.origSize = node.size
 
   # Figma API can give us \r\n -> \n
   # TODO: that might effect styles.
