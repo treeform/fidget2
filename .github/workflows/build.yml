@@ -31,7 +31,7 @@ jobs:
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
   
       - name: Build and run tests
-        run: nim c -r --gc:arc -d:release tests/run_frames.nim
+        run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
       - name: Build Examples
         run: |
