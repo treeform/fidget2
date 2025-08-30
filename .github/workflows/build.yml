@@ -45,6 +45,7 @@ jobs:
           cd ../layouts && nim c layouts.nim
           cd ../nimforum && nim c nimforum.nim
           cd ../scifi && nim c scifi.nim
+          nimble install chrono
           cd ../the7gui && nim c booking.nim
           cd ../the7gui && nim c cells.nim
           cd ../the7gui && nim c circles.nim
