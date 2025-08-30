@@ -12,12 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: jiro4989/setup-nim-action@v1
-    - run: nimble develop -y
+    - run: nimble develop -y -g
     - run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
     - run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
-
-    # Add fidget2/src to the path.
-    - run: echo "--path:src" > cfg.nims
 
     # Make sure the examples compile:
     - run: cd examples/bubbleats && nim c bubbleats.nim
