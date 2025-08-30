@@ -198,6 +198,8 @@ proc typeCharacter*(node: Node, rune: Rune) =
   node.undoSave()
   if node.cursor == node.characters.u.len:
     node.characters.u.add(rune)
+  elif node.cursor >= node.characters.u.len:
+    node.characters.u.insert(rune, node.characters.u.len)
   else:
     node.characters.u.insert(rune, node.cursor)
   node.runesChanged()
