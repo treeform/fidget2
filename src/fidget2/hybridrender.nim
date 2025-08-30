@@ -1,5 +1,5 @@
-import bumpy, math, opengl, pixie, schema, windy, tables, vmath,
-  boxy, internal, cpurender, layout, os, perf, nodes, loader, common
+import bumpy, opengl, pixie, schema, windy, tables, vmath,
+  boxy, internal, cpurender, layout, perf, nodes, loader, common
 
 export cpurender.underMouse
 
@@ -14,8 +14,8 @@ proc quasiEqual(a, b: Rect): bool =
   ## Quasi-equal. Equals everything except integer translation.
   ## Used for redraw only if node changed positions in whole pixels.
   a.w == b.w and a.h == b.h and
-    a.x.fractional == b.x.fractional and
-    a.y.fractional == b.y.fractional
+    fract(a.x) == fract(b.x) and
+    fract(a.y) == fract(b.y)
 
 proc willDrawSomething(node: Node): bool =
   ## Checks if node will draw something, or it's fully transparent with no fills
@@ -157,23 +157,8 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
 
   mat = prevMat
 
-proc mat4(m: Transform): Mat4 =
-  result = mat4()
-  result[0, 0] = m[0][0]
-  result[0, 1] = m[1][0]
-  result[1, 0] = m[0][1]
-  result[1, 1] = m[1][1]
-  result[3, 0] = m[0][2]
-  result[3, 1] = m[1][2]
 
-proc mat4(m: Mat3): Mat4 =
-  result = mat4()
-  result[0, 0] = m[0, 0]
-  result[0, 1] = m[0, 1]
-  result[1, 0] = m[1, 0]
-  result[1, 1] = m[1, 1]
-  result[3, 0] = m[2, 0]
-  result[3, 1] = m[2, 1]
+
 
 proc drawWithAtlas(node: Node) {.measure.} =
   # Draws the nodes using the atlas.
@@ -277,8 +262,8 @@ proc drawWithAtlas(node: Node) {.measure.} =
 
 
   elif node.id in bxy:
-    doAssert node.pixelBox.x.fractional == 0
-    doAssert node.pixelBox.y.fractional == 0
+    doAssert fract(node.pixelBox.x) == 0
+    doAssert fract(node.pixelBox.y) == 0
     doAssert node.willDrawSomething()
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 

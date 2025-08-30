@@ -1,4 +1,4 @@
-import chroma, fidget2, strformat, strutils
+import fidget2, strformat, strutils
 
 var
   celsius = 0.0

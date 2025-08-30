@@ -72,7 +72,7 @@ proc getFont*(fontName: string): Font =
   ## Gets a font from the cache or loads it from disk.
   if fontName notin typefaceCache:
     var typeface: Typeface
-    if existsFile(userFontPath(fontName)):
+    if fileExists(userFontPath(fontName)):
       typeface = parseOtf(readFile(userFontPath(fontName)))
     else:
       typeface = parseOtf(readFile(figmaFontPath(fontName)))
@@ -278,9 +278,7 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
   # TODO make this work for multiple spans.
   doAssert spans.len == 1
 
-  var at = 0
   for i, span in spans:
-    let to = at + span.text.len
     let
       start = newSpan(span.text.cutRunes(0, slice.a), span.font)
       middle = newSpan(span.text.cutRunes(slice.a, slice.b), span.font)

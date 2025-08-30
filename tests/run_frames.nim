@@ -1,5 +1,5 @@
 import cligen, os, pixie, strformat, strutils, times, windy
-import fidget2/loader, fidget2/schema, fidget2/perf, fidget2/internal
+import fidget2/loader, fidget2/schema, fidget2/perf
 
 when defined(benchy):
   import benchy
@@ -15,10 +15,10 @@ else:
 
 proc main(r = "", e = "", l = 10000) =
 
-  if not existsDir("tests/frames/diffs"):
+  if not dirExists("tests/frames/diffs"):
     createDir("tests/frames/diffs")
 
-  if not existsDir("tests/frames/rendered"):
+  if not dirExists("tests/frames/rendered"):
     createDir("tests/frames/rendered")
 
   var renderTime = 0.0

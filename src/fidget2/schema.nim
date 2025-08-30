@@ -1,4 +1,4 @@
-import bumpy, chroma, common, jsony, strutils, tables, pixie, vmath, options, unicode
+import bumpy, chroma, common, jsony, strutils, tables, pixie, vmath, options
 
 type
   NodeKind* = enum

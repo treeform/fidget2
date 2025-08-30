@@ -1,4 +1,4 @@
-import common, sequtils, pixie, unicode, vmath, bumpy, internal, schema, strutils, nodes, u, windy
+import common, pixie, unicode, vmath, bumpy, internal, schema, nodes, u, windy
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about
@@ -70,11 +70,6 @@ proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
         minDistance = dist
         minGlyph = i
   return minGlyph
-
-proc multilineCheck(node: Node) =
-  ## Makes sure there are no new lines in a single line text box.
-  if not node.multiline:
-    echo "fix non multiline"
 
 proc layout*(node: Node): seq[Rect] =
   return node.arrangement.selectionRects

@@ -1,6 +1,6 @@
 import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
-    internal, windy, pixie, textboxes, perf,
-    layout, common, nodes
+    internal, windy, textboxes, perf,
+    layout, common
 
 # CPU Renderer renders objects in a single thread using the CPU.
 # It serves as a backing to the hybrid renderer.

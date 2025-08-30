@@ -1,5 +1,4 @@
 import
-  chroma,
   schema, loader, random, algorithm, strutils,
   flatty, flatty/hashy2, vmath, sequtils, internal
 

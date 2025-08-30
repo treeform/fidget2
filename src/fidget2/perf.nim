@@ -1,6 +1,6 @@
 ## Second way of perf
 
-import tables, print, macros, std/monotimes, strutils, strformat
+import tables, macros, std/monotimes, strutils, strformat
 
 proc getTicks*(): int =
   ## Gets accurate time.

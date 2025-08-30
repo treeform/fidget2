@@ -1,4 +1,4 @@
-import bumpy, schema, vmath, internal, tables, pixie, perf
+import schema, vmath, internal, pixie, perf
 
 # Layout tries to match figma's layout engine.
 # It is responsible for computing the layout of a node, both constraints and auto-layout.
