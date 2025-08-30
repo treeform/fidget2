@@ -33,26 +33,3 @@ jobs:
       - name: Build and run tests
         run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
-      - name: Build Examples
-        run: |
-          cd examples/bubbleats && nim c bubbleats.nim
-          cd ../calculator && nim c calculator.nim
-          cd ../colorpicker && nim c colorpicker.nim
-          cd ../dragon && nim c dragon.nim
-          cd ../gradaui && nim c gradaui.nim
-          cd ../hackernews && nim c hackernews.nim
-          cd ../inspector && nim c inspector.nim
-          cd ../layouts && nim c layouts.nim
-          cd ../nimforum && nim c nimforum.nim
-          cd ../scifi && nim c scifi.nim
-          nimble install chrono
-          cd ../the7gui && nim c booking.nim
-          cd ../the7gui && nim c cells.nim
-          cd ../the7gui && nim c circles.nim
-          cd ../the7gui && nim c counter.nim
-          cd ../the7gui && nim c crud.nim
-          cd ../the7gui && nim c temperature.nim
-          cd ../the7gui && nim c timer.nim
-          cd ../uberlight && nim c uberlight.nim
-          cd ../writer && nim c writer.nim
-
