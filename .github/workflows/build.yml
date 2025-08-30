@@ -1,6 +1,9 @@
 name: Github Actions
+
 on:
   push:
+    branches: [ main, master ]
+  pull_request:
     branches: [ main, master ]
   workflow_dispatch:
 
@@ -9,44 +12,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Setup Nim
         uses: jiro4989/setup-nim-action@v1
         with:
           nim-version: '2.2.4'
   
-      - name: Install Packages
-        run: nimble develop -y
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Install Nim packages
+        run: nimble install -y
 
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
-
-      - name: Build Tests
-        run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
-
-      - name: Set Path
-        run: echo '--path:"fidget2/src"' > ../nim.cfg
+  
+      - name: Build and run tests
+        run: nim c -r --gc:arc -d:release tests/run_frames.nim
 
       - name: Build Examples
         run: |
           cd examples/bubbleats && nim c bubbleats.nim
-          cd examples/calculator && nim c calculator.nim
-          cd examples/colorpicker && nim c colorpicker.nim
-          cd examples/dragon && nim c dragon.nim
-          cd examples/gradaui && nim c gradaui.nim
-          cd examples/hackernews && nim c hackernews.nim
-          cd examples/inspector && nim c inspector.nim
-          cd examples/layouts && nim c layouts.nim
-          cd examples/nimforum && nim c nimforum.nim
-          cd examples/scifi && nim c scifi.nim
-          cd examples/the7gui && nim c booking.nim
-          cd examples/the7gui && nim c cells.nim
-          cd examples/the7gui && nim c circles.nim
-          cd examples/the7gui && nim c counter.nim
-          cd examples/the7gui && nim c crud.nim
-          cd examples/the7gui && nim c temperature.nim
-          cd examples/the7gui && nim c timer.nim
-          cd examples/uberlight && nim c uberlight.nim
-          cd examples/writer && nim c writer.nim
+          cd ../calculator && nim c calculator.nim
+          cd ../colorpicker && nim c colorpicker.nim
+          cd ../dragon && nim c dragon.nim
+          cd ../gradaui && nim c gradaui.nim
+          cd ../hackernews && nim c hackernews.nim
+          cd ../inspector && nim c inspector.nim
+          cd ../layouts && nim c layouts.nim
+          cd ../nimforum && nim c nimforum.nim
+          cd ../scifi && nim c scifi.nim
+          cd ../the7gui && nim c booking.nim
+          cd ../the7gui && nim c cells.nim
+          cd ../the7gui && nim c circles.nim
+          cd ../the7gui && nim c counter.nim
+          cd ../the7gui && nim c crud.nim
+          cd ../the7gui && nim c temperature.nim
+          cd ../the7gui && nim c timer.nim
+          cd ../uberlight && nim c uberlight.nim
+          cd ../writer && nim c writer.nim
 
