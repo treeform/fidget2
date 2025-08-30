@@ -1,5 +1,9 @@
 name: Github Actions
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
 jobs:
   build:
     strategy:
@@ -10,31 +14,45 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: jiro4989/setup-nim-action@v1
-    - run: nimble develop -y
-    - run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
-    - run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
+    - name: Checkout
+      uses: actions/checkout@v2
 
-    - run: echo '--path:"fidget2/src"' > ../nim.cfg
+    - name: Setup Nim
+      uses: jiro4989/setup-nim-action@v1
+      with:
+        nim-version: '2.2.4'
+ 
+    - name: Install Packages
+      run: nimble develop -y
 
-    # Make sure the examples compile:
-    - run: cd examples/bubbleats && nim c bubbleats.nim
-    - run: cd examples/calculator && nim c calculator.nim
-    - run: cd examples/colorpicker && nim c colorpicker.nim
-    - run: cd examples/dragon && nim c dragon.nim
-    - run: cd examples/gradaui && nim c gradaui.nim
-    - run: cd examples/hackernews && nim c hackernews.nim
-    - run: cd examples/inspector && nim c inspector.nim
-    - run: cd examples/layouts && nim c layouts.nim
-    - run: cd examples/nimforum && nim c nimforum.nim
-    - run: cd examples/scifi && nim c scifi.nim
-    - run: cd examples/the7gui && nim c booking.nim
-    - run: cd examples/the7gui && nim c cells.nim
-    - run: cd examples/the7gui && nim c circles.nim
-    - run: cd examples/the7gui && nim c counter.nim
-    - run: cd examples/the7gui && nim c crud.nim
-    - run: cd examples/the7gui && nim c temperature.nim
-    - run: cd examples/the7gui && nim c timer.nim
-    - run: cd examples/uberlight && nim c uberlight.nim
-    - run: cd examples/writer && nim c writer.nim
+    - name: Set Figma Token
+      run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
+
+    - name: Build Tests
+      run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
+
+    - name: Set Path
+      run: echo '--path:"fidget2/src"' > ../nim.cfg
+
+    - name: Build Examples
+      run: |
+        cd examples/bubbleats && nim c bubbleats.nim
+        cd examples/calculator && nim c calculator.nim
+        cd examples/colorpicker && nim c colorpicker.nim
+        cd examples/dragon && nim c dragon.nim
+        cd examples/gradaui && nim c gradaui.nim
+        cd examples/hackernews && nim c hackernews.nim
+        cd examples/inspector && nim c inspector.nim
+        cd examples/layouts && nim c layouts.nim
+        cd examples/nimforum && nim c nimforum.nim
+        cd examples/scifi && nim c scifi.nim
+        cd examples/the7gui && nim c booking.nim
+        cd examples/the7gui && nim c cells.nim
+        cd examples/the7gui && nim c circles.nim
+        cd examples/the7gui && nim c counter.nim
+        cd examples/the7gui && nim c crud.nim
+        cd examples/the7gui && nim c temperature.nim
+        cd examples/the7gui && nim c timer.nim
+        cd examples/uberlight && nim c uberlight.nim
+        cd examples/writer && nim c writer.nim
+
