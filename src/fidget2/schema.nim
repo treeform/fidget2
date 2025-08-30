@@ -1,4 +1,7 @@
-import bumpy, chroma, common, jsony, strutils, tables, pixie, vmath, options
+import
+  std/[options, parseutils, strutils, tables],
+  bumpy, chroma, jsony, pixie, vmath,
+  common
 
 type
   NodeKind* = enum
@@ -486,7 +489,7 @@ proc enumHook(s: string, v: var OverflowDirection) =
     of "HORIZONTAL_AND_VERTICAL_SCROLLING": HorizontalAndVerticalScrolling
     else: raise newException(FidgetError, "Invalid overflow direction:" & s)
 
-import parseutils
+
 proc parseHook(s: string, i: var int, v: var float32) =
   if i + 3 < s.len and s[i+0] == 'n' and s[i+1] == 'u' and s[i+2] == 'l' and s[i+3] == 'l':
     i += 4

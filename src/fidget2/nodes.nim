@@ -1,6 +1,7 @@
 import
-  schema, loader, random, algorithm, strutils,
-  flatty, flatty/hashy2, vmath, sequtils, internal
+  std/[algorithm, random, sequtils, strutils],
+  flatty, flatty/hashy2, vmath,
+  internal, loader, schema
 
 proc path*(node: Node): string =
   ## Returns the full path of the node back to the root.

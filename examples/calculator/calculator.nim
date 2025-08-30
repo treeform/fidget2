@@ -1,4 +1,6 @@
-import fidget2, strutils, sequtils
+import
+  std/[sequtils, strutils],
+  fidget2
 
 type
   SymbolKind = enum

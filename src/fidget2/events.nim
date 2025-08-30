@@ -1,7 +1,7 @@
-import algorithm, bumpy, common, globs, json, loader,
-    pixie, schema, windy, strformat, tables,
-    textboxes, unicode, vmath, internal,
-    nodes, perf, puppy, strutils, os
+import
+  std/[algorithm, json, os, strformat, strutils, tables, unicode],
+  bumpy, pixie, puppy, vmath, windy,
+  common, globs, internal, loader, nodes, perf, schema, textboxes
 
 export textboxes, nodes, common, windy
 

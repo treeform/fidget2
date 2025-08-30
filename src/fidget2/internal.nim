@@ -1,6 +1,7 @@
-import vmath, chroma, common, schema, windy,
-    tables, print, loader, bumpy, pixie, os, options,
-    pixie/fontformats/opentype, puppy, perf, unicode
+import
+  std/[options, os, tables, unicode],
+  bumpy, chroma, pixie, pixie/fontformats/opentype, print, puppy, vmath, windy,
+  common, loader, perf, schema
 
 export print
 

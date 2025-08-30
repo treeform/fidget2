@@ -1,4 +1,6 @@
-import strutils, schema
+import
+  std/[strutils],
+  schema
 
 # Globs are used to match paths in the tree.
 # Globs style paths are central to the fidget2 library.

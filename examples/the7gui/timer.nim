@@ -1,4 +1,6 @@
-import chroma, chrono, fidget2, vmath, times, strformat
+import
+  std/[strformat, times],
+  chroma, chrono, fidget2, vmath
 
 var
   startTime: float64 = epochTime()

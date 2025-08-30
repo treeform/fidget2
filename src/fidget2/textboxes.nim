@@ -1,4 +1,7 @@
-import common, pixie, unicode, vmath, bumpy, internal, schema, nodes, u, windy
+import
+  std/[unicode],
+  bumpy, pixie, vmath, windy,
+  common, internal, nodes, schema, u
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about

@@ -1,4 +1,6 @@
-import fidget2, strformat, strutils
+import
+  std/[strformat, strutils],
+  fidget2
 
 var
   celsius = 0.0

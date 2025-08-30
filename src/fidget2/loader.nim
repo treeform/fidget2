@@ -1,4 +1,7 @@
-import common, json, jsony, os, schema, strutils, sets, tables, puppy
+import
+  std/[json, os, sets, strutils, tables],
+  jsony, puppy,
+  common, schema
 
 # Loader is responsible for loading the figma file.
 # It also downloads images and fonts and manages the cache.

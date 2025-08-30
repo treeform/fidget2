@@ -1,6 +1,7 @@
-import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
-    internal, windy, textboxes, perf,
-    layout, common
+import
+  std/[math, tables],
+  bumpy, chroma, pixie, vmath, windy,
+  common, internal, layout, loader, perf, schema, textboxes
 
 # CPU Renderer renders objects in a single thread using the CPU.
 # It serves as a backing to the hybrid renderer.

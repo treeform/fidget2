@@ -1,4 +1,5 @@
-import strutils, unicode
+import
+  std/[strutils, unicode]
 
 ## Fancy .u UTF-8 API that mirrors strings.
 
