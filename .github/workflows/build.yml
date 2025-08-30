@@ -6,53 +6,47 @@ on:
 
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Setup Nim
-      uses: jiro4989/setup-nim-action@v1
-      with:
-        nim-version: '2.2.4'
- 
-    - name: Install Packages
-      run: nimble develop -y
+      - name: Setup Nim
+        uses: jiro4989/setup-nim-action@v1
+        with:
+          nim-version: '2.2.4'
+  
+      - name: Install Packages
+        run: nimble develop -y
 
-    - name: Set Figma Token
-      run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
+      - name: Set Figma Token
+        run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
 
-    - name: Build Tests
-      run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
+      - name: Build Tests
+        run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
 
-    - name: Set Path
-      run: echo '--path:"fidget2/src"' > ../nim.cfg
+      - name: Set Path
+        run: echo '--path:"fidget2/src"' > ../nim.cfg
 
-    - name: Build Examples
-      run: |
-        cd examples/bubbleats && nim c bubbleats.nim
-        cd examples/calculator && nim c calculator.nim
-        cd examples/colorpicker && nim c colorpicker.nim
-        cd examples/dragon && nim c dragon.nim
-        cd examples/gradaui && nim c gradaui.nim
-        cd examples/hackernews && nim c hackernews.nim
-        cd examples/inspector && nim c inspector.nim
-        cd examples/layouts && nim c layouts.nim
-        cd examples/nimforum && nim c nimforum.nim
-        cd examples/scifi && nim c scifi.nim
-        cd examples/the7gui && nim c booking.nim
-        cd examples/the7gui && nim c cells.nim
-        cd examples/the7gui && nim c circles.nim
-        cd examples/the7gui && nim c counter.nim
-        cd examples/the7gui && nim c crud.nim
-        cd examples/the7gui && nim c temperature.nim
-        cd examples/the7gui && nim c timer.nim
-        cd examples/uberlight && nim c uberlight.nim
-        cd examples/writer && nim c writer.nim
+      - name: Build Examples
+        run: |
+          cd examples/bubbleats && nim c bubbleats.nim
+          cd examples/calculator && nim c calculator.nim
+          cd examples/colorpicker && nim c colorpicker.nim
+          cd examples/dragon && nim c dragon.nim
+          cd examples/gradaui && nim c gradaui.nim
+          cd examples/hackernews && nim c hackernews.nim
+          cd examples/inspector && nim c inspector.nim
+          cd examples/layouts && nim c layouts.nim
+          cd examples/nimforum && nim c nimforum.nim
+          cd examples/scifi && nim c scifi.nim
+          cd examples/the7gui && nim c booking.nim
+          cd examples/the7gui && nim c cells.nim
+          cd examples/the7gui && nim c circles.nim
+          cd examples/the7gui && nim c counter.nim
+          cd examples/the7gui && nim c crud.nim
+          cd examples/the7gui && nim c temperature.nim
+          cd examples/the7gui && nim c timer.nim
+          cd examples/uberlight && nim c uberlight.nim
+          cd examples/writer && nim c writer.nim
 
