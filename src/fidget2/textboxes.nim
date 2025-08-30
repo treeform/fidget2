@@ -444,7 +444,7 @@ proc mouseAction*(
   ## Handles mouse action on the text.
   # Pick where to place the cursor.
   let index = node.arrangement.pickGlyphAt(mousePos)
-  if index != -1:
+  if index != -1 and index < node.characters.u.len:
     node.cursor = index
     node.savedX = mousePos.x
     if node.characters.u[index] != LF:

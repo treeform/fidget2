@@ -28,6 +28,10 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
   if node.kind == TextNode:
     node.computeArrangement()
     var bounds = node.arrangement.computeBounds(mat)
+    if textBoxFocus == node:
+      # Add extra padding for the caret.
+      bounds.w += 10
+      bounds.h += 10
     return bounds.snapToPixels()
   else:
     node.genFillGeometry()
@@ -263,7 +267,6 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.mea
         geometry.windingRule
       )
   else:
-
     # Mask + fill based on paint.
     var mask = newImage(layer.width, layer.height)
     let paint = newPaint(SolidPaint)
@@ -322,7 +325,6 @@ proc drawInnerShadow(node: Node) =
 
 proc drawGeometry*(node: Node) {.measure.} =
   ## Draws the geometry of a node.
-
   if node.strokeGeometry.len == 0:
     # No stroke just fill.
     node.drawPaint(node.fills, node.fillGeometry)
@@ -393,7 +395,6 @@ proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   blurLayer.draw(layer)
   layer = blurLayer
 
-
 proc drawText*(node: Node) {.measure.} =
   ## Draws the text (including editing of text).
   node.computeArrangement()
@@ -401,17 +402,20 @@ proc drawText*(node: Node) {.measure.} =
   mat = mat * translate(-node.scrollPos)
   if rtl:
     mat = mat * scale(vec2(-1, 1)) * translate(vec2(-node.size.x, 0))
+
   if textBoxFocus == node:
 
-    # TODO: Draw selection outline by using a parent focus variant?
-    # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
+    when defined(fidgetDebug):
+      # Draw selection outline by using a parent focus variant?
+      var path = newPath()
+      path.rect(node.pixelBox)
+      layer.strokePath(path, rgbx(255, 0, 0, 255), mat)
 
-    # TODO: Draw arrangement squares for debugging with a flag.
-    # block:
-    #   var path = newPath()
-    #   for rect in arrangement.selectionRects:
-    #     path.rect(rect)
-    #   layer.strokePath(path, color(1, 0, 0, 1), mat)
+      # Draw arrangement squares for debugging with a flag.
+      path = newPath()
+      for rect in node.arrangement.selectionRects:
+        path.rect(rect)
+      layer.strokePath(path, color(1, 0, 0, 1), mat)
 
     # Draw the selection ranges.
     let selectionRegions = node.selectionRegions()

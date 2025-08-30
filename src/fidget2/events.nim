@@ -38,6 +38,7 @@ type
 
 var
   eventCbs: seq[EventCb]
+  editableSelectors: seq[string]
   requestedFrame*: bool
   redisplay*: bool
 
@@ -80,6 +81,7 @@ proc find*(glob: string): Node =
     raise newException(FidgetError, &"Error glob can't be empty string \"\".")
   if thisSelector.len > 0 and not glob.startsWith("/"):
     glob = thisSelector & "/" & glob
+  echo "find: ", glob
   result = figmaFile.document.find(glob)
   if result == nil:
     raise newException(FidgetError, &"find(\"{glob}\") not found.")
@@ -118,6 +120,10 @@ template find*(glob: string, body: untyped) =
     body
   finally:
     popSelector()
+
+proc focused*(node: Node): bool =
+  ## Checks if a node is focused.
+  node == textBoxFocus
 
 template onFrame*(body: untyped) =
   ## Called once for each frame drawn.
@@ -227,6 +233,7 @@ proc textBoxKeyboardAction(button: Button) =
 
   # Do the text box commands.
   if textBoxFocus != nil:
+
     let
       ctrl = window.buttonDown[KeyLeftControl] or window.buttonDown[KeyRightControl]
       super = window.buttonDown[KeyLeftSuper] or window.buttonDown[KeyRightSuper]
@@ -282,32 +289,37 @@ proc textBoxKeyboardAction(button: Button) =
           if ctrl or super:
             textBoxFocus.selectAll()
         of MouseLeft:
-          echo "Click"
           textBoxFocus.mouseAction(
             window.relativeMousePos(textBoxFocus),
             true,
             shift
           )
         of DoubleClick:
-          echo "DoubleClick"
           textBoxFocus.selectWord(window.relativeMousePos(textBoxFocus))
         of TripleClick:
-          echo "TripleClick"
           textBoxFocus.selectParagraph(window.relativeMousePos(textBoxFocus))
         of QuadrupleClick:
-          echo "QuadrupleClick"
           textBoxFocus.selectAll()
         else:
           discard
 
     textBoxFocus.makeTextDirty()
+    
+    echo "on edit in the text box ", textBoxFocus.path
+    for cb in eventCbs:
+      if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
+        cb.handler(textBoxFocus)
 
 proc onRune(rune: Rune) =
   ## The user typed a character, needed for unicode entry.
   if textBoxFocus != nil:
-    echo "type:", rune
     textBoxFocus.typeCharacter(rune)
     requestedFrame = true
+
+  echo "on edit in the text box ", textBoxFocus.path
+  for cb in eventCbs:
+    if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
+      cb.handler(textBoxFocus)
 
 proc onScroll() =
   ## Handles the scroll wheel.
@@ -346,72 +358,35 @@ proc simulateClick*(glob: string) =
           cb.handler(node)
 
 template onEdit*(body: untyped) =
-  ## When a text node is displayed or edited.
+  ## When a text node is edited.
+  editableSelectors.add(thisSelector)
   addCb(
-    OnDisplay,
+    OnEdit,
     100,
     thisSelector,
-    proc(thisNode: Node) =
-      if window.buttonPressed[MouseLeft]:
-        if thisNode.parent.overlaps(window.mousePos.vec2):
-          if textBoxFocus != thisNode:
-            setupTextBox(thisNode)
-            textBoxFocus.mouseAction(
-              window.relativeMousePos(textBoxFocus),
-              true,
-              false
-            )
-        else:
-          if textBoxFocus == thisNode:
-            keyboard.onUnfocusNode = textBoxFocus
-            textBoxFocus.dirty = true
-            textBoxFocus = nil
-  )
-  block:
-    let fn = proc(thisNode {.inject.}: Node) =
+    proc(thisNode {.inject.}: Node) =
       body
-    addCb(
-      OnEdit,
-      200,
-      thisSelector,
-      proc(thisNode: Node) =
-        if textBoxFocus != nil:
-          for node in figmaFile.document.findAll(thisSelector):
-            if textBoxFocus == node and textBoxFocus.dirty:
-              fn(node)
-    )
+  )
 
 template onUnfocus*(body: untyped) =
-  ## When a text node is displayed and will continue to update.
-  block:
-    let fn = proc(thisNode {.inject.}: Node) =
+  ## When a text node loses focus.
+  addCb(
+    OnUnFocus,
+    500,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
       body
-    addCb(
-      OnUnFocus,
-      500,
-      thisSelector,
-      proc(thisNode: Node) =
-        if keyboard.onUnfocusNode != nil:
-          for node in figmaFile.document.findAll(thisSelector):
-            if keyboard.onUnfocusNode == node:
-              fn(node)
-    )
+  )
 
 template onFocus*(body: untyped) =
-  ## When a text node is displayed and will continue to update.
-  block:
-    let fn = proc(thisNode {.inject.}: Node) =
+  ## When a text node gets focused.
+  addCb(
+    OnFocus,
+    600,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
       body
-    addCb(
-      OnFocus,
-      600,
-      thisSelector,
-      proc(thisNode: Node)  =
-        if keyboard.onFocusNode != nil:
-          for node in figmaFile.document.findAll(thisSelector):
-            if keyboard.onFocusNode == node:
-              fn(node)
-    )
+  )
 
 proc updateWindowSize() =
   ## Handles window resize.
@@ -502,9 +477,7 @@ proc processEvents() {.measure.} =
     thisCb = cb
 
     case cb.kind:
-
     of OnShow:
-
       for node in findAll(thisCb.glob):
         if node.inTree(thisFrame):
           if node.shown == false:
@@ -513,21 +486,18 @@ proc processEvents() {.measure.} =
             thisCb.handler(node)
 
     of OnClick:
-
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node in underMouseNodes:
             thisCb.handler(node)
 
     of OnRightClick:
-
       if window.buttonPressed[MouseRight]:
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node in underMouseNodes:
             thisCb.handler(node)
 
     of OnClickOutside:
-
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and
@@ -536,14 +506,12 @@ proc processEvents() {.measure.} =
               thisCb.handler(node)
 
     of OnDisplay:
-
       if redisplay:
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame):
             thisCb.handler(node)
 
     of OnHide:
-
       for node in findAll(thisCb.glob):
         if not node.inTree(thisFrame):
           if node.shown == true:
@@ -551,7 +519,6 @@ proc processEvents() {.measure.} =
             thisCb.handler(node)
 
     of OnMouseMove:
-
       for node in findAll(thisCb.glob):
         if node.inTree(thisFrame) and node in underMouseNodes:
           thisCb.handler(node)
@@ -562,17 +529,43 @@ proc processEvents() {.measure.} =
           thisCb.handler(node)
 
     of OnEdit:
-      thisCb.handler(nil)
+      discard
 
     of OnFocus:
-      thisCb.handler(nil)
+      discard
 
     of OnUnfocus:
-      thisCb.handler(nil)
+      discard
 
     else:
       echo "not covered: ": cb.kind
 
+  # Check if clicks on editable nodes.
+  if window.buttonPressed[MouseLeft]:
+    for selector in editableSelectors:
+      for node in findAll(selector):
+        if node.inTree(thisFrame) and node in underMouseNodes:
+
+          if textBoxFocus != nil:
+            # Call onUnfocus on any old text box.
+            echo "stop editing: ", textBoxFocus.path
+            for cb in eventCbs:
+              if cb.kind == OnUnfocus and cb.glob == textBoxFocus.path:
+                cb.handler(textBoxFocus)
+                
+          setupTextBox(node)
+          textBoxFocus.mouseAction(
+            window.relativeMousePos(textBoxFocus),
+            true,
+            false
+          )
+
+          # Call onFocus on the new text box.
+          echo "start editing: ", node.path
+          for cb in eventCbs:
+            if cb.kind == OnFocus and cb.glob == node.path:
+              cb.handler(node)
+              
   if textBoxFocus != nil:
     let cursor = textBoxFocus.cursorRect()
     var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)
@@ -588,7 +581,6 @@ proc processEvents() {.measure.} =
     echo "writing atlas"
     bxy.readAtlas().writeFile("atlas.png")
 
-
   if window.buttonPressed[KeyF5]:
     echo "reloading from web"
     use(currentFigmaUrl)
@@ -600,11 +592,11 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
     if url notin imageCache:
       let fileKey = "cache/" & url.replace("/", "_").replace(":", "_").replace(".", "_").replace("?", "_")
       var imageData = ""
-      if existsFile(fileKey):
+      if fileExists(fileKey):
         imageData = readFile(fileKey)
       else:
         # Make cache directory if it doesn't exist.
-        if not existsDir("cache"):
+        if not dirExists("cache"):
           echo "Creating cache directory"
           createDir("cache")
         imageData = fetch(url)
