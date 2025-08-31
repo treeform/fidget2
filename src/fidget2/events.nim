@@ -81,7 +81,7 @@ proc find*(glob: string): Node =
     raise newException(FidgetError, &"Error glob can't be empty string \"\".")
   if thisSelector.len > 0 and not glob.startsWith("/"):
     glob = thisSelector & "/" & glob
-  echo "find: ", glob
+  echo "find: ", glob, " thisSelector: ", thisSelector
   result = figmaFile.document.find(glob)
   if result == nil:
     raise newException(FidgetError, &"find(\"{glob}\") not found.")
@@ -308,6 +308,7 @@ proc textBoxKeyboardAction(button: Button) =
     echo "on edit in the text box ", textBoxFocus.path
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
+        thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
 
 proc onRune(rune: Rune) =
@@ -319,6 +320,7 @@ proc onRune(rune: Rune) =
   echo "on edit in the text box ", textBoxFocus.path
   for cb in eventCbs:
     if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
+      thisSelector = textBoxFocus.path
       cb.handler(textBoxFocus)
 
 proc onScroll() =
@@ -551,6 +553,7 @@ proc processEvents() {.measure.} =
             echo "stop editing: ", textBoxFocus.path
             for cb in eventCbs:
               if cb.kind == OnUnfocus and cb.glob == textBoxFocus.path:
+                thisSelector = textBoxFocus.path
                 cb.handler(textBoxFocus)
                 
           setupTextBox(node)
@@ -561,10 +564,11 @@ proc processEvents() {.measure.} =
           )
 
           # Call onFocus on the new text box.
-          echo "start editing: ", node.path
+          echo "start editing: ", textBoxFocus.path
           for cb in eventCbs:
-            if cb.kind == OnFocus and cb.glob == node.path:
-              cb.handler(node)
+            if cb.kind == OnFocus and cb.glob == textBoxFocus.path:
+              thisSelector = node.path
+              cb.handler(textBoxFocus)
               
   if textBoxFocus != nil:
     let cursor = textBoxFocus.cursorRect()
