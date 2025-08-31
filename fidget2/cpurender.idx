@@ -1,0 +1,18 @@
+nimTitle	cpurender	fidget2/cpurender.html	module src/fidget2/cpurender		0
+nim	layer	fidget2/cpurender.html#layer	var layer		15
+nim	maskLayer	fidget2/cpurender.html#maskLayer	var maskLayer		17
+nim	computeIntBounds	fidget2/cpurender.html#computeIntBounds,Node,Mat3	proc computeIntBounds(node: Node; mat: Mat3; withChildren = false): Rect		25
+nim	underMouse	fidget2/cpurender.html#underMouse,Node,Vec2	proc underMouse(screenNode: Node; mousePos: Vec2): seq[Node]		91
+nim	drawPaint	fidget2/cpurender.html#drawPaint,Node,seq[Paint],seq[Geometry]	proc drawPaint(node: Node; paints: seq[Paint]; geometries: seq[Geometry])		244
+nim	drawInnerShadowEffect	fidget2/cpurender.html#drawInnerShadowEffect,Effect,Node,Image	proc drawInnerShadowEffect(effect: Effect; node: Node; fillMask: Image)		289
+nim	maskSelfImage	fidget2/cpurender.html#maskSelfImage,Node	proc maskSelfImage(node: Node): Image		306
+nim	drawGeometry	fidget2/cpurender.html#drawGeometry,Node	proc drawGeometry(node: Node)		327
+nim	drawDropShadowEffect	fidget2/cpurender.html#drawDropShadowEffect,Image,Image,Effect,Node	proc drawDropShadowEffect(lowerLayer: Image; layer: Image; effect: Effect; node: Node)		381
+nim	drawBackgroundBlur	fidget2/cpurender.html#drawBackgroundBlur,Image,Effect	proc drawBackgroundBlur(lowerLayer: Image; effect: Effect)		389
+nim	drawText	fidget2/cpurender.html#drawText,Node	proc drawText(node: Node)		399
+nim	drawNode	fidget2/cpurender.html#drawNode,Node	proc drawNode(node: Node; withChildren = true)		440
+nim	drawBooleanNode	fidget2/cpurender.html#drawBooleanNode,Node,BlendMode	proc drawBooleanNode(node: Node; blendMode: BlendMode)		442
+nim	drawBoolean	fidget2/cpurender.html#drawBoolean,Node	proc drawBoolean(node: Node)		474
+nim	drawNodeInternal	fidget2/cpurender.html#drawNodeInternal,Node	proc drawNodeInternal(node: Node; withChildren = true)		486
+nim	drawCompleteFrame	fidget2/cpurender.html#drawCompleteFrame,Node	proc drawCompleteFrame(node: Node): pixie.Image		589
+nim	setupWindow	fidget2/cpurender.html#setupWindow,Node,IVec2	proc setupWindow(frameNode: Node; size: IVec2; visible = true; style = Decorated)		606

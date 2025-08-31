@@ -1,0 +1,12 @@
+nimTitle	u	fidget2/u.html	module src/fidget2/u		0
+nim	u	fidget2/u.html#u,string	proc u(s: var string): U		11
+nim	add	fidget2/u.html#add,U,Rune	proc add(u: U; r: Rune)		19
+nim	len	fidget2/u.html#len,U	proc len(u: U): int		26
+nim	`[]`	fidget2/u.html#[],U,int	proc `[]`(u: U; i: int): Rune		61
+nim	`[]`	fidget2/u.html#[],U,BackwardsIndex	proc `[]`(u: U; i: BackwardsIndex): Rune		65
+nim	`[]`	fidget2/u.html#[],U,HSlice[int,int]	proc `[]`(u: U; slice: HSlice[int, int]): string		69
+nim	insert	fidget2/u.html#insert,U,Rune,int	proc insert(u: U; r: Rune; i: int)		77
+nim	delete	fidget2/u.html#delete,U,int	proc delete(u: U; i: int)		86
+nim	delete	fidget2/u.html#delete,U,HSlice[int,int]	proc delete(u: U; slice: HSlice[int, int])		93
+nimgrp	delete	fidget2/u.html#delete-procs-all	proc		86
+nimgrp	[]	fidget2/u.html#[]-procs-all	proc		61

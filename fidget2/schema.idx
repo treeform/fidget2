@@ -1,0 +1,97 @@
+nimTitle	schema	fidget2/schema.html	module src/fidget2/schema		0
+nim	DocumentNode	fidget2/schema.html#DocumentNode	NodeKind.DocumentNode		7
+nim	CanvasNode	fidget2/schema.html#CanvasNode	NodeKind.CanvasNode		7
+nim	RectangleNode	fidget2/schema.html#RectangleNode	NodeKind.RectangleNode		7
+nim	FrameNode	fidget2/schema.html#FrameNode	NodeKind.FrameNode		7
+nim	GroupNode	fidget2/schema.html#GroupNode	NodeKind.GroupNode		7
+nim	ComponentNode	fidget2/schema.html#ComponentNode	NodeKind.ComponentNode		7
+nim	InstanceNode	fidget2/schema.html#InstanceNode	NodeKind.InstanceNode		7
+nim	VectorNode	fidget2/schema.html#VectorNode	NodeKind.VectorNode		7
+nim	StarNode	fidget2/schema.html#StarNode	NodeKind.StarNode		7
+nim	EllipseNode	fidget2/schema.html#EllipseNode	NodeKind.EllipseNode		7
+nim	LineNode	fidget2/schema.html#LineNode	NodeKind.LineNode		7
+nim	RegularPolygonNode	fidget2/schema.html#RegularPolygonNode	NodeKind.RegularPolygonNode		7
+nim	TextNode	fidget2/schema.html#TextNode	NodeKind.TextNode		7
+nim	BooleanOperationNode	fidget2/schema.html#BooleanOperationNode	NodeKind.BooleanOperationNode		7
+nim	ComponentSetNode	fidget2/schema.html#ComponentSetNode	NodeKind.ComponentSetNode		7
+nim	SliceNode	fidget2/schema.html#SliceNode	NodeKind.SliceNode		7
+nim	NodeKind	fidget2/schema.html#NodeKind	enum NodeKind		7
+nim	Component	fidget2/schema.html#Component	type Component		16
+nim	MinConstraint	fidget2/schema.html#MinConstraint	ConstraintKind.MinConstraint		21
+nim	MaxConstraint	fidget2/schema.html#MaxConstraint	ConstraintKind.MaxConstraint		21
+nim	ScaleConstraint	fidget2/schema.html#ScaleConstraint	ConstraintKind.ScaleConstraint		21
+nim	StretchConstraint	fidget2/schema.html#StretchConstraint	ConstraintKind.StretchConstraint		21
+nim	CenterConstraint	fidget2/schema.html#CenterConstraint	ConstraintKind.CenterConstraint		21
+nim	ConstraintKind	fidget2/schema.html#ConstraintKind	enum ConstraintKind		21
+nim	LayoutConstraint	fidget2/schema.html#LayoutConstraint	type LayoutConstraint		28
+nim	InheritLayout	fidget2/schema.html#InheritLayout	LayoutAlign.InheritLayout		32
+nim	StretchLayout	fidget2/schema.html#StretchLayout	LayoutAlign.StretchLayout		32
+nim	LayoutAlign	fidget2/schema.html#LayoutAlign	enum LayoutAlign		32
+nim	pkSolid	fidget2/schema.html#pkSolid	PaintKind.pkSolid		36
+nim	pkImage	fidget2/schema.html#pkImage	PaintKind.pkImage		36
+nim	pkGradientLinear	fidget2/schema.html#pkGradientLinear	PaintKind.pkGradientLinear		36
+nim	pkGradientRadial	fidget2/schema.html#pkGradientRadial	PaintKind.pkGradientRadial		36
+nim	pkGradientAngular	fidget2/schema.html#pkGradientAngular	PaintKind.pkGradientAngular		36
+nim	pkGradientDiamond	fidget2/schema.html#pkGradientDiamond	PaintKind.pkGradientDiamond		36
+nim	PaintKind	fidget2/schema.html#PaintKind	enum PaintKind		36
+nim	FillScaleMode	fidget2/schema.html#FillScaleMode	ScaleMode.FillScaleMode		44
+nim	FitScaleMode	fidget2/schema.html#FitScaleMode	ScaleMode.FitScaleMode		44
+nim	StretchScaleMode	fidget2/schema.html#StretchScaleMode	ScaleMode.StretchScaleMode		44
+nim	TileScaleMode	fidget2/schema.html#TileScaleMode	ScaleMode.TileScaleMode		44
+nim	ScaleMode	fidget2/schema.html#ScaleMode	enum ScaleMode		44
+nim	Transform	fidget2/schema.html#Transform	type Transform		50
+nim	Paint	fidget2/schema.html#Paint	type Paint		55
+nim	DropShadow	fidget2/schema.html#DropShadow	EffectKind.DropShadow		69
+nim	InnerShadow	fidget2/schema.html#InnerShadow	EffectKind.InnerShadow		69
+nim	LayerBlur	fidget2/schema.html#LayerBlur	EffectKind.LayerBlur		69
+nim	BackgroundBlur	fidget2/schema.html#BackgroundBlur	EffectKind.BackgroundBlur		69
+nim	EffectKind	fidget2/schema.html#EffectKind	enum EffectKind		69
+nim	Effect	fidget2/schema.html#Effect	object Effect		75
+nim	NoneLayout	fidget2/schema.html#NoneLayout	LayoutMode.NoneLayout		84
+nim	HorizontalLayout	fidget2/schema.html#HorizontalLayout	LayoutMode.HorizontalLayout		84
+nim	VerticalLayout	fidget2/schema.html#VerticalLayout	LayoutMode.VerticalLayout		84
+nim	LayoutMode	fidget2/schema.html#LayoutMode	enum LayoutMode		84
+nim	ColumnsLayoutPattern	fidget2/schema.html#ColumnsLayoutPattern	LayoutPattern.ColumnsLayoutPattern		89
+nim	RowsLayoutPattern	fidget2/schema.html#RowsLayoutPattern	LayoutPattern.RowsLayoutPattern		89
+nim	GridLayoutPattern	fidget2/schema.html#GridLayoutPattern	LayoutPattern.GridLayoutPattern		89
+nim	LayoutPattern	fidget2/schema.html#LayoutPattern	enum LayoutPattern		89
+nim	MinGridAlign	fidget2/schema.html#MinGridAlign	GridAlign.MinGridAlign		94
+nim	StretchGridAlign	fidget2/schema.html#StretchGridAlign	GridAlign.StretchGridAlign		94
+nim	CenterGridAlign	fidget2/schema.html#CenterGridAlign	GridAlign.CenterGridAlign		94
+nim	GridAlign	fidget2/schema.html#GridAlign	enum GridAlign		94
+nim	LayoutGrid	fidget2/schema.html#LayoutGrid	object LayoutGrid		99
+nim	OpenTypeFlags	fidget2/schema.html#OpenTypeFlags	object OpenTypeFlags		109
+nim	FixedTextResize	fidget2/schema.html#FixedTextResize	TextAutoResize.FixedTextResize		112
+nim	HeightTextResize	fidget2/schema.html#HeightTextResize	TextAutoResize.HeightTextResize		112
+nim	WidthAndHeightTextResize	fidget2/schema.html#WidthAndHeightTextResize	TextAutoResize.WidthAndHeightTextResize		112
+nim	TextAutoResize	fidget2/schema.html#TextAutoResize	enum TextAutoResize		112
+nim	Strikethrough	fidget2/schema.html#Strikethrough	TextDecoration.Strikethrough		117
+nim	Underline	fidget2/schema.html#Underline	TextDecoration.Underline		117
+nim	TextDecoration	fidget2/schema.html#TextDecoration	enum TextDecoration		117
+nim	PixelUnit	fidget2/schema.html#PixelUnit	LineHeightUnit.PixelUnit		121
+nim	FontSizePercentUnit	fidget2/schema.html#FontSizePercentUnit	LineHeightUnit.FontSizePercentUnit		121
+nim	IntrinsicPercentUnit	fidget2/schema.html#IntrinsicPercentUnit	LineHeightUnit.IntrinsicPercentUnit		121
+nim	LineHeightUnit	fidget2/schema.html#LineHeightUnit	enum LineHeightUnit		121
+nim	TypeStyle	fidget2/schema.html#TypeStyle	type TypeStyle		126
+nim	Geometry	fidget2/schema.html#Geometry	object Geometry		147
+nim	UnionOperation	fidget2/schema.html#UnionOperation	BooleanOperation.UnionOperation		156
+nim	SubtractOperation	fidget2/schema.html#SubtractOperation	BooleanOperation.SubtractOperation		156
+nim	IntersectOperation	fidget2/schema.html#IntersectOperation	BooleanOperation.IntersectOperation		156
+nim	ExcludeOperation	fidget2/schema.html#ExcludeOperation	BooleanOperation.ExcludeOperation		156
+nim	BooleanOperation	fidget2/schema.html#BooleanOperation	enum BooleanOperation		156
+nim	InsideStroke	fidget2/schema.html#InsideStroke	StrokeAlign.InsideStroke		162
+nim	OutsideStroke	fidget2/schema.html#OutsideStroke	StrokeAlign.OutsideStroke		162
+nim	CenterStroke	fidget2/schema.html#CenterStroke	StrokeAlign.CenterStroke		162
+nim	StrokeAlign	fidget2/schema.html#StrokeAlign	enum StrokeAlign		162
+nim	AutoAxis	fidget2/schema.html#AutoAxis	AxisSizingMode.AutoAxis		167
+nim	FixedAxis	fidget2/schema.html#FixedAxis	AxisSizingMode.FixedAxis		167
+nim	AxisSizingMode	fidget2/schema.html#AxisSizingMode	enum AxisSizingMode		167
+nim	NoScrolling	fidget2/schema.html#NoScrolling	OverflowDirection.NoScrolling		171
+nim	HorizontalScrolling	fidget2/schema.html#HorizontalScrolling	OverflowDirection.HorizontalScrolling		171
+nim	VerticalScrolling	fidget2/schema.html#VerticalScrolling	OverflowDirection.VerticalScrolling		171
+nim	HorizontalAndVerticalScrolling	fidget2/schema.html#HorizontalAndVerticalScrolling	OverflowDirection.HorizontalAndVerticalScrolling		171
+nim	OverflowDirection	fidget2/schema.html#OverflowDirection	enum OverflowDirection		171
+nim	Node	fidget2/schema.html#Node	type Node		177
+nim	FigmaFile	fidget2/schema.html#FigmaFile	type FigmaFile		263
+nim	`$`	fidget2/schema.html#$,Node	proc `$`(node: Node): string		273
+nim	parseFigmaFile	fidget2/schema.html#parseFigmaFile,string	proc parseFigmaFile(data: string): FigmaFile		672

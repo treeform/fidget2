@@ -1,0 +1,50 @@
+nimTitle	events	fidget2/events.html	module src/fidget2/events		0
+nim	Keyboard	fidget2/events.html#Keyboard	type Keyboard		15
+nim	OnClick	fidget2/events.html#OnClick	EventCbKind.OnClick		19
+nim	OnClickOutside	fidget2/events.html#OnClickOutside	EventCbKind.OnClickOutside		19
+nim	OnRightClick	fidget2/events.html#OnRightClick	EventCbKind.OnRightClick		19
+nim	OnAnyClick	fidget2/events.html#OnAnyClick	EventCbKind.OnAnyClick		19
+nim	OnFrame	fidget2/events.html#OnFrame	EventCbKind.OnFrame		19
+nim	OnEdit	fidget2/events.html#OnEdit	EventCbKind.OnEdit		19
+nim	OnDisplay	fidget2/events.html#OnDisplay	EventCbKind.OnDisplay		19
+nim	OnFocus	fidget2/events.html#OnFocus	EventCbKind.OnFocus		19
+nim	OnUnfocus	fidget2/events.html#OnUnfocus	EventCbKind.OnUnfocus		19
+nim	OnShow	fidget2/events.html#OnShow	EventCbKind.OnShow		19
+nim	OnHide	fidget2/events.html#OnHide	EventCbKind.OnHide		19
+nim	OnMouseMove	fidget2/events.html#OnMouseMove	EventCbKind.OnMouseMove		19
+nim	EventCbKind	fidget2/events.html#EventCbKind	enum EventCbKind		19
+nim	EventCb	fidget2/events.html#EventCb	type EventCb		33
+nim	requestedFrame	fidget2/events.html#requestedFrame	var requestedFrame		42
+nim	redisplay	fidget2/events.html#redisplay	var redisplay		43
+nim	keyboard	fidget2/events.html#keyboard_2	var keyboard		45
+nim	thisFrame	fidget2/events.html#thisFrame	var thisFrame		47
+nim	thisCb	fidget2/events.html#thisCb	var thisCb		48
+nim	thisSelector	fidget2/events.html#thisSelector	var thisSelector		49
+nim	navigationHistory	fidget2/events.html#navigationHistory	var navigationHistory		52
+nim	showPopup	fidget2/events.html#showPopup,string	proc showPopup(name: string)		58
+nim	addCb	fidget2/events.html#addCb,EventCbKind,int,string,proc(Node)	proc addCb(kind: EventCbKind; priority: int; glob: string;\n      handler: proc (thisNode: Node))		63
+nim	find	fidget2/events.html#find,string	proc find(glob: string): Node		77
+nim	findAll	fidget2/events.html#findAll,string	proc findAll(glob: string): seq[Node]		89
+nim	find	fidget2/events.html#find.t,string,untyped	template find(glob: string; body: untyped)		115
+nim	focused	fidget2/events.html#focused,Node	proc focused(node: Node): bool		124
+nim	onFrame	fidget2/events.html#onFrame.t,untyped	template onFrame(body: untyped)		128
+nim	onDisplay	fidget2/events.html#onDisplay.t,untyped	template onDisplay(body: untyped)		138
+nim	onShow	fidget2/events.html#onShow.t,untyped	template onShow(body: untyped)		148
+nim	onHide	fidget2/events.html#onHide.t,untyped	template onHide(body: untyped)		158
+nim	onClick	fidget2/events.html#onClick.t,untyped	template onClick(body: untyped)		168
+nim	onRightClick	fidget2/events.html#onRightClick.t,untyped	template onRightClick(body: untyped)		178
+nim	onClickOutside	fidget2/events.html#onClickOutside.t,untyped	template onClickOutside(body: untyped)		188
+nim	onMouseMove	fidget2/events.html#onMouseMove.t,untyped	template onMouseMove(body: untyped)		198
+nim	relativeMousePos	fidget2/events.html#relativeMousePos,Window,Node	proc relativeMousePos(window: Window; node: Node): Vec2		225
+nim	simulateClick	fidget2/events.html#simulateClick,string	proc simulateClick(glob: string)		351
+nim	onEdit	fidget2/events.html#onEdit.t,untyped	template onEdit(body: untyped)		362
+nim	onUnfocus	fidget2/events.html#onUnfocus.t,untyped	template onUnfocus(body: untyped)		373
+nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped)		383
+nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		403
+nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		408
+nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		413
+nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		593
+nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		614
+nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		618
+nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		627
+nim	startFidget	fidget2/events.html#startFidget,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable)		668

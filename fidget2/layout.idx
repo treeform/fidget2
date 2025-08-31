@@ -1,0 +1,2 @@
+nimTitle	layout	fidget2/layout.html	module src/fidget2/layout		0
+nim	computeLayout	fidget2/layout.html#computeLayout,Node,Node	proc computeLayout(parent, node: Node)		13
