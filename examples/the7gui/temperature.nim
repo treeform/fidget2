@@ -1,19 +1,10 @@
 import
   std/[strformat, strutils],
-  chroma, fidget2
+  fidget2
 
 var
   celsius = 0.0
   fahrenheit = 32.0
-
-proc setVariant(node: Node, name, value: string) =
-  if name == "State":
-    if value == "Default":
-      node.fills[0].color = parseHtmlColor("#FFFFFF")
-      node.dirty = true
-    elif value == "Error":
-      node.fills[0].color = parseHtmlColor("#FFDAC5")
-      node.dirty = true
 
 find "/UI/TemperatureFrame":
 
@@ -26,11 +17,11 @@ find "/UI/TemperatureFrame":
       try:
         celsius = parseFloat(thisNode.text)
         fahrenheit = celsius * (9/5) + 32.0
-        find("../bg").setVariant("State", "Default")
+        thisNode.parent.setVariant("State", "Default")
       except ValueError:
-        find("../bg").setVariant("State", "Error")
+        thisNode.parent.setVariant("State", "Error")
     onUnfocus:
-      find("../bg").setVariant("State", "Default")
+      thisNode.parent.setVariant("State", "Default")
 
   find "FahrenheitInput/text":
     onDisplay:
@@ -41,11 +32,11 @@ find "/UI/TemperatureFrame":
       try:
         fahrenheit = parseFloat(thisNode.text)
         celsius = (fahrenheit - 32.0) * (5/9)
-        find("../bg").setVariant("State", "Default")
+        thisNode.parent.setVariant("State", "Default")
       except ValueError:
-        find("../bg").setVariant("State", "Error")
+        thisNode.parent.setVariant("State", "Error")
     onUnfocus:
-      find("../bg").setVariant("State", "Default")
+      thisNode.parent.setVariant("State", "Default")
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
