@@ -61,10 +61,8 @@ proc formatActivity(activity: int): string =
 
 find "/UI/MainScreen":
   onShow:
-    echo "fetching data"
     var
       data = fetch("https://forum.nim-lang.org/threads.json")
-    echo "have data"
     threadPage = fromJson(data, ThreadPage)
 
     var
@@ -76,12 +74,11 @@ find "/UI/MainScreen":
     for thread in threadPage.threads:
       let threadRow = threadRowMaster.newInstance()
 
-      threadRow.find("Topic").characters = thread.topic
-      #echo threadRow.find("Topic").id
-      threadRow.find("Category").characters = thread.category.name
-      threadRow.find("Replies").characters = $thread.replies
-      threadRow.find("Views").characters = $thread.views
-      threadRow.find("Time").characters = formatActivity(thread.activity)
+      threadRow.find("Topic").text = thread.topic
+      threadRow.find("Category").text = thread.category.name
+      threadRow.find("Replies").text = $thread.replies
+      threadRow.find("Views").text = $thread.views
+      threadRow.find("Time").text = formatActivity(thread.activity)
 
       for i, userIcon in threadRow.findAll("Users/*"):
         if i >= thread.users.len:

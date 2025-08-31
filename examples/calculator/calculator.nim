@@ -112,7 +112,7 @@ find "/UI/Main":
 
   find "ButtonSubtract":
     onClick:
-      # Subtract can be an operator or start of a number
+      # Minus symbol can be an operator or start of a number
       if inOperator():
         symbols[^1].operator = "-"
       else:

@@ -19,7 +19,12 @@ Fidget aims to provide natively compiled cross platform UIs for any platform - W
 Fidget leverages [Figma](https://www.figma.com/) - an app that is taking the design world by storm. Fidget uses Figma API to load designs directly. No more counting pixels, no more CSS puzzles. Want to change some spaces? Change it in Figma, press F5 in your see the changes in real time!
 
 
-## Simple Example Counter:
+## Examples:
+
+See all of the examples in the
+[example folder](https://github.com/treeform/fidget2/blob/master/examples/).
+
+### Simple counter
 
 <img src="docs/Counter.png">
 
@@ -36,13 +41,20 @@ find "/UI/CounterFrame":
       thisNode.text = $count
 ```
 
-## More examples:
-
 ### Calculator
 
 <img src="examples\calculator\calculator.png">
 
 [See the source code here](https://github.com/treeform/fidget2/blob/master/examples/calculator/calculator.nim)
+
+
+### Nim Form
+
+The style was copied form the current HTML forum, but nothing here uses HTML. Its all native rectangles, images and text.
+
+<img src="examples\nimforum\nimforum.png">
+
+[See the source code here](https://github.com/treeform/fidget2/blob/master/examples/nimforum/nimforum.nim)
 
 
 ## Getting the API key.
