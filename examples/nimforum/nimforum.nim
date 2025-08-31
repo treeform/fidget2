@@ -1,6 +1,6 @@
 import
   std/[sequtils, strformat, tables, times],
-  chroma, fidget2, fidget2/common, jsony, pixie, print, puppy, vmath
+  chroma, fidget2, fidget2/common, jsony, pixie, puppy, vmath
 
 type
   Category = ref object

@@ -1,9 +1,7 @@
 import
   std/[options, os, tables, unicode],
-  bumpy, chroma, pixie, pixie/fontformats/opentype, print, puppy, vmath, windy,
+  bumpy, chroma, pixie, pixie/fontformats/opentype, puppy, vmath, windy,
   common, loader, perf, schema
-
-export print
 
 ## Common vars shared across renderers.
 var
