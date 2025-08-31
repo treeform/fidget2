@@ -162,7 +162,7 @@ find "Button?":
   # Selects all buttons: Button0 - Button9
   onClick:
     echo thisNode.name[^1]
-``
+```
 
 ## Event model
 
@@ -233,4 +233,3 @@ Attach any subset of these inside a `find` block:
 * `frozen: bool`, `frozenId: string` - Snapshot linkage
 * `shown: bool` - Visibility flag backing `onShow` or `onHide`
 * Scrolling: `scrollable: bool`, `scrollPos: Vec2`
-
