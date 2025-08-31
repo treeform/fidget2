@@ -1,29 +1,29 @@
 nimTitle	internal	fidget2/internal.html	module src/fidget2/internal		0
-nim	typefaceCache	fidget2/internal.html#typefaceCache	var typefaceCache		11
-nim	imageCache	fidget2/internal.html#imageCache	var imageCache		13
-nim	mat	fidget2/internal.html#mat	var mat		16
-nim	hoverNode	fidget2/internal.html#hoverNode	var hoverNode		19
-nim	running	fidget2/internal.html#running	var running		21
-nim	rtl	fidget2/internal.html#rtl	var rtl		24
-nim	currentFigmaUrl	fidget2/internal.html#currentFigmaUrl	var currentFigmaUrl		26
-nim	entryFramePath	fidget2/internal.html#entryFramePath	var entryFramePath		27
-nim	textBoxFocus	fidget2/internal.html#textBoxFocus	var textBoxFocus		30
-nim	defaultTextBackgroundHighlightColor	fidget2/internal.html#defaultTextBackgroundHighlightColor	var defaultTextBackgroundHighlightColor		33
-nim	defaultTextHighlightColor	fidget2/internal.html#defaultTextHighlightColor	var defaultTextHighlightColor		34
-nim	transform	fidget2/internal.html#transform,Node	proc transform(node: Node): Mat3		36
-nim	reverse	fidget2/internal.html#reverse.i,seq[T]	iterator reverse[T](a: seq[T]): T		50
-nim	reversePairs	fidget2/internal.html#reversePairs.i,seq[T]	iterator reversePairs[T](a: seq[T]): (int, T)		57
-nim	clamp	fidget2/internal.html#clamp,Vec2,Rect	proc clamp(v: Vec2; r: Rect): Vec2		64
-nim	getFont	fidget2/internal.html#getFont,string	proc getFont(fontName: string): Font		72
-nim	genFillGeometry	fidget2/internal.html#genFillGeometry,Node	proc genFillGeometry(node: Node)		182
-nim	genStrokeGeometry	fidget2/internal.html#genStrokeGeometry,Node	proc genStrokeGeometry(node: Node)		191
-nim	genHitTestGeometry	fidget2/internal.html#genHitTestGeometry,Node	proc genHitTestGeometry(node: Node)		200
-nim	getFont	fidget2/internal.html#getFont,TypeStyle,TypeStyle	proc getFont(style: TypeStyle; backup: TypeStyle = nil): Font		217
-nim	cursorWidth	fidget2/internal.html#cursorWidth,Font	proc cursorWidth(font: Font): float		257
-nim	selection	fidget2/internal.html#selection,Node	proc selection(node: Node): HSlice[int, int]		261
-nim	computeArrangement	fidget2/internal.html#computeArrangement,Node	proc computeArrangement(node: Node)		297
-nim	font	fidget2/internal.html#font,Node	proc font(node: Node): Font		362
-nim	genTextGeometry	fidget2/internal.html#genTextGeometry,Node	proc genTextGeometry(node: Node)		370
-nim	computeScrollBounds	fidget2/internal.html#computeScrollBounds,Node	proc computeScrollBounds(node: Node): Rect		389
-nim	overlaps	fidget2/internal.html#overlaps,Node,Vec2	proc overlaps(node: Node; mouse: Vec2): bool		399
-nimgrp	getfont	fidget2/internal.html#getFont-procs-all	proc		72
+nim	typefaceCache	fidget2/internal.html#typefaceCache	var typefaceCache		9
+nim	imageCache	fidget2/internal.html#imageCache	var imageCache		11
+nim	mat	fidget2/internal.html#mat	var mat		14
+nim	hoverNode	fidget2/internal.html#hoverNode	var hoverNode		17
+nim	running	fidget2/internal.html#running	var running		19
+nim	rtl	fidget2/internal.html#rtl	var rtl		22
+nim	currentFigmaUrl	fidget2/internal.html#currentFigmaUrl	var currentFigmaUrl		24
+nim	entryFramePath	fidget2/internal.html#entryFramePath	var entryFramePath		25
+nim	textBoxFocus	fidget2/internal.html#textBoxFocus	var textBoxFocus		28
+nim	defaultTextBackgroundHighlightColor	fidget2/internal.html#defaultTextBackgroundHighlightColor	var defaultTextBackgroundHighlightColor		31
+nim	defaultTextHighlightColor	fidget2/internal.html#defaultTextHighlightColor	var defaultTextHighlightColor		32
+nim	transform	fidget2/internal.html#transform,Node	proc transform(node: Node): Mat3		34
+nim	reverse	fidget2/internal.html#reverse.i,seq[T]	iterator reverse[T](a: seq[T]): T		48
+nim	reversePairs	fidget2/internal.html#reversePairs.i,seq[T]	iterator reversePairs[T](a: seq[T]): (int, T)		55
+nim	clamp	fidget2/internal.html#clamp,Vec2,Rect	proc clamp(v: Vec2; r: Rect): Vec2		62
+nim	getFont	fidget2/internal.html#getFont,string	proc getFont(fontName: string): Font		70
+nim	genFillGeometry	fidget2/internal.html#genFillGeometry,Node	proc genFillGeometry(node: Node)		180
+nim	genStrokeGeometry	fidget2/internal.html#genStrokeGeometry,Node	proc genStrokeGeometry(node: Node)		189
+nim	genHitTestGeometry	fidget2/internal.html#genHitTestGeometry,Node	proc genHitTestGeometry(node: Node)		198
+nim	getFont	fidget2/internal.html#getFont,TypeStyle,TypeStyle	proc getFont(style: TypeStyle; backup: TypeStyle = nil): Font		215
+nim	cursorWidth	fidget2/internal.html#cursorWidth,Font	proc cursorWidth(font: Font): float		255
+nim	selection	fidget2/internal.html#selection,Node	proc selection(node: Node): HSlice[int, int]		259
+nim	computeArrangement	fidget2/internal.html#computeArrangement,Node	proc computeArrangement(node: Node)		295
+nim	font	fidget2/internal.html#font,Node	proc font(node: Node): Font		360
+nim	genTextGeometry	fidget2/internal.html#genTextGeometry,Node	proc genTextGeometry(node: Node)		368
+nim	computeScrollBounds	fidget2/internal.html#computeScrollBounds,Node	proc computeScrollBounds(node: Node): Rect		387
+nim	overlaps	fidget2/internal.html#overlaps,Node,Vec2	proc overlaps(node: Node; mouse: Vec2): bool		397
+nimgrp	getfont	fidget2/internal.html#getFont-procs-all	proc		70
