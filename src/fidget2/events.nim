@@ -539,8 +539,8 @@ proc processEvents() {.measure.} =
     of OnUnfocus:
       discard
 
-    else:
-      echo "not covered: ": cb.kind
+    of OnAnyClick:
+      discard
 
   # Check if clicks on editable nodes.
   if window.buttonPressed[MouseLeft]:
@@ -550,7 +550,6 @@ proc processEvents() {.measure.} =
 
           if textBoxFocus != nil:
             # Call onUnfocus on any old text box.
-            echo "stop editing: ", textBoxFocus.path
             for cb in eventCbs:
               if cb.kind == OnUnfocus and cb.glob == textBoxFocus.path:
                 thisSelector = textBoxFocus.path
@@ -564,7 +563,6 @@ proc processEvents() {.measure.} =
           )
 
           # Call onFocus on the new text box.
-          echo "start editing: ", textBoxFocus.path
           for cb in eventCbs:
             if cb.kind == OnFocus and cb.glob == textBoxFocus.path:
               thisSelector = node.path

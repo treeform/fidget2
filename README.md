@@ -59,3 +59,34 @@ As an industry we design too much of the UI by hand. And we do it many times. A 
 Music is not coded by hand, we use tools. Images are not coded by hand, we use tools. Nor are 3D models, which can be very complex, they have editors and tools. Why do we do this for UI? Why has no good UI editor appeared? It is madness.
 
 This happens because of the wrong programming model. What you want is the design side and the action side. The design side is a tree of nodes made in a UX design program like Figma. The action side is also a tree of event handlers, display functions, and other mutators. A designer should be able to change the design a bit and it should stay working. Likewise a programmer should be able to change the handlers and the design should not need to change. Like rigging a 3D model, you should be able to breathe life into a layout through code.
+
+## Making an app
+
+To open a window and start the app call `startFidget` with the figma file and other window properties.
+
+```nim
+startFidget(
+  figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
+  windowTitle = "Temperature",
+  entryFrame = "/UI/TemperatureFrame",
+  windowStyle = Decorated
+)
+```
+
+Then use `find` to build the event tree using glob patterns:
+
+```nim
+find "/UI/TemperatureFrame":
+  find "CelsiusInput/text":
+    onDisplay:
+      ...
+    onEdit:
+      ...
+    ofFocus:
+      ...
+    onUnfocus:
+      ...
+```
+
+
+
