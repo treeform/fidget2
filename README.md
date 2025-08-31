@@ -10,19 +10,14 @@
 
 ![Github Actions](https://github.com/treeform/fidget2/workflows/Github%20Actions/badge.svg)
 
-[API reference](https://nimdocs.com/treeform/fidget2)
+[API reference](https://treeform.github.io/fidget2)
 
 ## About
 
-Fidget aims to provide natively compiled cross platform UIs for any platform - Web with HTML5 (WASM), Windows, macOS, Linux, iOS and Android with OpenGL.
+Fidget aims to provide natively compiled cross platform UIs for any platform - Web with HTML5 (WASM), Windows, macOS, Linux with OpenGL.
 
 Fidget leverages [Figma](https://www.figma.com/) - an app that is taking the design world by storm. Fidget uses Figma API to load designs directly. No more counting pixels, no more CSS puzzles. Want to change some spaces? Change it in Figma, press F5 in your see the changes in real time!
 
-## It allows you to create UIs like these:
-
-<img src="tests/files/masters/Crew%20Dragon%20Flight%20Control%20UI.png">
-<img src="tests/files/masters/Driving%20-%20Navigation.png">
-<img src="tests/files/masters/T-1.png">
 
 ## Simple Example Counter:
 
@@ -57,3 +52,10 @@ Figma also has a whole library of designs https://www.figma.com/community licens
 
 "Let somebody else figure out how to make it look pretty, as long as you can move rectanges around you are good." - Ryan
 
+## Philosophy
+
+As an industry we design too much of the UI by hand. And we do it many times. A designer builds the UI. We throw that away. Then programmers code up layouts, set colors, and push pixels around. Sometimes several different times for web and mobile. It is madness.
+
+Music is not coded by hand, we use tools. Images are not coded by hand, we use tools. Nor are 3D models, which can be very complex, they have editors and tools. Why do we do this for UI? Why has no good UI editor appeared? It is madness.
+
+This happens because of the wrong programming model. What you want is the design side and the action side. The design side is a tree of nodes made in a UX design program like Figma. The action side is also a tree of event handlers, display functions, and other mutators. A designer should be able to change the design a bit and it should stay working. Likewise a programmer should be able to change the handlers and the design should not need to change. Like rigging a 3D model, you should be able to breathe life into a layout through code.
