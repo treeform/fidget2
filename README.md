@@ -88,5 +88,85 @@ find "/UI/TemperatureFrame":
       ...
 ```
 
+In every event hander you get `thisNode` and it has many properties:
 
+```nim
+thisNode.text = "hello world"
+```
+
+
+## Glob Patters
+
+* Absolute path from the mounted frame: `/UI/TemperatureFrame/...`
+* Relative to the current `find` scope: `find "CelsiusInput/text"`
+* Globs are supported: `find "**/Button*"` (descendants), `find "*/icon"` (children by name)
+
+
+## Event model
+
+Attach any subset of these inside a `find` block:
+
+* `onDisplay` - Runs during render when the node is painted. Use for idempotent view updates (for example, set text or value if not focused) **Best practice:** keep `onDisplay` cheap, prefer mutating only what actually changed.
+* `onFocus` / `onUnfocus` - Focus or blur notifications for interactive nodes for when `thisNode.focused` changes.
+* `onEdit` - Content changed (for example, text input keystrokes)
+* `onShow` / `onHide` - Visibility toggles (when `thisNode.shown` changes)
+* `onClick` - Mouse clicks.
+
+
+
+## Node key properties and fields
+
+`thisNode` is a `Node` that mirrors Figma’s model with extra runtime fields for interactivity, layout, and caching.
+
+### Identity and type
+
+* `id* : string` - Stable unique id
+* `name* : string` - Node name from the design tool
+* `kind* : NodeKind` - One of `FrameNode`, `TextNode`, `RectangleNode`, etc
+* `children* : seq[Node]`, `parent* : Node`
+* `componentId* : string`, `prototypeStartNodeID* : string`
+
+### Transform
+
+* `position* : Vec2` - Top left in parent coords
+* `size* : Vec2` - Width and height in px
+* `scale* : Vec2`, `rotation* : float32`
+* `flipHorizontal* : bool`, `flipVertical* : bool`
+
+### Visuals and shape
+
+* `fillGeometry* : seq[Geometry]`
+* `strokes* : seq[Paint]`, `strokeWeight* : float32`, `strokeAlign* : StrokeAlign`
+* `cornerRadius* : float32`, `rectangleCornerRadii* : array[4, float32]`
+* `effects* : seq[Effect]`, `blendMode* : BlendMode`, `opacity* : float32`, `visible* : bool`
+* Masking: `isMask*`, `isMaskOutline*`, `booleanOperation*`, `clipsContent*`
+
+### Text
+
+* `text` - Main method to get and set text.
+* `style* : TypeStyle` - Font family, size, weight, decoration, auto resize, etc
+* `characterStyleOverrides* : seq[int]`, `styleOverrideTable* : Table[string, TypeStyle]`
+* Helpers: `cursor* : int`, `selector* : int` (selection), `multiline*`, `wordWrap*`, `spans*`, `arrangement*`
+* Undo or redo: `undoStack*`, `redoStack*`
+
+### Layout and constraints
+
+* `constraints* : LayoutConstraint` - (min, max, scale, stretch, center per axis)
+* `layoutAlign* : LayoutAlign`, `layoutMode* : LayoutMode`
+* `layoutGrids* : seq[LayoutGrid]`
+* `itemSpacing* : float32`
+* `counterAxisSizingMode* : AxisSizingMode`
+* Padding: `paddingLeft*`, `paddingRight*`, `paddingTop*`, `paddingBottom*`
+* Overflow: `overflowDirection* : OverflowDirection`
+
+### Runtime and caching
+
+* `dirty* : bool` - Needs redraw
+* `pixels* : Image`, `pixelBox* : Rect` - Render cache and bounds
+* `editable* : bool` - Whether the user can edit text
+* `mat* : Mat3` - World transform helper
+* `collapse* : bool` - Draw as a single texture (internal optimization)
+* `frozen* : bool`, `frozenId* : string` - Snapshot linkage
+* `shown* : bool` - Visibility flag backing `onShow` or `onHide`
+* Scrolling: `scrollable* : bool`, `scrollPos* : Vec2`
 
