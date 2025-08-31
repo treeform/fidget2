@@ -12,7 +12,7 @@ find "/UI/CounterFrame":
   # When text is displayed it grabs the value from the count variable.
   find "CounterDisplay/text":
     onDisplay:
-      thisNode.setText($count)
+      thisNode.text = $count
 
 # Starts the fidget main loop.
 startFidget(

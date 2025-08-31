@@ -31,17 +31,14 @@ Fidget leverages [Figma](https://www.figma.com/) - an app that is taking the des
 Figma file: https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa
 
 ```nim
-# Connect a figma file to the code base.
-use("https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa")
-
-# This is where we store the count.
 var count = 0
-
-# On click of the button increment the counter.
-onClick("Count1Up"): inc count
-
-# When displaying text use the count variable.
-onDisplay("text", $count)
+find "/UI/CounterFrame":
+  find "Count1Up":
+    onClick:
+      inc count
+  find "CounterDisplay/text":
+    onDisplay:
+      thisNode.text = $count
 ```
 
 ## Getting the API key.
@@ -60,6 +57,3 @@ Figma also has a whole library of designs https://www.figma.com/community licens
 
 "Let somebody else figure out how to make it look pretty, as long as you can move rectanges around you are good." - Ryan
 
-<img src="docs/FigmaMaterialDesignDesktopKit.png">
-<img src="docs/MetFreeUIKit.png">
-<img src="docs/MicrosoftToolKits.png">
