@@ -43,8 +43,8 @@ nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped
 nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		403
 nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		408
 nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		413
-nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		593
-nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		614
-nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		618
-nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		627
-nim	startFidget	fidget2/events.html#startFidget,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable)		668
+nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		591
+nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		612
+nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		616
+nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		625
+nim	startFidget	fidget2/events.html#startFidget,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable)		666
