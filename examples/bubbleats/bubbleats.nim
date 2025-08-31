@@ -1,4 +1,6 @@
-import fidget2, algorithm, times, strformat, random
+import
+  std/[algorithm, random, strformat, times],
+  fidget2
 
 const
   speed = 0.2

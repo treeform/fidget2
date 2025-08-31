@@ -1,4 +1,7 @@
-import common, sequtils, pixie, unicode, vmath, bumpy, internal, schema, strutils, nodes, u, windy
+import
+  std/[unicode],
+  bumpy, pixie, vmath, windy,
+  common, internal, nodes, schema, u
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about
@@ -58,29 +61,24 @@ proc getSelection*(arrangement: Arrangement, start, stop: int): seq[Rect] =
 proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
   ## Given X,Y coordinate, return the GlyphPosition picked.
   ## If direct click not happened finds closest to the right.
-  var minG = -1
-  var minDist = -1.0
+  var minGlyph = -1
+  var minDistance = -1.0
   for i, selectRect in arrangement.selectionRects:
     if selectRect.y <= pos.y and pos.y < selectRect.y + selectRect.h:
       # on same line
       let dist = abs(pos.x - (selectRect.x))
       # closet character
-      if minDist < 0 or dist < minDist:
+      if minDistance < 0 or dist < minDistance:
         # min distance here
-        minDist = dist
-        minG = i
-  return minG
-
-proc multilineCheck(node: Node) =
-  ## Makes sure there are not new lines in a single line text box.
-  if not node.multiline:
-    echo "fix non multiline"
+        minDistance = dist
+        minGlyph = i
+  return minGlyph
 
 proc layout*(node: Node): seq[Rect] =
   return node.arrangement.selectionRects
 
 proc innerHeight*(node: Node): float32 =
-  ## Rectangle where selection cursor should be drawn.
+  ## Returns the inner height where content can be drawn.
   let layout = node.layout()
   if layout.len > 0:
     let lastPos = layout[^1]
@@ -89,7 +87,7 @@ proc innerHeight*(node: Node): float32 =
     return node.font.lineHeight
 
 proc locationRect*(node: Node, loc: int): Rect =
-  ## Rectangle where cursor should be drawn.
+  ## Rectangle where the cursor should be drawn.
   let layout = node.layout()
   if layout.len > 0:
     if loc >= layout.len:
@@ -108,40 +106,40 @@ proc locationRect*(node: Node, loc: int): Rect =
   result.h = max(node.font.size, node.font.lineHeight)
 
 proc cursorRect*(node: Node): Rect =
-  ## Rectangle where cursor should be drawn.
+  ## Rectangle where the cursor should be drawn.
   node.locationRect(node.cursor + window.imeCursorIndex)
 
 proc cursorPos*(node: Node): Vec2 =
-  ## Position where cursor should be drawn.
+  ## Position where the cursor should be drawn.
   node.cursorRect.xy
 
 proc selectorRect*(node: Node): Rect =
-  ## Rectangle where selection cursor should be drawn.
+  ## Rectangle where the selection cursor should be drawn.
   node.locationRect(node.selector)
 
 proc selectorPos*(node: Node): Vec2 =
-  ## Position where selection cursor should be drawn.
+  ## Position where the selection cursor should be drawn.
   node.cursorRect.xy
 
 proc selectionRegions*(node: Node): seq[Rect] =
-  ## Selection regions to draw selection of text.
+  ## Selection regions to draw the selection of text.
   let sel = node.selection
   node.arrangement.getSelection(sel.a, sel.b)
 
 proc undoSave(node: Node) =
-  ## Save current state of undo.
+  ## Saves the current state for undo.
   node.undoStack.add((node.characters, node.cursor))
   node.redoStack.setLen(0)
 
 proc undo*(node: Node) =
-  ## Go back in history.
+  ## Goes back in history.
   if node.undoStack.len > 0:
     node.redoStack.add((node.characters, node.cursor))
     (node.characters, node.cursor) = node.undoStack.pop()
     node.selector = node.cursor
 
 proc redo*(node: Node) =
-  ## Go forward in history.
+  ## Goes forward in history.
   if node.redoStack.len > 0:
     node.undoStack.add((node.characters, node.cursor))
     (node.characters, node.cursor) = node.redoStack.pop()
@@ -151,7 +149,7 @@ proc runesChanged(node: Node) =
   node.makeTextDirty()
 
 proc removedSelection*(node: Node): bool =
-  ## Removes selected runes if they are selected.
+  ## Removes selected runes.
   ## Returns true if anything was removed.
   let sel = node.selection
   if sel.a != sel.b:
@@ -164,11 +162,11 @@ proc removedSelection*(node: Node): bool =
   return false
 
 proc removeSelection(node: Node) =
-  ## Removes selected runes if they are selected.
+  ## Removes selected runes.
   discard node.removedSelection()
 
 proc scrollToCursor*(node: Node) =
-  ## Adjust scroll to make sure cursor is in the window.
+  ## Adjusts scroll to make sure the cursor is in the window.
   if node.scrollable:
     let
       r = node.cursorRect()
@@ -188,7 +186,7 @@ proc scrollToCursor*(node: Node) =
       node.makeTextDirty()
 
 proc typeCharacter*(node: Node, rune: Rune) =
-  ## Add a character to the text box.
+  ## Adds a character to the text box.
   if not node.editable:
     return
   node.removeSelection()
@@ -198,6 +196,8 @@ proc typeCharacter*(node: Node, rune: Rune) =
   node.undoSave()
   if node.cursor == node.characters.u.len:
     node.characters.u.add(rune)
+  elif node.cursor >= node.characters.u.len:
+    node.characters.u.insert(rune, node.characters.u.len)
   else:
     node.characters.u.insert(rune, node.cursor)
   node.runesChanged()
@@ -207,11 +207,11 @@ proc typeCharacter*(node: Node, rune: Rune) =
   node.makeTextDirty()
 
 proc typeCharacter*(node: Node, letter: char) =
-  ## Add a character to the text box.
+  ## Adds a character to the text box.
   node.typeCharacter(Rune(letter))
 
 proc typeCharacters*(node: Node, s: string) =
-  ## Add a character to the text box.
+  ## Adds characters to the text box.
   if not node.editable:
     return
   node.removeSelection()
@@ -273,7 +273,7 @@ proc delete*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc backspaceWord*(node: Node, shift = false) =
-  ## Backspace word command. (Usually ctr + backspace).
+  ## Backspace word command. (Usually ctrl + backspace).
   if node.editable:
     if node.removedSelection(): return
     if node.cursor > 0:
@@ -287,7 +287,7 @@ proc backspaceWord*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc deleteWord*(node: Node, shift = false) =
-  ## Delete word command. (Usually ctr + delete).
+  ## Delete word command. (Usually ctrl + delete).
   if node.editable:
     if node.removedSelection(): return
     if node.cursor < node.characters.u.len:
@@ -299,7 +299,7 @@ proc deleteWord*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc left*(node: Node, shift = false) =
-  ## Move cursor left.
+  ## Moves the cursor left.
   if node.cursor > 0:
     dec node.cursor
     if not shift:
@@ -308,7 +308,7 @@ proc left*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc right*(node: Node, shift = false) =
-  ## Move cursor right.
+  ## Moves the cursor right.
   if node.cursor < node.characters.u.len:
     inc node.cursor
     if not shift:
@@ -317,7 +317,7 @@ proc right*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc down*(node: Node, shift = false) =
-  ## Move cursor down.
+  ## Moves the cursor down.
   let layout = node.layout()
   if layout.len > 0:
     let index = node.arrangement.pickGlyphAt(
@@ -334,7 +334,7 @@ proc down*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc up*(node: Node, shift = false) =
-  ## Move cursor up.
+  ## Moves the cursor up.
   let layout = node.layout()
   if layout.len > 0:
     let index = node.arrangement.pickGlyphAt(
@@ -351,7 +351,7 @@ proc up*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc leftWord*(node: Node, shift = false) =
-  ## Move cursor left by a word (Usually ctr + left).
+  ## Moves the cursor left by a word. (Usually ctrl + left).
   if node.cursor > 0:
     dec node.cursor
   while node.cursor > 0 and
@@ -363,7 +363,7 @@ proc leftWord*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc rightWord*(node: Node, shift = false) =
-  ## Move cursor right by a word (Usually ctr + right).
+  ## Moves the cursor right by a word. (Usually ctrl + right).
   if node.cursor < node.characters.u.len:
     inc node.cursor
   while node.cursor < node.characters.u.len and
@@ -375,7 +375,7 @@ proc rightWord*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc startOfLine*(node: Node, shift = false) =
-  ## Move cursor left by a word.
+  ## Moves the cursor to the start of the line.
   while node.cursor > 0 and
     node.characters.u[node.cursor - 1] != Rune(10):
     dec node.cursor
@@ -385,7 +385,7 @@ proc startOfLine*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc endOfLine*(node: Node, shift = false) =
-  ## Move cursor right by a word.
+  ## Moves the cursor to the end of the line.
   while node.cursor < node.characters.u.len and
     node.characters.u[node.cursor] != Rune(10):
     inc node.cursor
@@ -395,7 +395,7 @@ proc endOfLine*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc pageUp*(node: Node, shift = false) =
-  ## Move cursor up by half a text box height.
+  ## Moves the cursor up by half a text box height.
   let layout = node.layout()
   if layout.len == 0:
     return
@@ -414,7 +414,7 @@ proc pageUp*(node: Node, shift = false) =
   node.scrollToCursor()
 
 proc pageDown*(node: Node, shift = false) =
-  ## Move cursor down up by half a text box height.
+  ## Moves the cursor down by half a text box height.
   let layout = node.layout()
   if layout.len == 0:
     return
@@ -439,10 +439,10 @@ proc mouseAction*(
   click = true,
   shift = false
 ) =
-  ## Click on this with a mouse.
+  ## Handles mouse action on the text.
   # Pick where to place the cursor.
   let index = node.arrangement.pickGlyphAt(mousePos)
-  if index != -1:
+  if index != -1 and index < node.characters.u.len:
     node.cursor = index
     node.savedX = mousePos.x
     if node.characters.u[index] != LF:
@@ -467,7 +467,7 @@ proc mouseAction*(
   node.makeTextDirty()
 
 proc selectWord*(node: Node, mousePos: Vec2, extraSpace = false) =
-  ## Select word under the cursor (double click).
+  ## Selects the word under the cursor (double click).
   node.mouseAction(mousePos, click = true)
   while node.cursor > 0 and
     not node.characters.u[node.cursor - 1].isWhiteSpace():
@@ -484,7 +484,7 @@ proc selectWord*(node: Node, mousePos: Vec2, extraSpace = false) =
   node.dirty = true
 
 proc selectParagraph*(node: Node, mousePos: Vec2) =
-  ## Select paragraph under the cursor (triple click).
+  ## Selects the paragraph under the cursor (triple click).
   node.mouseAction(mousePos, click = true)
   while node.cursor > 0 and
     node.characters.u[node.cursor - 1] != Rune(10):
@@ -494,11 +494,11 @@ proc selectParagraph*(node: Node, mousePos: Vec2) =
     inc node.selector
 
 proc selectAll*(node: Node) =
-  ## Select all text (quad click or ctrl-a).
+  ## Selects all text (quad click or ctrl-a).
   node.cursor = 0
   node.selector = node.characters.u.len
 
 proc scrollBy*(node: Node, amount: float) =
-  ## Scroll text box with a scroll wheel.
+  ## Scrolls the text box with a scroll wheel.
   node.scrollPos.y += amount
   node.makeTextDirty()

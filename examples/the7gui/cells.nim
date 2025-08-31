@@ -1,6 +1,6 @@
 import chroma, chrono, fidget2
 
-find "CellsFrame":
+find "/UI/CellsFrame":
 
   find "Cell/text":
     onEdit:
@@ -9,6 +9,6 @@ find "CellsFrame":
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Cells",
-  entryFrame = "CellsFrame",
-  resizable = false
+  entryFrame = "/UI/CellsFrame",
+  windowStyle = Decorated
 )

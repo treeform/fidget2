@@ -1,6 +1,7 @@
-import vmath, chroma, common, schema, windy,
-    tables, print, loader, bumpy, pixie, os, options,
-    pixie/fontformats/opentype, puppy, perf, unicode
+import
+  std/[options, os, tables, unicode],
+  bumpy, chroma, pixie, pixie/fontformats/opentype, print, puppy, vmath, windy,
+  common, loader, perf, schema
 
 export print
 
@@ -14,17 +15,18 @@ var
   ## Current mat during the draw cycle.
   mat*: Mat3
 
-  ## Node that currently is being hovered over.
+  ## Node that is currently being hovered over.
   hoverNode*: Node
 
   running*: bool
 
-  rtl*: bool               ## Set Right-to-Left UI mode.
+  ## Sets Right-to-Left UI mode.
+  rtl*: bool
 
   currentFigmaUrl*: string
   entryFramePath*: string
 
-  ## Nodes that is focused and has the current text box.
+  ## Node that is focused and has the current text box.
   textBoxFocus*: Node
 
   ## Default text highlight color (blueish by default).
@@ -46,19 +48,21 @@ proc transform*(node: Node): Mat3 =
     result = translate(-node.parent.scrollPos) * result
 
 iterator reverse*[T](a: seq[T]): T {.inline.} =
+  ## Iterates over a sequence in reverse order.
   var i = a.len - 1
   while i > -1:
     yield a[i]
     dec i
 
 iterator reversePairs*[T](a: seq[T]): (int, T) {.inline.} =
+  ## Iterates over a sequence in reverse order with index.
   var i = a.len - 1
   while i > -1:
     yield (a.len - 1 - i, a[i])
     dec i
 
 proc clamp*(v: Vec2, r: Rect): Vec2 =
-  ## Makes returns a vec that stays in bounds of the rectangle.
+  ## Returns a vec that stays in bounds of the rectangle.
   result = v
   if result.x < r.x: result.x = r.x
   if result.y < r.y: result.y = r.y
@@ -66,9 +70,10 @@ proc clamp*(v: Vec2, r: Rect): Vec2 =
   if result.y > r.y + r.h: result.y = r.y + r.h
 
 proc getFont*(fontName: string): Font =
+  ## Gets a font from the cache or loads it from disk.
   if fontName notin typefaceCache:
     var typeface: Typeface
-    if existsFile(userFontPath(fontName)):
+    if fileExists(userFontPath(fontName)):
       typeface = parseOtf(readFile(userFontPath(fontName)))
     else:
       typeface = parseOtf(readFile(figmaFontPath(fontName)))
@@ -77,7 +82,7 @@ proc getFont*(fontName: string): Font =
   newFont(typefaceCache[fontName])
 
 proc rectangleFillGeometry(node: Node): Geometry =
-  ## Creates a fill geometry from a rectangle like node.
+  ## Creates a fill geometry from a rectangle-like node.
   result = Geometry()
   result.path = newPath()
   result.mat = mat3()
@@ -112,7 +117,7 @@ proc rectangleFillGeometry(node: Node): Geometry =
     )
 
 proc rectangleStrokeGeometry(node: Node): Geometry =
-  ## Creates a fill geometry from a rectangle like node.
+  ## Creates a stroke geometry from a rectangle-like node.
   result = Geometry()
   result.path = newPath()
   result.mat = mat3()
@@ -210,8 +215,7 @@ proc genHitTestGeometry*(node: Node) {.measure.} =
   node.fillGeometry = @[geom]
 
 proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font {.measure.} =
-  ## Get the font!
-
+  ## Gets a font from the cache or loads it from disk.
   var fontName = style.fontPostScriptName
 
   if backup != nil:
@@ -219,12 +223,9 @@ proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font {.measure.} =
       fontName = backup.fontPostScriptName
 
   if fontName == "":
-    # if font name is still blak fall back to fall back font
+    # If font name is still blank fall back to fall back font.
     fontName = "NotoSansJP-Regular"
 
-  # print style
-  # print backup
-  # print fontName
   let font = getFont(fontName)
 
   if style.fontSize != 0:
@@ -254,18 +255,17 @@ proc getFont*(style: TypeStyle, backup: TypeStyle = nil): Font {.measure.} =
   return font
 
 proc cursorWidth*(font: Font): float =
+  ## Returns the width of the cursor.
   min(font.size / 12, 1)
 
 proc selection*(node: Node): HSlice[int, int] =
-  ## Returns current selection from.
+  ## Returns the current selection from the node.
   result.a = min(node.cursor, node.selector)
   result.b = max(node.cursor, node.selector)
 
-proc copy*[T](f: T): T =
-  result = T()
-  result[] = f[]
 
 proc cutRunes(s: string, start, stop: int): string =
+  ## Cuts runes from a string.
   for i, r in s.toRunes:
     if i >= stop:
       break
@@ -274,13 +274,12 @@ proc cutRunes(s: string, start, stop: int): string =
 
 
 proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
+  ## Modifies spans.
 
   # TODO make this work for multiple spans.
   doAssert spans.len == 1
 
-  var at = 0
-  for idx, span in spans:
-    let to = at + span.text.len
+  for i, span in spans:
     let
       start = newSpan(span.text.cutRunes(0, slice.a), span.font)
       middle = newSpan(span.text.cutRunes(slice.a, slice.b), span.font)
@@ -289,14 +288,14 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
     middle.font = span.font.copy()
     result.add(middle)
 
-    spans.delete(idx)
-    spans.insert(stop, idx)
-    spans.insert(middle, idx)
-    spans.insert(start, idx)
+    spans.delete(i)
+    spans.insert(stop, i)
+    spans.insert(middle, i)
+    spans.insert(start, i)
     break
 
 proc computeArrangement*(node: Node) {.measure.} =
-
+  ## Computes the arrangement of a node.
   if node.arrangement != nil:
     return
 
@@ -304,9 +303,9 @@ proc computeArrangement*(node: Node) {.measure.} =
     # The 0th style is node default style:
     node.spans.setLen(0)
     node.styleOverrideTable["0"] = node.style
-    var prevStyle: int
+    var previousStyle: int
     for i, styleKey in node.characterStyleOverrides:
-      if i == 0 or node.characterStyleOverrides[i] != prevStyle:
+      if i == 0 or node.characterStyleOverrides[i] != previousStyle:
         let style = node.styleOverrideTable[$styleKey]
 
         let font = getFont(style, node.style)
@@ -322,7 +321,7 @@ proc computeArrangement*(node: Node) {.measure.} =
         node.spans.add(newSpan("", font))
 
       node.spans[^1].text.add(node.characters[i])
-      prevStyle = styleKey
+      previousStyle = styleKey
 
   else:
     let font = getFont(node.style)
@@ -336,29 +335,21 @@ proc computeArrangement*(node: Node) {.measure.} =
 
   if textBoxFocus == node:
     # If node is being editing we might have to add highlight or ime string.
-    let selSlice = node.selection()
-    if selSlice.a != selSlice.b:
-      for modSpan in node.spans.modifySpans(node.selection()):
-        modSpan.font.paint = defaultTextHighlightColor
+    let selection = node.selection()
+    if selection.a != selection.b:
+      for span in node.spans.modifySpans(node.selection()):
+        span.font.paint = defaultTextHighlightColor
 
     elif window.imeCompositionString != "":
       let imeSlice = HSlice[int, int](a: node.cursor, b: node.cursor)
-      for modSpan in node.spans.modifySpans(imeSlice):
-        modSpan.font.underline = true
-        modSpan.text = window.imeCompositionString
+      for span in node.spans.modifySpans(imeSlice):
+        span.font.underline = true
+        span.text = window.imeCompositionString
 
     if node.spans.len == 1 and node.spans[0].text.len == 0:
       # When the text has nothing in it "", a bunch of things become 0.
       # To prevent this insert a fake space " ".
       node.spans[0].text = " "
-
-  # for span in node.spans:
-  #   print "---"
-  #   print span.text
-  #   print span.font.typeface.filePath
-  #   print span.font.paint.color
-  #   print span.font.size
-  #   print span.font.lineHeight
 
   node.arrangement = typeset(
     node.spans,
@@ -368,22 +359,8 @@ proc computeArrangement*(node: Node) {.measure.} =
     vAlign = node.style.textAlignVertical,
   )
 
-  # proc similar(a, b: Arrangement): bool =
-  #   if a == nil and b == nil: return true
-  #   if a == nil: return false
-  #   if b == nil: return false
-  #   if a.lines != b.lines: return false
-  #   if a.spans != b.spans: return false
-  #   if a.runes != b.runes: return false
-  #   if a.positions != b.positions: return false
-  #   if a.selectionRects != b.selectionRects: return false
-
-  # if node.arrangement.similar(prevArrangment):
-  #   echo "BAD"
-  #   #print node.runes == prevArrangment.runes
-  #   # print node.dirty, prevArrangment != nil
-
 proc font*(node: Node): Font =
+  ## Gets the font of a node.
   node.computeArrangement()
   if node.spans.len > 0:
     node.spans[0].font
@@ -410,6 +387,7 @@ proc genTextGeometry*(node: Node) {.measure.} =
   node.fillGeometry = @[geom]
 
 proc computeScrollBounds*(node: Node): Rect =
+  ## Computes the scroll bounds of a node.
   if node.kind != TextNode:
     for child in node.children:
       result = result or rect(child.position, child.size)
@@ -419,9 +397,8 @@ proc computeScrollBounds*(node: Node): Rect =
   result.h = max(0, result.h - node.size.y)
 
 proc overlaps*(node: Node, mouse: Vec2): bool =
-  ## Does the mouse overlap the node.
-
-  # Generate the geometry.
+  ## Does the mouse overlap the node?
+  # Generates the geometry.
   if node.kind == TextNode:
     node.genHitTestGeometry()
   else:

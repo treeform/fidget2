@@ -1,4 +1,5 @@
-import strutils, unicode
+import
+  std/[strutils, unicode]
 
 ## Fancy .u UTF-8 API that mirrors strings.
 
@@ -8,9 +9,11 @@ when defined(amd64) and not defined(fidgetNoSimd):
 type U = distinct ptr string
 
 proc u*(s: var string): U {.inline.} =
+  ## Creates a unicode view for the string.
   s.addr.U
 
 proc str(u: U): var string {.inline.} =
+  ## Gets the string from a unicode view.
   cast[ptr string](u)[]
 
 proc add*(u: U, r: Rune) =

@@ -1,16 +1,14 @@
-import schema, loader, random, algorithm, strutils,
-    flatty/hashy2, vmath, sequtils, internal
+import
+  std/[algorithm, random, sequtils, strutils],
+  flatty, flatty/hashy2, vmath,
+  internal, loader, schema
 
 proc path*(node: Node): string =
-  ## Returns that full path of the node back to the root.
+  ## Returns the full path of the node back to the root.
   var walkNode = node
   while walkNode != nil and walkNode.kind != DocumentNode:
     result = "/" & walkNode.name & result
     walkNode = walkNode.parent
-
-proc deepClone[T](a: T): T =
-  ## Deep copy of the object.
-  deepCopy(result, a)
 
 proc markTreeDirty*(node: Node) =
   ## Marks the entire tree dirty or not dirty.
@@ -25,7 +23,7 @@ proc markTreeClean*(node: Node) =
     markTreeClean(c)
 
 proc checkDirty*(node: Node) =
-  ## Makes sure if children are dirty, parents are dirty too!
+  ## Makes sure that if children are dirty, parents are dirty too.
   for c in node.children:
     checkDirty(c)
     if c.dirty == true:
@@ -43,12 +41,17 @@ proc makeTextDirty*(node: Node) =
     node.arrangement = nil
     node.computeArrangement()
 
-proc setText*(node: Node, text: string) =
+proc `text=`*(node: Node, text: string) =
   if node.kind != TextNode:
     echo "trying to set text of non text node: " & node.path
   if node.characters != text:
     node.characters = text
     node.makeTextDirty()
+
+proc text*(node: Node): string =
+  if node.kind != TextNode:
+    echo "trying to get text of non text node: " & node.path
+  return node.characters
 
 proc show*(node: Node) =
   node.visible = true
@@ -67,15 +70,15 @@ proc hide*(nodes: seq[Node]) =
     node.hide()
 
 proc findNodeById*(id: string): Node =
-  ## Finds a node by id (slow).
-  proc recur(node: Node): Node =
+  ## Finds a node by ID (slow).
+  proc search(node: Node): Node =
     if node.id == id:
       return node
     for n in node.children:
-      let c = recur(n)
+      let c = search(n)
       if c != nil:
         return c
-  return recur(figmaFile.document)
+  return search(figmaFile.document)
 
 var deleteNodeHook*: proc(node: Node)
 proc removeChild*(parent, node: Node) =
@@ -97,18 +100,27 @@ proc delete*(nodes: seq[Node]) =
   for node in toSeq(nodes):
     node.delete()
 
+proc removeChildren*(node: Node) =
+  for child in toSeq(node.children):
+    node.removeChild(child)
+
 proc assignIdsToTree(node: Node) =
-  ## Walks the tree giving everyone a new id.
+  ## Walks the tree giving everyone a new ID.
   node.id = $rand(int.high)
   for c in node.children:
     c.assignIdsToTree()
 
+
+proc copy[T](a: T): T =
+  ## Copies a value.
+  toFlatty(a).fromFlatty(T)
+
 proc copy*(node: Node): Node =
-  ## Copies a node creating new one.
+  ## Copies a node creating a new one.
   result = Node()
 
   template copyField(x: untyped) =
-    result.x = node.x.deepClone()
+    result.x = node.x.copy()
 
   # Base
   copyField componentId
@@ -118,9 +130,9 @@ proc copy*(node: Node): Node =
     result.kind = InstanceNode
   # Transform
   copyField position
-  copyField orgPosition
+  copyField origPosition
   copyField size
-  copyField orgSize
+  copyField origSize
   copyField rotation
   copyField scale
   copyField flipHorizontal
@@ -182,7 +194,7 @@ proc addChild*(parent, child: Node) =
   parent.markTreeDirty()
 
 proc inTree*(node, other: Node): bool =
-  ## Returns true if node is a sub node of other.
+  ## Returns true if node is a subnode of the other.
   var node = node
   while node != nil:
     if node.id == other.id:
@@ -190,7 +202,7 @@ proc inTree*(node, other: Node): bool =
     node = node.parent
 
 proc normalize(props: var seq[(string, string)]) =
-  ## Makes sure that prop name is sorted.
+  ## Makes sure that prop names are sorted.
   props.sort proc(a, b: (string, string)): int = cmp(a[0], b[0])
 
 proc parseName(name: string): seq[(string, string)] =
@@ -206,13 +218,13 @@ proc parseName(name: string): seq[(string, string)] =
   result.normalize()
 
 func `[]`*(query: seq[(string, string)], key: string): string =
-  ## Get a key out of PropName.
+  ## Gets a key out of PropName.
   for (k, v) in query:
     if k == key:
       return v
 
 func contains*(query: seq[(string, string)], key: string): bool =
-  ## Does the query contains this key.
+  ## Does the query contain this key?
   for (k, v) in query:
     if k == key:
       return true
@@ -226,21 +238,21 @@ func `[]=`*(query: var seq[(string, string)], key, value: string) =
       return
   query.add((key, value))
 
-proc triMerge(current, prevMaster, currMaster: Node) =
-  ## Does a tri merge of the node trees.
-  # If current.x and prevMaster.x are same, we can change to currMaster.x
+proc triMerge(current, previousMaster, currentMaster: Node) =
+  ## Does a tri-merge of the node trees.
+  # If current.x and previousMaster.x are same, we can change to currentMaster.x
   # TODO: changes all the way back to the original restores maybe?
 
   template mergeField(x: untyped) =
-    if hashy(current.x) == hashy(prevMaster.x):
-      current.x = currMaster.x.deepClone()
+    if hashy(current.x) == hashy(previousMaster.x):
+      current.x = currentMaster.x.copy()
       current.dirty = true
 
   # Ids
   mergeField componentId
   # Transform
   mergeField position
-  mergeField orgPosition
+  mergeField origPosition
   mergeField rotation
   mergeField scale
   mergeField flipHorizontal
@@ -280,49 +292,49 @@ proc triMerge(current, prevMaster, currMaster: Node) =
   mergeField paddingBottom
   mergeField overflowDirection
 
-  let minChildLen = min(min(
+  let minChildren = min(min(
     current.children.len,
-    prevMaster.children.len),
+    previousMaster.children.len),
     current.children.len
   )
 
-  for i in 0 ..< minChildLen:
+  for i in 0 ..< minChildren:
     if current.children[i].kind == InstanceNode and
-      prevMaster.children[i].kind == InstanceNode and
-      currMaster.children[i].kind == InstanceNode:
+      previousMaster.children[i].kind == InstanceNode and
+      currentMaster.children[i].kind == InstanceNode:
       # Don't do anything with instance nodes.
       continue
-    elif current.children[i].name == prevMaster.children[i].name and
-      current.children[i].name == currMaster.children[i].name:
+    elif current.children[i].name == previousMaster.children[i].name and
+      current.children[i].name == currentMaster.children[i].name:
       triMerge(
         current.children[i],
-        prevMaster.children[i],
-        currMaster.children[i]
+        previousMaster.children[i],
+        currentMaster.children[i]
       )
     else:
       echo "name error?", current.children[i].path
       echo "node.kind ", current.children[i].kind
       echo "current name     ", current.children[i].name
-      echo "name prev master ", prevMaster.children[i].name
-      echo "name curr master ", currMaster.children[i].name
+      echo "name prev master ", previousMaster.children[i].name
+      echo "name curr master ", currentMaster.children[i].name
 
 proc setVariant*(node: Node, name, value: string) =
   ## Changes the variant of the node.
-  var prevMaster = findNodeById(node.componentId)
-  var props = prevMaster.name.parseName()
+  var previousMaster = findNodeById(node.componentId)
+  var props = previousMaster.name.parseName()
   if props[name] == value:
     # no change
     return
   props[name] = value
   props.normalize()
 
-  var componentSet = prevMaster.parent
+  var componentSet = previousMaster.parent
   for n in componentSet.children:
-    var nProps = n.name.parseName()
-    if nProps == props:
-      var currMaster = n
-      triMerge(node, prevMaster, currMaster)
-      node.componentId = currMaster.id
+    var nodeProps = n.name.parseName()
+    if nodeProps == props:
+      var currentMaster = n
+      triMerge(node, previousMaster, currentMaster)
+      node.componentId = currentMaster.id
       break
 
 proc setVariant*(nodes: seq[Node], name, value: string) =
@@ -331,22 +343,22 @@ proc setVariant*(nodes: seq[Node], name, value: string) =
     node.setVariant(name, value)
 
 proc hasVariant*(node: Node, name, value: string): bool =
-  ## Checks the variant exists for the node.
-  var prevMaster = findNodeById(node.componentId)
-  if prevMaster != nil:
-    var props = prevMaster.name.parseName()
+  ## Checks if the variant exists for the node.
+  var previousMaster = findNodeById(node.componentId)
+  if previousMaster != nil:
+    var props = previousMaster.name.parseName()
     props[name] = value
     props.normalize()
-    var componentSet = prevMaster.parent
+    var componentSet = previousMaster.parent
     for n in componentSet.children:
-      var nProps = n.name.parseName()
-      if nProps == props:
+      var nodeProps = n.name.parseName()
+      if nodeProps == props:
         return true
 
 proc getVariant*(node: Node, name: string): string =
   ## Gets the variant for the node.
-  var prevMaster = findNodeById(node.componentId)
-  var props = prevMaster.name.parseName()
+  var previousMaster = findNodeById(node.componentId)
+  var props = previousMaster.name.parseName()
   if name in props:
     return props[name]
 

@@ -1,6 +1,6 @@
 import chroma, chrono, fidget2
 
-find "CrudFrame":
+find "/UI/CrudFrame":
 
   find "PrefixInput/text":
     onEdit:
@@ -35,6 +35,6 @@ find "CrudFrame":
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Crud",
-  entryFrame = "CrudFrame",
-  resizable = false
+  entryFrame = "/UI/CrudFrame",
+  windowStyle = Decorated
 )

@@ -1,8 +1,14 @@
-import bumpy, schema, vmath, internal, tables, pixie, perf
+import
+  pixie, vmath,
+  internal, perf, schema
+
+# Layout tries to match figma's layout engine.
+# It is responsible for computing the layout of a node, both constraints and auto-layout.
 
 proc computeTextBounds(node: Node): Vec2 {.measure.} =
+  ## Computes the text bounds of a node.
   node.computeArrangement()
-  return node.arrangement.layoutBounds()
+  result = node.arrangement.layoutBounds()
 
 proc computeLayout*(parent, node: Node) {.measure.} =
   ## Computes constraints and auto-layout.
@@ -89,35 +95,35 @@ proc computeLayout*(parent, node: Node) {.measure.} =
   case node.constraints.horizontal:
     of MinConstraint: discard
     of MaxConstraint:
-      let rightSpace = parent.orgSize.x - node.orgPosition.x
+      let rightSpace = parent.origSize.x - node.origPosition.x
       node.position.x = parent.size.x - rightSpace
     of ScaleConstraint:
-      doAssert parent.orgSize.x != 0
-      let xScale = parent.size.x / parent.orgSize.x
-      node.position.x = node.orgPosition.x * xScale
-      node.size.x = node.orgSize.x * xScale
+      doAssert parent.origSize.x != 0
+      let xScale = parent.size.x / parent.origSize.x
+      node.position.x = node.origPosition.x * xScale
+      node.size.x = node.origSize.x * xScale
     of StretchConstraint:
-      let rightSpace = parent.orgSize.x - node.orgSize.x
+      let rightSpace = parent.origSize.x - node.origSize.x
       node.size.x = parent.size.x - rightSpace
     of CenterConstraint:
-      let offset = node.orgPosition.x - round(parent.orgSize.x / 2.0)
+      let offset = node.origPosition.x - round(parent.origSize.x / 2.0)
       node.position.x = round(parent.size.x / 2.0) + offset
 
   case node.constraints.vertical:
     of MinConstraint: discard
     of MaxConstraint:
-      let bottomSpace = parent.orgSize.y - node.orgPosition.y
+      let bottomSpace = parent.origSize.y - node.origPosition.y
       node.position.y = parent.size.y - bottomSpace
     of ScaleConstraint:
-      doAssert parent.orgSize.y != 0
-      let yScale = parent.size.y / parent.orgSize.y
-      node.position.y = node.orgPosition.y * yScale
-      node.size.y = node.orgSize.y * yScale
+      doAssert parent.origSize.y != 0
+      let yScale = parent.size.y / parent.origSize.y
+      node.position.y = node.origPosition.y * yScale
+      node.size.y = node.origSize.y * yScale
     of StretchConstraint:
-      let bottomSpace = parent.orgSize.y - node.orgSize.y
+      let bottomSpace = parent.origSize.y - node.origSize.y
       node.size.y = parent.size.y - bottomSpace
     of CenterConstraint:
-      let offset = node.orgPosition.y - round(parent.orgSize.y / 2.0)
+      let offset = node.origPosition.y - round(parent.origSize.y / 2.0)
       node.position.y = round(parent.size.y / 2.0) + offset
 
   # Fix scroll position when resizing.

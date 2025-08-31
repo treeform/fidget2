@@ -1,9 +1,10 @@
 ## Second way of perf
 
-import tables, print, macros, std/monotimes, strutils, strformat
+import
+  std/[macros, monotimes, strformat, strutils, tables]
 
 proc getTicks*(): int =
-  ## Get accurate time.
+  ## Gets accurate time.
   when defined(emscripten):
     0
   else:
@@ -16,7 +17,7 @@ var
   calls: CountTable[string]
 
 proc measurePush*(what: string) =
-  ## Used by {.measure.} pragma to push measure section.
+  ## Used by {.measure.} pragma to push a measure section.
   let now = getTicks()
   if measureStack.len > 0:
     let dt = now - measureStart
@@ -27,7 +28,7 @@ proc measurePush*(what: string) =
   calls.inc(what)
 
 proc measurePop*() =
-  ## Used by {.measure.} pragma to pop measure section.
+  ## Used by {.measure.} pragma to pop a measure section.
   let now = getTicks()
   let key = measureStack.pop()
   let dt = now - measureStart

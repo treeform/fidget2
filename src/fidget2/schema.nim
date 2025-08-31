@@ -1,4 +1,7 @@
-import bumpy, chroma, common, jsony, strutils, tables, pixie, vmath, options, unicode
+import
+  std/[options, parseutils, strutils, tables],
+  bumpy, chroma, jsony, pixie, vmath,
+  common
 
 type
   NodeKind* = enum
@@ -246,8 +249,8 @@ type
     pixels*: Image      ## Pixel image cache.
     pixelBox*: Rect     ## Pixel position and size.
     editable*: bool     ## Can the user edit the text?
-    orgPosition*: Vec2  ## Original position used by constraints.
-    orgSize*: Vec2      ## Original size used by constraints.
+    origPosition*: Vec2  ## Original position used by constraints.
+    origSize*: Vec2      ## Original size used by constraints.
     idNum*: int         ## Integer ID of the node
     mat*: Mat3          ## Useful to get back to the node.
     collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
@@ -486,7 +489,7 @@ proc enumHook(s: string, v: var OverflowDirection) =
     of "HORIZONTAL_AND_VERTICAL_SCROLLING": HorizontalAndVerticalScrolling
     else: raise newException(FidgetError, "Invalid overflow direction:" & s)
 
-import parseutils
+
 proc parseHook(s: string, i: var int, v: var float32) =
   if i + 3 < s.len and s[i+0] == 'n' and s[i+1] == 'u' and s[i+2] == 'l' and s[i+3] == 'l':
     i += 4
@@ -656,8 +659,8 @@ proc parseHook(s: string, i: var int, node: var Node) =
     child.parent = node
 
   # Knowing original position and size is important for layout.
-  node.orgPosition = node.position
-  node.orgSize = node.size
+  node.origPosition = node.position
+  node.origSize = node.size
 
   # Figma API can give us \r\n -> \n
   # TODO: that might effect styles.

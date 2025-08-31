@@ -20,25 +20,25 @@ proc setVariant(node: Node, name, value: string) =
     elif value == "Disabled":
       node.fills[0].color = parseHtmlColor("#B7B7B7")
 
-find "BookingFrame":
+find "/UI/BookingFrame":
 
   find "Picker":
     find "Return":
       onClick:
-        if find("/BookingFrame/Picker").visible:
+        if find("/UI/BookingFrame/Picker").visible:
           flightType = ReturnFlight
-          find("..").visible = false
+          find("/UI/BookingFrame/Picker").visible = false
 
-          var n = find("/BookingFrame/Inner/ReturnInput/bg")
+          var n = find("/UI/BookingFrame/Inner/ReturnInput/bg")
           n.setVariant("State", "Default")
 
     find "OneWay":
       onClick:
-        if find("/BookingFrame/Picker").visible:
+        if find("/UI/BookingFrame/Picker").visible:
           flightType = OneWayFlight
-          find("..").visible = false
+          find("/UI/BookingFrame/Picker").visible = false
 
-          var n = find("/BookingFrame/Inner/ReturnInput/bg")
+          var n = find("/UI/BookingFrame/Inner/ReturnInput/bg")
           n.setVariant("State", "Disabled")
 
   find "Inner":
@@ -50,7 +50,7 @@ find "BookingFrame":
           else:
             thisNode.characters = "return flight"
       onClick:
-        find("/BookingFrame/Picker").visible = true
+        find("/UI/BookingFrame/Picker").visible = true
 
     find "DepartInput":
       find "text":
@@ -82,6 +82,6 @@ find "BookingFrame":
 startFidget(
   figmaUrl = "https://www.figma.com/file/Km8Hvdw4wZwEk6L1bN4RLa",
   windowTitle = "Booking",
-  entryFrame = "BookingFrame",
-  resizable = false
+  entryFrame = "/UI/BookingFrame",
+  windowStyle = Decorated
 )

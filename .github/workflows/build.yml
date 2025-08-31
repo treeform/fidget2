@@ -1,17 +1,35 @@
 name: Github Actions
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
 jobs:
   build:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: jiro4989/setup-nim-action@v1
-    - run: nimble develop -y
-    - run: echo 138746-9dc80e99-1680-4571-9bd3-49fbd6b417f4 > ~/.figmatoken
-    - run: nim c -r --gc:arc -d:release -d:cpu tests/run_frames.nim
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Nim
+        uses: jiro4989/setup-nim-action@v1
+        with:
+          nim-version: '2.2.4'
+  
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Install Nim packages
+        run: nimble install -y
+
+      - name: Set Figma Token
+        run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
+  
+      - name: Build and run tests
+        run: nim c -r --d:cpu -d:release tests/run_frames.nim
+

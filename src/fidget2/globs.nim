@@ -1,22 +1,24 @@
-import strutils, schema
+import
+  std/[strutils],
+  schema
+
+# Globs are used to match paths in the tree.
+# Globs style paths are central to the fidget2 library.
+# They sort of resemble unix paths or CSS selectors.
 
 type
   GlobbyError* = object of ValueError
 
-  # Node* = ref object
-  #   name*: string
-  #   children*: seq[Node]
-
   Glob = seq[string]
 
 proc treeLen*(node: Node): int =
-  ## Return number of nodes in the tree.
+  ## Returns the number of nodes in the tree.
   inc result
   for c in node.children:
     result += c.treeLen()
 
 proc scan*(node: Node): seq[Node] =
-  ## Iterates the tree and returns flat list.
+  ## Iterates the tree and returns a flat list.
   proc visit(node: Node, list: var seq[Node]) =
     list.add(node)
     for c in node.children:
@@ -35,7 +37,7 @@ proc walk*(node: Node): seq[(string, Node)] =
     c.visit(result, "")
 
 proc globMatchOne(path, glob: string, pathStart = 0, globStart = 0): bool =
-  ## Match a single entry string to glob.
+  ## Matches a single entry string to glob.
 
   proc error(glob: string) =
     raise newException(GlobbyError, "Invalid glob: `" & glob & "`")
@@ -91,7 +93,7 @@ proc globMatchOne(path, glob: string, pathStart = 0, globStart = 0): bool =
     return true
 
 proc globSimplify(globParts: seq[string]): seq[string] =
-  ## Simplify backwards ".." and absolute "//".
+  ## Simplifies backwards ".." and absolute "//".
   for globPart in globParts:
     if globPart == "..":
       if result.len > 0:
@@ -102,9 +104,11 @@ proc globSimplify(globParts: seq[string]): seq[string] =
       result.add globPart
 
 proc parseGlob(glob: string): Glob =
+  ## Parses a glob string into a glob object.
   glob.split('/').globSimplify()
 
 proc findAll*(node: Node, glob: string): seq[Node] =
+  ## Finds all nodes that match a glob.
   let glob = parseGlob(glob)
   if glob.len == 0:
     return
@@ -135,9 +139,14 @@ proc findAll*(node: Node, glob: string): seq[Node] =
     c.visit(result, glob)
 
 proc find*(node: Node, glob: string): Node =
+  ## Finds the first node that matches a glob.
+  ## It is not an error for glob to not match any nodes.
+  ## But only one node is returned.
   let glob = parseGlob(glob)
+  echo "find glob: ", glob
   proc visit(node: Node, one: var Node, glob: Glob, globAt = 0) =
     if globMatchOne(node.name, glob[globAt]):
+      echo "checking node: ", node.name
       if glob[globAt] == "**":
         if globAt + 1 == glob.len:
           # "**" at last level means this node.
@@ -154,6 +163,7 @@ proc find*(node: Node, glob: string): Node =
       else:
         if globAt + 1 == glob.len:
           # Glob end
+          echo "glob end: ", node.name
           one = node
         else:
           # Glob path

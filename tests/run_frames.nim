@@ -1,5 +1,5 @@
 import cligen, os, pixie, strformat, strutils, times, windy
-import fidget2/loader, fidget2/schema, fidget2/perf, fidget2/internal
+import fidget2/loader, fidget2/schema, fidget2/perf
 
 when defined(benchy):
   import benchy
@@ -10,13 +10,15 @@ when defined(cpu):
 elif defined(hyb):
   const w = "hyb"
   import fidget2/hybridrender, boxy
+else:
+  {.error: "Unsupported backend define -d:cpu or -d:hyb".}
 
 proc main(r = "", e = "", l = 10000) =
 
-  if not existsDir("tests/frames/diffs"):
+  if not dirExists("tests/frames/diffs"):
     createDir("tests/frames/diffs")
 
-  if not existsDir("tests/frames/rendered"):
+  if not dirExists("tests/frames/rendered"):
     createDir("tests/frames/rendered")
 
   var renderTime = 0.0
@@ -44,7 +46,7 @@ proc main(r = "", e = "", l = 10000) =
     #when not defined(benchy):
     #  echo frame.name, " --------------------------------- "
 
-    if firstTime and w in [
+    if firstTime and w in @[
       "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:

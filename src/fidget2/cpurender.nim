@@ -1,6 +1,13 @@
-import bumpy, chroma, loader, math, pixie, schema, tables, vmath,
-    internal, windy, pixie, textboxes, perf,
-    layout, common, nodes
+import
+  std/[math, tables],
+  bumpy, chroma, pixie, vmath, windy,
+  common, internal, layout, loader, perf, schema, textboxes
+
+# CPU Renderer renders objects in a single thread using the CPU.
+# It serves as a backing to the hybrid renderer.
+# It's much easier to get CPU rendering exactly the same as the master Figma renderer,
+# then work on the GPU or hybrid implementation.
+# This sort of acts as a first step beyond Figma's "reference" renderer, and then as the leaf renderer for the hybrid renderer.
 
 type Paint = schema.Paint
 
@@ -20,9 +27,12 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
 
   # Generate the geometry.
   if node.kind == TextNode:
-    #node.genTextGeometry()
     node.computeArrangement()
     var bounds = node.arrangement.computeBounds(mat)
+    if textBoxFocus == node:
+      # Add extra padding for the caret.
+      bounds.w += 10
+      bounds.h += 10
     return bounds.snapToPixels()
   else:
     node.genFillGeometry()
@@ -82,7 +92,7 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
   ## Computes a list of nodes under the mouse.
 
   proc visit(node: Node, mat: Mat3, mousePos: Vec2, s: var seq[Node]): bool =
-    ## Visits each node and sees if its geometry overlaps the mouse.
+    ## Visits each node and checks if its geometry overlaps the mouse.
 
     let mat = mat * node.transform()
 
@@ -116,6 +126,7 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
   discard screenNode.visit(screenNode.transform().inverse(), mousePos, result)
 
 proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
+  ## Converts a Figma paint to a pixie paint.
   let paintKind = case paint.kind:
     of schema.pkSolid: SolidPaint
     of schema.pkImage: ImagePaint
@@ -231,13 +242,13 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
     result.fillGradient(paint.toPixiePaint(node))
 
 proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.measure.} =
-
-  echo "draw paint", node.path
+  ## Draws a paint onto a node.
 
   if paints.len == 0 or geometries.len == 0:
     return
 
   if paints.len == 1 and paints[0].kind == schema.PaintKind.pkSolid:
+
     # Fast path for 1 solid paint (most common).
     let paint = paints[0]
     if not paint.visible or paint.opacity == 0:
@@ -307,12 +318,14 @@ proc maskSelfImage*(node: Node): Image {.measure.} =
   return mask
 
 proc drawInnerShadow(node: Node) =
+  ## Draws the inner shadow.
   for effect in node.effects:
     if effect.visible:
       if effect.kind == InnerShadow:
         drawInnerShadowEffect(effect, node, node.maskSelfImage())
 
 proc drawGeometry*(node: Node) {.measure.} =
+  ## Draws the geometry of a node.
   if node.strokeGeometry.len == 0:
     # No stroke just fill.
     node.drawPaint(node.fills, node.fillGeometry)
@@ -322,7 +335,6 @@ proc drawGeometry*(node: Node) {.measure.} =
     of InsideStroke:
       if node.fillGeometry.len == 0:
         node.drawPaint(node.strokes, node.strokeGeometry)
-
       else:
         # Deal with fill
         var fillLayer = layer
@@ -334,7 +346,6 @@ proc drawGeometry*(node: Node) {.measure.} =
         for geometry in node.fillGeometry:
           fillMask.fillPath(geometry.path, paint, mat, geometry.windingRule)
           node.drawInnerShadow()
-
         # Deal with stroke
         var strokeLayer = newImage(layer.width, layer.height)
         layer = strokeLayer
@@ -376,6 +387,7 @@ proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node
   lowerLayer.draw(shadow2)
 
 proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
+  ## Draws the background blur.
   var blurLayer = lowerLayer.copy() # Maybe collapse bg?
   var blurMask = layer.copy()
   blurMask.ceil()
@@ -384,29 +396,27 @@ proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   blurLayer.draw(layer)
   layer = blurLayer
 
-
 proc drawText*(node: Node) {.measure.} =
   ## Draws the text (including editing of text).
-
   node.computeArrangement()
-
   # Scroll inside the text box
   mat = mat * translate(-node.scrollPos)
-
   if rtl:
     mat = mat * scale(vec2(-1, 1)) * translate(vec2(-node.size.x, 0))
 
   if textBoxFocus == node:
 
-    # TODO: Draw selection outline by using a parent focus variant?
-    # layer.fillRect(node.pixelBox, rgbx(255, 0, 0, 255))
+    when defined(fidgetDebug):
+      # Draw selection outline by using a parent focus variant?
+      var path = newPath()
+      path.rect(node.pixelBox)
+      layer.strokePath(path, rgbx(255, 0, 0, 255), mat)
 
-    # draw arrangement squares for debugging
-    # block:
-    #   var path = newPath()
-    #   for rect in arrangement.selectionRects:
-    #     path.rect(rect)
-    #   layer.strokePath(path, color(1, 0, 0, 1), mat)
+      # Draw arrangement squares for debugging with a flag.
+      path = newPath()
+      for rect in node.arrangement.selectionRects:
+        path.rect(rect)
+      layer.strokePath(path, color(1, 0, 0, 1), mat)
 
     # Draw the selection ranges.
     let selectionRegions = node.selectionRegions()
@@ -430,6 +440,7 @@ proc drawText*(node: Node) {.measure.} =
 proc drawNode*(node: Node, withChildren=true)
 
 proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
+  ## Draws a boolean subnode.
   let prevMat = mat
   mat = mat * node.transform()
 
@@ -461,7 +472,7 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
   mat = prevMat
 
 proc drawBoolean*(node: Node) {.measure.} =
-  ## Draws boolean
+  ## Draws a boolean node.
   maskLayer = newImage(layer.width, layer.height)
   mat = mat * node.transform().inverse()
   drawBooleanNode(node, NormalBlend)
@@ -473,6 +484,7 @@ proc drawBoolean*(node: Node) {.measure.} =
     layer.draw(fillImage)
 
 proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
+  ## Draws the internal parts of a node, with or without children.
 
   if not node.visible or node.opacity == 0:
     return
@@ -555,13 +567,14 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
         if effect.kind == BackgroundBlur:
           drawBackgroundBlur(lowerLayer, effect)
 
-    measurePush("lowerLayer.draw") # & $node.blendMode)
+    measurePush("lowerLayer.draw")
+    # TODO: Add flag for blend mode.
     lowerLayer.draw(layer, blendMode = node.blendMode)
     layer = lowerLayer
     measurePop()
 
 proc drawNode*(node: Node, withChildren=true) {.measure.} =
-
+  ## Draws a node.
   let prevMat = mat
   mat = mat * node.transform()
 
@@ -574,6 +587,7 @@ proc drawNode*(node: Node, withChildren=true) {.measure.} =
   mat = prevMat
 
 proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
+  ## Draws the complete frame with all child nodes.
   let
     w = node.size.x.int
     h = node.size.y.int
@@ -584,6 +598,7 @@ proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
   mat = translate(-node.position)
   drawNode(node)
 
+  # Make sure we pop all layers.
   doAssert layers.len == 0
 
   return layer
@@ -594,5 +609,6 @@ proc setupWindow*(
   visible = true,
   style = Decorated
 ) =
-  window = newWindow("loading..", size, visible=visible)
+  ## Sets up the window.
+  window = newWindow("loading...", size, visible=visible)
   window.style = style

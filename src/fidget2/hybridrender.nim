@@ -1,20 +1,26 @@
-import bumpy, math, opengl, pixie, schema, windy, tables, vmath,
-  boxy, internal, cpurender, layout, os, perf, nodes, loader, common
+import
+  std/[tables],
+  boxy, bumpy, pixie, opengl, vmath, windy,
+  common, cpurender, internal, layout, loader, nodes, perf, schema
 
 export cpurender.underMouse
+
+# Hybrid renderer is a renderer that uses the GPU for some things and the CPU for others.
+# It tries to do fast work on the GPU and slow work on the CPU.
+# It has a bunch of dirty flags to track what is dirty and needs to be redrawn.
 
 var
   bxy*: Boxy
 
 proc quasiEqual(a, b: Rect): bool =
-  ## Quasi equal. Equal everything except integer translation.
+  ## Quasi-equal. Equals everything except integer translation.
   ## Used for redraw only if node changed positions in whole pixels.
   a.w == b.w and a.h == b.h and
-    a.x.fractional == b.x.fractional and
-    a.y.fractional == b.y.fractional
+    fract(a.x) == fract(b.x) and
+    fract(a.y) == fract(b.y)
 
 proc willDrawSomething(node: Node): bool =
-  ## Checks if node will draw something, or its fully transparent with no fills
+  ## Checks if node will draw something, or it's fully transparent with no fills
   ## or strokes.
   if not node.visible or node.opacity == 0:
     return false
@@ -23,11 +29,11 @@ proc willDrawSomething(node: Node): bool =
     return false
 
   if node.collapse:
-    # TODO do children
+    # TODO: Do children.
     return true
 
   if node.clipsContent:
-    # draws clipping mask
+    # Draws clipping mask.
     return true
 
   for fill in node.fills:
@@ -50,7 +56,7 @@ proc isSimpleImage*(node: Node): bool =
   node.cornerRadius == 0
 
 proc drawToAtlas(node: Node, level: int) {.measure.} =
-  ## Draw the nodes into the atlas (and setup pixel box).
+  ## Draws the nodes into the atlas (and sets up the pixel box).
 
   if not node.visible or node.opacity == 0:
     node.markTreeClean()
@@ -59,7 +65,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
   let prevMat = mat
   mat = mat * node.transform()
 
-  node.mat = mat # needed for picking
+  node.mat = mat # Needed for picking.
 
   var pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
 
@@ -69,12 +75,6 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
     return
 
   if node.dirty or not quasiEqual(pixelBox, node.pixelBox):
-
-    # if not quasiEqual(pixelBox, node.pixelBox):
-    #   echo "node size changed"
-
-    # if node.dirty:
-    #   echo "drawToAtlas: ", node.name, " is dirty"
 
     node.dirty = false
     # compute bounds
@@ -159,26 +159,11 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
 
   mat = prevMat
 
-proc mat4(m: Transform): Mat4 =
-  result = mat4()
-  result[0, 0] = m[0][0]
-  result[0, 1] = m[1][0]
-  result[1, 0] = m[0][1]
-  result[1, 1] = m[1][1]
-  result[3, 0] = m[0][2]
-  result[3, 1] = m[1][2]
 
-proc mat4(m: Mat3): Mat4 =
-  result = mat4()
-  result[0, 0] = m[0, 0]
-  result[0, 1] = m[0, 1]
-  result[1, 0] = m[1, 0]
-  result[1, 1] = m[1, 1]
-  result[3, 0] = m[2, 0]
-  result[3, 1] = m[2, 1]
+
 
 proc drawWithAtlas(node: Node) {.measure.} =
-  # Draw the nodes using atlas.
+  # Draws the nodes using the atlas.
   if not node.visible or node.opacity == 0:
     return
 
@@ -194,7 +179,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.restoreTransform()
     return
 
-  var pushedMasks = 0
+  var pushedLayers = 0
 
   var hasMask = false
   for child in node.children:
@@ -206,7 +191,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     hasMask or
     node.blendMode != NormalBlend:
       bxy.pushLayer()
-      inc pushedMasks
+      inc pushedLayers
 
   if node.isSimpleImage:
     let paint = node.fills[0]
@@ -279,24 +264,24 @@ proc drawWithAtlas(node: Node) {.measure.} =
 
 
   elif node.id in bxy:
-    doAssert node.pixelBox.x.fractional == 0
-    doAssert node.pixelBox.y.fractional == 0
+    doAssert fract(node.pixelBox.x) == 0
+    doAssert fract(node.pixelBox.y) == 0
     doAssert node.willDrawSomething()
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
   if not node.collapse:
-    var needsMask: seq[Node]
+    var masks: seq[Node]
     for child in node.children:
       if child.isMask:
-        needsMask.add(child)
+        masks.add(child)
       else:
-        if needsMask.len == 0:
+        if masks.len == 0:
           drawWithAtlas(child)
         else:
           bxy.pushLayer()
           drawWithAtlas(child)
           bxy.pushLayer()
-          for mask in needsMask:
+          for mask in masks:
             drawWithAtlas(mask)
           bxy.popLayer(blendMode = MaskBlend)
           bxy.popLayer()
@@ -306,11 +291,11 @@ proc drawWithAtlas(node: Node) {.measure.} =
     bxy.drawImage(node.id & ".mask", pos = node.pixelBox.xy)
     bxy.popLayer(blendMode = MaskBlend)
 
-  for i in 0 ..< pushedMasks:
+  for i in 0 ..< pushedLayers:
     bxy.popLayer(tint = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
 
 proc drawToScreen*(screenNode: Node) {.measure.} =
-  ## Draw the current node onto the screen.
+  ## Draws the current node onto the screen.
 
   if window.size.vec2 != screenNode.size:
     if window.style == DecoratedResizable:
@@ -343,6 +328,7 @@ proc setupWindow*(
   visible = true,
   style = DecoratedResizable
 ) =
+  ## Sets up the window.
   window = newWindow("loading...", size, visible=visible, msaa=msaa8x)
   window.style = style
 
@@ -361,7 +347,7 @@ proc setupWindow*(
   bxy = newBoxy()
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
-  ## Read the GPU pixels from screen.
+  ## Reads the GPU pixels from the screen.
   ## Use for debugging and tests only.
   var screen = newImage(window.size.x.int, window.size.y.int)
   glReadPixels(
@@ -374,6 +360,10 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   return screen
 
 proc freeze*(node: Node, scaleFactor = 1.0f) =
+  ## Freezes a node.
+  ## This is used to speed up rendering by caching the node as an image.
+  ## It is not a good idea to freeze nodes that are animated or that are
+  ## being edited.
   let s = scaleFactor
   if node.isSimpleImage:
     return
@@ -396,12 +386,10 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       bxy.addImage(node.frozenId, layer, genMipmaps=true)
 
 deleteNodeHook = proc(node: Node) =
+  ## Hook to delete a node from the atlas.
   if node.id in bxy:
-    #echo "remove ", node.id
     bxy.removeImage(node.id)
   if node.id & ".mask" in bxy:
-    #echo "remove ", node.id  & ".mask"
     bxy.removeImage(node.id & ".mask")
   if node.frozenId in bxy:
-    #echo "remove frozenId ", node.frozenId
     bxy.removeImage(node.frozenId)
