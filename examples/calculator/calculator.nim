@@ -161,7 +161,7 @@ find "/UI/Main":
         formula.add(t.operator)
       # Fix negative numbers: [a][-][-b] and [a][+][-b]
       formula = formula.replace("--", "+").replace("+-", "-")
-      thisNode.setText(formula)
+      thisNode.text = formula
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/0R8RlgLgwX8R7cG7FczrHO",
