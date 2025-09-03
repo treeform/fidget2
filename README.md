@@ -77,11 +77,11 @@ Figma also has a whole library of designs https://www.figma.com/community licens
 
 As an industry we design too much of the UI by hand. And we do it many times. A designer builds the UI. We throw that away. Then programmers code up layouts, set colors, and push pixels around. Sometimes several different times for web and mobile.
 
-It is madness!
+**It is madness!**
 
 Music is not coded by hand, we use tools. Images are not coded by hand, we use tools. Nor are 3D models, which can be very complex, with bones, sockets, and animations. They have editors and tools. Why do we do this for UI? Why has no good UI editor appeared?
 
-It is madness!
+**It is madness!**
 
 This happens because of the wrong programming model. What you want is the design side and the action side. The design side is a tree of nodes made in a UX design program like Figma. The action side is also a tree of event handlers, display functions, and other mutators. A designer should be able to change the design a bit and it should stay working. Likewise a programmer should be able to change the handlers and the design should not need to change. You should be able to rig a UI design and puppet it from code.
 
@@ -122,8 +122,6 @@ In every event hander you get `thisNode` and it has many properties:
 thisNode.text = "hello world"
 ```
 
-
-
 ## Find and Glob Patters
 
 * Absolute path from the mounted frame: `/UI/TemperatureFrame/...`
@@ -152,11 +150,13 @@ let subNode = node.find("text")
 ```
 
 You can also use `finds` to find multiple nodes:
+
 ```nim
 for button in finds("Button*"):
 ```
 
 You can use `*` or `?` and even `**` to select multiple nodes at once:
+
 ```nim
 find "Button?":
   # Selects all buttons: Button0 - Button9
@@ -176,7 +176,6 @@ Attach any subset of these inside a `find` block:
 * `onClickOutside` - Useful to cancel actions.
 * `onRightClick` - Mouse right click.
 * `onMouseMove` - When mouse moves over the element.
-
 
 ## Node key properties and fields
 
@@ -249,12 +248,12 @@ Another cool feature is "live reload" using the F5 button. In development mode, 
 
 Another really important feature of Fidget2 is the extensive test suite. I have built a system that tests a very wide range of features, far beyond what most UI libraries even attempt. Most UI libraries just draw boxes, text, images, and maybe some clipping or masking. Fidget2 goes much further. It tries to support almost all Figma features, and hopefully in the future every single one. It supports masking modes, blending modes, vector operations, boolean operations, text features, components and component variants, multiple layout systems, layouts and more. Absolute layout and box layout, where you can pin things to corners or centers or make them stretchable, and auto layout, which stretches and skews based on parent constraints. The idea is that Figma is the source of truth. What you design in Figma should render the same in Fidget. The test suite enforces this. You can run it yourself with `tests/run_frames.nim` and see how broad the coverage is.
 
-## Node addressing.
+## Node addressing
 
 I also thought a lot about how to address nodes. At first I looked at IDs like node 1, node 2, and so on, but that was very user-hostile. Nobody wants to attach a handler to node 3000. Then I looked at CSS selectors, but they are too complicated, with IDs and classes and specificity rules. The answer came from Figma itself. Every node has a name and a path with slashes, just like a file system. So Fidget represents nodes as a file system. You can use glob patterns like in a shell. A star matches unknown names, a question mark matches unknown characters, and double star matches across multiple levels. When you are in a handler and want to access a subnode, you can use relative paths or .. to go up a level. Every programmer already knows how file systems work, so this is a natural fit. The only major difference is that nodes can have exact same name wich is not true of files. There is also no file extensions, unless you add them.
 
 In Fidget, action handlers are attached to glob paths, not nodes. This is powerful, because you can create or remove nodes freely. As long as they match the glob path, the handler will fire. This avoids a big mistake I beleave happened with HTML and JavaScript. In HTML, CSS selectors are used for styling, but not for events. You cannot see which handlers are attached to a node, and you cannot copy handlers easily. It is a mess. Fidget fixes this with a simple glob path system. Handlers are attached to paths, and if a node matches, it works. Easy and simple.
 
-## Minimal and fully custom philosophy.
+## Minimal and fully custom
 
 Another thing I want to emphasize is philosophy. Many UI libraries give you complicated controls like tree views, tab controls, color pickers, and date pickers. They look simple, but once you try to style them, they become very cumbersome. Every app wants its own style. In Fidget2 I do not provide high level widgets like that. Instead, I provide simple Figma primitives from which you can build any control you need. This makes it easy to build advanced controls that match the style of your app.
