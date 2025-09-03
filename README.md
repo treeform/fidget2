@@ -233,3 +233,28 @@ Attach any subset of these inside a `find` block:
 * `frozen: bool`, `frozenId: string` - Snapshot linkage
 * `shown: bool` - Visibility flag backing `onShow` or `onHide`
 * Scrolling: `scrollable: bool`, `scrollPos: Vec2`
+
+
+## How is it different form Fitget 1?
+
+It is a little bit of a departure from the Fidget1 model, but the main idea is the same. You should not need to design a UI once in a design program like Figma, and then rebuild it again in code using boxes, elements, CSS, or whatever. The basic idea is that you design your UI in Figma, and it just stays in Figma forever. You take that UI and bring it into programming land. You add hooks, events, and small pieces of logic, but you continue to work with the design itself. You can always go back to the Figma file and modify it slightly, and you should not need to modify the code very much. If you add new nodes, new elements, or rename things, in your design: then you will need code changes. But if you only move things around or change colors, sizes, or fonts, then no code changes are necessary!
+
+## Live reload.
+
+One really cool aspect of this new system is that I use the Figma API directly. In Fidget1 you had to use a plugin to export Figma code. After export you could no longer really design, since the code was stuck. If you wanted to make changes you had to go back to Figma, export new code, and copy paste it in. That was cumbersome, and I wanted to fix it. That is why I went full Figma API. No more copying code around. The library connects to Figma and downloads the design directly.
+
+Another cool feature is "live reload" using the F5 button. In development mode, every Fidget app has a keyboard shortcut. You press F5, and it reloads the Figma file. It fetches the new design and re-renders the app. If the names and node structure remain the same, it updates live without changes to the code. This means you can design and test features at the same time. A designer can run the app, make changes in Figma, press F5, and immediately see the new design in the live app. This makes very rapid iteration possible, something that designers have not had access to before.
+
+## Testing
+
+Another really important feature of Fidget2 is the extensive test suite. I have built a system that tests a very wide range of features, far beyond what most UI libraries even attempt. Most UI libraries just draw boxes, text, images, and maybe some clipping or masking. Fidget2 goes much further. It tries to support almost all Figma features, and hopefully in the future every single one. It supports masking modes, blending modes, vector operations, boolean operations, text features, components and component variants, multiple layout systems, layouts and more. Absolute layout and box layout, where you can pin things to corners or centers or make them stretchable, and auto layout, which stretches and skews based on parent constraints. The idea is that Figma is the source of truth. What you design in Figma should render the same in Fidget. The test suite enforces this. You can run it yourself with `tests/run_frames.nim` and see how broad the coverage is.
+
+## Node addressing.
+
+I also thought a lot about how to address nodes. At first I looked at IDs like node 1, node 2, and so on, but that was very user-hostile. Nobody wants to attach a handler to node 3000. Then I looked at CSS selectors, but they are too complicated, with IDs and classes and specificity rules. The answer came from Figma itself. Every node has a name and a path with slashes, just like a file system. So Fidget represents nodes as a file system. You can use glob patterns like in a shell. A star matches unknown names, a question mark matches unknown characters, and double star matches across multiple levels. When you are in a handler and want to access a subnode, you can use relative paths or .. to go up a level. Every programmer already knows how file systems work, so this is a natural fit. The only major difference is that nodes can have exact same name wich is not true of files. There is also no file extensions, unless you add them.
+
+In Fidget, action handlers are attached to glob paths, not nodes. This is powerful, because you can create or remove nodes freely. As long as they match the glob path, the handler will fire. This avoids a big mistake I beleave happened with HTML and JavaScript. In HTML, CSS selectors are used for styling, but not for events. You cannot see which handlers are attached to a node, and you cannot copy handlers easily. It is a mess. Fidget fixes this with a simple glob path system. Handlers are attached to paths, and if a node matches, it works. Easy and simple.
+
+## Minimal and fully custom philosophy.
+
+Another thing I want to emphasize is philosophy. Many UI libraries give you complicated controls like tree views, tab controls, color pickers, and date pickers. They look simple, but once you try to style them, they become very cumbersome. Every app wants its own style. In Fidget2 I do not provide high level widgets like that. Instead, I provide simple Figma primitives from which you can build any control you need. This makes it easy to build advanced controls that match the style of your app.

@@ -5,7 +5,7 @@ license     = "MIT"
 
 srcDir = "src"
 
-requires "nim >= 1.2.2"
+requires "nim >= 2.2.4"
 requires "pixie#head"
 requires "vmath#head"
 requires "opengl >= 1.2.3"
