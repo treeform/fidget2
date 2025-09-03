@@ -143,10 +143,8 @@ proc find*(node: Node, glob: string): Node =
   ## It is not an error for glob to not match any nodes.
   ## But only one node is returned.
   let glob = parseGlob(glob)
-  echo "find glob: ", glob
   proc visit(node: Node, one: var Node, glob: Glob, globAt = 0) =
     if globMatchOne(node.name, glob[globAt]):
-      echo "checking node: ", node.name
       if glob[globAt] == "**":
         if globAt + 1 == glob.len:
           # "**" at last level means this node.
@@ -163,7 +161,6 @@ proc find*(node: Node, glob: string): Node =
       else:
         if globAt + 1 == glob.len:
           # Glob end
-          echo "glob end: ", node.name
           one = node
         else:
           # Glob path

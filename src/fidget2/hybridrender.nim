@@ -159,9 +159,6 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
 
   mat = prevMat
 
-
-
-
 proc drawWithAtlas(node: Node) {.measure.} =
   # Draws the nodes using the atlas.
   if not node.visible or node.opacity == 0:
@@ -192,6 +189,9 @@ proc drawWithAtlas(node: Node) {.measure.} =
     node.blendMode != NormalBlend:
       bxy.pushLayer()
       inc pushedLayers
+
+  if node.onRenderCallback != nil:
+    node.onRenderCallback(node)
 
   if node.isSimpleImage:
     let paint = node.fills[0]

@@ -1,5 +1,5 @@
 import
-  std/[options, parseutils, strutils, tables],
+  std/[options, parseutils, strutils, tables, unicode],
   bumpy, chroma, jsony, pixie, vmath,
   common
 
@@ -259,6 +259,10 @@ type
     shown*: bool        ## for onShow/onHide events.
     scrollable*: bool   ## Can this node scroll.
     scrollPos*: Vec2    ## How does it scroll it's children.
+
+    # Event handling
+    onRenderCallback*: proc(thisNode: Node)
+
 
   FigmaFile* = ref object
     document*: Node
