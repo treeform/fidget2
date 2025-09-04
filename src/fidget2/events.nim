@@ -81,7 +81,6 @@ proc find*(glob: string): Node =
     raise newException(FidgetError, &"Error glob can't be empty string \"\".")
   if thisSelector.len > 0 and not glob.startsWith("/"):
     glob = thisSelector & "/" & glob
-  echo "find: ", glob, " thisSelector: ", thisSelector
   result = figmaFile.document.find(glob)
   if result == nil:
     raise newException(FidgetError, &"find(\"{glob}\") not found.")
@@ -280,7 +279,6 @@ proc textBoxKeyboardAction(button: Button) =
         of KeyV: # paste
           if ctrl or super:
             let s = getClipboardString()
-            echo s
             textBoxFocus.pasteText(s)
         of KeyX: # cut
           if ctrl or super:
@@ -305,7 +303,6 @@ proc textBoxKeyboardAction(button: Button) =
 
     textBoxFocus.makeTextDirty()
     
-    echo "on edit in the text box ", textBoxFocus.path
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
@@ -317,7 +314,6 @@ proc onRune(rune: Rune) =
     textBoxFocus.typeCharacter(rune)
     requestedFrame = true
 
-  echo "on edit in the text box ", textBoxFocus.path
   for cb in eventCbs:
     if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
       thisSelector = textBoxFocus.path
@@ -431,12 +427,6 @@ proc processEvents() {.measure.} =
 
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
-
-  # if window.buttonPressed[MouseLeft]:
-  #   echo "---"
-  #   for n in underMouseNodes:
-  #     echo n.name
-  #   echo "---"
 
   if window.buttonDown[MouseLeft]:
     window.closeIme()
@@ -580,11 +570,11 @@ proc processEvents() {.measure.} =
   redisplay = false
 
   if window.buttonPressed[KeyF4]:
-    echo "writing atlas"
+    echo "Writing 'atlas.png'"
     bxy.readAtlas().writeFile("atlas.png")
 
   if window.buttonPressed[KeyF5]:
-    echo "reloading from web"
+    echo "Reloading from web '", currentFigmaUrl, "'"
     use(currentFigmaUrl)
     thisFrame = find(entryFramePath)
 
@@ -599,10 +589,10 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
       else:
         # Make cache directory if it doesn't exist.
         if not dirExists("cache"):
-          echo "Creating cache directory"
+          echo "Creating cache directory 'cache/'"
           createDir("cache")
         imageData = fetch(url)
-        echo "Writing file: ", fileKey
+        echo "Writing file '", fileKey, "'"
         writeFile(fileKey, imageData)
 
       let image = decodeImage(imageData)

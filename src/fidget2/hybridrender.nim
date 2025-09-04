@@ -123,7 +123,6 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
             imageCache[paint.imageRef] = image
           else:
             image = imageCache[paint.imageRef]
-          echo "addImage paint.imageRef ", paint.imageRef
           bxy.addImage(paint.imageRef, image)
 
       else:

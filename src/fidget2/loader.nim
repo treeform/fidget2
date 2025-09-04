@@ -41,12 +41,12 @@ proc downloadImage(imageRef, url: string) =
   ## Downloads an image.
   let imagePath = figmaImagePath(imageRef)
   if not fileExists(imagePath):
-    echo "Downloading ", url
+    echo "Downloading '", url, "'"
     let
       request = newRequest(url)
       response = fetch(request)
     if response.code != 200:
-      raise newException(FidgetError, "Downloading " & url & " failed")
+      raise newException(FidgetError, "Downloading '" & url & "' failed")
     writeFile(imagePath, response.body)
 
 proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
@@ -106,13 +106,13 @@ proc downloadFont(fontPostScriptName: string) =
   if not fileExists(fontPath) and not fileExists(fontUserPath):
     const baseUrl = "https://github.com/treeform/fidgetfonts/raw/main/fonts/"
     let url = baseUrl & fontPostScriptName & ".ttf"
-    echo "Font not found: ", fontPath
-    echo "Downloading ", url
+    echo "Font not found: '", fontPath, "'"
+    echo "Downloading '", url, "'"
     let
       request = newRequest(url)
       response = fetch(request)
     if response.code != 200:
-      raise newException(FidgetError, "Downloading " & url & " failed")
+      raise newException(FidgetError, "Downloading '" & url & "' failed")
     writeFile(fontPath, response.body)
 
 proc downloadFonts(figmaFile: FigmaFile) =
@@ -215,10 +215,10 @@ proc downloadFigmaFile(fileKey: string) =
         if liveFile.lastModified == readFile(lastModifiedFilePath):
           useCached = true
         else:
-          echo "Cached Figma file out of date, downloading latest"
+          echo "Cached Figma file out of date, downloading latest."
 
   if useCached:
-    echo "Using cached Figma file"
+    echo "Using cached Figma file."
     return
 
   let
@@ -244,7 +244,7 @@ proc downloadFigmaFile(fileKey: string) =
   downloadFonts(liveFile)
   writeFile(figmaFilePath, pretty(json))
   writeFile(lastModifiedFilePath, liveFile.lastModified)
-  echo "Downloaded latest Figma file"
+  echo "Downloaded latest Figma file."
 
 proc use*(figmaUrl: string) =
   ## Use the figma url as a new figmaFile.

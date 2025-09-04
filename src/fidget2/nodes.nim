@@ -43,14 +43,14 @@ proc makeTextDirty*(node: Node) =
 
 proc `text=`*(node: Node, text: string) =
   if node.kind != TextNode:
-    echo "trying to set text of non text node: " & node.path
+    echo "Trying to set text of non text node: '" & node.path & "'"
   if node.characters != text:
     node.characters = text
     node.makeTextDirty()
 
 proc text*(node: Node): string =
   if node.kind != TextNode:
-    echo "trying to get text of non text node: " & node.path
+    echo "Trying to get text of non text node: '" & node.path & "'"
   return node.characters
 
 proc show*(node: Node) =
