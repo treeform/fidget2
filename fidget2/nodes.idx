@@ -25,11 +25,11 @@ nim	`[]`	fidget2/nodes.html#[],seq[],string	proc `[]`(query: seq[(string, string
 nim	contains	fidget2/nodes.html#contains,seq[],string	proc contains(query: seq[(string, string)]; key: string): bool		226
 nim	`[]=`	fidget2/nodes.html#[]=,seq[],string,string	proc `[]=`(query: var seq[(string, string)]; key, value: string)		232
 nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		321
-nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		340
-nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		345
-nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		358
-nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		365
-nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		370
+nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		343
+nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		348
+nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		361
+nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		368
+nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		373
 nimgrp	show	fidget2/nodes.html#show-procs-all	proc		56
 nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		321
 nimgrp	delete	fidget2/nodes.html#delete-procs-all	proc		96
