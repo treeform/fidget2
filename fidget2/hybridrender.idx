@@ -1,7 +1,7 @@
 nimTitle	hybridrender	fidget2/hybridrender.html	module src/fidget2/hybridrender		0
 nim	bxy	fidget2/hybridrender.html#bxy	var bxy		13
 nim	isSimpleImage	fidget2/hybridrender.html#isSimpleImage,Node	proc isSimpleImage(node: Node): bool		49
-nim	drawToScreen	fidget2/hybridrender.html#drawToScreen,Node	proc drawToScreen(screenNode: Node)		297
-nim	setupWindow	fidget2/hybridrender.html#setupWindow,Node,IVec2	proc setupWindow(frameNode: Node; size: IVec2; visible = true;\n            style = DecoratedResizable)		325
-nim	readGpuPixelsFromScreen	fidget2/hybridrender.html#readGpuPixelsFromScreen	proc readGpuPixelsFromScreen(): pixie.Image		349
-nim	freeze	fidget2/hybridrender.html#freeze,Node,float32	proc freeze(node: Node; scaleFactor = 1.0'f32)		362
+nim	drawToScreen	fidget2/hybridrender.html#drawToScreen,Node	proc drawToScreen(screenNode: Node)		296
+nim	setupWindow	fidget2/hybridrender.html#setupWindow,Node,IVec2	proc setupWindow(frameNode: Node; size: IVec2; visible = true;\n            style = DecoratedResizable)		324
+nim	readGpuPixelsFromScreen	fidget2/hybridrender.html#readGpuPixelsFromScreen	proc readGpuPixelsFromScreen(): pixie.Image		348
+nim	freeze	fidget2/hybridrender.html#freeze,Node,float32	proc freeze(node: Node; scaleFactor = 1.0'f32)		361
