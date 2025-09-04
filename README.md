@@ -41,6 +41,12 @@ find "/UI/CounterFrame":
       thisNode.text = $count
 ```
 
+### Performance
+
+Because the entire lib is compiled with your program you should compile with
+`-d:release -d:noAutoGLerrorCheck`
+if you want it to run fast.
+
 ### Calculator
 
 <img src="examples\calculator\calculator.png">
