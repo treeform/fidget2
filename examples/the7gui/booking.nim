@@ -39,7 +39,7 @@ find "/UI/BookingFrame":
             thisNode.characters = "return flight"
       onClick:
         find("/UI/BookingFrame/Picker").visible = true
-
+        
     find "DepartInput":
       find "text":
         onShow:
@@ -48,8 +48,10 @@ find "/UI/BookingFrame":
           try:
             departCal = parseCalendar(CalendarFormat, thisNode.text)
             thisNode.parent.setVariant("State", "Default")
+            find("/UI/BookingFrame/Inner/BookButton").setVariant("State", "Default")
           except ValueError:
             thisNode.parent.setVariant("State", "Error")
+            find("/UI/BookingFrame/Inner/BookButton").setVariant("State", "Disabled")
 
     find "ReturnInput":
       find "text":
@@ -59,8 +61,10 @@ find "/UI/BookingFrame":
           try:
             returnCal = parseCalendar(CalendarFormat, thisNode.text)
             thisNode.parent.setVariant("State", "Default")
+            find("/UI/BookingFrame/Inner/BookButton").setVariant("State", "Default")
           except ValueError:
             thisNode.parent.setVariant("State", "Error")
+            find("/UI/BookingFrame/Inner/BookButton").setVariant("State", "Disabled")
 
     find "BookButton":
       onClick:
