@@ -1,5 +1,5 @@
 import
-  std/[options, parseutils, strutils, tables, unicode],
+  std/[options, parseutils, strutils, tables],
   bumpy, chroma, jsony, pixie, vmath,
   common
 

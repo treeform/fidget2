@@ -321,6 +321,9 @@ proc triMerge(current, previousMaster, currentMaster: Node) =
 proc setVariant*(node: Node, name, value: string) =
   ## Changes the variant of the node.
   var previousMaster = findNodeById(node.componentId)
+  if previousMaster == nil:
+    echo "Previous master not found for node: '" & node.path & "'"
+    return
   var props = previousMaster.name.parseName()
   if props[name] == value:
     # no change

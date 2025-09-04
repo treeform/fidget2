@@ -1,45 +1,33 @@
-import chroma, chrono, fidget2
+import chrono, fidget2
+
+
+const
+  CalendarFormat = "{day/2}.{month/2}.{year/4}"
 
 type
   FlightType = enum
-    ReturnFlight, OneWayFlight
+    ReturnFlight, 
+    OneWayFlight
 
 var
   flightType = OneWayFlight
-  departStr = "02.09.2021"
-  departCal: Calendar
-  returnStr = "03.09.2021"
-  returnCal: Calendar
-
-proc setVariant(node: Node, name, value: string) =
-  if name == "State":
-    if value == "Default":
-      node.fills[0].color = parseHtmlColor("#FFFFFF")
-    elif value == "Error":
-      node.fills[0].color = parseHtmlColor("#FFDAC5")
-    elif value == "Disabled":
-      node.fills[0].color = parseHtmlColor("#B7B7B7")
+  departCal = Calendar(year: 2026, month: 9, day: 2)
+  returnCal = Calendar(year: 2026, month: 9, day: 3)
 
 find "/UI/BookingFrame":
 
   find "Picker":
     find "Return":
       onClick:
-        if find("/UI/BookingFrame/Picker").visible:
-          flightType = ReturnFlight
-          find("/UI/BookingFrame/Picker").visible = false
-
-          var n = find("/UI/BookingFrame/Inner/ReturnInput/bg")
-          n.setVariant("State", "Default")
+        flightType = ReturnFlight
+        thisNode.parent.visible = false
+        find("/UI/BookingFrame/Inner/ReturnInput").setVariant("State", "Default")
 
     find "OneWay":
       onClick:
-        if find("/UI/BookingFrame/Picker").visible:
-          flightType = OneWayFlight
-          find("/UI/BookingFrame/Picker").visible = false
-
-          var n = find("/UI/BookingFrame/Inner/ReturnInput/bg")
-          n.setVariant("State", "Disabled")
+        flightType = OneWayFlight
+        thisNode.parent.visible = false
+        find("/UI/BookingFrame/Inner/ReturnInput").setVariant("State", "Disabled")
 
   find "Inner":
     find "FlightType":
@@ -54,23 +42,25 @@ find "/UI/BookingFrame":
 
     find "DepartInput":
       find "text":
+        onShow:
+          thisNode.text = departCal.format(CalendarFormat)
         onEdit:
-          departStr = thisNode.characters
           try:
-            departCal = parseCalendar("{day/2}.{month/2}.{year/4}", departStr)
-            find("../bg").setVariant("State", "Default")
+            departCal = parseCalendar(CalendarFormat, thisNode.text)
+            thisNode.parent.setVariant("State", "Default")
           except ValueError:
-            find("../bg").setVariant("State", "Error")
+            thisNode.parent.setVariant("State", "Error")
 
     find "ReturnInput":
       find "text":
+        onShow:
+          thisNode.text = returnCal.format(CalendarFormat)
         onEdit:
-          returnStr = thisNode.characters
           try:
-            returnCal = parseCalendar("{day/2}.{month/2}.{year/4}", returnStr)
-            find("../bg").setVariant("State", "Default")
+            returnCal = parseCalendar(CalendarFormat, thisNode.text)
+            thisNode.parent.setVariant("State", "Default")
           except ValueError:
-            find("../bg").setVariant("State", "Error")
+            thisNode.parent.setVariant("State", "Error")
 
     find "BookButton":
       onClick:
