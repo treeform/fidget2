@@ -189,9 +189,6 @@ proc drawWithAtlas(node: Node) {.measure.} =
       bxy.pushLayer()
       inc pushedLayers
 
-  if node.onRenderCallback != nil:
-    node.onRenderCallback(node)
-
   if node.isSimpleImage:
     let paint = node.fills[0]
     if paint.imageRef in bxy:
@@ -267,6 +264,9 @@ proc drawWithAtlas(node: Node) {.measure.} =
     doAssert fract(node.pixelBox.y) == 0
     doAssert node.willDrawSomething()
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
+
+  if node.onRenderCallback != nil:
+    node.onRenderCallback(node)
 
   if not node.collapse:
     var masks: seq[Node]
