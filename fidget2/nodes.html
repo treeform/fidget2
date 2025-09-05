@@ -163,6 +163,7 @@
 </ul>
 <ul class="simple nested-toc-section">setVariant
   <li><a class="reference" href="#setVariant%2CNode%2Cstring%2Cstring" title="setVariant(node: Node; name, value: string)">setVariant(node: Node; name, value: string)</a></li>
+<li><a class="reference" href="#setVariant%2CNode%2Cstring%2Cbool" title="setVariant(node: Node; name: string; value: bool)">setVariant(node: Node; name: string; value: bool)</a></li>
 <li><a class="reference" href="#setVariant%2Cseq%5BNode%5D%2Cstring%2Cstring" title="setVariant(nodes: seq[Node]; name, value: string)">setVariant(nodes: seq[Node]; name, value: string)</a></li>
 
 </ul>
@@ -344,8 +345,8 @@
   <dd>
     
     Gets the variant for the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L361" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L361" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L378" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L378" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -358,8 +359,8 @@
   <dd>
     
     Checks if the variant exists for the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L348" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L348" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L365" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L365" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -407,8 +408,8 @@
   <dd>
     
     Checks if node is an instance node. And can have variants.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L368" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L368" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L385" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L385" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -461,8 +462,8 @@
   <dd>
     
     Gets the master component if this is an instance and it exists.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L373" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L373" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L390" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L390" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -514,8 +515,8 @@
   <dd>
     
     Removes the node from the document.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L377" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L377" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L394" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L394" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -561,14 +562,25 @@
 
   </dd>
 </div>
+<div id="setVariant,Node,string,bool">
+  <dt><pre><span class="Keyword">proc</span> <a href="#setVariant%2CNode%2Cstring%2Cbool"><span class="Identifier">setVariant</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">value</span><span class="Other">:</span> <span class="Identifier">bool</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Changes the variant of the node to &quot;True&quot; or &quot;False&quot;.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L358" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L358" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
 <div id="setVariant,seq[Node],string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#setVariant%2Cseq%5BNode%5D%2Cstring%2Cstring"><span class="Identifier">setVariant</span></a><span class="Other">(</span><span class="Identifier">nodes</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">name</span><span class="Other">,</span> <span class="Identifier">value</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Changes the variant of the nodes.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L343" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L343" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L353" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L353" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -635,7 +647,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-04 22:23:32 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-05 19:58:03 UTC</small>
       </div>
     </div>
   </div>
