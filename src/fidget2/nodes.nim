@@ -373,3 +373,7 @@ proc isInstance*(node: Node): bool =
 proc masterComponent*(node: Node): Node =
   ## Gets the master component if this is an instance and it exists.
   findNodeById(node.componentId)
+
+proc remove*(node: Node) =
+  ## Removes the node from the document.
+  node.parent.removeChild(node)

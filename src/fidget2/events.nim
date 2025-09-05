@@ -1,9 +1,12 @@
 import
   std/[algorithm, json, os, strformat, strutils, tables, unicode],
-  bumpy, pixie, puppy, vmath, windy,
+  bumpy, pixie, vmath, windy,
   common, globs, internal, loader, nodes, perf, schema, textboxes
 
 export textboxes, nodes, common, windy
+
+when not defined(emscripten):
+  import puppy
 
 when defined(cpu):
   import cpurender
@@ -302,7 +305,7 @@ proc textBoxKeyboardAction(button: Button) =
           discard
 
     textBoxFocus.makeTextDirty()
-    
+
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
@@ -544,7 +547,7 @@ proc processEvents() {.measure.} =
               if cb.kind == OnUnfocus and cb.glob == textBoxFocus.path:
                 thisSelector = textBoxFocus.path
                 cb.handler(textBoxFocus)
-                
+
           setupTextBox(node)
           textBoxFocus.mouseAction(
             window.relativeMousePos(textBoxFocus),
@@ -557,7 +560,7 @@ proc processEvents() {.measure.} =
             if cb.kind == OnFocus and cb.glob == textBoxFocus.path:
               thisSelector = node.path
               cb.handler(textBoxFocus)
-              
+
   if textBoxFocus != nil:
     let cursor = textBoxFocus.cursorRect()
     var imePos = textBoxFocus.mat * (cursor.xy + vec2(0, cursor.h) - textBoxFocus.scrollPos)

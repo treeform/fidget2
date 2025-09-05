@@ -65,7 +65,7 @@ The style was copied form the current HTML forum, but nothing here uses HTML. It
 
 ## Getting the API key.
 
-Before using the Fidget integrated Figma API you will need a Figma account and the API key. After creating account go to your profile's settings, add new `Personal access token` and download your key and put it into `.figmakey` in your home directory or the root file of your project.
+Before using the Fidget integrated Figma API you will need a Figma account and the API key. After creating account go to your profile's settings, add new `Personal access token` and download your key and put it into `.figmatoken` in your home directory or the root file of your project.
 
 <img src="docs/figmaApiKey.png">
 
