@@ -66,14 +66,9 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
       borderMinV = min(borderMinV, vec2(-effect.radius))
       borderMaxV = max(borderMaxV, vec2(effect.radius))
     of DropShadow, InnerShadow:
-      borderMinV = min(
-        borderMinV,
-        effect.offset - vec2(effect.radius+effect.spread)
-      )
-      borderMaxV = max(
-        borderMaxV,
-        effect.offset + vec2(effect.radius + effect.spread)
-      )
+      let e = vec2(effect.radius + effect.spread)
+      borderMinV = min(borderMinV, min(vec2(0, 0), effect.offset) - e)
+      borderMaxV = max(borderMaxV, max(vec2(0, 0), effect.offset) + e)
   minV += borderMinV
   maxV += borderMaxV
 
@@ -386,19 +381,30 @@ proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = OverwriteBlend)
+  var shadowColor: Color = effect.color
+  if node.fills.len > 0 and node.fills[0].kind == schema.pkSolid:
+    shadowColor = node.fills[0].color
+    # Preserve the effect's alpha on the shadow color.
+    shadowColor.a = effect.color.a
   let shadow2 = shadow.shadow(
-    effect.offset, effect.spread, effect.radius, effect.color.rgbx)
+    effect.offset, effect.spread, effect.radius, shadowColor.rgbx)
   lowerLayer.draw(shadow2)
 
 proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   ## Draws the background blur.
-  var blurLayer = lowerLayer.copy() # Maybe collapse bg?
+  # Create a masked blurred background without populating pixels outside the mask.
+  # This ensures that non-blurred areas remain transparent and do not affect blending.
   var blurMask = layer.copy()
   blurMask.ceil()
-  blurLayer.blur(effect.radius)
-  blurLayer.draw(blurMask, blendMode = MaskBlend)
-  blurLayer.draw(layer)
-  layer = blurLayer
+
+  var blurredBg = lowerLayer.copy()
+  blurredBg.blur(effect.radius)
+  blurredBg.draw(blurMask, blendMode = MaskBlend)
+
+  var result = newImage(layer.width, layer.height)
+  result.draw(blurredBg)
+  result.draw(layer)
+  layer = result
 
 proc drawText*(node: Node) {.measure.} =
   ## Draws the text (including editing of text).
@@ -544,40 +550,48 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
 
   if withChildren:
     if hasMaskedChildren:
-      # Render all mask children into images once.
-      var masks: seq[Image]
-      let lw = layer.width
-      let lh = layer.height
+      # Every mask creates its own pair of layer and mask layer.
+      var maskLayers: seq[Image]
+
       for child in node.children:
         if child.isMask and child.visible:
+          # A mask layer creates a new pair of layer and mask layer.s
           layers.add(layer)
-          layer = newImage(lw, lh)
+          layer = newImage(layer.width, layer.height)
           drawNode(child)
-          masks.add(layer)
-          layer = layers.pop()
+          maskLayers.add(layer)
+          layer = newImage(layer.width, layer.height)
+        else:
+          # Regular nodes are just drawn into current layer.
+          drawNode(child)
 
-      # For each non-mask child, render into its own layer, apply masks,
-      # then composite back with the child's blend mode and opacity.
-      for child in node.children:
-        if not child.isMask and child.visible:
-          layers.add(layer)
-          var childLayer = newImage(lw, lh)
-          layer = childLayer
-          drawNode(child)
-          # Apply combined masks to the child layer.
-          for m in masks:
-            childLayer.draw(m, blendMode = MaskBlend)
-          # Apply child opacity if needed.
-          if child.opacity != 1.0:
-            childLayer.applyOpacity(child.opacity)
-          # Restore parent layer and composite with child's blend mode.
-          layer = layers.pop()
-          layer.draw(childLayer, blendMode = child.blendMode)
+      while maskLayers.len > 0:
+        # Pop pair of layer and mask layer and apply them.
+        let maskLayer = maskLayers.pop()
+        layer.draw(maskLayer, blendMode = MaskBlend)
+        layers[^1].draw(layer)
+        layer = layers.pop()
 
     elif node.kind == BooleanOperationNode:
       discard
     else:
       for child in node.children:
+        # Ensure non-normal blending over empty backdrop renders as black in the
+        # non-overlapped region, matching Figma compositing expectations.
+        if child.blendMode != NormalBlend:
+          let prevMat2 = mat
+          mat = mat * child.transform()
+          let childMask = child.maskSelfImage()
+          mat = prevMat2
+
+          var blackUnder = newImage(layer.width, layer.height)
+          var blackPaint = newPaint(SolidPaint)
+          blackPaint.color = color(0, 0, 0, 1)
+          blackUnder.fill(blackPaint)
+          blackUnder.draw(childMask, blendMode = MaskBlend)
+          blackUnder.draw(layer, blendMode = SubtractMaskBlend)
+          layer.draw(blackUnder)
+
         drawNode(child)
 
   if node.clipsContent:
