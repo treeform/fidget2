@@ -332,18 +332,35 @@ proc setVariant*(node: Node, name, value: string) =
   props.normalize()
 
   var componentSet = previousMaster.parent
+  var foundNode: Node
   for n in componentSet.children:
     var nodeProps = n.name.parseName()
     if nodeProps == props:
-      var currentMaster = n
-      triMerge(node, previousMaster, currentMaster)
-      node.componentId = currentMaster.id
+      foundNode = n
       break
+
+  if foundNode != nil:
+    var currentMaster = foundNode
+    triMerge(node, previousMaster, currentMaster)
+    node.componentId = currentMaster.id
+  else:
+    var needName = ""
+    for (k, v) in props:
+      needName &= k & "=" & v & ","
+    needName.removeSuffix(",")
+    echo "Node '", needName, "' not found in component set: ", node.path
 
 proc setVariant*(nodes: seq[Node], name, value: string) =
   ## Changes the variant of the nodes.
   for node in nodes:
     node.setVariant(name, value)
+
+proc setVariant*(node: Node, name: string, value: bool) =
+  ## Changes the variant of the node to "True" or "False".
+  if value:
+    node.setVariant(name, "True")
+  else:
+    node.setVariant(name, "False")
 
 proc hasVariant*(node: Node, name, value: string): bool =
   ## Checks if the variant exists for the node.

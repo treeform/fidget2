@@ -448,10 +448,10 @@ proc processEvents() {.measure.} =
         hovering = true
         break
 
-  if not hovering:
-    if hoverNode != nil:
+  if not hovering and hoverNode != nil:
+    if hoverNode.hasVariant("State", "Default"):
       hoverNode.setVariant("State", "Default")
-      hoverNode = nil
+    hoverNode = nil
 
   for n in underMouseNodes:
     if n.isInstance:
