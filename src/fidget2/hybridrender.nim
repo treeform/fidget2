@@ -12,6 +12,18 @@ export cpurender.underMouse
 var
   bxy*: Boxy
 
+proc readGpuPixelsFromScreen*(): pixie.Image
+
+proc treeHasBackgroundBlur(node: Node): bool =
+  ## Returns true if this node or any descendant has a BackgroundBlur effect.
+  for effect in node.effects:
+    if effect.visible and effect.kind == BackgroundBlur:
+      return true
+  for child in node.children:
+    if child.visible and treeHasBackgroundBlur(child):
+      return true
+  return false
+
 proc quasiEqual(a, b: Rect): bool =
   ## Quasi-equal. Equals everything except integer translation.
   ## Used for redraw only if node changed positions in whole pixels.
@@ -126,12 +138,20 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
           bxy.addImage(paint.imageRef, image)
 
       else:
-        layer = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
-        let prevBoundsMat = mat
-        mat = translate(-node.pixelBox.xy) * mat
-        node.drawNodeInternal(withChildren=node.collapse)
-        bxy.addImage(node.id, layer, genMipmaps=false)
-        mat = prevBoundsMat
+        # If this node has a BackgroundBlur effect, defer CPU rendering to
+        # drawWithAtlas where the actual backdrop is available.
+        var hasBackgroundBlur = false
+        for effect in node.effects:
+          if effect.visible and effect.kind == BackgroundBlur:
+            hasBackgroundBlur = true
+            break
+        if not hasBackgroundBlur:
+          layer = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
+          let prevBoundsMat = mat
+          mat = translate(-node.pixelBox.xy) * mat
+          node.drawNodeInternal(withChildren=node.collapse)
+          bxy.addImage(node.id, layer, genMipmaps=false)
+          mat = prevBoundsMat
 
       if node.clipsContent:
         layer = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
@@ -177,17 +197,27 @@ proc drawWithAtlas(node: Node) {.measure.} =
 
   var pushedLayers = 0
 
+  # Detect background blur; CPU path will handle full compositing for it.
+  var hasBackgroundBlur = false
+  for effect in node.effects:
+    if effect.visible and effect.kind == BackgroundBlur:
+      hasBackgroundBlur = true
+      break
+
   var hasMask = false
   for child in node.children:
     if child.isMask:
       hasMask = true
 
-  if node.clipsContent or
+  let needsGpuLayer = (not hasBackgroundBlur) and (
+    node.clipsContent or
     node.opacity < 1.0 or
     hasMask or
-    node.blendMode != NormalBlend:
-      bxy.pushLayer()
-      inc pushedLayers
+    node.blendMode != NormalBlend
+  )
+  if needsGpuLayer:
+    bxy.pushLayer()
+    inc pushedLayers
 
   if node.isSimpleImage:
     let paint = node.fills[0]
@@ -265,6 +295,36 @@ proc drawWithAtlas(node: Node) {.measure.} =
     doAssert node.willDrawSomething()
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
+  else:
+    # Handle deferred CPU rendering for BackgroundBlur nodes.
+    var hasBackgroundBlur = false
+    for effect in node.effects:
+      if effect.visible and effect.kind == BackgroundBlur:
+        hasBackgroundBlur = true
+        break
+    if hasBackgroundBlur:
+      # Capture full-screen GPU backdrop then compute the node's effect in CPU,
+      # finally composite only the affected region back.
+      let screen = readGpuPixelsFromScreen()
+      let
+        winW = screen.width
+        winH = screen.height
+        px = clamp(node.pixelBox.x.int, 0, winW)
+        py = clamp(node.pixelBox.y.int, 0, winH)
+        pw = clamp(node.pixelBox.w.int, 0, winW - px)
+        ph = clamp(node.pixelBox.h.int, 0, winH - py)
+      if pw > 0 and ph > 0:
+        layer = screen
+        let prevBoundsMat = mat
+        mat = translate(-node.pixelBox.xy) * node.mat
+        node.drawNodeInternal(withChildren=true)
+        mat = prevBoundsMat
+
+        # Only upload and draw the impacted region.
+        let resultRegion = layer.subImage(px, py, pw, ph)
+        bxy.addImage(node.id, resultRegion, genMipmaps=false)
+        bxy.drawImage(node.id, pos = node.pixelBox.xy)
+
   if node.onRenderCallback != nil:
     node.onRenderCallback(node)
 
@@ -288,7 +348,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
             blendMode = child.blendMode
           )
 
-  if node.clipsContent:
+  if node.clipsContent and not hasBackgroundBlur:
     bxy.pushLayer()
     bxy.drawImage(node.id & ".mask", pos = node.pixelBox.xy)
     bxy.popLayer(blendMode = MaskBlend)
@@ -307,22 +367,28 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
       # Stretch the window to fit the current frame.
       window.size = screenNode.size.ivec2
 
-  bxy.beginFrame(window.size, clearFrame=clearFrame)
-
-  for i in 0 ..< 2:
-    # TODO: figure out how to call layout only once.
+  # Compute layout once.
+  for i in 0 ..< 1:
     computeLayout(nil, screenNode)
 
-  # Setup proper matrix for drawing.
-  mat = scale(vec2(window.contentScale, window.contentScale))
-  if rtl:
-    mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
-  mat = mat * screenNode.transform().inverse()
-
-  drawToAtlas(screenNode, 0)
-
-  drawWithAtlas(screenNode)
-  bxy.endFrame()
+  # If the frame tree contains BackgroundBlur, render fully on CPU for fidelity.
+  if treeHasBackgroundBlur(screenNode):
+    let cpuImage = drawCompleteFrame(screenNode)
+    bxy.beginFrame(window.size, clearFrame=clearFrame)
+    let frameKey = "__frame__"
+    bxy.addImage(frameKey, cpuImage, genMipmaps=false)
+    bxy.drawImage(frameKey, pos = vec2(0, 0))
+    bxy.endFrame()
+  else:
+    bxy.beginFrame(window.size, clearFrame=clearFrame)
+    # Setup proper matrix for drawing.
+    mat = scale(vec2(window.contentScale, window.contentScale))
+    if rtl:
+      mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
+    mat = mat * screenNode.transform().inverse()
+    drawToAtlas(screenNode, 0)
+    drawWithAtlas(screenNode)
+    bxy.endFrame()
 
 proc setupWindow*(
   frameNode: Node,
