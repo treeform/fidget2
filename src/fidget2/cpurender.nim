@@ -137,6 +137,10 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
 
   result = newPaint(paintKind)
   result.opacity = paint.opacity
+  if result.kind == SolidPaint:
+    var c = paint.color
+    c.a = c.a * paint.opacity
+    result.color = c
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add(
       mat * (handle * node.size)
@@ -433,6 +437,25 @@ proc drawText*(node: Node) {.measure.} =
       var path = newPath()
       path.rect(s)
       layer.fillPath(path, node.fills[0].color.rgbx, mat)
+
+  ## Apply fills (solid or gradients) from the node/style to the fonts.
+  block:
+    # Prefer node-level fills; if none, fall back to style fills.
+    var sourceFills: seq[schema.Paint]
+    if node.fills.len > 0:
+      sourceFills = node.fills
+    elif node.style.fills.len > 0:
+      sourceFills = node.style.fills
+
+    if sourceFills.len > 0:
+      for spanIndex in 0 ..< node.arrangement.spans.len:
+        var paints: seq[pixie.Paint]
+        for paint in sourceFills:
+          if not paint.visible or paint.opacity == 0:
+            continue
+          paints.add(paint.toPixiePaint(node))
+        if paints.len > 0:
+          node.arrangement.fonts[spanIndex].paints = paints
 
   ## Fills the text arrangement.
   layer.fillText(node.arrangement, mat)
