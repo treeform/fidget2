@@ -5,8 +5,6 @@ import
 
 export textboxes, nodes, common, windy
 
-when not defined(emscripten):
-  import puppy
 
 when defined(cpu):
   import cpurender
@@ -581,26 +579,33 @@ proc processEvents() {.measure.} =
     use(currentFigmaUrl)
     thisFrame = find(entryFramePath)
 
-proc `imageUrl=`*(paint: schema.Paint, url: string) =
-  # TODO: Make loading images async.
-  when not defined(emscripten):
-    if url notin imageCache:
-      let fileKey = "cache/" & url.replace("/", "_").replace(":", "_").replace(".", "_").replace("?", "_")
-      var imageData = ""
-      if fileExists(fileKey):
-        imageData = readFile(fileKey)
-      else:
-        # Make cache directory if it doesn't exist.
-        if not dirExists("cache"):
-          echo "Creating cache directory 'cache/'"
-          createDir("cache")
-        imageData = fetch(url)
-        echo "Writing file '", fileKey, "'"
-        writeFile(fileKey, imageData)
 
-      let image = decodeImage(imageData)
-      imageCache[url] = image
-    paint.imageRef = url
+proc `imageUrl=`*(paint: schema.Paint, url: string) =
+  when not defined(emscripten):
+    if url notin fetchResponses:
+      # Request the image.
+      fetchRequests[url] = startHttpRequest(url) 
+      fetchRequests[url].onResponse = proc(response: HttpResponse) =
+        fetchResponses[url] = response
+        paint.imageRef = url
+        imageCache[url] = decodeImage(fetchResponses[url].body)
+        # Find all nodes that use this image and mark them dirty.
+        proc visit(node: Node) =
+          for child in node.children:
+            visit(child)
+          if node.fills.len > 0 and node.fills[0].imageRef == url:
+            node.dirty = true
+        visit(thisFrame)
+        thisFrame.markTreeDirty()
+        echo "Image fetched: ", url
+      fetchRequests[url].onError = proc(error: string) =
+        echo "Error fetching image: ", error  
+    elif url in fetchResponses:
+      # Have the response.
+      paint.imageRef = url
+    else:
+      # Wait for the response.
+      discard
 
 proc `image=`*(paint: schema.Paint, image: Image) =
   imageCache[paint.imageRef] = image

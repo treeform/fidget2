@@ -9,6 +9,8 @@ var
   typefaceCache*: Table[string, Typeface]
   ## Cache of images.
   imageCache*: Table[string, Image]
+  fetchRequests*: Table[string, HttpRequestHandle]
+  fetchResponses*: Table[string, HttpResponse]
 
   ## Current mat during the draw cycle.
   mat*: Mat3

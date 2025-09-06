@@ -263,7 +263,6 @@ type
     # Event handling
     onRenderCallback*: proc(thisNode: Node)
 
-
   FigmaFile* = ref object
     document*: Node
     components*: Table[string, Component]
