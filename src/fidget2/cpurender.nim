@@ -66,14 +66,9 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
       borderMinV = min(borderMinV, vec2(-effect.radius))
       borderMaxV = max(borderMaxV, vec2(effect.radius))
     of DropShadow, InnerShadow:
-      borderMinV = min(
-        borderMinV,
-        effect.offset - vec2(effect.radius+effect.spread)
-      )
-      borderMaxV = max(
-        borderMaxV,
-        effect.offset + vec2(effect.radius + effect.spread)
-      )
+      let e = vec2(effect.radius + effect.spread)
+      borderMinV = min(borderMinV, min(vec2(0, 0), effect.offset) - e)
+      borderMaxV = max(borderMaxV, max(vec2(0, 0), effect.offset) + e)
   minV += borderMinV
   maxV += borderMaxV
 
@@ -137,6 +132,10 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
 
   result = newPaint(paintKind)
   result.opacity = paint.opacity
+  if result.kind == SolidPaint:
+    var c = paint.color
+    c.a = c.a * paint.opacity
+    result.color = c
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add(
       mat * (handle * node.size)
@@ -382,19 +381,30 @@ proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = OverwriteBlend)
+  var shadowColor: Color = effect.color
+  if node.fills.len > 0 and node.fills[0].kind == schema.pkSolid:
+    shadowColor = node.fills[0].color
+    # Preserve the effect's alpha on the shadow color.
+    shadowColor.a = effect.color.a
   let shadow2 = shadow.shadow(
-    effect.offset, effect.spread, effect.radius, effect.color.rgbx)
+    effect.offset, effect.spread, effect.radius, shadowColor.rgbx)
   lowerLayer.draw(shadow2)
 
 proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   ## Draws the background blur.
-  var blurLayer = lowerLayer.copy() # Maybe collapse bg?
+  # Create a masked blurred background without populating pixels outside the mask.
+  # This ensures that non-blurred areas remain transparent and do not affect blending.
   var blurMask = layer.copy()
   blurMask.ceil()
-  blurLayer.blur(effect.radius)
-  blurLayer.draw(blurMask, blendMode = MaskBlend)
-  blurLayer.draw(layer)
-  layer = blurLayer
+
+  var blurredBg = lowerLayer.copy()
+  blurredBg.blur(effect.radius)
+  blurredBg.draw(blurMask, blendMode = MaskBlend)
+
+  var result = newImage(layer.width, layer.height)
+  result.draw(blurredBg)
+  result.draw(layer)
+  layer = result
 
 proc drawText*(node: Node) {.measure.} =
   ## Draws the text (including editing of text).
@@ -433,6 +443,25 @@ proc drawText*(node: Node) {.measure.} =
       var path = newPath()
       path.rect(s)
       layer.fillPath(path, node.fills[0].color.rgbx, mat)
+
+  ## Apply fills (solid or gradients) from the node/style to the fonts.
+  block:
+    # Prefer node-level fills; if none, fall back to style fills.
+    var sourceFills: seq[schema.Paint]
+    if node.fills.len > 0:
+      sourceFills = node.fills
+    elif node.style.fills.len > 0:
+      sourceFills = node.style.fills
+
+    if sourceFills.len > 0:
+      for spanIndex in 0 ..< node.arrangement.spans.len:
+        var paints: seq[pixie.Paint]
+        for paint in sourceFills:
+          if not paint.visible or paint.opacity == 0:
+            continue
+          paints.add(paint.toPixiePaint(node))
+        if paints.len > 0:
+          node.arrangement.fonts[spanIndex].paints = paints
 
   ## Fills the text arrangement.
   layer.fillText(node.arrangement, mat)
@@ -547,6 +576,22 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
       discard
     else:
       for child in node.children:
+        # Ensure non-normal blending over empty backdrop renders as black in the
+        # non-overlapped region, matching Figma compositing expectations.
+        if child.blendMode != NormalBlend:
+          let prevMat2 = mat
+          mat = mat * child.transform()
+          let childMask = child.maskSelfImage()
+          mat = prevMat2
+
+          var blackUnder = newImage(layer.width, layer.height)
+          var blackPaint = newPaint(SolidPaint)
+          blackPaint.color = color(0, 0, 0, 1)
+          blackUnder.fill(blackPaint)
+          blackUnder.draw(childMask, blendMode = MaskBlend)
+          blackUnder.draw(layer, blendMode = SubtractMaskBlend)
+          layer.draw(blackUnder)
+
         drawNode(child)
 
   if node.clipsContent:
