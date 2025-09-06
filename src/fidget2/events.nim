@@ -29,7 +29,7 @@ type
     OnUnfocus
     OnShow
     OnHide
-    OnMouseMove
+    OnMouseMove 
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -579,9 +579,8 @@ proc processEvents() {.measure.} =
     use(currentFigmaUrl)
     thisFrame = find(entryFramePath)
 
-
 proc `imageUrl=`*(paint: schema.Paint, url: string) =
-  when not defined(emscripten):
+  when not defined(emscripten) and not defined(nimdoc):
     if url notin fetchResponses:
       # Request the image.
       fetchRequests[url] = startHttpRequest(url) 
