@@ -105,9 +105,15 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
     # if level != 0 and node.clipsContent:
     #   node.collapse = true
 
-    # Can't draw effects on the GPU.
+    # Can't draw effects on the GPU, except BackgroundBlur.
     if node.effects.len != 0:
-      node.collapse = true
+      var onlyBackgroundBlur = true
+      for e in node.effects:
+        if e.visible and e.kind != BackgroundBlur:
+          onlyBackgroundBlur = false
+          break
+      if not onlyBackgroundBlur:
+        node.collapse = true
 
     if node.willDrawSomething():
 
@@ -188,6 +194,33 @@ proc drawWithAtlas(node: Node) {.measure.} =
     node.blendMode != NormalBlend:
       bxy.pushLayer()
       inc pushedLayers
+
+  # GPU BackgroundBlur: sample lower, blur, mask by this node, then composite.
+  if node.effects.len > 0:
+    var hasBackgroundBlur = false
+    var bgRadius: float32
+    for e in node.effects:
+      if e.visible and e.kind == BackgroundBlur:
+        hasBackgroundBlur = true
+        bgRadius = e.radius
+        break
+    if hasBackgroundBlur:
+      # Create a new layer and copy lower into it.
+      bxy.pushLayer()
+      bxy.copyLowerToCurrent()
+      # Blur the copied layer in place.
+      bxy.blurEffect(bgRadius)
+
+      # Mask the blurred content by the node's transformed rectangle bounds.
+      bxy.pushLayer()
+      bxy.saveTransform()
+      bxy.applyTransform(node.mat)
+      bxy.drawRect(rect(vec2(0, 0), node.size), color(1, 1, 1, 1))
+      bxy.restoreTransform()
+      bxy.popLayer(blendMode = MaskBlend)
+
+      # Composite masked blur over lower.
+      bxy.popLayer()
 
   if node.isSimpleImage:
     let paint = node.fills[0]
