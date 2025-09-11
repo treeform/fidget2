@@ -137,6 +137,10 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
 
   result = newPaint(paintKind)
   result.opacity = paint.opacity
+  if result.kind == SolidPaint:
+    var c = paint.color
+    c.a = c.a * paint.opacity
+    result.color = c
   for handle in paint.gradientHandlePositions:
     result.gradientHandlePositions.add(
       mat * (handle * node.size)
@@ -434,6 +438,25 @@ proc drawText*(node: Node) {.measure.} =
       path.rect(s)
       layer.fillPath(path, node.fills[0].color.rgbx, mat)
 
+  ## Apply fills (solid or gradients) from the node/style to the fonts.
+  block:
+    # Prefer node-level fills; if none, fall back to style fills.
+    var sourceFills: seq[schema.Paint]
+    if node.fills.len > 0:
+      sourceFills = node.fills
+    elif node.style.fills.len > 0:
+      sourceFills = node.style.fills
+
+    if sourceFills.len > 0:
+      for spanIndex in 0 ..< node.arrangement.spans.len:
+        var paints: seq[pixie.Paint]
+        for paint in sourceFills:
+          if not paint.visible or paint.opacity == 0:
+            continue
+          paints.add(paint.toPixiePaint(node))
+        if paints.len > 0:
+          node.arrangement.fonts[spanIndex].paints = paints
+
   ## Fills the text arrangement.
   layer.fillText(node.arrangement, mat)
 
@@ -521,27 +544,35 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
 
   if withChildren:
     if hasMaskedChildren:
-      # Every mask creates its own pair of layer and mask layer.
-      var maskLayers: seq[Image]
-
+      # Render all mask children into images once.
+      var masks: seq[Image]
+      let lw = layer.width
+      let lh = layer.height
       for child in node.children:
         if child.isMask and child.visible:
-          # A mask layer creates a new pair of layer and mask layer.s
           layers.add(layer)
-          layer = newImage(layer.width, layer.height)
+          layer = newImage(lw, lh)
           drawNode(child)
-          maskLayers.add(layer)
-          layer = newImage(layer.width, layer.height)
-        else:
-          # Regular nodes are just drawn into current layer.
-          drawNode(child)
+          masks.add(layer)
+          layer = layers.pop()
 
-      while maskLayers.len > 0:
-        # Pop pair of layer and mask layer and apply them.
-        let maskLayer = maskLayers.pop()
-        layer.draw(maskLayer, blendMode = MaskBlend)
-        layers[^1].draw(layer)
-        layer = layers.pop()
+      # For each non-mask child, render into its own layer, apply masks,
+      # then composite back with the child's blend mode and opacity.
+      for child in node.children:
+        if not child.isMask and child.visible:
+          layers.add(layer)
+          var childLayer = newImage(lw, lh)
+          layer = childLayer
+          drawNode(child)
+          # Apply combined masks to the child layer.
+          for m in masks:
+            childLayer.draw(m, blendMode = MaskBlend)
+          # Apply child opacity if needed.
+          if child.opacity != 1.0:
+            childLayer.applyOpacity(child.opacity)
+          # Restore parent layer and composite with child's blend mode.
+          layer = layers.pop()
+          layer.draw(childLayer, blendMode = child.blendMode)
 
     elif node.kind == BooleanOperationNode:
       discard

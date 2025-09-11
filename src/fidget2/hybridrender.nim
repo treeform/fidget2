@@ -283,7 +283,10 @@ proc drawWithAtlas(node: Node) {.measure.} =
           for mask in masks:
             drawWithAtlas(mask)
           bxy.popLayer(blendMode = MaskBlend)
-          bxy.popLayer()
+          bxy.popLayer(
+            tint = color(1, 1, 1, child.opacity),
+            blendMode = child.blendMode
+          )
 
   if node.clipsContent:
     bxy.pushLayer()
