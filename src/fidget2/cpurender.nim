@@ -568,9 +568,29 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
           drawBackgroundBlur(lowerLayer, effect)
 
     measurePush("lowerLayer.draw")
-    # TODO: Add flag for blend mode.
-    lowerLayer.draw(layer, blendMode = node.blendMode)
-    layer = lowerLayer
+    if node.blendMode in {HueBlend, SoftLightBlend}:
+      # Masked blend on overlap only
+      var overlapMask = lowerLayer.copy()
+      overlapMask.ceil()
+      var srcOver = layer.copy()
+      srcOver.draw(overlapMask, blendMode = MaskBlend)
+      lowerLayer.draw(srcOver, blendMode = node.blendMode)
+
+      # Draw pure black where there is source but no backdrop
+      var srcMask = layer.copy()
+      srcMask.ceil()
+      var nonOverlapMask = overlapMask
+      nonOverlapMask.invert()
+      srcMask.draw(nonOverlapMask, blendMode = MaskBlend)
+      var black = newImage(layer.width, layer.height)
+      black.fill(color(0, 0, 0, 1))
+      black.draw(srcMask, blendMode = MaskBlend)
+      lowerLayer.draw(black)
+      layer = lowerLayer
+    else:
+      # TODO: Add flag for blend mode.
+      lowerLayer.draw(layer, blendMode = node.blendMode)
+      layer = lowerLayer
     measurePop()
 
 proc drawNode*(node: Node, withChildren=true) {.measure.} =
