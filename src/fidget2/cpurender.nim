@@ -578,10 +578,8 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
 
       # Draw pure black where there is source but no backdrop
       var srcMask = layer.copy()
-      srcMask.ceil()
-      var nonOverlapMask = overlapMask
-      nonOverlapMask.invert()
-      srcMask.draw(nonOverlapMask, blendMode = MaskBlend)
+      # Remove overlap from source to keep only non-overlap region
+      srcMask.draw(overlapMask, blendMode = SubtractMaskBlend)
       var black = newImage(layer.width, layer.height)
       black.fill(color(0, 0, 0, 1))
       black.draw(srcMask, blendMode = MaskBlend)
