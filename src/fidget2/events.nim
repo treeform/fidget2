@@ -1,6 +1,6 @@
 import
   std/[algorithm, json, os, strformat, strutils, tables, unicode],
-  bumpy, pixie, vmath, windy,
+  bumpy, pixie, vmath, windy, windy.http,
   common, globs, internal, loader, nodes, perf, schema, textboxes
 
 export textboxes, nodes, common, windy
@@ -29,7 +29,7 @@ type
     OnUnfocus
     OnShow
     OnHide
-    OnMouseMove 
+    OnMouseMove
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -583,7 +583,7 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
   when not defined(emscripten) and not defined(nimdoc):
     if url notin fetchResponses:
       # Request the image.
-      fetchRequests[url] = startHttpRequest(url) 
+      fetchRequests[url] = startHttpRequest(url)
       fetchRequests[url].onResponse = proc(response: HttpResponse) =
         fetchResponses[url] = response
         paint.imageRef = url
@@ -598,7 +598,7 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
         thisFrame.markTreeDirty()
         echo "Image fetched: ", url
       fetchRequests[url].onError = proc(error: string) =
-        echo "Error fetching image: ", error  
+        echo "Error fetching image: ", error
     elif url in fetchResponses:
       # Have the response.
       paint.imageRef = url
