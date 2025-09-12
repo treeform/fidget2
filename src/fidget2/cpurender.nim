@@ -448,6 +448,12 @@ proc drawText*(node: Node) {.measure.} =
       sourceFills = node.style.fills
 
     if sourceFills.len > 0:
+      var hasGradient = false
+      for paint in sourceFills:
+        if paint.kind != schema.PaintKind.pkSolid:
+          hasGradient = true
+          break
+
       for spanIndex in 0 ..< node.arrangement.spans.len:
         var paints: seq[pixie.Paint]
         for paint in sourceFills:
@@ -455,7 +461,9 @@ proc drawText*(node: Node) {.measure.} =
             continue
           paints.add(paint.toPixiePaint(node))
         if paints.len > 0:
-          node.arrangement.fonts[spanIndex].paints = paints
+          let hasSpanPaints = node.arrangement.fonts[spanIndex].paints.len > 0
+          if hasGradient or (not hasSpanPaints):
+            node.arrangement.fonts[spanIndex].paints = paints
 
   ## Fills the text arrangement.
   layer.fillText(node.arrangement, mat)
