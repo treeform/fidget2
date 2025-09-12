@@ -10,9 +10,9 @@ nim	drawGeometry	fidget2/cpurender.html#drawGeometry,Node	proc drawGeometry(node
 nim	drawDropShadowEffect	fidget2/cpurender.html#drawDropShadowEffect,Image,Image,Effect,Node	proc drawDropShadowEffect(lowerLayer: Image; layer: Image; effect: Effect; node: Node)		385
 nim	drawBackgroundBlur	fidget2/cpurender.html#drawBackgroundBlur,Image,Effect	proc drawBackgroundBlur(lowerLayer: Image; effect: Effect)		393
 nim	drawText	fidget2/cpurender.html#drawText,Node	proc drawText(node: Node)		403
-nim	drawNode	fidget2/cpurender.html#drawNode,Node	proc drawNode(node: Node; withChildren = true)		463
-nim	drawBooleanNode	fidget2/cpurender.html#drawBooleanNode,Node,BlendMode	proc drawBooleanNode(node: Node; blendMode: BlendMode)		465
-nim	drawBoolean	fidget2/cpurender.html#drawBoolean,Node	proc drawBoolean(node: Node)		497
-nim	drawNodeInternal	fidget2/cpurender.html#drawNodeInternal,Node	proc drawNodeInternal(node: Node; withChildren = true)		509
-nim	drawCompleteFrame	fidget2/cpurender.html#drawCompleteFrame,Node	proc drawCompleteFrame(node: Node): pixie.Image		620
-nim	setupWindow	fidget2/cpurender.html#setupWindow,Node,IVec2	proc setupWindow(frameNode: Node; size: IVec2; visible = true; style = Decorated)		637
+nim	drawNode	fidget2/cpurender.html#drawNode,Node	proc drawNode(node: Node; withChildren = true)		471
+nim	drawBooleanNode	fidget2/cpurender.html#drawBooleanNode,Node,BlendMode	proc drawBooleanNode(node: Node; blendMode: BlendMode)		473
+nim	drawBoolean	fidget2/cpurender.html#drawBoolean,Node	proc drawBoolean(node: Node)		505
+nim	drawNodeInternal	fidget2/cpurender.html#drawNodeInternal,Node	proc drawNodeInternal(node: Node; withChildren = true)		517
+nim	drawCompleteFrame	fidget2/cpurender.html#drawCompleteFrame,Node	proc drawCompleteFrame(node: Node): pixie.Image		628
+nim	setupWindow	fidget2/cpurender.html#setupWindow,Node,IVec2	proc setupWindow(frameNode: Node; size: IVec2; visible = true; style = Decorated)		645
