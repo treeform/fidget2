@@ -110,7 +110,6 @@ proc assignIdsToTree(node: Node) =
   for c in node.children:
     c.assignIdsToTree()
 
-
 proc copy[T](a: T): T =
   ## Copies a value.
   toFlatty(a).fromFlatty(T)
@@ -341,7 +340,9 @@ proc setVariant*(node: Node, name, value: string) =
 
   if foundNode != nil:
     var currentMaster = foundNode
+    var currentPos = node.position
     triMerge(node, previousMaster, currentMaster)
+    node.position = currentPos
     node.componentId = currentMaster.id
   else:
     var needName = ""
