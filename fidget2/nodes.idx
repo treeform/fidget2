@@ -17,22 +17,22 @@ nim	removeChild	fidget2/nodes.html#removeChild,Node,Node	proc removeChild(parent
 nim	delete	fidget2/nodes.html#delete,Node	proc delete(node: Node)		96
 nim	delete	fidget2/nodes.html#delete,seq[Node]	proc delete(nodes: seq[Node])		99
 nim	removeChildren	fidget2/nodes.html#removeChildren,Node	proc removeChildren(node: Node)		103
-nim	copy	fidget2/nodes.html#copy,Node	proc copy(node: Node): Node		118
-nim	newInstance	fidget2/nodes.html#newInstance,Node	proc newInstance(node: Node): Node		183
-nim	addChild	fidget2/nodes.html#addChild,Node,Node	proc addChild(parent, child: Node)		190
-nim	inTree	fidget2/nodes.html#inTree,Node,Node	proc inTree(node, other: Node): bool		196
-nim	`[]`	fidget2/nodes.html#[],seq[],string	proc `[]`(query: seq[(string, string)]; key: string): string		220
-nim	contains	fidget2/nodes.html#contains,seq[],string	proc contains(query: seq[(string, string)]; key: string): bool		226
-nim	`[]=`	fidget2/nodes.html#[]=,seq[],string,string	proc `[]=`(query: var seq[(string, string)]; key, value: string)		232
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		321
-nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		353
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		358
-nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		365
-nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		378
-nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		385
-nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		390
-nim	remove	fidget2/nodes.html#remove,Node	proc remove(node: Node)		394
+nim	copy	fidget2/nodes.html#copy,Node	proc copy(node: Node): Node		117
+nim	newInstance	fidget2/nodes.html#newInstance,Node	proc newInstance(node: Node): Node		182
+nim	addChild	fidget2/nodes.html#addChild,Node,Node	proc addChild(parent, child: Node)		189
+nim	inTree	fidget2/nodes.html#inTree,Node,Node	proc inTree(node, other: Node): bool		195
+nim	`[]`	fidget2/nodes.html#[],seq[],string	proc `[]`(query: seq[(string, string)]; key: string): string		219
+nim	contains	fidget2/nodes.html#contains,seq[],string	proc contains(query: seq[(string, string)]; key: string): bool		225
+nim	`[]=`	fidget2/nodes.html#[]=,seq[],string,string	proc `[]=`(query: var seq[(string, string)]; key, value: string)		231
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		320
+nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		354
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		359
+nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		366
+nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		379
+nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		386
+nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		391
+nim	remove	fidget2/nodes.html#remove,Node	proc remove(node: Node)		395
 nimgrp	show	fidget2/nodes.html#show-procs-all	proc		56
-nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		321
+nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		320
 nimgrp	delete	fidget2/nodes.html#delete-procs-all	proc		96
 nimgrp	hide	fidget2/nodes.html#hide-procs-all	proc		60
