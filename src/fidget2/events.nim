@@ -54,7 +54,7 @@ var
 
   #requestPool* = newRequestPool(10)
 
-proc display(withEvents=true)
+proc display()
 
 proc showPopup*(name: string) =
   ## Pops up a given node as a popup.
@@ -395,7 +395,7 @@ proc updateWindowSize() =
 proc onResize() =
   ## Handles window resize.
   updateWindowSize()
-  display(withEvents = false)
+  display()
 
 proc takeScreenShot*(): Image =
   ## Takes a screenshot of the current screen.
@@ -626,12 +626,8 @@ proc navigateBack*() =
   thisFrame = navigationHistory.pop()
   thisFrame.markTreeDirty()
 
-proc display(withEvents = true) {.measure.} =
+proc display() {.measure.} =
   ## Called every frame by the main while loop.
-
-  if withEvents:
-    processEvents()
-
   if window.minimized:
     return
 
@@ -644,13 +640,18 @@ proc display(withEvents = true) {.measure.} =
   thisFrame.checkDirty()
   if true or thisFrame.dirty:
     drawToScreen(thisFrame)
-
     swapBuffers()
   else:
     # skip frame
-    sleep(7)
+    when defined(emscripten):
+      # Emscripten needs to return as soon as possible.
+      discard
+    else:
+      # Native needs to sleep to avoid 100% CPU usage.
+      sleep(7)
 
 proc mainLoop() {.cdecl.} =
+  processEvents()
   pollEvents()
   display()
 
@@ -712,8 +713,7 @@ proc startFidget*(
 
   when defined(emscripten):
     # Emscripten can't block so it will call this callback instead.
-    proc emscripten_set_main_loop(f: proc() {.cdecl.}, a: cint, b: bool) {.importc.}
-    emscripten_set_main_loop(mainLoop, 0, true);
+    window.run(mainLoop)
   else:
     # When running native code we can block in an infinite loop.
     while internal.running:
