@@ -24,8 +24,8 @@ nim	getFont	fidget2/internal.html#getFont,TypeStyle,TypeStyle	proc getFont(style
 nim	cursorWidth	fidget2/internal.html#cursorWidth,Font	proc cursorWidth(font: Font): float		257
 nim	selection	fidget2/internal.html#selection,Node	proc selection(node: Node): HSlice[int, int]		261
 nim	computeArrangement	fidget2/internal.html#computeArrangement,Node	proc computeArrangement(node: Node)		297
-nim	font	fidget2/internal.html#font,Node	proc font(node: Node): Font		362
-nim	genTextGeometry	fidget2/internal.html#genTextGeometry,Node	proc genTextGeometry(node: Node)		370
-nim	computeScrollBounds	fidget2/internal.html#computeScrollBounds,Node	proc computeScrollBounds(node: Node): Rect		389
-nim	overlaps	fidget2/internal.html#overlaps,Node,Vec2	proc overlaps(node: Node; mouse: Vec2): bool		399
+nim	font	fidget2/internal.html#font,Node	proc font(node: Node): Font		373
+nim	genTextGeometry	fidget2/internal.html#genTextGeometry,Node	proc genTextGeometry(node: Node)		381
+nim	computeScrollBounds	fidget2/internal.html#computeScrollBounds,Node	proc computeScrollBounds(node: Node): Rect		400
+nim	overlaps	fidget2/internal.html#overlaps,Node,Vec2	proc overlaps(node: Node; mouse: Vec2): bool		410
 nimgrp	getfont	fidget2/internal.html#getFont-procs-all	proc		72

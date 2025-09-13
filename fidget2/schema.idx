@@ -72,26 +72,29 @@ nim	PixelUnit	fidget2/schema.html#PixelUnit	LineHeightUnit.PixelUnit		121
 nim	FontSizePercentUnit	fidget2/schema.html#FontSizePercentUnit	LineHeightUnit.FontSizePercentUnit		121
 nim	IntrinsicPercentUnit	fidget2/schema.html#IntrinsicPercentUnit	LineHeightUnit.IntrinsicPercentUnit		121
 nim	LineHeightUnit	fidget2/schema.html#LineHeightUnit	enum LineHeightUnit		121
-nim	TypeStyle	fidget2/schema.html#TypeStyle	type TypeStyle		126
-nim	Geometry	fidget2/schema.html#Geometry	object Geometry		147
-nim	UnionOperation	fidget2/schema.html#UnionOperation	BooleanOperation.UnionOperation		156
-nim	SubtractOperation	fidget2/schema.html#SubtractOperation	BooleanOperation.SubtractOperation		156
-nim	IntersectOperation	fidget2/schema.html#IntersectOperation	BooleanOperation.IntersectOperation		156
-nim	ExcludeOperation	fidget2/schema.html#ExcludeOperation	BooleanOperation.ExcludeOperation		156
-nim	BooleanOperation	fidget2/schema.html#BooleanOperation	enum BooleanOperation		156
-nim	InsideStroke	fidget2/schema.html#InsideStroke	StrokeAlign.InsideStroke		162
-nim	OutsideStroke	fidget2/schema.html#OutsideStroke	StrokeAlign.OutsideStroke		162
-nim	CenterStroke	fidget2/schema.html#CenterStroke	StrokeAlign.CenterStroke		162
-nim	StrokeAlign	fidget2/schema.html#StrokeAlign	enum StrokeAlign		162
-nim	AutoAxis	fidget2/schema.html#AutoAxis	AxisSizingMode.AutoAxis		167
-nim	FixedAxis	fidget2/schema.html#FixedAxis	AxisSizingMode.FixedAxis		167
-nim	AxisSizingMode	fidget2/schema.html#AxisSizingMode	enum AxisSizingMode		167
-nim	NoScrolling	fidget2/schema.html#NoScrolling	OverflowDirection.NoScrolling		171
-nim	HorizontalScrolling	fidget2/schema.html#HorizontalScrolling	OverflowDirection.HorizontalScrolling		171
-nim	VerticalScrolling	fidget2/schema.html#VerticalScrolling	OverflowDirection.VerticalScrolling		171
-nim	HorizontalAndVerticalScrolling	fidget2/schema.html#HorizontalAndVerticalScrolling	OverflowDirection.HorizontalAndVerticalScrolling		171
-nim	OverflowDirection	fidget2/schema.html#OverflowDirection	enum OverflowDirection		171
-nim	Node	fidget2/schema.html#Node	type Node		177
-nim	FigmaFile	fidget2/schema.html#FigmaFile	type FigmaFile		266
-nim	`$`	fidget2/schema.html#$,Node	proc `$`(node: Node): string		276
-nim	parseFigmaFile	fidget2/schema.html#parseFigmaFile,string	proc parseFigmaFile(data: string): FigmaFile		675
+nim	NoLeadingTrim	fidget2/schema.html#NoLeadingTrim	LeadingTrim.NoLeadingTrim		126
+nim	CapHeight	fidget2/schema.html#CapHeight	LeadingTrim.CapHeight		126
+nim	LeadingTrim	fidget2/schema.html#LeadingTrim	enum LeadingTrim		126
+nim	TypeStyle	fidget2/schema.html#TypeStyle	type TypeStyle		130
+nim	Geometry	fidget2/schema.html#Geometry	object Geometry		152
+nim	UnionOperation	fidget2/schema.html#UnionOperation	BooleanOperation.UnionOperation		161
+nim	SubtractOperation	fidget2/schema.html#SubtractOperation	BooleanOperation.SubtractOperation		161
+nim	IntersectOperation	fidget2/schema.html#IntersectOperation	BooleanOperation.IntersectOperation		161
+nim	ExcludeOperation	fidget2/schema.html#ExcludeOperation	BooleanOperation.ExcludeOperation		161
+nim	BooleanOperation	fidget2/schema.html#BooleanOperation	enum BooleanOperation		161
+nim	InsideStroke	fidget2/schema.html#InsideStroke	StrokeAlign.InsideStroke		167
+nim	OutsideStroke	fidget2/schema.html#OutsideStroke	StrokeAlign.OutsideStroke		167
+nim	CenterStroke	fidget2/schema.html#CenterStroke	StrokeAlign.CenterStroke		167
+nim	StrokeAlign	fidget2/schema.html#StrokeAlign	enum StrokeAlign		167
+nim	AutoAxis	fidget2/schema.html#AutoAxis	AxisSizingMode.AutoAxis		172
+nim	FixedAxis	fidget2/schema.html#FixedAxis	AxisSizingMode.FixedAxis		172
+nim	AxisSizingMode	fidget2/schema.html#AxisSizingMode	enum AxisSizingMode		172
+nim	NoScrolling	fidget2/schema.html#NoScrolling	OverflowDirection.NoScrolling		176
+nim	HorizontalScrolling	fidget2/schema.html#HorizontalScrolling	OverflowDirection.HorizontalScrolling		176
+nim	VerticalScrolling	fidget2/schema.html#VerticalScrolling	OverflowDirection.VerticalScrolling		176
+nim	HorizontalAndVerticalScrolling	fidget2/schema.html#HorizontalAndVerticalScrolling	OverflowDirection.HorizontalAndVerticalScrolling		176
+nim	OverflowDirection	fidget2/schema.html#OverflowDirection	enum OverflowDirection		176
+nim	Node	fidget2/schema.html#Node	type Node		182
+nim	FigmaFile	fidget2/schema.html#FigmaFile	type FigmaFile		271
+nim	`$`	fidget2/schema.html#$,Node	proc `$`(node: Node): string		281
+nim	parseFigmaFile	fidget2/schema.html#parseFigmaFile,string	proc parseFigmaFile(data: string): FigmaFile		685
