@@ -359,6 +359,17 @@ proc computeArrangement*(node: Node) {.measure.} =
     vAlign = node.style.textAlignVertical,
   )
 
+  if node.style.leadingTrim == CapHeight:
+    # Apply leading trim to the arrangement.
+    let
+      font = node.spans[0].font
+      ascent = font.typeface.ascent
+      capHeight = font.typeface.capHeight
+      leadingTrim = (ascent - capHeight) * font.scale()
+    for i in 0 ..< node.arrangement.positions.len:
+      node.arrangement.positions[i].y -= leadingTrim
+      node.arrangement.selectionRects[i].y -= leadingTrim
+
 proc font*(node: Node): Font =
   ## Gets the font of a node.
   node.computeArrangement()

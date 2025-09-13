@@ -123,6 +123,10 @@ type
     FontSizePercentUnit
     IntrinsicPercentUnit
 
+  LeadingTrim* = enum
+    NoLeadingTrim
+    CapHeight
+
   TypeStyle* = ref object
     fontFamily*: string
     fontPostScriptName*: string
@@ -143,6 +147,7 @@ type
     lineHeightPercentFontSize*: float32
     lineHeightUnit*: Option[LineHeightUnit]
     opentypeFlags*: OpenTypeFlags
+    leadingTrim*: LeadingTrim
 
   Geometry* = object
     path*: Path
@@ -412,6 +417,12 @@ proc enumHook(s: string, v: var LineHeightUnit) =
     of "INTRINSIC_%": IntrinsicPercentUnit
     else: raise newException(FidgetError, "Invalid text line height unit:" & s)
 
+proc enumHook(s: string, v: var LeadingTrim) =
+  v = case s:
+    of "NONE": NoLeadingTrim
+    of "CAP_HEIGHT": CapHeight
+    else: raise newException(FidgetError, "Invalid leading trim:" & s)
+
 proc enumHook(s: string, v: var StrokeAlign) =
   v = case s:
     of "INSIDE": InsideStroke
@@ -491,7 +502,6 @@ proc enumHook(s: string, v: var OverflowDirection) =
     of "VERTICAL_SCROLLING": VerticalScrolling
     of "HORIZONTAL_AND_VERTICAL_SCROLLING": HorizontalAndVerticalScrolling
     else: raise newException(FidgetError, "Invalid overflow direction:" & s)
-
 
 proc parseHook(s: string, i: var int, v: var float32) =
   if i + 3 < s.len and s[i+0] == 'n' and s[i+1] == 'u' and s[i+2] == 'l' and s[i+3] == 'l':
