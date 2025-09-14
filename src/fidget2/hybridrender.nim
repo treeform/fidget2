@@ -136,7 +136,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
         let prevBoundsMat = mat
         mat = translate(-node.pixelBox.xy) * mat
         node.drawNodeInternal(withChildren=node.collapse)
-        bxy.addImage(node.id, layer, genMipmaps=false)
+        bxy.addImage(node.id, layer)
         mat = prevBoundsMat
 
       if node.clipsContent:
@@ -147,7 +147,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
         var mask = node.maskSelfImage()
         layer.draw(mask, blendMode = MaskBlend)
 
-        bxy.addImage(node.id & ".mask", layer, genMipmaps=false)
+        bxy.addImage(node.id & ".mask", layer)
         mat = prevBoundsMat
     else:
       bxy.removeImage(node.id)
@@ -379,7 +379,7 @@ proc setupWindow*(
   echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
 
   # Setup bxy
-  bxy = newBoxy()
+  bxy = newBoxy(atlasSize = 1024*8)
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Reads the GPU pixels from the screen.
@@ -409,7 +409,7 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       mat = scale(vec2(s, s))
       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
       node.drawNodeInternal(withChildren=true)
-      bxy.addImage(node.frozenId, layer, genMipmaps=true)
+      bxy.addImage(node.frozenId, layer)
   else:
     echo "Warning: Freezing non instance: ", node.path
     node.frozen = true
@@ -418,7 +418,7 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       mat = scale(vec2(s, s))
       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
       node.drawNodeInternal(withChildren=true)
-      bxy.addImage(node.frozenId, layer, genMipmaps=true)
+      bxy.addImage(node.frozenId, layer)
 
 deleteNodeHook = proc(node: Node) =
   ## Hook to delete a node from the atlas.
