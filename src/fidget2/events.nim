@@ -30,6 +30,7 @@ type
     OnShow
     OnHide
     OnMouseMove
+    OnLoad
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -124,6 +125,16 @@ template find*(glob: string, body: untyped) =
 proc focused*(node: Node): bool =
   ## Checks if a node is focused.
   node == textBoxFocus
+
+template onLoad*(body: untyped) =
+  ## Called when the node is loaded.
+  addCb(
+    OnLoad,
+    0,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
 
 template onFrame*(body: untyped) =
   ## Called once for each frame drawn.
@@ -470,6 +481,9 @@ proc processEvents() {.measure.} =
     thisCb = cb
 
     case cb.kind:
+    of OnLoad:
+      discard
+
     of OnShow:
       for node in findAll(thisCb.glob):
         if node.inTree(thisFrame):
@@ -711,9 +725,15 @@ proc startFidget*(
 
   redisplay = true
 
+  # All all onLoad callbacks.
+  for cb in eventCbs:
+    if cb.kind == OnLoad:
+      thisSelector = cb.glob
+      cb.handler(thisFrame)
+
   when defined(emscripten):
     # Emscripten can't block so it will call this callback instead.
-    window.run(mainLoop)
+    window. run(mainLoop)
   else:
     # When running native code we can block in an infinite loop.
     while internal.running:

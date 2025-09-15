@@ -93,12 +93,12 @@ proc removeChild*(parent, node: Node) =
       deleteNodeHook(node)
       return
 
-proc delete*(node: Node) =
+proc remove*(node: Node) =
   node.parent.removeChild(node)
 
-proc delete*(nodes: seq[Node]) =
+proc remove*(nodes: seq[Node]) =
   for node in toSeq(nodes):
-    node.delete()
+    node.remove()
 
 proc removeChildren*(node: Node) =
   for child in toSeq(node.children):
@@ -391,7 +391,3 @@ proc isInstance*(node: Node): bool =
 proc masterComponent*(node: Node): Node =
   ## Gets the master component if this is an instance and it exists.
   findNodeById(node.componentId)
-
-proc remove*(node: Node) =
-  ## Removes the node from the document.
-  node.parent.removeChild(node)
