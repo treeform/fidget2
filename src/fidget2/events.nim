@@ -18,22 +18,48 @@ type
     onUnfocusNode*: Node
 
   EventCbKind* = enum
+    ## When user clicks on a node.
     OnClick
+    ## When user clicks outside a node.
     OnClickOutside
+    ## When user right-clicks on a node.
     OnRightClick
-    OnAnyClick
-    OnFrame
-    OnEdit
-    OnDisplay
-    OnFocus
-    OnUnfocus
-    OnShow
-    OnHide
+    ## When the mouse moves over a node.
     OnMouseMove
+    ## When the node is loaded.
+    ## Called only once per node.
     OnLoad
+    ## Called once per frame.
+    ## NOTE: Can caused performance issues if overused.
+    OnFrame
+    ## When a node is displayed.
+    ## NOTE: Can caused performance issues if overused.
+    OnDisplay
+    ## When a text node is edited.
+    OnEdit
+    ## When a text node is focused.
+    OnFocus
+    ## When a text node is unfocused.
+    OnUnfocus
+    ## When a node is shown, `thisNode.visible` is true.
+    OnShow
+    ## When a node is hidden, `thisNode.visible` is false.
+    OnHide
+    ## When a button is pressed, includes mouse buttons and keyboard buttons.
     OnButtonPress
+    ## When a button is released, includes mouse buttons and keyboard buttons.
     OnButtonRelease
+    ## When the `thisNode.size` changes.
     OnResize
+    ## When user starts dragging a node.
+    ## `dragNode` is the node that is being dragged.
+    OnDrag
+    ## When user stops dragging a node called on the node that is being dragged.
+    ## `dragNode` is the node that was stopped dragging.
+    OnDragEnd
+    ## When user drops a node, called on the node that is below the node that is being dragged.
+    ## `dropNode` is the node that was dropped.
+    OnDrop
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -538,6 +564,7 @@ proc processEvents() {.measure.} =
 
     case cb.kind:
     of OnLoad:
+      # Handled in during startFidget phase.
       discard
 
     of OnShow:
@@ -591,19 +618,12 @@ proc processEvents() {.measure.} =
         if node.inTree(thisFrame):
           thisCb.handler(node)
 
-    of OnEdit:
-      discard
-
-    of OnFocus:
-      discard
-
-    of OnUnfocus:
-      discard
-
-    of OnAnyClick:
+    of OnEdit, OnFocus, OnUnfocus:
+      # Handled in text box keyboard action.
       discard
 
     of OnButtonPress, OnButtonRelease:
+      # Handled in the onButtonPress and onButtonRelease callbacks.
       discard
 
     of OnResize:
@@ -613,6 +633,10 @@ proc processEvents() {.measure.} =
             onResizeCache[node.path] != node.size:
               onResizeCache[node.path] = node.size
               thisCb.handler(node)
+
+    of OnDrag, OnDragEnd, OnDrop:
+      # TODO: implement.
+      discard
 
   # Check if clicks on editable nodes.
   if window.buttonPressed[MouseLeft]:
