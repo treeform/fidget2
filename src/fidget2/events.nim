@@ -5,6 +5,11 @@ import
 
 export textboxes, nodes, common, windy
 
+const
+  ## After N pixels of mouse button down and dragging,
+  ## having onDrag event handler,
+  ## the node is considered to be dragged.
+  DragThreshold = 5.0
 
 when defined(cpu):
   import cpurender
@@ -36,6 +41,7 @@ type
     ## NOTE: Can caused performance issues if overused.
     OnDisplay
     ## When a text node is edited.
+    ## Only text nodes with this event can be edited.
     OnEdit
     ## When a text node is focused.
     OnFocus
@@ -52,12 +58,18 @@ type
     ## When the `thisNode.size` changes.
     OnResize
     ## When user starts dragging a node.
+    ## Only nodes with this event can be dragged.
     ## `dragNode` is the node that is being dragged.
+    OnDragStart
+    ## When user is dragging a node.
+    ## `dragNode` is the node that is being dragged.
+    ## Similar to OnMouseMove, but only called on the node that is being dragged.
     OnDrag
     ## When user stops dragging a node called on the node that is being dragged.
     ## `dragNode` is the node that was stopped dragging.
     OnDragEnd
     ## When user drops a node, called on the node that is below the node that is being dragged.
+    ## Only nodes with this event can be dropped to.
     ## `dropNode` is the node that was dropped.
     OnDrop
 
@@ -76,6 +88,9 @@ var
   keyboard* = Keyboard()
 
   thisFrame*: Node
+  dragNode*: Node
+  dragCandidate*: Node
+  dragCandidatePos*: Vec2
   thisCb*: EventCb
   thisSelector*: string
   thisButton*: Button
@@ -384,7 +399,7 @@ proc textBoxKeyboardAction(button: Button) =
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
-    
+
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
       textBoxFocus.makeTextDirty()
@@ -400,7 +415,7 @@ proc onRune(rune: Rune) =
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
-    
+
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
       textBoxFocus.makeTextDirty()
@@ -429,17 +444,6 @@ proc onScroll() =
         continue
 
       break
-
-proc simulateClick*(glob: string) =
-  ## Simulates a mouse click on a node.
-  ## Used mainly for writing tests.
-  for cb in eventCbs:
-    if cb.kind == OnClick:
-      thisCb = cb
-      thisSelector = thisCb.glob
-      if cb.glob == glob:
-        for node in findAll(cb.glob):
-          cb.handler(node)
 
 template onEdit*(body: untyped) =
   ## When a text node is edited.
@@ -471,6 +475,57 @@ template onFocus*(body: untyped) =
     proc(thisNode {.inject.}: Node) =
       body
   )
+
+template onDragStart*(body: untyped) =
+  ## When a node is dragged.
+  addCb(
+    OnDragStart,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onDrag*(body: untyped) =
+  ## When a node is dragged.
+  addCb(
+    OnDrag,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onDragEnd*(body: untyped) =
+  ## When a node is dragged.
+  addCb(
+    OnDragEnd,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onDrop*(body: untyped) =
+  ## When a node is dropped.
+  addCb(
+    OnDrop,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+proc simulateClick*(glob: string) =
+  ## Simulates a mouse click on a node.
+  ## Used mainly for writing tests.
+  for cb in eventCbs:
+    if cb.kind == OnClick:
+      thisCb = cb
+      thisSelector = thisCb.glob
+      if cb.glob == glob:
+        for node in findAll(cb.glob):
+          cb.handler(node)
 
 proc updateWindowSize() =
   ## Handles window resize.
@@ -634,7 +689,38 @@ proc processEvents() {.measure.} =
               onResizeCache[node.path] = node.size
               thisCb.handler(node)
 
-    of OnDrag, OnDragEnd, OnDrop:
+    of OnDragStart:
+      if dragNode == nil and window.buttonDown[MouseLeft]:
+        for node in findAll(thisCb.glob):
+          if node.inTree(thisFrame):
+            # Second: If mouse moved enough, we set the drag node and call the handler.
+            if dragCandidate != nil:
+              let dragDistance = window.mousePos.vec2 - dragCandidatePos
+              if dragDistance.length > DragThreshold:
+                dragNode = dragCandidate
+                thisCb.handler(dragNode)
+                dragCandidate = nil
+            # First: we get a candidate drag node, but it's not the drag node yet.
+            if window.buttonPressed[MouseLeft] and node in underMouseNodes:
+              dragCandidate = node
+              dragCandidatePos = window.mousePos.vec2
+      if dragCandidate != nil and not window.buttonDown[MouseLeft]:
+        dragCandidate = nil
+
+    of OnDrag:
+      if dragNode != nil:
+        for node in findAll(thisCb.glob):
+          if node.inTree(thisFrame) and node == dragNode:
+            thisCb.handler(node)
+
+    of OnDragEnd:
+      if dragNode != nil and window.buttonReleased[MouseLeft]:
+        for node in findAll(thisCb.glob):
+          if node.inTree(thisFrame) and node == dragNode:
+            thisCb.handler(node)
+        dragNode = nil
+
+    of OnDrop:
       # TODO: implement.
       discard
 
@@ -730,6 +816,13 @@ proc navigateBack*() =
     return
   thisFrame = navigationHistory.pop()
   thisFrame.markTreeDirty()
+
+proc absolutePosition*(node: Node): Vec2 =
+  ## Gets the absolute position of the node.
+  ## TODO: Take transform and rotation into account.
+  if node.parent == nil or thisFrame == node:
+    return vec2(0, 0)
+  return node.parent.absolutePosition + node.position
 
 proc display() {.measure.} =
   ## Called every frame by the main while loop.
@@ -874,12 +967,12 @@ proc initFidget*(
 
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
-  
+
   setupWindowAndEvents(
     windowTitle = windowTitle,
     windowStyle = windowStyle
   )
-   
+
 proc startFidget*(
   figmaUrl: string,
   windowTitle: string,
@@ -895,7 +988,7 @@ proc startFidget*(
     dataDir = dataDir
   )
   runMainLoop()
-  
+
 proc startFidget*(
   figmaFile: FigmaFile,
   windowTitle: string,
@@ -905,17 +998,17 @@ proc startFidget*(
 ) =
   ## Starts fidget with a manually created FigmaFile instead of loading from URL.
   ## This allows you to create UIs purely in code without needing Figma files.
-  
+
   # Set up the global figmaFile
   loader.figmaFile = figmaFile
   common.dataDir = dataDir
-  
+
   # Set up entry frame
   entryFramePath = entryFrame
   thisFrame = find(entryFramePath)
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
-  
+
   setupWindowAndEvents(
     windowTitle = windowTitle,
     windowStyle = windowStyle

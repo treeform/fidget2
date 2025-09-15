@@ -29,40 +29,7 @@ var
   panelHeaderTemplate: Node
   panelTemplate: Node
   rootArea: Area
-
-proc findPanelByHeader*(node: Node): Panel =
-  ## Finds the panel that contains the given header node.
-  proc visit(area: Area, node: Node): Panel =
-    for panel in area.panels:
-      if panel.header == node:
-        return panel
-    for subarea in area.areas:
-      let panel = visit(subarea, node)
-      if panel != nil:
-        return panel
-    return nil
-  return visit(rootArea, node)
-
-proc addPanel*(area: Area, name: string) =
-  let panel = Panel(name: name)
-  panel.header = panelHeaderTemplate.copy()
-  panel.header.find("title").text = name
-  panel.node = panelTemplate.copy()
-  area.panels.add(panel)
-  panel.parentArea = area
-  area.node.find("Header").addChild(panel.header)
-  area.node.addChild(panel.node)
-
-proc split*(area: Area, layout: AreaLayout) =
-  let
-    area1 = Area(node: areaTemplate.copy())
-    area2 = Area(node: areaTemplate.copy())
-  area.layout = layout
-  area.split = 0.5
-  area.areas.add(area1)
-  area.areas.add(area2)
-  area.node.addChild(area1.node)
-  area.node.addChild(area2.node)
+  dropHighlight: Node
 
 proc clear*(area: Area) =
   ## Clears the area and all its subareas and panels.
@@ -129,6 +96,52 @@ proc refresh*(area: Area) =
       else:
         panel.header.setVariant("State", "Selected")
 
+proc findPanelByHeader*(node: Node): Panel =
+  ## Finds the panel that contains the given header node.
+  proc visit(area: Area, node: Node): Panel =
+    for panel in area.panels:
+      if panel.header == node:
+        return panel
+    for subarea in area.areas:
+      let panel = visit(subarea, node)
+      if panel != nil:
+        return panel
+    return nil
+  return visit(rootArea, node)
+
+proc addPanel*(area: Area, name: string) =
+  ## Adds a panel to the given area.
+  let panel = Panel(name: name)
+  panel.header = panelHeaderTemplate.copy()
+  panel.header.find("title").text = name
+  panel.node = panelTemplate.copy()
+  area.panels.add(panel)
+  panel.parentArea = area
+  area.node.find("Header").addChild(panel.header)
+  area.node.addChild(panel.node)
+
+proc movePanel*(area: Area, panel: Panel) =
+  ## Moves the panel to the given area.
+  panel.parentArea.panels.delete(panel.parentArea.panels.find(panel))
+  area.panels.add(panel)
+  panel.parentArea = area
+  area.node.find("Header").addChild(panel.header)
+  area.node.addChild(panel.node)
+  area.refresh()
+
+proc split*(area: Area, layout: AreaLayout) =
+  ## Splits the area into two subareas.
+  let
+    area1 = Area(node: areaTemplate.copy())
+    area2 = Area(node: areaTemplate.copy())
+  area.layout = layout
+  area.split = 0.5
+  area.areas.add(area1)
+  area.areas.add(area2)
+  area.node.addChild(area1.node)
+  area.node.addChild(area2.node)
+  area.refresh()
+
 find "/UI/Main":
   onLoad:
     echo "onLoad"
@@ -152,8 +165,8 @@ find "/UI/Main":
     rootArea.split(Vertical)
     rootArea.split = 0.20
 
-    rootArea.areas[0].addPanel("Panel 1")
-    rootArea.areas[0].addPanel("Panel 2")
+    rootArea.areas[0].addPanel("Super Panel 1")
+    rootArea.areas[0].addPanel("Cool Panel 2")
 
     # rootArea.areas[1].addPanel("Panel 3")
     # rootArea.areas[1].addPanel("Panel 4")
@@ -162,15 +175,22 @@ find "/UI/Main":
     rootArea.areas[1].split(Horizontal)
     rootArea.areas[1].split = 0.5
 
-    rootArea.areas[1].areas[0].addPanel("Panel 3")
-    rootArea.areas[1].areas[0].addPanel("Panel 4")
+    rootArea.areas[1].areas[0].addPanel("Nice Panel 3")
+    rootArea.areas[1].areas[0].addPanel("The Other Panel 4")
     rootArea.areas[1].areas[0].addPanel("Panel 5")
 
-    rootArea.areas[1].areas[1].addPanel("Panel 6")
-    rootArea.areas[1].areas[1].addPanel("Panel 7")
-    rootArea.areas[1].areas[1].addPanel("Panel 8")
+    rootArea.areas[1].areas[1].addPanel("World classPanel 6")
+    rootArea.areas[1].areas[1].addPanel("FUN Panel 7")
+    rootArea.areas[1].areas[1].addPanel("Amazing Panel 8")
 
     rootArea.refresh()
+
+    dropHighlight = find("/UI/DropHighlight")
+    dropHighlight.remove()
+    dropHighlight.position = vec2(100, 100)
+    dropHighlight.size = vec2(500, 500)
+    dropHighlight.visible = false
+    thisNode.addChild(dropHighlight)
 
   onResize:
     echo "onResize"
@@ -216,6 +236,50 @@ find "/UI/Main":
         panel.parentArea.selectedPanelNum = thisNode.childIndex
         echo "Selected panel: ", panel.parentArea.selectedPanelNum
         panel.parentArea.refresh()
+
+    onDragStart:
+      echo "onDragStart: ", thisNode.path
+      dropHighlight.visible = true
+
+    onDrag:
+      echo "onDrag: ", thisNode.path
+
+      # Go through all areas and panels and check if the mouse is over them.
+      let percentMousePos = window.mousePos.vec2 / thisFrame.size.vec2 * 100
+      var overArea: Area
+      proc visit(area: Area) =
+        if percentMousePos.overlaps(area.rect):
+          if area.areas.len > 0:
+            for subarea in area.areas:
+              visit(subarea)
+          else:
+            overArea = area
+      visit(rootArea)
+
+      if overArea != nil:
+        dropHighlight.position = overArea.node.absolutePosition
+        dropHighlight.size = overArea.node.size
+
+    onDragEnd:
+      echo "onDragEnd: ", thisNode.path
+      dropHighlight.visible = false
+
+      # Go through all areas and panels and check if the mouse is over them.
+      let percentMousePos = window.mousePos.vec2 / thisFrame.size.vec2 * 100
+      var overArea: Area
+      proc visit(area: Area) =
+        if percentMousePos.overlaps(area.rect):
+          if area.areas.len > 0:
+            for subarea in area.areas:
+              visit(subarea)
+          else:
+            overArea = area
+      visit(rootArea)
+
+      if overArea != nil:
+        let panel = findPanelByHeader(thisNode)
+        if panel != nil:
+          overArea.movePanel(panel)
 
 startFidget(
   figmaUrl = "https://www.figma.com/design/CvLIH2hh6B6V3rgxNV2gMD",

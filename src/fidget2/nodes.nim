@@ -199,6 +199,10 @@ proc newInstance*(node: Node): Node =
 
 proc addChild*(parent, child: Node) =
   ## Adds a child to a parent node.
+  if child.parent != nil:
+    child.parent.children.delete(child.parent.children.find(child))
+    child.parent.markTreeDirty()
+    child.parent = nil
   parent.children.add(child)
   child.parent = parent
   parent.markTreeDirty()
