@@ -13,40 +13,47 @@ nim	OnShow	fidget2/events.html#OnShow	EventCbKind.OnShow		20
 nim	OnHide	fidget2/events.html#OnHide	EventCbKind.OnHide		20
 nim	OnMouseMove	fidget2/events.html#OnMouseMove	EventCbKind.OnMouseMove		20
 nim	OnLoad	fidget2/events.html#OnLoad	EventCbKind.OnLoad		20
+nim	OnButtonPress	fidget2/events.html#OnButtonPress	EventCbKind.OnButtonPress		20
+nim	OnButtonRelease	fidget2/events.html#OnButtonRelease	EventCbKind.OnButtonRelease		20
+nim	OnResize	fidget2/events.html#OnResize	EventCbKind.OnResize		20
 nim	EventCbKind	fidget2/events.html#EventCbKind	enum EventCbKind		20
-nim	EventCb	fidget2/events.html#EventCb	type EventCb		35
-nim	requestedFrame	fidget2/events.html#requestedFrame	var requestedFrame		44
-nim	redisplay	fidget2/events.html#redisplay	var redisplay		45
-nim	keyboard	fidget2/events.html#keyboard_2	var keyboard		47
-nim	thisFrame	fidget2/events.html#thisFrame	var thisFrame		49
-nim	thisCb	fidget2/events.html#thisCb	var thisCb		50
-nim	thisSelector	fidget2/events.html#thisSelector	var thisSelector		51
-nim	navigationHistory	fidget2/events.html#navigationHistory	var navigationHistory		54
-nim	showPopup	fidget2/events.html#showPopup,string	proc showPopup(name: string)		60
-nim	addCb	fidget2/events.html#addCb,EventCbKind,int,string,proc(Node)	proc addCb(kind: EventCbKind; priority: int; glob: string;\n      handler: proc (thisNode: Node))		65
-nim	find	fidget2/events.html#find,string	proc find(glob: string): Node		79
-nim	findAll	fidget2/events.html#findAll,string	proc findAll(glob: string): seq[Node]		90
-nim	find	fidget2/events.html#find.t,string,untyped	template find(glob: string; body: untyped)		116
-nim	focused	fidget2/events.html#focused,Node	proc focused(node: Node): bool		125
-nim	onLoad	fidget2/events.html#onLoad.t,untyped	template onLoad(body: untyped)		129
-nim	onFrame	fidget2/events.html#onFrame.t,untyped	template onFrame(body: untyped)		139
-nim	onDisplay	fidget2/events.html#onDisplay.t,untyped	template onDisplay(body: untyped)		149
-nim	onShow	fidget2/events.html#onShow.t,untyped	template onShow(body: untyped)		159
-nim	onHide	fidget2/events.html#onHide.t,untyped	template onHide(body: untyped)		169
-nim	onClick	fidget2/events.html#onClick.t,untyped	template onClick(body: untyped)		179
-nim	onRightClick	fidget2/events.html#onRightClick.t,untyped	template onRightClick(body: untyped)		189
-nim	onClickOutside	fidget2/events.html#onClickOutside.t,untyped	template onClickOutside(body: untyped)		199
-nim	onMouseMove	fidget2/events.html#onMouseMove.t,untyped	template onMouseMove(body: untyped)		209
-nim	relativeMousePos	fidget2/events.html#relativeMousePos,Window,Node	proc relativeMousePos(window: Window; node: Node): Vec2		236
-nim	simulateClick	fidget2/events.html#simulateClick,string	proc simulateClick(glob: string)		359
-nim	onEdit	fidget2/events.html#onEdit.t,untyped	template onEdit(body: untyped)		370
-nim	onUnfocus	fidget2/events.html#onUnfocus.t,untyped	template onUnfocus(body: untyped)		381
-nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped)		391
-nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		411
-nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		416
-nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		421
-nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		596
-nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		623
-nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		627
-nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		636
-nim	startFidget	fidget2/events.html#startFidget,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable)		678
+nim	EventCb	fidget2/events.html#EventCb	type EventCb		38
+nim	requestedFrame	fidget2/events.html#requestedFrame	var requestedFrame		47
+nim	redisplay	fidget2/events.html#redisplay	var redisplay		48
+nim	keyboard	fidget2/events.html#keyboard_2	var keyboard		50
+nim	thisFrame	fidget2/events.html#thisFrame	var thisFrame		52
+nim	thisCb	fidget2/events.html#thisCb	var thisCb		53
+nim	thisSelector	fidget2/events.html#thisSelector	var thisSelector		54
+nim	thisButton	fidget2/events.html#thisButton	var thisButton		55
+nim	navigationHistory	fidget2/events.html#navigationHistory	var navigationHistory		59
+nim	showPopup	fidget2/events.html#showPopup,string	proc showPopup(name: string)		67
+nim	addCb	fidget2/events.html#addCb,EventCbKind,int,string,proc(Node)	proc addCb(kind: EventCbKind; priority: int; glob: string;\n      handler: proc (thisNode: Node))		72
+nim	find	fidget2/events.html#find,string	proc find(glob: string): Node		86
+nim	findAll	fidget2/events.html#findAll,string	proc findAll(glob: string): seq[Node]		97
+nim	find	fidget2/events.html#find.t,string,untyped	template find(glob: string; body: untyped)		123
+nim	focused	fidget2/events.html#focused,Node	proc focused(node: Node): bool		132
+nim	onLoad	fidget2/events.html#onLoad.t,untyped	template onLoad(body: untyped)		136
+nim	onFrame	fidget2/events.html#onFrame.t,untyped	template onFrame(body: untyped)		146
+nim	onDisplay	fidget2/events.html#onDisplay.t,untyped	template onDisplay(body: untyped)		156
+nim	onShow	fidget2/events.html#onShow.t,untyped	template onShow(body: untyped)		166
+nim	onHide	fidget2/events.html#onHide.t,untyped	template onHide(body: untyped)		176
+nim	onClick	fidget2/events.html#onClick.t,untyped	template onClick(body: untyped)		186
+nim	onRightClick	fidget2/events.html#onRightClick.t,untyped	template onRightClick(body: untyped)		196
+nim	onClickOutside	fidget2/events.html#onClickOutside.t,untyped	template onClickOutside(body: untyped)		206
+nim	onMouseMove	fidget2/events.html#onMouseMove.t,untyped	template onMouseMove(body: untyped)		216
+nim	onButtonPress	fidget2/events.html#onButtonPress.t,untyped	template onButtonPress(body: untyped)		226
+nim	onButtonRelease	fidget2/events.html#onButtonRelease.t,untyped	template onButtonRelease(body: untyped)		236
+nim	onResize	fidget2/events.html#onResize.t,untyped	template onResize(body: untyped)		246
+nim	relativeMousePos	fidget2/events.html#relativeMousePos,Window,Node	proc relativeMousePos(window: Window; node: Node): Vec2		273
+nim	simulateClick	fidget2/events.html#simulateClick,string	proc simulateClick(glob: string)		396
+nim	onEdit	fidget2/events.html#onEdit.t,untyped	template onEdit(body: untyped)		407
+nim	onUnfocus	fidget2/events.html#onUnfocus.t,untyped	template onUnfocus(body: untyped)		418
+nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped)		428
+nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		448
+nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		453
+nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		458
+nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		649
+nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		676
+nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		680
+nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		689
+nim	startFidget	fidget2/events.html#startFidget,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable)		731
