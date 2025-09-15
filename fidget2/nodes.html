@@ -91,11 +91,6 @@
   <li><a class="reference" href="#copy%2CNode" title="copy(node: Node): Node">copy(node: Node): Node</a></li>
 
 </ul>
-<ul class="simple nested-toc-section">delete
-  <li><a class="reference" href="#delete%2CNode" title="delete(node: Node)">delete(node: Node)</a></li>
-<li><a class="reference" href="#delete%2Cseq%5BNode%5D" title="delete(nodes: seq[Node])">delete(nodes: seq[Node])</a></li>
-
-</ul>
 <ul class="simple nested-toc-section">findNodeById
   <li><a class="reference" href="#findNodeById%2Cstring" title="findNodeById(id: string): Node">findNodeById(id: string): Node</a></li>
 
@@ -151,6 +146,7 @@
 </ul>
 <ul class="simple nested-toc-section">remove
   <li><a class="reference" href="#remove%2CNode" title="remove(node: Node)">remove(node: Node)</a></li>
+<li><a class="reference" href="#remove%2Cseq%5BNode%5D" title="remove(nodes: seq[Node])">remove(nodes: seq[Node])</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">removeChild
@@ -296,30 +292,6 @@
     Copies a node creating a new one.
     <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L117" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L117" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-
-</div>
-<div id="delete-procs-all">
-  <div id="delete,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#delete%2CNode"><span class="Identifier">delete</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L96" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L96" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="delete,seq[Node]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#delete%2Cseq%5BNode%5D"><span class="Identifier">delete</span></a><span class="Other">(</span><span class="Identifier">nodes</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span>
-                                <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L99" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L99" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -514,9 +486,20 @@
   <dt><pre><span class="Keyword">proc</span> <a href="#remove%2CNode"><span class="Identifier">remove</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Removes the node from the document.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L395" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L395" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L96" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L96" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="remove,seq[Node]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#remove%2Cseq%5BNode%5D"><span class="Identifier">remove</span></a><span class="Other">(</span><span class="Identifier">nodes</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span>
+                                <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L99" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L99" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -647,7 +630,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-14 18:03:29 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-15 00:02:36 UTC</small>
       </div>
     </div>
   </div>
