@@ -31,6 +31,9 @@ type
     OnHide
     OnMouseMove
     OnLoad
+    OnButtonPress
+    OnButtonRelease
+    OnResize
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -49,11 +52,15 @@ var
   thisFrame*: Node
   thisCb*: EventCb
   thisSelector*: string
+  thisButton*: Button
+
   selectorStack: seq[string]
 
   navigationHistory*: seq[Node]
 
   #requestPool* = newRequestPool(10)
+
+  onResizeCache: Table[string, Vec2]
 
 proc display()
 
@@ -210,6 +217,36 @@ template onMouseMove*(body: untyped) =
   ## When the mouse moves over a node.
   addCb(
     OnMouseMove,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onButtonPress*(body: untyped) =
+  ## When a key is pressed.
+  addCb(
+    OnButtonPress,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onButtonRelease*(body: untyped) =
+  ## When a key is pressed.
+  addCb(
+    OnButtonRelease,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onResize*(body: untyped) =
+  ## When the window is resized.
+  addCb(
+    OnResize,
     100,
     thisSelector,
     proc(thisNode {.inject.}: Node) =
@@ -440,6 +477,11 @@ proc processEvents() {.measure.} =
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
 
+  # echo "underMouseNodes: "
+  # for n in underMouseNodes:
+  #   echo n.path
+  # echo "--------------------------------"
+
   if window.buttonDown[MouseLeft]:
     window.closeIme()
 
@@ -546,6 +588,17 @@ proc processEvents() {.measure.} =
 
     of OnAnyClick:
       discard
+
+    of OnButtonPress, OnButtonRelease:
+      discard
+
+    of OnResize:
+      for node in findAll(thisCb.glob):
+        if node.inTree(thisFrame):
+          if node.path notin onResizeCache or
+            onResizeCache[node.path] != node.size:
+              onResizeCache[node.path] = node.size
+              thisCb.handler(node)
 
   # Check if clicks on editable nodes.
   if window.buttonPressed[MouseLeft]:
@@ -706,7 +759,28 @@ proc startFidget*(
   window.onResize = onResize
   window.onScroll = onScroll
   window.onButtonPress = proc(button: Button) =
+    # Do text box keyboard action.
     textBoxKeyboardAction(button)
+    # Do button press callbacks.
+    for cb in eventCbs:
+      if cb.kind == OnButtonPress:
+        for node in findAll(cb.glob):
+          if node.inTree(thisFrame):
+            thisButton = button
+            thisSelector = cb.glob
+            thisCb = cb
+            thisCb.handler(node)
+
+  window.onButtonRelease = proc(button: Button) =
+    for cb in eventCbs:
+      if cb.kind == OnButtonRelease:
+        for node in findAll(cb.glob):
+          if node.inTree(thisFrame):
+            thisButton = button
+            thisSelector = cb.glob
+            thisCb = cb
+            thisCb.handler(node)
+
   window.onMouseMove = onMouseMove
   window.onRune = onRune
 

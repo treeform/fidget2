@@ -1,6 +1,8 @@
 # This example shows a draggable panel UI like in a large editor like VS Code or Blender.
 
-import fidget2, bumpy
+import
+  std/random,
+  fidget2, bumpy
 
 type
   AreaLayout = enum
@@ -20,6 +22,7 @@ type
     name: string            ## The name of the panel.
     header: Node            ## The header of the panel.
     node: Node              ## The node of the panel.
+    parentArea: Area        ## The parent area of the panel.
 
 var
   areaTemplate: Node
@@ -27,12 +30,26 @@ var
   panelTemplate: Node
   rootArea: Area
 
+proc findPanelByHeader*(node: Node): Panel =
+  ## Finds the panel that contains the given header node.
+  proc visit(area: Area, node: Node): Panel =
+    for panel in area.panels:
+      if panel.header == node:
+        return panel
+    for subarea in area.areas:
+      let panel = visit(subarea, node)
+      if panel != nil:
+        return panel
+    return nil
+  return visit(rootArea, node)
+
 proc addPanel*(area: Area, name: string) =
   let panel = Panel(name: name)
   panel.header = panelHeaderTemplate.copy()
   panel.header.find("title").text = name
   panel.node = panelTemplate.copy()
   area.panels.add(panel)
+  panel.parentArea = area
   area.node.find("Header").addChild(panel.header)
   area.node.addChild(panel.node)
 
@@ -47,7 +64,22 @@ proc split*(area: Area, layout: AreaLayout) =
   area.node.addChild(area1.node)
   area.node.addChild(area2.node)
 
-proc doLayout*(area: Area) =
+proc clear*(area: Area) =
+  ## Clears the area and all its subareas and panels.
+  for panel in area.panels:
+    if panel.node != nil:
+      panel.node.remove()
+      panel.node = nil
+    panel.parentArea = nil
+  for subarea in area.areas:
+    subarea.clear()
+  if area.node != nil:
+    area.node.remove()
+    area.node = nil
+  area.panels.setLen(0)
+  area.areas.setLen(0)
+
+proc refresh*(area: Area) =
   let
     w = thisFrame.size.x.float32
     h = thisFrame.size.y.float32
@@ -87,7 +119,7 @@ proc doLayout*(area: Area) =
         area.rect.h
       )
   for subarea in area.areas:
-    subarea.doLayout()
+    subarea.refresh()
 
   if area.panels.len > 0:
     # Set the state of the headers.
@@ -115,6 +147,7 @@ find "/UI/Main":
 
     rootArea = Area(node: areaTemplate.copy())
     rootArea.rect = Rect(x: 0, y: 0, w: 100, h: 100)
+    thisNode.addChild(rootArea.node)
 
     rootArea.split(Vertical)
     rootArea.split = 0.20
@@ -137,12 +170,52 @@ find "/UI/Main":
     rootArea.areas[1].areas[1].addPanel("Panel 7")
     rootArea.areas[1].areas[1].addPanel("Panel 8")
 
-    rootArea.doLayout()
+    rootArea.refresh()
 
-    thisNode.addChild(rootArea.node)
+  onResize:
+    echo "onResize"
+    rootArea.refresh()
 
-  onFrame:
-    rootArea.doLayout()
+  onButtonPress:
+    if window.buttonPressed[KeyR]:
+      echo "Regenerating the root area and panels with random sizes and positions."
+      # Regenerate the root area and panels with random sizes and positions.
+      rootArea.clear()
+
+      rootArea = Area(node: areaTemplate.copy())
+      rootArea.rect = Rect(x: 0, y: 0, w: 100, h: 100)
+      thisNode.addChild(rootArea.node)
+
+      var panelNum = 1
+      proc iterate(area: Area, depth: int) =
+        if rand(0 .. depth) < 2:
+          # Split the area.
+          if rand(0 .. 1) == 0:
+            area.split(Horizontal)
+          else:
+            area.split(Vertical)
+          area.split = rand(0.2 .. 0.8)
+          iterate(area.areas[0], depth + 1)
+          iterate(area.areas[1], depth + 1)
+        else:
+          # Don't split the area.
+          for i in 0 ..< rand(1 .. 3):
+            area.addPanel("Panel " & $panelNum)
+            panelNum += 1
+      iterate(rootArea, 0)
+
+      rootArea.refresh()
+
+  find "**/PanelHeader":
+    onClick:
+      echo "Clicked: ", thisNode.name
+      let panel = findPanelByHeader(thisNode)
+      echo "Panel: ", panel != nil
+      if panel != nil:
+
+        panel.parentArea.selectedPanelNum = thisNode.childIndex
+        echo "Selected panel: ", panel.parentArea.selectedPanelNum
+        panel.parentArea.refresh()
 
 startFidget(
   figmaUrl = "https://www.figma.com/design/CvLIH2hh6B6V3rgxNV2gMD",

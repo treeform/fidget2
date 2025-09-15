@@ -391,3 +391,7 @@ proc isInstance*(node: Node): bool =
 proc masterComponent*(node: Node): Node =
   ## Gets the master component if this is an instance and it exists.
   findNodeById(node.componentId)
+
+proc childIndex*(node: Node): int =
+  ## Gets the child index of the node.
+  node.parent.children.find(node)
