@@ -430,3 +430,10 @@ proc sendBackward*(node: Node) =
   ## Sends the node backward in the parent's children.
   node.parent.children.delete(node.parent.children.find(node))
   node.parent.children.insert(node, 0)
+
+proc dumpTree*(node: Node, indent: string = ""): string =
+  ## Dumps the tree to a string.
+  result = indent & node.name & "\n"
+  for child in node.children:
+    result &= dumpTree(child, indent & "  ")
+  return result

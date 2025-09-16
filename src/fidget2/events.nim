@@ -761,6 +761,10 @@ proc processEvents() {.measure.} =
   thisCb = nil
   redisplay = false
 
+  if window.buttonPressed[KeyF2]:
+    echo "Current node tree: "
+    echo thisFrame.dumpTree()
+
   if window.buttonPressed[KeyF4]:
     echo "Writing 'atlas.png'"
     bxy.readAtlas().writeFile("atlas.png")
