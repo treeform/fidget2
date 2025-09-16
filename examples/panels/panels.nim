@@ -55,28 +55,53 @@ proc refresh*(area: Area) =
   if area.areas.len > 0:
     # Combine the areas if they have no panels.
     if area.areas[0].panels.len == 0 and area.areas[0].areas.len == 0:
-      echo "Combining areas, 0 has no panels, 1 has ", area.areas[1].panels.len, " panels"
+      echo "Combining areas, 0 has no panels or areas"
+      echo "1 has ", area.areas[1].panels.len, " panels and ", area.areas[1].areas.len, " areas"
       if area.areas[1].areas.len > 0:
+        echo "Area 1 has areas, just copy over the Areas to this Area."
+        let oldAreas = area.areas
         area.areas = area.areas[1].areas
-        area.split = area.areas[1].split
-        area.layout = area.areas[1].layout
+        area.node.addChild(area.areas[0].node)
+        area.node.addChild(area.areas[1].node)
+        area.split = oldAreas[1].split
+        area.layout = oldAreas[1].layout
+        # oldAreas[1].clear()
+        # oldAreas[0].clear()
+        oldAreas[1].node.remove()
+        oldAreas[0].node.remove()
       else:
+        echo "Area 1 has only panels, move them over."
         area.movePanels(area.areas[1].panels)
-        area.areas[0].clear()
-        area.areas[1].clear()
+        # area.areas[0].clear()
+        # area.areas[1].clear()
+        area.areas[1].node.remove()
+        area.areas[0].node.remove()
         area.areas.setLen(0)
-    elif area.areas[1].panels.len == 0 and area.areas[1].areas.len == 0:
-      echo "Combining areas, 1 has no panels, 0 has ", area.areas[0].panels.len, " panels"
+        
+    if area.areas[1].panels.len == 0 and area.areas[1].areas.len == 0:
+      echo "Combining areas, 1 has no panels or areas"
+      echo "0 has ", area.areas[0].panels.len, " panels and ", area.areas[0].areas.len, " areas"
       if area.areas[0].areas.len > 0:
+        echo "Area 0 has areas, just copy over the Areas to this Area."
+        let oldAreas = area.areas
         area.areas = area.areas[0].areas
-        area.split = area.areas[0].split
-        area.layout = area.areas[0].layout
+        area.node.addChild(area.areas[0].node)
+        area.node.addChild(area.areas[1].node)
+        area.split = oldAreas[0].split
+        area.layout = oldAreas[0].layout
+        oldAreas[0].node.remove()
+        oldAreas[1].node.remove()
+        # oldAreas[1].clear()
+        # oldAreas[0].clear()
       else:
+        echo "Area 0 has only panels, move them over."
         area.movePanels(area.areas[0].panels)
-        area.areas[0].clear()
-        area.areas[1].clear()
+        # area.areas[0].clear()
+        # area.areas[1].clear()
+        area.areas[0].node.remove()
+        area.areas[1].node.remove()
         area.areas.setLen(0)
-  
+
   if area.areas.len > 0:
     # Layout according to the layout.
     if area.layout == Horizontal:
