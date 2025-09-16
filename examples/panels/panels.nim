@@ -1,7 +1,7 @@
 # This example shows a draggable panel UI like in a large editor like VS Code or Blender.
 
 import
-  std/random,
+  std/[random, sequtils],
   fidget2, bumpy
 
 type
@@ -23,6 +23,9 @@ type
     node: Node              ## The node of the panel.
     parentArea: Area        ## The parent area of the panel.
 
+const
+  AreaHeaderHeight = 28
+
 var
   areaTemplate: Node
   panelHeaderTemplate: Node
@@ -34,6 +37,8 @@ proc clear*(area: Area) =
   ## Clears the area and all its subareas and panels.
   for panel in area.panels:
     if panel.node != nil:
+      panel.header.remove()
+      panel.header = nil
       panel.node.remove()
       panel.node = nil
     panel.parentArea = nil
@@ -45,8 +50,35 @@ proc clear*(area: Area) =
   area.panels.setLen(0)
   area.areas.setLen(0)
 
+proc movePanels*(area: Area, panels: seq[Panel]) 
 proc refresh*(area: Area) =
   if area.areas.len > 0:
+    # Combine the areas if they have no panels.
+    if area.areas[0].panels.len == 0 and area.areas[0].areas.len == 0:
+      echo "Combining areas, 0 has no panels, 1 has ", area.areas[1].panels.len, " panels"
+      if area.areas[1].areas.len > 0:
+        area.areas = area.areas[1].areas
+        area.split = area.areas[1].split
+        area.layout = area.areas[1].layout
+      else:
+        area.movePanels(area.areas[1].panels)
+        area.areas[0].clear()
+        area.areas[1].clear()
+        area.areas.setLen(0)
+    elif area.areas[1].panels.len == 0 and area.areas[1].areas.len == 0:
+      echo "Combining areas, 1 has no panels, 0 has ", area.areas[0].panels.len, " panels"
+      if area.areas[0].areas.len > 0:
+        area.areas = area.areas[0].areas
+        area.split = area.areas[0].split
+        area.layout = area.areas[0].layout
+      else:
+        area.movePanels(area.areas[0].panels)
+        area.areas[0].clear()
+        area.areas[1].clear()
+        area.areas.setLen(0)
+  
+  if area.areas.len > 0:
+    # Layout according to the layout.
     if area.layout == Horizontal:
       # Split horizontally (top/bottom)
       let splitPos = area.node.size.y * area.split
@@ -61,7 +93,7 @@ proc refresh*(area: Area) =
       area.areas[0].node.size = vec2(splitPos, area.node.size.y)
       area.areas[1].node.position = vec2(splitPos, 0)
       area.areas[1].node.size = vec2(area.node.size.x - splitPos, area.node.size.y)
-  
+    
   for subarea in area.areas:
     subarea.refresh()
 
@@ -104,7 +136,12 @@ proc movePanel*(area: Area, panel: Panel) =
   panel.parentArea = area
   area.node.find("Header").addChild(panel.header)
   area.node.addChild(panel.node)
-  area.refresh()
+
+proc movePanels*(area: Area, panels: seq[Panel]) =
+  ## Moves the panels to the given area.
+  var panelList = panels.toSeq()
+  for panel in panelList:
+    area.movePanel(panel)
 
 proc split*(area: Area, layout: AreaLayout) =
   ## Splits the area into two subareas.
@@ -117,7 +154,74 @@ proc split*(area: Area, layout: AreaLayout) =
   area.areas.add(area2)
   area.node.addChild(area1.node)
   area.node.addChild(area2.node)
-  area.refresh()
+
+type
+  AreaScan = enum
+    Header
+    Body
+    North
+    South
+    East
+    West
+
+proc scan*(area: Area): (Area,AreaScan, Rect) =
+  let mousePos = window.mousePos.vec2
+  var targetArea: Area
+  var areaScan: AreaScan
+  var rect: Rect
+  proc visit(area: Area) =
+    let areaRect = rect(area.node.absolutePosition, area.node.size)
+    if mousePos.overlaps(areaRect):
+      if area.areas.len > 0:
+        for subarea in area.areas:
+          visit(subarea)
+      else:
+        let 
+          headerRect = rect(
+            area.node.absolutePosition, 
+            vec2(area.node.size.x, AreaHeaderHeight)
+          )
+          bodyRect = rect(
+            area.node.absolutePosition + vec2(0, AreaHeaderHeight), 
+            vec2(area.node.size.x, area.node.size.y - AreaHeaderHeight)
+          )
+          northRect = rect(
+            area.node.absolutePosition + vec2(0, AreaHeaderHeight),
+            vec2(area.node.size.x, area.node.size.y * 0.2)
+          )
+          southRect = rect(
+            area.node.absolutePosition + vec2(0, area.node.size.y * 0.8),
+            vec2(area.node.size.x, area.node.size.y * 0.2)
+          )
+          eastRect = rect(
+            area.node.absolutePosition + vec2(area.node.size.x * 0.8, 0) + vec2(0, AreaHeaderHeight),
+            vec2(area.node.size.x * 0.2, area.node.size.y - AreaHeaderHeight)
+          )
+          westRect = rect(
+            area.node.absolutePosition + vec2(0, 0) + vec2(0, AreaHeaderHeight),
+            vec2(area.node.size.x * 0.2, area.node.size.y - AreaHeaderHeight)
+          )
+        if mousePos.overlaps(headerRect):
+          areaScan = Header
+          rect = headerRect
+        elif mousePos.overlaps(northRect):
+          areaScan = North
+          rect = northRect
+        elif mousePos.overlaps(southRect):
+          areaScan = South
+          rect = southRect
+        elif mousePos.overlaps(eastRect):
+          areaScan = East
+          rect = eastRect
+        elif mousePos.overlaps(westRect):
+          areaScan = West
+          rect = westRect
+        elif mousePos.overlaps(bodyRect):
+          areaScan = Body
+          rect = bodyRect
+        targetArea = area
+  visit(rootArea)
+  return (targetArea, areaScan, rect)
 
 find "/UI/Main":
   onLoad:
@@ -206,6 +310,8 @@ find "/UI/Main":
 
       rootArea.refresh()
 
+      dropHighlight.sendToFront()
+
   find "**/PanelHeader":
     onClick:
       echo "Clicked: ", thisNode.name
@@ -223,45 +329,39 @@ find "/UI/Main":
 
     onDrag:
       echo "onDrag: ", thisNode.path
-
-      # Go through all areas and panels and check if the mouse is over them.
-      let mousePos = window.mousePos.vec2
-      var overArea: Area
-      proc visit(area: Area) =
-        let areaRect = rect(area.node.absolutePosition, area.node.size)
-        if mousePos.overlaps(areaRect):
-          if area.areas.len > 0:
-            for subarea in area.areas:
-              visit(subarea)
-          else:
-            overArea = area
-      visit(rootArea)
-
-      if overArea != nil:
-        dropHighlight.position = overArea.node.absolutePosition
-        dropHighlight.size = overArea.node.size
+      let (_, _, rect) = rootArea.scan()
+      dropHighlight.position = rect.xy
+      dropHighlight.size = rect.wh
 
     onDragEnd:
       echo "onDragEnd: ", thisNode.path
       dropHighlight.visible = false
-
-      # Go through all areas and panels and check if the mouse is over them.
-      let mousePos = window.mousePos.vec2
-      var overArea: Area
-      proc visit(area: Area) =
-        let areaRect = rect(area.node.absolutePosition, area.node.size)
-        if mousePos.overlaps(areaRect):
-          if area.areas.len > 0:
-            for subarea in area.areas:
-              visit(subarea)
-          else:
-            overArea = area
-      visit(rootArea)
-
-      if overArea != nil:
+      let (targetArea, areaScan, _) = rootArea.scan()
+      if targetArea != nil:
         let panel = findPanelByHeader(thisNode)
         if panel != nil:
-          overArea.movePanel(panel)
+          case areaScan:
+            of Header:
+              targetArea.movePanel(panel)
+            of Body:
+              targetArea.movePanel(panel)
+            of North:
+              targetArea.split(Horizontal)
+              targetArea.areas[0].movePanel(panel)
+              targetArea.areas[1].movePanels(targetArea.panels)
+            of South:
+              targetArea.split(Horizontal)
+              targetArea.areas[1].movePanel(panel)
+              targetArea.areas[0].movePanels(targetArea.panels)
+            of East:
+              targetArea.split(Vertical)
+              targetArea.areas[1].movePanel(panel)
+              targetArea.areas[0].movePanels(targetArea.panels)
+            of West:
+              targetArea.split(Vertical)
+              targetArea.areas[0].movePanel(panel)
+              targetArea.areas[1].movePanels(targetArea.panels)
+        rootArea.refresh()
 
 startFidget(
   figmaUrl = "https://www.figma.com/design/CvLIH2hh6B6V3rgxNV2gMD",

@@ -410,3 +410,23 @@ proc masterComponent*(node: Node): Node =
 proc childIndex*(node: Node): int =
   ## Gets the child index of the node.
   node.parent.children.find(node)
+
+proc sendToFront*(node: Node) =
+  ## Sends the node to the front of the parent's children.
+  node.parent.children.delete(node.parent.children.find(node))
+  node.parent.children.add(node)
+
+proc sendToBack*(node: Node) =
+  ## Sends the node to the back of the parent's children.
+  node.parent.children.delete(node.parent.children.find(node))
+  node.parent.children.insert(node, 0)
+
+proc sendForward*(node: Node) =
+  ## Sends the node forward in the parent's children.
+  node.parent.children.delete(node.parent.children.find(node))
+  node.parent.children.add(node)
+
+proc sendBackward*(node: Node) =
+  ## Sends the node backward in the parent's children.
+  node.parent.children.delete(node.parent.children.find(node))
+  node.parent.children.insert(node, 0)
