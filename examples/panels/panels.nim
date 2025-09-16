@@ -14,7 +14,6 @@ type
     layout: AreaLayout      ## The layout of the area.
     areas: seq[Area]        ## The subareas in the area (0 or 2)
     panels: seq[Panel]      ## The panels in the area.
-    rect: Rect              ## The position and size of the area in window percentages.
     split: float32          ## The split percentage of the area.
     selectedPanelNum: int   ## The index of the selected panel in the area.
 
@@ -47,44 +46,22 @@ proc clear*(area: Area) =
   area.areas.setLen(0)
 
 proc refresh*(area: Area) =
-  let
-    w = thisFrame.size.x.float32
-    h = thisFrame.size.y.float32
-  area.node.position = vec2(
-    floor(area.rect.x/100 * w),
-    floor(area.rect.y/100 * h)
-  )
-  area.node.size = vec2(
-    ceil(area.rect.w/100 * w),
-    ceil(area.rect.h/100 * h)
-  )
   if area.areas.len > 0:
     if area.layout == Horizontal:
-      area.areas[0].rect = rect(
-        0,
-        0,
-        area.rect.w,
-        area.rect.h * area.split
-      )
-      area.areas[1].rect = rect(
-        0,
-        area.rect.h * area.split,
-        area.rect.w,
-        area.rect.h * (1 - area.split)
-      )
+      # Split horizontally (top/bottom)
+      let splitPos = area.node.size.y * area.split
+      area.areas[0].node.position = vec2(0, 0)
+      area.areas[0].node.size = vec2(area.node.size.x, splitPos)
+      area.areas[1].node.position = vec2(0, splitPos)
+      area.areas[1].node.size = vec2(area.node.size.x, area.node.size.y - splitPos)
     else:
-      area.areas[0].rect = rect(
-        0,
-        0,
-        area.rect.w * area.split,
-        area.rect.h
-      )
-      area.areas[1].rect = rect(
-        area.rect.w * area.split,
-        0,
-        area.rect.w * (1 - area.split),
-        area.rect.h
-      )
+      # Split vertically (left/right)
+      let splitPos = area.node.size.x * area.split
+      area.areas[0].node.position = vec2(0, 0)
+      area.areas[0].node.size = vec2(splitPos, area.node.size.y)
+      area.areas[1].node.position = vec2(splitPos, 0)
+      area.areas[1].node.size = vec2(area.node.size.x - splitPos, area.node.size.y)
+  
   for subarea in area.areas:
     subarea.refresh()
 
@@ -159,7 +136,8 @@ find "/UI/Main":
     find("Area").remove()
 
     rootArea = Area(node: areaTemplate.copy())
-    rootArea.rect = Rect(x: 0, y: 0, w: 100, h: 100)
+    rootArea.node.position = vec2(0, 0)
+    rootArea.node.size = thisFrame.size.vec2
     thisNode.addChild(rootArea.node)
 
     rootArea.split(Vertical)
@@ -194,6 +172,7 @@ find "/UI/Main":
 
   onResize:
     echo "onResize"
+    rootArea.node.size = thisFrame.size.vec2
     rootArea.refresh()
 
   onButtonPress:
@@ -203,7 +182,8 @@ find "/UI/Main":
       rootArea.clear()
 
       rootArea = Area(node: areaTemplate.copy())
-      rootArea.rect = Rect(x: 0, y: 0, w: 100, h: 100)
+      rootArea.node.position = vec2(0, 0)
+      rootArea.node.size = thisFrame.size.vec2
       thisNode.addChild(rootArea.node)
 
       var panelNum = 1
@@ -245,10 +225,11 @@ find "/UI/Main":
       echo "onDrag: ", thisNode.path
 
       # Go through all areas and panels and check if the mouse is over them.
-      let percentMousePos = window.mousePos.vec2 / thisFrame.size.vec2 * 100
+      let mousePos = window.mousePos.vec2
       var overArea: Area
       proc visit(area: Area) =
-        if percentMousePos.overlaps(area.rect):
+        let areaRect = rect(area.node.absolutePosition, area.node.size)
+        if mousePos.overlaps(areaRect):
           if area.areas.len > 0:
             for subarea in area.areas:
               visit(subarea)
@@ -265,10 +246,11 @@ find "/UI/Main":
       dropHighlight.visible = false
 
       # Go through all areas and panels and check if the mouse is over them.
-      let percentMousePos = window.mousePos.vec2 / thisFrame.size.vec2 * 100
+      let mousePos = window.mousePos.vec2
       var overArea: Area
       proc visit(area: Area) =
-        if percentMousePos.overlaps(area.rect):
+        let areaRect = rect(area.node.absolutePosition, area.node.size)
+        if mousePos.overlaps(areaRect):
           if area.areas.len > 0:
             for subarea in area.areas:
               visit(subarea)
