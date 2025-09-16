@@ -1,6 +1,6 @@
 import
   std/[algorithm, json, os, strformat, strutils, tables, unicode],
-  bumpy, pixie, vmath, windy, 
+  bumpy, pixie, vmath, windy,
   common, globs, internal, loader, nodes, perf, schema, textboxes
 
 export textboxes, nodes, common, windy
@@ -746,6 +746,10 @@ proc processEvents() {.measure.} =
   thisSelector = ""
   thisCb = nil
   redisplay = false
+
+  if window.buttonPressed[KeyF2]:
+    echo "Current node tree: "
+    echo thisFrame.dumpTree()
 
   if window.buttonPressed[KeyF4]:
     echo "Writing 'atlas.png'"

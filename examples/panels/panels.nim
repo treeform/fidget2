@@ -38,87 +38,79 @@ proc clear*(area: Area) =
   for panel in area.panels:
     if panel.node != nil:
       panel.header.remove()
-      panel.header = nil
       panel.node.remove()
-      panel.node = nil
     panel.parentArea = nil
   for subarea in area.areas:
     subarea.clear()
   if area.node != nil:
     area.node.remove()
-    area.node = nil
   area.panels.setLen(0)
   area.areas.setLen(0)
 
-proc movePanels*(area: Area, panels: seq[Panel]) 
-proc refresh*(area: Area) =
+proc movePanels*(area: Area, panels: seq[Panel])
+
+proc removeBlankAreas*(area: Area) =
+  ## Removes all areas that have no panels or subareas.
+
   if area.areas.len > 0:
-    # Combine the areas if they have no panels.
+    assert area.areas.len == 2
     if area.areas[0].panels.len == 0 and area.areas[0].areas.len == 0:
-      echo "Combining areas, 0 has no panels or areas"
-      echo "1 has ", area.areas[1].panels.len, " panels and ", area.areas[1].areas.len, " areas"
-      if area.areas[1].areas.len > 0:
-        echo "Area 1 has areas, just copy over the Areas to this Area."
+      if area.areas[1].panels.len > 0:
+        area.movePanels(area.areas[1].panels)
+        area.areas[0].node.remove()
+        area.areas[1].node.remove()
+        area.areas.setLen(0)
+      elif area.areas[1].areas.len > 0:
         let oldAreas = area.areas
         area.areas = area.areas[1].areas
-        area.node.addChild(area.areas[0].node)
-        area.node.addChild(area.areas[1].node)
+        for subarea in area.areas:
+          area.node.addChild(subarea.node)
         area.split = oldAreas[1].split
         area.layout = oldAreas[1].layout
-        # oldAreas[1].clear()
-        # oldAreas[0].clear()
-        oldAreas[1].node.remove()
         oldAreas[0].node.remove()
+        oldAreas[1].node.remove()
       else:
-        echo "Area 1 has only panels, move them over."
-        area.movePanels(area.areas[1].panels)
-        # area.areas[0].clear()
-        # area.areas[1].clear()
+        discard # Both areas are blank, do nothing.
+
+    elif area.areas[1].panels.len == 0 and area.areas[1].areas.len == 0:
+      if area.areas[0].panels.len > 0:
+        area.movePanels(area.areas[0].panels)
         area.areas[1].node.remove()
         area.areas[0].node.remove()
         area.areas.setLen(0)
-        
-    if area.areas[1].panels.len == 0 and area.areas[1].areas.len == 0:
-      echo "Combining areas, 1 has no panels or areas"
-      echo "0 has ", area.areas[0].panels.len, " panels and ", area.areas[0].areas.len, " areas"
-      if area.areas[0].areas.len > 0:
-        echo "Area 0 has areas, just copy over the Areas to this Area."
+      elif area.areas[0].areas.len > 0:
         let oldAreas = area.areas
         area.areas = area.areas[0].areas
-        area.node.addChild(area.areas[0].node)
-        area.node.addChild(area.areas[1].node)
+        for subarea in area.areas:
+          area.node.addChild(subarea.node)
         area.split = oldAreas[0].split
         area.layout = oldAreas[0].layout
-        oldAreas[0].node.remove()
         oldAreas[1].node.remove()
-        # oldAreas[1].clear()
-        # oldAreas[0].clear()
+        oldAreas[0].node.remove()
       else:
-        echo "Area 0 has only panels, move them over."
-        area.movePanels(area.areas[0].panels)
-        # area.areas[0].clear()
-        # area.areas[1].clear()
-        area.areas[0].node.remove()
-        area.areas[1].node.remove()
-        area.areas.setLen(0)
+        discard # Both areas are blank, do nothing.
 
+    for subarea in area.areas:
+      removeBlankAreas(subarea)
+
+proc refresh*(area: Area) =
   if area.areas.len > 0:
     # Layout according to the layout.
     if area.layout == Horizontal:
       # Split horizontally (top/bottom)
       let splitPos = area.node.size.y * area.split
-      area.areas[0].node.position = vec2(0, 0)
+      area.areas[0].node.position = vec2(0, 0).floor()
       area.areas[0].node.size = vec2(area.node.size.x, splitPos)
-      area.areas[1].node.position = vec2(0, splitPos)
-      area.areas[1].node.size = vec2(area.node.size.x, area.node.size.y - splitPos)
+      area.areas[1].node.position = vec2(0, splitPos).floor()
+      area.areas[1].node.size = vec2(area.node.size.x, area.node.size.y - splitPos).ceil()
     else:
       # Split vertically (left/right)
       let splitPos = area.node.size.x * area.split
-      area.areas[0].node.position = vec2(0, 0)
-      area.areas[0].node.size = vec2(splitPos, area.node.size.y)
-      area.areas[1].node.position = vec2(splitPos, 0)
-      area.areas[1].node.size = vec2(area.node.size.x - splitPos, area.node.size.y)
-    
+      area.areas[0].node.position = vec2(0, 0).floor()
+      area.areas[0].node.size = vec2(splitPos, area.node.size.y).ceil()
+      area.areas[1].node.position = vec2(splitPos, 0).floor()
+      area.areas[1].node.size = vec2(area.node.size.x - splitPos, area.node.size.y).ceil()
+
   for subarea in area.areas:
     subarea.refresh()
 
@@ -201,13 +193,13 @@ proc scan*(area: Area): (Area,AreaScan, Rect) =
         for subarea in area.areas:
           visit(subarea)
       else:
-        let 
+        let
           headerRect = rect(
-            area.node.absolutePosition, 
+            area.node.absolutePosition,
             vec2(area.node.size.x, AreaHeaderHeight)
           )
           bodyRect = rect(
-            area.node.absolutePosition + vec2(0, AreaHeaderHeight), 
+            area.node.absolutePosition + vec2(0, AreaHeaderHeight),
             vec2(area.node.size.x, area.node.size.y - AreaHeaderHeight)
           )
           northRect = rect(
@@ -353,7 +345,6 @@ find "/UI/Main":
       dropHighlight.visible = true
 
     onDrag:
-      echo "onDrag: ", thisNode.path
       let (_, _, rect) = rootArea.scan()
       dropHighlight.position = rect.xy
       dropHighlight.size = rect.wh
@@ -386,6 +377,8 @@ find "/UI/Main":
               targetArea.split(Vertical)
               targetArea.areas[0].movePanel(panel)
               targetArea.areas[1].movePanels(targetArea.panels)
+
+        rootArea.removeBlankAreas()
         rootArea.refresh()
 
 startFidget(
