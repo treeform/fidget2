@@ -680,7 +680,7 @@ proc processEvents() {.measure.} =
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame):
             # Second: If mouse moved enough, we set the drag node and call the handler.
-            if dragCandidate != nil:
+            if dragCandidate != nil and dragCandidate == node:
               let dragDistance = window.mousePos.vec2 - dragCandidatePos
               if dragDistance.length > DragThreshold:
                 dragNode = dragCandidate
@@ -704,7 +704,7 @@ proc processEvents() {.measure.} =
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node == dragNode:
             thisCb.handler(node)
-        dragNode = nil
+            dragNode = nil
 
     of OnDrop:
       # TODO: implement.
@@ -838,7 +838,7 @@ proc display() {.measure.} =
       # Native needs to sleep to avoid 100% CPU usage.
       sleep(7)
 
-proc mainLoop() {.cdecl.} =
+proc mainLoop*() {.cdecl.} =
   processEvents()
   pollEvents()
   display()
@@ -849,7 +849,7 @@ proc mainLoop() {.cdecl.} =
   if window.buttonToggle[KeyF9]:
     dumpMeasures(16)
 
-proc startFidget*(
+proc initFidget*(
   figmaUrl: string,
   windowTitle: string,
   entryFrame: string,
@@ -926,9 +926,21 @@ proc startFidget*(
       thisSelector = cb.glob
       cb.handler(thisFrame)
 
+proc startFidget*(
+  figmaUrl: string,
+  windowTitle: string,
+  entryFrame: string,
+  windowStyle = DecoratedResizable
+) =
+  initFidget(
+    figmaUrl = figmaUrl,
+    windowTitle = windowTitle,
+    entryFrame = entryFrame,
+    windowStyle = windowStyle
+  )
   when defined(emscripten):
     # Emscripten can't block so it will call this callback instead.
-    window. run(mainLoop)
+    window.run(mainLoop)
   else:
     # When running native code we can block in an infinite loop.
     while internal.running:
