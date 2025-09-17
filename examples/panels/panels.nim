@@ -2,8 +2,7 @@
 
 import
   std/[random, sequtils],
-  fidget2, bumpy
-
+  fidget2, bumpy, chroma
 type
   AreaLayout = enum
     Horizontal
@@ -25,6 +24,7 @@ type
 
 const
   AreaHeaderHeight = 28
+  AreaMargin = 6
 
 var
   areaTemplate: Node
@@ -32,6 +32,7 @@ var
   panelTemplate: Node
   rootArea: Area
   dropHighlight: Node
+  dragArea: Area
 
 proc clear*(area: Area) =
   ## Clears the area and all its subareas and panels.
@@ -93,34 +94,41 @@ proc removeBlankAreas*(area: Area) =
     for subarea in area.areas:
       removeBlankAreas(subarea)
 
-proc refresh*(area: Area) =
+proc refresh*(area: Area, depth = 0) =
   if area.areas.len > 0:
     # Layout according to the layout.
+    let m = AreaMargin/2
     if area.layout == Horizontal:
       # Split horizontally (top/bottom)
       let splitPos = area.node.size.y * area.split
       area.areas[0].node.position = vec2(0, 0).floor()
-      area.areas[0].node.size = vec2(area.node.size.x, splitPos)
-      area.areas[1].node.position = vec2(0, splitPos).floor()
-      area.areas[1].node.size = vec2(area.node.size.x, area.node.size.y - splitPos).ceil()
+      area.areas[0].node.size = vec2(area.node.size.x, splitPos - m)
+      area.areas[1].node.position = vec2(0, splitPos + m).floor()
+      area.areas[1].node.size = vec2(area.node.size.x, area.node.size.y - splitPos - m).ceil()
     else:
       # Split vertically (left/right)
       let splitPos = area.node.size.x * area.split
       area.areas[0].node.position = vec2(0, 0).floor()
-      area.areas[0].node.size = vec2(splitPos, area.node.size.y).ceil()
-      area.areas[1].node.position = vec2(splitPos, 0).floor()
-      area.areas[1].node.size = vec2(area.node.size.x - splitPos, area.node.size.y).ceil()
+      area.areas[0].node.size = vec2(splitPos - m, area.node.size.y).ceil()
+      area.areas[1].node.position = vec2(splitPos + m, 0).floor()
+      area.areas[1].node.size = vec2(area.node.size.x - splitPos - m, area.node.size.y).ceil()
 
   for subarea in area.areas:
-    subarea.refresh()
+    subarea.refresh(depth + 1)
 
   if area.panels.len > 0:
+    if area.selectedPanelNum > area.panels.len - 1:
+      area.selectedPanelNum = area.panels.len - 1
     # Set the state of the headers.
     for i, panel in area.panels:
       if i != area.selectedPanelNum:
         panel.header.setVariant("State", "Default")
+        panel.node.visible = false
       else:
         panel.header.setVariant("State", "Selected")
+        panel.node.visible = true
+        panel.node.position = vec2(0, AreaHeaderHeight)
+        panel.node.size = area.node.size - vec2(0, AreaHeaderHeight)
 
 proc findPanelByHeader*(node: Node): Panel =
   ## Finds the panel that contains the given header node.
@@ -134,6 +142,17 @@ proc findPanelByHeader*(node: Node): Panel =
         return panel
     return nil
   return visit(rootArea, node)
+
+proc findAreaByNode*(node: Node): Area =
+  ## Finds the area that contains the given node.
+  proc visit(area: Area): Area =
+    if area.node == node:
+      return area
+    for subarea in area.areas:
+      let area = visit(subarea)
+      if area != nil:
+        return area
+  return visit(rootArea)
 
 proc addPanel*(area: Area, name: string) =
   ## Adds a panel to the given area.
@@ -329,13 +348,41 @@ find "/UI/Main":
 
       dropHighlight.sendToFront()
 
+  find "**/Area":
+    onDragStart:
+      echo "onDragStart: ", thisNode.path
+      let area = findAreaByNode(thisNode)
+      if area != nil and area.areas.len > 0:
+        dragArea = area
+        dropHighlight.visible = true
+    onDrag:
+      echo "onDrag: ", thisNode.path
+      if dragArea != nil:
+        echo "Dragging area with name: ", dragArea.panels.len, " panels and ", dragArea.areas.len, " subareas"
+        if dragArea.layout == Horizontal:
+          dropHighlight.position = vec2(dragArea.node.absolutePosition.x, window.mousePos.vec2.y)
+          dropHighlight.size = vec2(dragArea.node.size.x, AreaMargin)
+        else:
+          dropHighlight.position = vec2(window.mousePos.vec2.x, dragArea.node.absolutePosition.y)
+          dropHighlight.size = vec2(AreaMargin, dragArea.node.size.y)
+    onDragEnd:
+      echo "onDragEnd: ", thisNode.path
+      if dragArea != nil:
+        if dragArea.layout == Horizontal:
+          dragArea.split = (window.mousePos.vec2.y - dragArea.node.absolutePosition.y) / dragArea.node.size.y
+        else:
+          dragArea.split = (window.mousePos.vec2.x - dragArea.node.absolutePosition.x) / dragArea.node.size.x
+        dragArea.refresh()
+      dragArea = nil
+      dropHighlight.visible = false
+
+
   find "**/PanelHeader":
     onClick:
       echo "Clicked: ", thisNode.name
       let panel = findPanelByHeader(thisNode)
       echo "Panel: ", panel != nil
       if panel != nil:
-
         panel.parentArea.selectedPanelNum = thisNode.childIndex
         echo "Selected panel: ", panel.parentArea.selectedPanelNum
         panel.parentArea.refresh()

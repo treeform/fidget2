@@ -694,7 +694,7 @@ proc processEvents() {.measure.} =
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame):
             # Second: If mouse moved enough, we set the drag node and call the handler.
-            if dragCandidate != nil:
+            if dragCandidate != nil and dragCandidate == node:
               let dragDistance = window.mousePos.vec2 - dragCandidatePos
               if dragDistance.length > DragThreshold:
                 dragNode = dragCandidate
@@ -718,7 +718,7 @@ proc processEvents() {.measure.} =
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node == dragNode:
             thisCb.handler(node)
-        dragNode = nil
+            dragNode = nil
 
     of OnDrop:
       # TODO: implement.
