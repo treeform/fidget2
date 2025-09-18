@@ -6,4 +6,5 @@ type
 
 var
   window*: Window
+  dataDir*: string = "data"
   clearFrame*: bool = true

@@ -6,11 +6,11 @@ import
 # Loader is responsible for loading the figma file.
 # It also downloads images and fonts and manages the cache.
 
-var figmaFile*: FigmaFile                ## Main figma file.
+var figmaFile*: FigmaFile             ## Main figma file.
 
 proc figmaFilePath(fileKey: string): string =
   ## Gets the Figma file path.
-  "data/fidget/" & fileKey & ".json"
+  dataDir / "fidget" / fileKey & ".json"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
   ## Loads the Figma file.
@@ -19,19 +19,19 @@ proc loadFigmaFile(fileKey: string): FigmaFile =
 
 proc lastModifiedFilePath(fileKey: string): string =
   ## Gets the last modified file path.
-  "data/fidget/" & fileKey & ".lastModified"
+  dataDir / "fidget" / fileKey & ".lastModified"
 
 proc figmaImagePath*(imageRef: string): string =
   ## Gets the Figma image path.
-  "data/fidget/images/" & imageRef & ".png"
+  dataDir / "fidget" / "images" / imageRef & ".png"
 
 proc figmaFontPath*(fontPostScriptName: string): string =
   ## Gets the Figma font path.
-  "data/fidget/fonts/" & fontPostScriptName & ".ttf"
+  dataDir / "fidget" / "fonts" / fontPostScriptName & ".ttf"
 
 proc userFontPath*(fontPostScriptName: string): string =
   ## Gets the user font path.
-  "data/fonts/" & fontPostScriptName & ".ttf"
+  dataDir / "fonts" / fontPostScriptName & ".ttf"
 
 when defined(emscripten):
 
@@ -72,8 +72,8 @@ else:
 
   proc downloadImages(fileKey: string, figmaFile: FigmaFile) =
     ## Downloads all the images used in the Figma file.
-    if not dirExists("data/fidget/images"):
-      createDir("data/fidget/images")
+    if not dirExists(dataDir / "fidget" / "images"):
+      createDir(dataDir / "fidget" / "images")
 
     # Walk the Figma file and find all the images used
     var imagesUsed: HashSet[string]
@@ -89,16 +89,16 @@ else:
     walk(figmaFile.document)
 
     # Walk images dir and remove any unused images
-    for kind, path in walkDir("data/fidget/images", relative = true):
+    for kind, path in walkDir(dataDir / "fidget" / "images", relative = true):
       case kind:
       of pcFile:
         let (_, imageRef, _) = splitFile(path)
         if imageRef notin imagesUsed:
           removeFile(figmaImagePath(imageRef))
       of pcDir:
-        removeDir("data/fidget/images" / path)
+        removeDir(dataDir / "fidget" / "images" / path)
       of pcLinkToFile, pcLinkToDir:
-        removeFile("data/fidget/images" / path)
+        removeFile(dataDir / "fidget" / "images" / path)
 
     # Check if we need to download any images
     var needsDownload: bool
@@ -138,8 +138,8 @@ else:
 
   proc downloadFonts(figmaFile: FigmaFile) =
     ## Downloads all the fonts used in the Figma file.
-    if not dirExists("data/fidget/fonts"):
-      createDir("data/fidget/fonts")
+    if not dirExists(dataDir / "fidget" / "fonts"):
+      createDir(dataDir / "fidget" / "fonts")
 
     # Walk the Figma file and find all the fonts used
 
@@ -171,16 +171,16 @@ else:
 
     # Walk font dir and remove any unused fonts
 
-    for kind, path in walkDir("data/fidget/fonts", relative = true):
+    for kind, path in walkDir(dataDir / "fidget" / "fonts", relative = true):
       case kind:
       of pcFile:
         let (_, name, _) = splitFile(path)
         if name notin fontsUsed:
           removeFile(figmaFontPath(name))
       of pcDir:
-        removeDir("data/fidget/fonts" / path)
+        removeDir(dataDir / "fidget" / "fonts" / path)
       of pcLinkToFile, pcLinkToDir:
-        removeFile("data/fidget/fonts" / path)
+        removeFile(dataDir / "fidget" / "fonts" / path)
 
     # Check if we need to download any fonts
 
@@ -200,8 +200,8 @@ else:
 
   proc downloadFigmaFile(fileKey: string) =
     ## Downloads and caches the Figma file for this file key.
-    if not dirExists("data/fidget"):
-      createDir("data/fidget")
+    if not dirExists(dataDir / "fidget"):
+      createDir(dataDir / "fidget")
 
     let
       figmaFilePath = figmaFilePath(fileKey)
@@ -209,17 +209,17 @@ else:
 
     # Walk data/fidget dir and remove any unexpected entries
 
-    for kind, path in walkDir("data/fidget", relative = true):
+    for kind, path in walkDir(dataDir / "fidget", relative = true):
       case kind:
       of pcFile:
         let (_, name, _) = splitFile(path)
         if name != fileKey:
-          removeFile("data/fidget" / path)
+          removeFile(dataDir / "fidget" / path)
       of pcDir:
         if path notin ["images", "fonts"]:
-          removeDir("data/fidget" / path)
+          removeDir(dataDir / "fidget" / path)
       of pcLinkToFile, pcLinkToDir:
-        removeFile("data/fidget" / path)
+        removeFile(dataDir / "fidget" / path)
 
     var useCached: bool
     when defined(fidgetUseCached):

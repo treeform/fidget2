@@ -717,7 +717,7 @@ proc display() {.measure.} =
       # Native needs to sleep to avoid 100% CPU usage.
       sleep(7)
 
-proc mainLoop() {.cdecl.} =
+proc mainLoop*() {.cdecl.} =
   processEvents()
   pollEvents()
   display()
@@ -728,14 +728,16 @@ proc mainLoop() {.cdecl.} =
   if window.buttonToggle[KeyF9]:
     dumpMeasures(16)
 
-proc startFidget*(
+proc initFidget*(
   figmaUrl: string,
   windowTitle: string,
   entryFrame: string,
-  windowStyle = DecoratedResizable
+  windowStyle = DecoratedResizable,
+  dataDir = "data"
 ) =
   ## Starts the Fidget main loop.
   currentFigmaUrl = figmaUrl
+  common.dataDir = dataDir
   use(currentFigmaUrl)
 
   entryFramePath = entryFrame
@@ -805,6 +807,20 @@ proc startFidget*(
       thisSelector = cb.glob
       cb.handler(thisFrame)
 
+proc startFidget*(
+  figmaUrl: string,
+  windowTitle: string,
+  entryFrame: string,
+  windowStyle = DecoratedResizable,
+  dataDir = "data"
+) =
+  initFidget(
+    figmaUrl = figmaUrl,
+    windowTitle = windowTitle,
+    entryFrame = entryFrame,
+    windowStyle = windowStyle,
+    dataDir = dataDir
+  )
   when defined(emscripten):
     # Emscripten can't block so it will call this callback instead.
     window. run(mainLoop)
