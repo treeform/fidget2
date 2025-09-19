@@ -335,10 +335,10 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
   if window.size.vec2 != screenNode.size:
     if window.style == DecoratedResizable:
       # Stretch the current frame to fit the window.
-      screenNode.size = window.size.vec2
+      screenNode.size = window.size.vec2 / window.contentScale
     else:
       # Stretch the window to fit the current frame.
-      window.size = screenNode.size.ivec2
+      window.size = (screenNode.size.vec2 * window.contentScale).ivec2
 
   bxy.beginFrame(window.size, clearFrame=clearFrame)
 
@@ -364,7 +364,18 @@ proc setupWindow*(
   style = DecoratedResizable
 ) =
   ## Sets up the window.
-  window = newWindow("loading...", size, visible=visible, msaa=msaa8x)
+  window = newWindow(
+    "loading...",
+    size,
+    visible=visible,
+    msaa=msaa8x
+  )
+  # Adjust size to account for content scale.
+  if window.contentScale != 1.0:
+    echo "Scale the window?", window.contentScale
+    echo "size before: ", window.size
+    window.size = (window.size.vec2 * window.contentScale).ivec2
+    echo "size after: ", window.size
   window.style = style
 
   window.makeContextCurrent()

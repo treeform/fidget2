@@ -374,7 +374,7 @@ proc onScroll() =
   if textBoxFocus != nil:
     textBoxFocus.scrollBy(-window.scrollDelta.y * 50)
 
-  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
+  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
 
   for node in underMouseNodes:
     if node.overflowDirection == VerticalScrolling:
@@ -475,7 +475,7 @@ proc swapBuffers() {.measure.} =
 proc processEvents() {.measure.} =
 
   # Get the node list under the mouse.
-  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2)
+  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
 
   # echo "underMouseNodes: "
   # for n in underMouseNodes:
