@@ -14,5 +14,5 @@ nim	drawNode	fidget2/cpurender.html#drawNode,Node	proc drawNode(node: Node; with
 nim	drawBooleanNode	fidget2/cpurender.html#drawBooleanNode,Node,BlendMode	proc drawBooleanNode(node: Node; blendMode: BlendMode)		475
 nim	drawBoolean	fidget2/cpurender.html#drawBoolean,Node	proc drawBoolean(node: Node)		507
 nim	drawNodeInternal	fidget2/cpurender.html#drawNodeInternal,Node	proc drawNodeInternal(node: Node; withChildren = true)		519
-nim	drawCompleteFrame	fidget2/cpurender.html#drawCompleteFrame,Node	proc drawCompleteFrame(node: Node): pixie.Image		630
-nim	setupWindow	fidget2/cpurender.html#setupWindow,Node,IVec2	proc setupWindow(frameNode: Node; size: IVec2; visible = true; style = Decorated)		647
+nim	drawCompleteFrame	fidget2/cpurender.html#drawCompleteFrame,Node	proc drawCompleteFrame(node: Node): pixie.Image		648
+nim	setupWindow	fidget2/cpurender.html#setupWindow,Node,IVec2	proc setupWindow(frameNode: Node; size: IVec2; visible = true; style = Decorated)		665
