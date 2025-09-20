@@ -59,15 +59,15 @@ when defined(release):
   {.pop.}
 
 proc `[]`*(u: U, i: int): Rune =
-  ## Like [i] but for unicode runes.
+  ## Like `[i]` but for unicode runes.
   u.str.runeAtPos(i)
 
 proc `[]`*(u: U, i: BackwardsIndex): Rune =
-  ## Like [^i] but for unicode runes.
+  ## Like `[^i]` but for unicode runes.
   u[u.len - i.int] # u.len is very expensive here, should instead work backwards
 
 proc `[]`*(u: U, slice: HSlice[int, int]): string =
-  ## Like [i ..< j] but for unicode runes.
+  ## Like `[i ..< j]` but for unicode runes.
   let
     aStart = u.str.runeOffset(slice.a)
     bStart = u.str.runeOffset(slice.b)
