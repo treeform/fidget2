@@ -4,35 +4,35 @@ nim	markTreeDirty	fidget2/nodes.html#markTreeDirty,Node	proc markTreeDirty(node:
 nim	markTreeClean	fidget2/nodes.html#markTreeClean,Node	proc markTreeClean(node: Node)		19
 nim	checkDirty	fidget2/nodes.html#checkDirty,Node	proc checkDirty(node: Node)		25
 nim	printDirtyStatus	fidget2/nodes.html#printDirtyStatus,Node,int	proc printDirtyStatus(node: Node; indent = 0)		33
-nim	makeTextDirty	fidget2/nodes.html#makeTextDirty,Node	proc makeTextDirty(node: Node)		38
-nim	text=	fidget2/nodes.html#text=,Node,string	proc text=(node: Node; text: string)		44
-nim	text	fidget2/nodes.html#text,Node	proc text(node: Node): string		51
-nim	show	fidget2/nodes.html#show,Node	proc show(node: Node)		56
-nim	hide	fidget2/nodes.html#hide,Node	proc hide(node: Node)		60
-nim	show	fidget2/nodes.html#show,seq[Node]	proc show(nodes: seq[Node])		64
-nim	hide	fidget2/nodes.html#hide,seq[Node]	proc hide(nodes: seq[Node])		68
-nim	findNodeById	fidget2/nodes.html#findNodeById,string	proc findNodeById(id: string): Node		72
-nim	deleteNodeHook	fidget2/nodes.html#deleteNodeHook	var deleteNodeHook		83
-nim	removeChild	fidget2/nodes.html#removeChild,Node,Node	proc removeChild(parent, node: Node)		84
-nim	remove	fidget2/nodes.html#remove,Node	proc remove(node: Node)		96
-nim	remove	fidget2/nodes.html#remove,seq[Node]	proc remove(nodes: seq[Node])		99
-nim	removeChildren	fidget2/nodes.html#removeChildren,Node	proc removeChildren(node: Node)		103
-nim	copy	fidget2/nodes.html#copy,Node	proc copy(node: Node): Node		117
-nim	newInstance	fidget2/nodes.html#newInstance,Node	proc newInstance(node: Node): Node		182
-nim	addChild	fidget2/nodes.html#addChild,Node,Node	proc addChild(parent, child: Node)		189
-nim	inTree	fidget2/nodes.html#inTree,Node,Node	proc inTree(node, other: Node): bool		195
-nim	`[]`	fidget2/nodes.html#[],seq[],string	proc `[]`(query: seq[(string, string)]; key: string): string		219
-nim	contains	fidget2/nodes.html#contains,seq[],string	proc contains(query: seq[(string, string)]; key: string): bool		225
-nim	`[]=`	fidget2/nodes.html#[]=,seq[],string,string	proc `[]=`(query: var seq[(string, string)]; key, value: string)		231
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		320
-nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		354
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		359
-nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		366
-nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		379
-nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		386
-nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		391
-nim	childIndex	fidget2/nodes.html#childIndex,Node	proc childIndex(node: Node): int		395
-nimgrp	show	fidget2/nodes.html#show-procs-all	proc		56
-nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		320
-nimgrp	remove	fidget2/nodes.html#remove-procs-all	proc		96
-nimgrp	hide	fidget2/nodes.html#hide-procs-all	proc		60
+nim	makeTextDirty	fidget2/nodes.html#makeTextDirty,Node	proc makeTextDirty(node: Node)		39
+nim	text=	fidget2/nodes.html#text=,Node,string	proc text=(node: Node; text: string)		46
+nim	text	fidget2/nodes.html#text,Node	proc text(node: Node): string		54
+nim	show	fidget2/nodes.html#show,Node	proc show(node: Node)		60
+nim	hide	fidget2/nodes.html#hide,Node	proc hide(node: Node)		65
+nim	show	fidget2/nodes.html#show,seq[Node]	proc show(nodes: seq[Node])		70
+nim	hide	fidget2/nodes.html#hide,seq[Node]	proc hide(nodes: seq[Node])		75
+nim	findNodeById	fidget2/nodes.html#findNodeById,string	proc findNodeById(id: string): Node		80
+nim	deleteNodeHook	fidget2/nodes.html#deleteNodeHook	var deleteNodeHook		91
+nim	removeChild	fidget2/nodes.html#removeChild,Node,Node	proc removeChild(parent, node: Node)		92
+nim	remove	fidget2/nodes.html#remove,Node	proc remove(node: Node)		104
+nim	remove	fidget2/nodes.html#remove,seq[Node]	proc remove(nodes: seq[Node])		108
+nim	removeChildren	fidget2/nodes.html#removeChildren,Node	proc removeChildren(node: Node)		113
+nim	copy	fidget2/nodes.html#copy,Node	proc copy(node: Node): Node		128
+nim	newInstance	fidget2/nodes.html#newInstance,Node	proc newInstance(node: Node): Node		193
+nim	addChild	fidget2/nodes.html#addChild,Node,Node	proc addChild(parent, child: Node)		200
+nim	inTree	fidget2/nodes.html#inTree,Node,Node	proc inTree(node, other: Node): bool		206
+nim	`[]`	fidget2/nodes.html#[],seq[],string	proc `[]`(query: seq[(string, string)]; key: string): string		230
+nim	contains	fidget2/nodes.html#contains,seq[],string	proc contains(query: seq[(string, string)]; key: string): bool		236
+nim	`[]=`	fidget2/nodes.html#[]=,seq[],string,string	proc `[]=`(query: var seq[(string, string)]; key, value: string)		242
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		331
+nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		365
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		370
+nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		377
+nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		390
+nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		397
+nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		402
+nim	childIndex	fidget2/nodes.html#childIndex,Node	proc childIndex(node: Node): int		406
+nimgrp	show	fidget2/nodes.html#show-procs-all	proc		60
+nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		331
+nimgrp	remove	fidget2/nodes.html#remove-procs-all	proc		104
+nimgrp	hide	fidget2/nodes.html#hide-procs-all	proc		65

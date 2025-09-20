@@ -45,17 +45,17 @@ nim	onButtonPress	fidget2/events.html#onButtonPress.t,untyped	template onButtonP
 nim	onButtonRelease	fidget2/events.html#onButtonRelease.t,untyped	template onButtonRelease(body: untyped)		236
 nim	onResize	fidget2/events.html#onResize.t,untyped	template onResize(body: untyped)		246
 nim	relativeMousePos	fidget2/events.html#relativeMousePos,Window,Node	proc relativeMousePos(window: Window; node: Node): Vec2		273
-nim	simulateClick	fidget2/events.html#simulateClick,string	proc simulateClick(glob: string)		396
-nim	onEdit	fidget2/events.html#onEdit.t,untyped	template onEdit(body: untyped)		407
-nim	onUnfocus	fidget2/events.html#onUnfocus.t,untyped	template onUnfocus(body: untyped)		418
-nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped)		428
-nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		448
-nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		453
-nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		458
-nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		649
-nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		676
-nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		680
-nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		689
-nim	mainLoop	fidget2/events.html#mainLoop	proc mainLoop()		720
-nim	initFidget	fidget2/events.html#initFidget,string,string,string,string	proc initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n           windowStyle = DecoratedResizable; dataDir = "data")		731
-nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		810
+nim	simulateClick	fidget2/events.html#simulateClick,string	proc simulateClick(glob: string)		398
+nim	onEdit	fidget2/events.html#onEdit.t,untyped	template onEdit(body: untyped)		409
+nim	onUnfocus	fidget2/events.html#onUnfocus.t,untyped	template onUnfocus(body: untyped)		420
+nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped)		430
+nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		450
+nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		455
+nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		460
+nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		654
+nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		681
+nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		685
+nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		694
+nim	mainLoop	fidget2/events.html#mainLoop	proc mainLoop()		725
+nim	initFidget	fidget2/events.html#initFidget,string,string,string,string	proc initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n           windowStyle = DecoratedResizable; dataDir = "data")		737
+nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		816

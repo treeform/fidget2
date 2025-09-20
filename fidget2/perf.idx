@@ -3,4 +3,4 @@ nim	getTicks	fidget2/perf.html#getTicks	proc getTicks(): int		6
 nim	measurePush	fidget2/perf.html#measurePush,string	proc measurePush(what: string)		19
 nim	measurePop	fidget2/perf.html#measurePop	proc measurePop()		30
 nim	measure	fidget2/perf.html#measure.m,untyped	macro measure(fn: untyped)		38
-nim	dumpMeasures	fidget2/perf.html#dumpMeasures,float	proc dumpMeasures(overTotalMs = 0.0)		46
+nim	dumpMeasures	fidget2/perf.html#dumpMeasures,float	proc dumpMeasures(overTotalMs = 0.0)		47
