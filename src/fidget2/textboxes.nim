@@ -44,7 +44,7 @@ proc clamp(v, a, b: int): int =
 
 proc getSelection*(arrangement: Arrangement, start, stop: int): seq[Rect] =
   ## Given a layout gives selection from start to stop in glyph positions.
-  ## If start == stop returns [].
+  ## If start == stop returns `[]`.
   if start == stop:
     return
   for i, selectRect in arrangement.selectionRects:
