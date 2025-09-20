@@ -17,9 +17,11 @@ var
   maskLayer*: Image
 
 proc newImage(w, h: int): Image {.measure.} =
+  ## Creates a new image with the specified dimensions, wrapped for metrics.
   pixie.newImage(w, h)
 
 proc draw(a, b: Image) {.measure.} =
+  ## Draws image b onto image a, wrapped for metrics.
   pixie.draw(a, b)
 
 proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measure.} =

@@ -40,6 +40,7 @@ const
   CR = Rune(13)
 
 proc clamp(v, a, b: int): int =
+  ## Clamps a value between two bounds.
   max(a, min(b, v))
 
 proc getSelection*(arrangement: Arrangement, start, stop: int): seq[Rect] =
@@ -75,6 +76,7 @@ proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
   return minGlyph
 
 proc layout*(node: Node): seq[Rect] =
+  ## Gets the layout rectangles for a node.
   return node.arrangement.selectionRects
 
 proc innerHeight*(node: Node): float32 =
@@ -146,6 +148,7 @@ proc redo*(node: Node) =
     node.selector = node.cursor
 
 proc runesChanged(node: Node) =
+  ## Called when runes in a text node change.
   node.makeTextDirty()
 
 proc removedSelection*(node: Node): bool =
@@ -247,6 +250,7 @@ proc cutText*(node: Node): string =
   node.savedX = node.cursorPos.x
 
 proc setCursor*(node: Node, loc: int) =
+  ## Sets the cursor position in a text node.
   node.cursor = clamp(loc, 0, node.characters.u.len + 1)
   node.selector = node.cursor
 
