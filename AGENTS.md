@@ -125,4 +125,45 @@ Try to only use a single line per doc comment.
 Never more than 4 lines.
 Avoid top level section comments, especially surround with `=` or `#` characters.
 
+## Error Handling
+
+Its best to let the exception propagate to the top level. Don't silence them with `try/except`. Use error codes where absolutely necessary. Adding asserts especially at start or end of a procedure is good as they can be compiled out in release mode. Many errors are not actually errors and can be passed through. Prefer returning nil, "", 0, false, over raising exceptions or error codes.
+
+## Checking the code
+
+In many projects you can run `nim check` and `nimble test` as you are writing the code to make sure it works. Always do this after big changes and before committing.
+
+## Block formatting
+
+Some small or repeating functions its ok to be without a doc comment.
+
+```nim
+proc toFlatty*(s: var string, x: uint8) = s.addUint8(x)
+proc toFlatty*(s: var string, x: int8) = s.addInt8(x)
+proc toFlatty*(s: var string, x: uint16) = s.addUint16(x)
+proc toFlatty*(s: var string, x: int16) = s.addInt16(x)
+proc toFlatty*(s: var string, x: uint32) = s.addUint32(x)
+proc toFlatty*(s: var string, x: int32) = s.addInt32(x)
+proc toFlatty*(s: var string, x: uint64) = s.addUint64(x)
+proc toFlatty*(s: var string, x: int64) = s.addInt64(x)
+proc toFlatty*(s: var string, x: float32) = s.addFloat32(x)
+proc toFlatty*(s: var string, x: float64) = s.addFloat64(x)
+```
+
+Some functions that are just use to interface with external libraries its ok to be without a doc comment and be on long lines.
+
+```nim	
+proc WinHttpReceiveResponse*(hRequest: HINTERNET, lpReserved: LPVOID): BOOL {.dynlib: "winhttp".}
+proc WinHttpQueryHeaders*(hRequest: HINTERNET, dwInfoLevel: DWORD, pwszName: LPCWSTR, lpBuffer: LPVOID, lpdwBufferLength: LPDWORD, lpdwIndex: LPDWORD): BOOL {.dynlib: "winhttp".}
+proc WinHttpReadData*(hFile: HINTERNET, lpBuffer: LPVOID, dwNumberOfBytesToRead: DWORD, lpdwNumberOfBytesRead: LPDWORD): BOOL {.dynlib: "winhttp".}
+```
+
+Its ok to add zero to make blocks line up:
+
+```
+for i in 0 ..< 10:
+  echo data[i * 3 + 0]
+  echo data[i * 3 + 1]
+  echo data[i * 3 + 2]
+```
 
