@@ -1,6 +1,6 @@
 import
   std/[algorithm, json, os, strformat, strutils, tables, unicode],
-  bumpy, pixie, vmath, windy, 
+  bumpy, pixie, vmath, windy,
   common, globs, internal, loader, nodes, perf, schema, textboxes
 
 export textboxes, nodes, common, windy
