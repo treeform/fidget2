@@ -36,6 +36,7 @@ proc measurePop*() =
   measureStart = now
 
 macro measure*(fn: untyped) =
+  ## Macro that adds performance measurement to a function.
   let procName = fn[0].repr
   fn[6].insert 0, quote do:
     measurePush(`procName`)
@@ -44,6 +45,7 @@ macro measure*(fn: untyped) =
   return fn
 
 proc dumpMeasures*(overTotalMs = 0.0) =
+  ## Dumps performance measurements if total time exceeds threshold.
   measures.sort()
   var
     maxK = 0

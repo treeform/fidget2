@@ -31,17 +31,20 @@ proc checkDirty*(node: Node) =
       break
 
 proc printDirtyStatus*(node: Node, indent = 0) =
+  ## Prints the dirty status of a node and its children.
   echo " ".repeat(indent), node.name, ":", node.dirty
   for child in node.children:
     printDirtyStatus(child, indent + 1)
 
 proc makeTextDirty*(node: Node) =
+  ## Marks a text node as dirty and clears its arrangement.
   node.dirty = true
   if node.kind == TextNode:
     node.arrangement = nil
     node.computeArrangement()
 
 proc `text=`*(node: Node, text: string) =
+  ## Sets the text content of a text node.
   if node.kind != TextNode:
     echo "Trying to set text of non text node: '" & node.path & "'"
   if node.characters != text:
@@ -49,23 +52,28 @@ proc `text=`*(node: Node, text: string) =
     node.makeTextDirty()
 
 proc text*(node: Node): string =
+  ## Gets the text content of a text node.
   if node.kind != TextNode:
     echo "Trying to get text of non text node: '" & node.path & "'"
   return node.characters
 
 proc show*(node: Node) =
+  ## Shows a node by making it visible.
   node.visible = true
   node.markTreeDirty()
 
 proc hide*(node: Node) =
+  ## Hides a node by making it invisible.
   node.visible = false
   node.markTreeDirty()
 
 proc show*(nodes: seq[Node]) =
+  ## Shows multiple nodes.
   for node in nodes:
     node.show()
 
 proc hide*(nodes: seq[Node]) =
+  ## Hides multiple nodes.
   for node in nodes:
     node.hide()
 
@@ -94,13 +102,16 @@ proc removeChild*(parent, node: Node) =
       return
 
 proc remove*(node: Node) =
+  ## Removes a node from its parent.
   node.parent.removeChild(node)
 
 proc remove*(nodes: seq[Node]) =
+  ## Removes multiple nodes.
   for node in toSeq(nodes):
     node.remove()
 
 proc removeChildren*(node: Node) =
+  ## Removes all children from a node.
   for child in toSeq(node.children):
     node.removeChild(child)
 

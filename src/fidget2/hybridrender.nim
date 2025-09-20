@@ -165,7 +165,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
   mat = prevMat
 
 proc drawWithAtlas(node: Node) {.measure.} =
-  # Draws the nodes using the atlas.
+  ## Draws the nodes from the atlas to the screen.
   if not node.visible or node.opacity == 0:
     return
 

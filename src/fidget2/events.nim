@@ -271,12 +271,14 @@ proc setupTextBox(node: Node) =
   node.editable = true
 
 proc relativeMousePos*(window: Window, node: Node): Vec2 =
+  ## Gets the mouse position relative to a node.
   let
     mat = scale(vec2(1, 1) / window.contentScale) *
       node.mat * translate(-node.scrollPos)
   return mat.inverse() * window.mousePos.vec2
 
 proc textBoxKeyboardAction(button: Button) =
+  ## Handles keyboard actions for text boxes.
   requestedFrame = true
 
   # Do the text box commands.
@@ -456,6 +458,7 @@ proc clearAllEventHandlers*() =
   eventCbs.setLen(0)
 
 proc resizeWindow*(x, y: int) =
+  ## Resizes the window to the specified dimensions.
   window.size = ivec2(x.cint, y.cint)
 
 proc onMouseMove() =
@@ -470,9 +473,11 @@ proc onMouseMove() =
       )
 
 proc swapBuffers() {.measure.} =
+  ## Swaps the display buffers.
   window.swapBuffers()
 
 proc processEvents() {.measure.} =
+  ## Processes window and input events.
 
   # Get the node list under the mouse.
   let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
@@ -718,6 +723,7 @@ proc display() {.measure.} =
       sleep(7)
 
 proc mainLoop*() {.cdecl.} =
+  ## Main application loop.
   processEvents()
   pollEvents()
   display()
