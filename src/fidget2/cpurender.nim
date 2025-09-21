@@ -110,7 +110,10 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
         break
 
     if node.clipsContent:
-      if not overlapsNode:
+      # For clipping, check if mouse is within the node's bounds, not just its geometry
+      let localMousePos = mat.inverse() * mousePos
+      if localMousePos.x < 0 or localMousePos.y < 0 or 
+         localMousePos.x > node.size.x or localMousePos.y > node.size.y:
         return
 
     var overlapsChild = false
