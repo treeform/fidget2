@@ -59,6 +59,9 @@
     <summary><a class="reference reference-toplevel" href="#8" id="58">Vars</a></summary>
     <ul class="simple simple-toc-section">
       <li><a class="reference" href="#currentFigmaUrl" title="currentFigmaUrl: string">currentFigmaUrl</a></li>
+<li><a class="reference" href="#cursorBlinkDuration" title="cursorBlinkDuration = 0.53">cursorBlinkDuration</a></li>
+<li><a class="reference" href="#cursorBlinkTime" title="cursorBlinkTime: float64">cursorBlinkTime</a></li>
+<li><a class="reference" href="#cursorVisible" title="cursorVisible: bool">cursorVisible</a></li>
 <li><a class="reference" href="#defaultTextBackgroundHighlightColor" title="defaultTextBackgroundHighlightColor = rgbx(50, 150, 250, 255)">defaultTextBackgroundHighlightColor</a></li>
 <li><a class="reference" href="#defaultTextHighlightColor" title="defaultTextHighlightColor = color(1, 1, 1, 1)">defaultTextHighlightColor</a></li>
 <li><a class="reference" href="#entryFramePath" title="entryFramePath: string">entryFramePath</a></li>
@@ -124,6 +127,10 @@
   <li><a class="reference" href="#overlaps%2CNode%2CVec2" title="overlaps(node: Node; mouse: Vec2): bool">overlaps(node: Node; mouse: Vec2): bool</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">resetCursorBlink
+  <li><a class="reference" href="#resetCursorBlink" title="resetCursorBlink()">resetCursorBlink()</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">selection
   <li><a class="reference" href="#selection%2CNode" title="selection(node: Node): HSlice[int, int]">selection(node: Node): HSlice[int, int]</a></li>
 
@@ -179,6 +186,36 @@
     
     <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L26" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L26" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="cursorBlinkDuration">
+  <dt><pre><a href="internal.html#cursorBlinkDuration"><span class="Identifier">cursorBlinkDuration</span></a> <span class="Other">=</span> <span class="FloatNumber">0.53</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L37" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L37" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="cursorBlinkTime">
+  <dt><pre><a href="internal.html#cursorBlinkTime"><span class="Identifier">cursorBlinkTime</span></a><span class="Other">:</span> <span class="Identifier">float64</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L39" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L39" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="cursorVisible">
+  <dt><pre><a href="internal.html#cursorVisible"><span class="Identifier">cursorVisible</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L41" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L41" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -314,8 +351,8 @@
   <dd>
     
     Returns a vec that stays in bounds of the rectangle.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L64" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L64" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L76" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L76" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -329,8 +366,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L297" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L297" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L309" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L309" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -345,8 +382,8 @@
   <dd>
     
     Computes the scroll bounds of a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L400" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L400" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L412" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L412" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -358,8 +395,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L257" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L257" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L269" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L269" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -373,8 +410,8 @@
   <dd>
     
     Gets the font of a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L373" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L373" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L385" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L385" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -386,8 +423,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L182" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L182" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L194" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L194" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -400,8 +437,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L200" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L200" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L212" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L212" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -413,8 +450,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L191" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L191" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L203" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L203" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -428,8 +465,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L381" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L381" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L393" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L393" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -442,8 +479,8 @@
   <dd>
     
     Gets a font from the cache or loads it from disk.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L72" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L72" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L84" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L84" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -455,8 +492,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L217" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L217" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L229" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L229" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -469,8 +506,21 @@
   <dd>
     
     Does the mouse overlap the node?
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L410" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L410" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L422" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L422" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="resetCursorBlink-procs-all">
+  <div id="resetCursorBlink">
+  <dt><pre><span class="Keyword">proc</span> <a href="#resetCursorBlink"><span class="Identifier">resetCursorBlink</span></a><span class="Other">(</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Resets cursor blink to visible state (called when typing).
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L43" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L43" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -482,8 +532,8 @@
   <dd>
     
     Returns the current selection from the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L261" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L261" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L273" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L273" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -495,8 +545,8 @@
   <dd>
     
     Returns Mat3 transform of the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L36" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L36" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L48" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L48" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -514,8 +564,8 @@
   <dd>
     
     Iterates over a sequence in reverse order.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L50" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L50" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L62" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L62" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -527,8 +577,8 @@
   <dd>
     
     Iterates over a sequence in reverse order with index.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L57" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L57" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/internal.nim#L69" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/internal.nim#L69" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -544,7 +594,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-21 00:06:15 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-21 16:07:38 UTC</small>
       </div>
     </div>
   </div>

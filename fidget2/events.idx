@@ -56,6 +56,6 @@ nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema
 nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		681
 nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		685
 nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		694
-nim	mainLoop	fidget2/events.html#mainLoop	proc mainLoop()		725
-nim	initFidget	fidget2/events.html#initFidget,string,string,string,string	proc initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n           windowStyle = DecoratedResizable; dataDir = "data")		737
-nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		816
+nim	mainLoop	fidget2/events.html#mainLoop	proc mainLoop()		735
+nim	initFidget	fidget2/events.html#initFidget,string,string,string,string	proc initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n           windowStyle = DecoratedResizable; dataDir = "data")		747
+nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		826
