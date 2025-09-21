@@ -434,7 +434,7 @@ proc drawText*(node: Node) {.measure.} =
         layer.fillPath(path, defaultTextBackgroundHighlightColor, mat)
 
     # Draw the typing cursor
-    if selectionRegions.len == 0:
+    if selectionRegions.len == 0 and cursorVisible:
       var s = node.cursorRect()
       var path = newPath()
       path.rect(s)
