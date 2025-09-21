@@ -313,8 +313,8 @@ proc textBoxKeyboardAction(button: Button) =
         of KeyPageDown:
           textBoxFocus.pageDown(shift)
         of KeyEnter:
-          #TODO: keyboard.multiline:
-          textBoxFocus.typeCharacter(Rune(10))
+          if textBoxFocus.multiline:
+            textBoxFocus.typeCharacter(Rune(10))
         of KeyBackspace:
           textBoxFocus.backspace(shift)
         of KeyDelete:
@@ -352,23 +352,33 @@ proc textBoxKeyboardAction(button: Button) =
         else:
           discard
 
+    let oldMultiline = textBoxFocus.multiline
     textBoxFocus.makeTextDirty()
 
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
+    
+    # If multiline changed during onEdit, refresh the arrangement
+    if textBoxFocus.multiline != oldMultiline:
+      textBoxFocus.makeTextDirty()
 
 proc onRune(rune: Rune) =
   ## The user typed a character, needed for unicode entry.
   if textBoxFocus != nil:
+    let oldMultiline = textBoxFocus.multiline
     textBoxFocus.typeCharacter(rune)
     requestedFrame = true
 
-  for cb in eventCbs:
-    if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
-      thisSelector = textBoxFocus.path
-      cb.handler(textBoxFocus)
+    for cb in eventCbs:
+      if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
+        thisSelector = textBoxFocus.path
+        cb.handler(textBoxFocus)
+    
+    # If multiline changed during onEdit, refresh the arrangement
+    if textBoxFocus.multiline != oldMultiline:
+      textBoxFocus.makeTextDirty()
 
 proc onScroll() =
   ## Handles the scroll wheel.

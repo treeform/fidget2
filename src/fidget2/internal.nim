@@ -341,9 +341,13 @@ proc computeArrangement*(node: Node) {.measure.} =
     node.spans = @[newSpan(node.characters, font)]
 
   let wrap =
-    case node.style.textAutoResize:
-      of FixedTextResize, HeightTextResize: true
-      of WidthAndHeightTextResize: false
+    if not node.multiline:
+      # Single-line text boxes should never wrap.
+      false
+    else:
+      case node.style.textAutoResize:
+        of FixedTextResize, HeightTextResize: true
+        of WidthAndHeightTextResize: false
 
   if textBoxFocus == node:
     # If node is being editing we might have to add highlight or ime string.
@@ -363,9 +367,16 @@ proc computeArrangement*(node: Node) {.measure.} =
       # To prevent this insert a fake space " ".
       node.spans[0].text = " "
 
+  let bounds =
+    if not node.multiline:
+      # Single-line don't have bounds in the X direction. 
+      vec2(0, node.size.y)
+    else:
+      node.size
+
   node.arrangement = typeset(
     node.spans,
-    bounds = node.size,
+    bounds = bounds,
     wrap = wrap,
     hAlign = node.style.textAlignHorizontal,
     vAlign = node.style.textAlignVertical,
