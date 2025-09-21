@@ -208,6 +208,7 @@ proc typeCharacter*(node: Node, rune: Rune) =
   node.selector = node.cursor
   node.scrollToCursor()
   node.makeTextDirty()
+  resetCursorBlink()
 
 proc typeCharacter*(node: Node, letter: char) =
   ## Adds a character to the text box.
@@ -227,6 +228,7 @@ proc typeCharacters*(node: Node, s: string) =
   node.runesChanged()
   node.scrollToCursor()
   node.makeTextDirty()
+  resetCursorBlink()
 
 proc copyText*(node: Node): string =
   ## Returns the text that was copied.
@@ -310,6 +312,7 @@ proc left*(node: Node, shift = false) =
       node.selector = node.cursor
     node.savedX = node.cursorPos.x
   node.scrollToCursor()
+  resetCursorBlink()
 
 proc right*(node: Node, shift = false) =
   ## Moves the cursor right.
@@ -319,6 +322,7 @@ proc right*(node: Node, shift = false) =
       node.selector = node.cursor
     node.savedX = node.cursorPos.x
   node.scrollToCursor()
+  resetCursorBlink()
 
 proc down*(node: Node, shift = false) =
   ## Moves the cursor down.
@@ -336,6 +340,7 @@ proc down*(node: Node, shift = false) =
       if not shift:
         node.selector = node.cursor
   node.scrollToCursor()
+  resetCursorBlink()
 
 proc up*(node: Node, shift = false) =
   ## Moves the cursor up.
@@ -353,6 +358,7 @@ proc up*(node: Node, shift = false) =
       if not shift:
         node.selector = node.cursor
   node.scrollToCursor()
+  resetCursorBlink()
 
 proc leftWord*(node: Node, shift = false) =
   ## Moves the cursor left by a word. (Usually ctrl + left).
@@ -469,6 +475,7 @@ proc mouseAction*(
 
   node.scrollToCursor()
   node.makeTextDirty()
+  resetCursorBlink()
 
 proc selectWord*(node: Node, mousePos: Vec2, extraSpace = false) =
   ## Selects the word under the cursor (double click).

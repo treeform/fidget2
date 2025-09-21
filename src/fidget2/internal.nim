@@ -1,5 +1,5 @@
 import
-  std/[options, os, tables, unicode],
+  std/[options, os, tables, unicode, times],
   bumpy, chroma, pixie, pixie/fontformats/opentype, vmath, windy,
   common, loader, perf, schema
 
@@ -32,6 +32,18 @@ var
   ## Default text highlight color (blueish by default).
   defaultTextBackgroundHighlightColor* = rgbx(50, 150, 250, 255)
   defaultTextHighlightColor* = color(1, 1, 1, 1)
+
+  ## Cursor blink duration in seconds.
+  cursorBlinkDuration* = 0.530 
+  ## Current cursor blink state and timing.
+  cursorBlinkTime*: float64
+  ## Current cursor blink state.
+  cursorVisible*: bool
+
+proc resetCursorBlink*() =
+  ## Resets cursor blink to visible state (called when typing).
+  cursorBlinkTime = epochTime()
+  cursorVisible = true
 
 proc transform*(node: Node): Mat3 =
   ## Returns Mat3 transform of the node.

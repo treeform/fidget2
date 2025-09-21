@@ -1,5 +1,5 @@
 import
-  std/[algorithm, json, os, strformat, strutils, tables, unicode],
+  std/[algorithm, json, os, strformat, strutils, tables, unicode, times],
   bumpy, pixie, vmath, windy,
   common, globs, internal, loader, nodes, perf, schema, textboxes
 
@@ -702,6 +702,16 @@ proc display() {.measure.} =
   ## Called every frame by the main while loop.
   if window.minimized:
     return
+
+  # Update cursor blink timing.
+  if textBoxFocus != nil:
+    let currentTime = epochTime()
+    if cursorBlinkTime + cursorBlinkDuration < currentTime:
+      cursorBlinkTime = currentTime
+      # Toggle cursor visible state.
+      cursorVisible = not cursorVisible
+      # Mark text box dirty if cursor is visible.
+      textBoxFocus.makeTextDirty()
 
   keyboard.onFocusNode = nil
   keyboard.onUnfocusNode = nil
