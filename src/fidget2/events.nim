@@ -265,7 +265,6 @@ proc setupTextBox(node: Node) =
   keyboard.onFocusNode.dirty = true
 
   # TODO: handle these properties better
-  node.multiline = true
   node.wordWrap = false
   node.scrollable = true
   node.editable = true
