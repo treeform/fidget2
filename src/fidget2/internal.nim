@@ -341,7 +341,7 @@ proc computeArrangement*(node: Node) {.measure.} =
     node.spans = @[newSpan(node.characters, font)]
 
   let wrap =
-    if not node.multiline:
+    if node.singleline:
       # Single-line text boxes should never wrap.
       false
     else:
@@ -368,7 +368,7 @@ proc computeArrangement*(node: Node) {.measure.} =
       node.spans[0].text = " "
 
   let bounds =
-    if not node.multiline:
+    if node.singleline:
       # Single-line don't have bounds in the X direction. 
       vec2(0, node.size.y)
     else:

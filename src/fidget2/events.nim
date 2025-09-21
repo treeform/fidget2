@@ -312,7 +312,7 @@ proc textBoxKeyboardAction(button: Button) =
         of KeyPageDown:
           textBoxFocus.pageDown(shift)
         of KeyEnter:
-          if textBoxFocus.multiline:
+          if not textBoxFocus.singleline:
             textBoxFocus.typeCharacter(Rune(10))
         of KeyBackspace:
           textBoxFocus.backspace(shift)
@@ -351,7 +351,7 @@ proc textBoxKeyboardAction(button: Button) =
         else:
           discard
 
-    let oldMultiline = textBoxFocus.multiline
+    let oldSingleline = textBoxFocus.singleline
     textBoxFocus.makeTextDirty()
 
     for cb in eventCbs:
@@ -359,14 +359,14 @@ proc textBoxKeyboardAction(button: Button) =
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
     
-    # If multiline changed during onEdit, refresh the arrangement
-    if textBoxFocus.multiline != oldMultiline:
+    # If singleline changed during onEdit, refresh the arrangement
+    if textBoxFocus.singleline != oldSingleline:
       textBoxFocus.makeTextDirty()
 
 proc onRune(rune: Rune) =
   ## The user typed a character, needed for unicode entry.
   if textBoxFocus != nil:
-    let oldMultiline = textBoxFocus.multiline
+    let oldSingleline = textBoxFocus.singleline
     textBoxFocus.typeCharacter(rune)
     requestedFrame = true
 
@@ -375,8 +375,8 @@ proc onRune(rune: Rune) =
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
     
-    # If multiline changed during onEdit, refresh the arrangement
-    if textBoxFocus.multiline != oldMultiline:
+    # If singleline changed during onEdit, refresh the arrangement
+    if textBoxFocus.singleline != oldSingleline:
       textBoxFocus.makeTextDirty()
 
 proc onScroll() =
