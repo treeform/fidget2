@@ -77,6 +77,7 @@ Merge multiple const, let, and var declarations into a single block declaration.
 
 ## Readme
 
+Fix spelling and grammar, only!
 Avoid using emoji in the readme, avoid using fancy quotes, mdash, semicolon, and other fancy characters. Write in a simple, clear, and direct way. Bullet lists or table to show features are good.
 
 ## Indentation
