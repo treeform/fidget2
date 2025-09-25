@@ -194,7 +194,7 @@ proc typeCharacter*(node: Node, rune: Rune) =
     return
   node.removeSelection()
   # don't add new lines in a single line box.
-  if not node.multiline and rune == Rune(10):
+  if node.singleline and rune == Rune(10):
     return
   node.undoSave()
   if node.cursor == node.characters.u.len:

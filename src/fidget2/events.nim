@@ -265,7 +265,6 @@ proc setupTextBox(node: Node) =
   keyboard.onFocusNode.dirty = true
 
   # TODO: handle these properties better
-  node.multiline = true
   node.wordWrap = false
   node.scrollable = true
   node.editable = true
@@ -313,8 +312,8 @@ proc textBoxKeyboardAction(button: Button) =
         of KeyPageDown:
           textBoxFocus.pageDown(shift)
         of KeyEnter:
-          #TODO: keyboard.multiline:
-          textBoxFocus.typeCharacter(Rune(10))
+          if not textBoxFocus.singleline:
+            textBoxFocus.typeCharacter(Rune(10))
         of KeyBackspace:
           textBoxFocus.backspace(shift)
         of KeyDelete:
@@ -352,23 +351,33 @@ proc textBoxKeyboardAction(button: Button) =
         else:
           discard
 
+    let oldSingleline = textBoxFocus.singleline
     textBoxFocus.makeTextDirty()
 
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
+    
+    # If singleline changed during onEdit, refresh the arrangement
+    if textBoxFocus.singleline != oldSingleline:
+      textBoxFocus.makeTextDirty()
 
 proc onRune(rune: Rune) =
   ## The user typed a character, needed for unicode entry.
   if textBoxFocus != nil:
+    let oldSingleline = textBoxFocus.singleline
     textBoxFocus.typeCharacter(rune)
     requestedFrame = true
 
-  for cb in eventCbs:
-    if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
-      thisSelector = textBoxFocus.path
-      cb.handler(textBoxFocus)
+    for cb in eventCbs:
+      if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
+        thisSelector = textBoxFocus.path
+        cb.handler(textBoxFocus)
+    
+    # If singleline changed during onEdit, refresh the arrangement
+    if textBoxFocus.singleline != oldSingleline:
+      textBoxFocus.makeTextDirty()
 
 proc onScroll() =
   ## Handles the scroll wheel.
@@ -732,6 +741,7 @@ proc display() {.measure.} =
       # Native needs to sleep to avoid 100% CPU usage.
       sleep(7)
 
+
 proc mainLoop*() {.cdecl.} =
   ## Main application loop.
   processEvents()
@@ -744,26 +754,24 @@ proc mainLoop*() {.cdecl.} =
   if window.buttonToggle[KeyF9]:
     dumpMeasures(16)
 
-proc initFidget*(
-  figmaUrl: string,
+proc runMainLoop*() =
+  ## Runs the main loop.
+  when defined(emscripten):
+    # Emscripten can't block so it will call this callback instead.
+    window.run(mainLoop)
+  else:
+    # When running native code we can block in an infinite loop.
+    while internal.running:
+      mainLoop()
+
+    # Destroy the window.
+    window.close()
+
+proc setupWindowAndEvents*(
   windowTitle: string,
-  entryFrame: string,
-  windowStyle = DecoratedResizable,
-  dataDir = "data"
+  windowStyle = DecoratedResizable
 ) =
-  ## Starts the Fidget main loop.
-  currentFigmaUrl = figmaUrl
-  common.dataDir = dataDir
-  use(currentFigmaUrl)
-
-  entryFramePath = entryFrame
-  thisFrame = find(entryFramePath)
-  if thisFrame == nil:
-    quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
-
-  if thisFrame == nil:
-    raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
-
+  ## Sets up the window and events.
   hybridrender.setupWindow(
     thisFrame,
     thisFrame.size.ivec2,
@@ -823,6 +831,31 @@ proc initFidget*(
       thisSelector = cb.glob
       cb.handler(thisFrame)
 
+proc initFidget*(
+  figmaUrl: string,
+  windowTitle: string,
+  entryFrame: string,
+  windowStyle = DecoratedResizable,
+  dataDir = "data"
+) =
+  ## Starts the Fidget main loop.
+  currentFigmaUrl = figmaUrl
+  common.dataDir = dataDir
+  use(currentFigmaUrl)
+
+  entryFramePath = entryFrame
+  thisFrame = find(entryFramePath)
+  if thisFrame == nil:
+    quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
+
+  if thisFrame == nil:
+    raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
+  
+  setupWindowAndEvents(
+    windowTitle = windowTitle,
+    windowStyle = windowStyle
+  )
+   
 proc startFidget*(
   figmaUrl: string,
   windowTitle: string,
@@ -837,13 +870,30 @@ proc startFidget*(
     windowStyle = windowStyle,
     dataDir = dataDir
   )
-  when defined(emscripten):
-    # Emscripten can't block so it will call this callback instead.
-    window. run(mainLoop)
-  else:
-    # When running native code we can block in an infinite loop.
-    while internal.running:
-      mainLoop()
-
-    # Destroy the window.
-    window.close()
+  runMainLoop()
+  
+proc startFidget*(
+  figmaFile: FigmaFile,
+  windowTitle: string,
+  entryFrame: string,
+  windowStyle = DecoratedResizable,
+  dataDir = "data"
+) =
+  ## Starts fidget with a manually created FigmaFile instead of loading from URL.
+  ## This allows you to create UIs purely in code without needing Figma files.
+  
+  # Set up the global figmaFile
+  loader.figmaFile = figmaFile
+  common.dataDir = dataDir
+  
+  # Set up entry frame
+  entryFramePath = entryFrame
+  thisFrame = find(entryFramePath)
+  if thisFrame == nil:
+    raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
+  
+  setupWindowAndEvents(
+    windowTitle = windowTitle,
+    windowStyle = windowStyle
+  )
+  runMainLoop()

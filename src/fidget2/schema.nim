@@ -230,7 +230,7 @@ type
     arrangement*: Arrangement
     cursor*: int      # The typing cursor.
     selector*: int    # The selection cursor.
-    multiline*: bool  # Single line only (good for input fields).
+    singleline*: bool  # Single line mode (no wrapping, horizontal scroll).
     wordWrap*: bool   # Should the lines wrap or not.
     savedX*: float     # X position affinity when moving cursor up or down.
     undoStack*: seq[(string, int)]

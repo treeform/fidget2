@@ -13,7 +13,7 @@ find "/UI/TemperatureFrame":
       if not thisNode.focused:
         thisNode.text = &"{celsius:0.2f}"
     onEdit:
-      thisNode.multiline = false
+      thisNode.singleline = true
       try:
         celsius = parseFloat(thisNode.text)
         fahrenheit = celsius * (9/5) + 32.0
@@ -28,7 +28,7 @@ find "/UI/TemperatureFrame":
       if not thisNode.focused:
         thisNode.text = &"{fahrenheit:0.2f}"
     onEdit:
-      thisNode.multiline = false
+      thisNode.singleline = true
       try:
         fahrenheit = parseFloat(thisNode.text)
         celsius = (fahrenheit - 32.0) * (5/9)

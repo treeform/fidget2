@@ -183,6 +183,10 @@ Attach any subset of these inside a `find` block:
 * `onRightClick` - Mouse right click.
 * `onMouseMove` - When mouse moves over the element.
 
+## What if I don't want to use Figma?
+
+This does go against the Fidget philosophy, but I get it. You are a propgrammer, you don't want to learn another tool. You just want to write code and that's it. Well you can construct your own nodes and attach handlers to them. See the pure code examples folder [here](https://github.com/treeform/fidget2/tree/master/examples/purecode).
+
 ## Node key properties and fields
 
 `thisNode` is a `Node` that mirrors Figma’s model with extra runtime fields for interactivity, layout, and caching.
