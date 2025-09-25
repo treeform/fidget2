@@ -5,6 +5,11 @@ import
 
 export textboxes, nodes, common, windy
 
+const
+  ## After N pixels of mouse button down and dragging,
+  ## having onDrag event handler,
+  ## the node is considered to be dragged.
+  DragThreshold = 5.0
 
 when defined(cpu):
   import cpurender
@@ -18,22 +23,55 @@ type
     onUnfocusNode*: Node
 
   EventCbKind* = enum
+    ## When user clicks on a node.
     OnClick
+    ## When user clicks outside a node.
     OnClickOutside
+    ## When user right-clicks on a node.
     OnRightClick
-    OnAnyClick
-    OnFrame
-    OnEdit
-    OnDisplay
-    OnFocus
-    OnUnfocus
-    OnShow
-    OnHide
+    ## When the mouse moves over a node.
     OnMouseMove
+    ## When the node is loaded.
+    ## Called only once per node.
     OnLoad
+    ## Called once per frame.
+    ## NOTE: Can caused performance issues if overused.
+    OnFrame
+    ## When a node is displayed.
+    ## NOTE: Can caused performance issues if overused.
+    OnDisplay
+    ## When a text node is edited.
+    ## Only text nodes with this event can be edited.
+    OnEdit
+    ## When a text node is focused.
+    OnFocus
+    ## When a text node is unfocused.
+    OnUnfocus
+    ## When a node is shown, `thisNode.visible` is true.
+    OnShow
+    ## When a node is hidden, `thisNode.visible` is false.
+    OnHide
+    ## When a button is pressed, includes mouse buttons and keyboard buttons.
     OnButtonPress
+    ## When a button is released, includes mouse buttons and keyboard buttons.
     OnButtonRelease
+    ## When the `thisNode.size` changes.
     OnResize
+    ## When user starts dragging a node.
+    ## Only nodes with this event can be dragged.
+    ## `dragNode` is the node that is being dragged.
+    OnDragStart
+    ## When user is dragging a node.
+    ## `dragNode` is the node that is being dragged.
+    ## Similar to OnMouseMove, but only called on the node that is being dragged.
+    OnDrag
+    ## When user stops dragging a node called on the node that is being dragged.
+    ## `dragNode` is the node that was stopped dragging.
+    OnDragEnd
+    ## When user drops a node, called on the node that is below the node that is being dragged.
+    ## Only nodes with this event can be dropped to.
+    ## `dropNode` is the node that was dropped.
+    OnDrop
 
   EventCb* = ref object
     kind*: EventCbKind
@@ -50,9 +88,14 @@ var
   keyboard* = Keyboard()
 
   thisFrame*: Node
+  dragNode*: Node
+  dragCandidate*: Node
+  dragCandidatePos*: Vec2
   thisCb*: EventCb
   thisSelector*: string
   thisButton*: Button
+  thisCursor*: Cursor
+  hoverNodes*: seq[Node]
 
   selectorStack: seq[string]
 
@@ -358,7 +401,7 @@ proc textBoxKeyboardAction(button: Button) =
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
-    
+
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
       textBoxFocus.makeTextDirty()
@@ -374,7 +417,7 @@ proc onRune(rune: Rune) =
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
         cb.handler(textBoxFocus)
-    
+
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
       textBoxFocus.makeTextDirty()
@@ -385,9 +428,9 @@ proc onScroll() =
   if textBoxFocus != nil:
     textBoxFocus.scrollBy(-window.scrollDelta.y * 50)
 
-  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+  let hoverNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
 
-  for node in underMouseNodes:
+  for node in hoverNodes:
     if node.overflowDirection == VerticalScrolling:
       # TODO make it scroll both x and y.
       node.scrollPos.y -= window.scrollDelta.y * 50
@@ -403,17 +446,6 @@ proc onScroll() =
         continue
 
       break
-
-proc simulateClick*(glob: string) =
-  ## Simulates a mouse click on a node.
-  ## Used mainly for writing tests.
-  for cb in eventCbs:
-    if cb.kind == OnClick:
-      thisCb = cb
-      thisSelector = thisCb.glob
-      if cb.glob == glob:
-        for node in findAll(cb.glob):
-          cb.handler(node)
 
 template onEdit*(body: untyped) =
   ## When a text node is edited.
@@ -445,6 +477,57 @@ template onFocus*(body: untyped) =
     proc(thisNode {.inject.}: Node) =
       body
   )
+
+template onDragStart*(body: untyped) =
+  ## When a node is dragged.
+  addCb(
+    OnDragStart,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onDrag*(body: untyped) =
+  ## When a node is dragged.
+  addCb(
+    OnDrag,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onDragEnd*(body: untyped) =
+  ## When a node is dragged.
+  addCb(
+    OnDragEnd,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+template onDrop*(body: untyped) =
+  ## When a node is dropped.
+  addCb(
+    OnDrop,
+    100,
+    thisSelector,
+    proc(thisNode {.inject.}: Node) =
+      body
+  )
+
+proc simulateClick*(glob: string) =
+  ## Simulates a mouse click on a node.
+  ## Used mainly for writing tests.
+  for cb in eventCbs:
+    if cb.kind == OnClick:
+      thisCb = cb
+      thisSelector = thisCb.glob
+      if cb.glob == glob:
+        for node in findAll(cb.glob):
+          cb.handler(node)
 
 proc updateWindowSize() =
   ## Handles window resize.
@@ -488,11 +571,13 @@ proc swapBuffers() {.measure.} =
 proc processEvents() {.measure.} =
   ## Processes window and input events.
 
-  # Get the node list under the mouse.
-  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+  thisCursor = Cursor(kind: ArrowCursor)
 
-  # echo "underMouseNodes: "
-  # for n in underMouseNodes:
+  # Get the node list under the mouse.
+  hoverNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+
+  # echo "hoverNodes: "
+  # for n in hoverNodes:
   #   echo n.path
   # echo "--------------------------------"
 
@@ -508,7 +593,7 @@ proc processEvents() {.measure.} =
   # Do hovering logic.
   var hovering = false
   if hoverNode != nil:
-    for n in underMouseNodes:
+    for n in hoverNodes:
       if n == hoverNode:
         hovering = true
         break
@@ -518,7 +603,7 @@ proc processEvents() {.measure.} =
       hoverNode.setVariant("State", "Default")
     hoverNode = nil
 
-  for n in underMouseNodes:
+  for n in hoverNodes:
     if n.isInstance:
       var stateDown = false
       if window.buttonDown[MouseLeft]:
@@ -538,6 +623,7 @@ proc processEvents() {.measure.} =
 
     case cb.kind:
     of OnLoad:
+      # Handled in during startFidget phase.
       discard
 
     of OnShow:
@@ -551,20 +637,20 @@ proc processEvents() {.measure.} =
     of OnClick:
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisCb.glob):
-          if node.inTree(thisFrame) and node in underMouseNodes:
+          if node.inTree(thisFrame) and node in hoverNodes:
             thisCb.handler(node)
 
     of OnRightClick:
       if window.buttonPressed[MouseRight]:
         for node in findAll(thisCb.glob):
-          if node.inTree(thisFrame) and node in underMouseNodes:
+          if node.inTree(thisFrame) and node in hoverNodes:
             thisCb.handler(node)
 
     of OnClickOutside:
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and
-            node notin underMouseNodes and
+            node notin hoverNodes and
             node.visible:
               thisCb.handler(node)
 
@@ -583,7 +669,7 @@ proc processEvents() {.measure.} =
 
     of OnMouseMove:
       for node in findAll(thisCb.glob):
-        if node.inTree(thisFrame) and node in underMouseNodes:
+        if node.inTree(thisFrame) and node in hoverNodes:
           thisCb.handler(node)
 
     of OnFrame:
@@ -591,19 +677,12 @@ proc processEvents() {.measure.} =
         if node.inTree(thisFrame):
           thisCb.handler(node)
 
-    of OnEdit:
-      discard
-
-    of OnFocus:
-      discard
-
-    of OnUnfocus:
-      discard
-
-    of OnAnyClick:
+    of OnEdit, OnFocus, OnUnfocus:
+      # Handled in text box keyboard action.
       discard
 
     of OnButtonPress, OnButtonRelease:
+      # Handled in the onButtonPress and onButtonRelease callbacks.
       discard
 
     of OnResize:
@@ -614,11 +693,46 @@ proc processEvents() {.measure.} =
               onResizeCache[node.path] = node.size
               thisCb.handler(node)
 
+    of OnDragStart:
+      if dragNode == nil and window.buttonDown[MouseLeft]:
+        for node in findAll(thisCb.glob):
+          if node.inTree(thisFrame):
+            # Second: If mouse moved enough, we set the drag node and call the handler.
+            if dragCandidate != nil and dragCandidate == node:
+              let dragDistance = window.mousePos.vec2 - dragCandidatePos
+              if dragDistance.length > DragThreshold:
+                dragNode = dragCandidate
+                thisCb.handler(dragNode)
+                dragCandidate = nil
+            # First: we get a candidate drag node, but it's not the drag node yet.
+            if window.buttonPressed[MouseLeft] and node in hoverNodes:
+              dragCandidate = node
+              dragCandidatePos = window.mousePos.vec2
+      if dragCandidate != nil and not window.buttonDown[MouseLeft]:
+        dragCandidate = nil
+
+    of OnDrag:
+      if dragNode != nil:
+        for node in findAll(thisCb.glob):
+          if node.inTree(thisFrame) and node == dragNode:
+            thisCb.handler(node)
+
+    of OnDragEnd:
+      if dragNode != nil and window.buttonReleased[MouseLeft]:
+        for node in findAll(thisCb.glob):
+          if node.inTree(thisFrame) and node == dragNode:
+            thisCb.handler(node)
+            dragNode = nil
+
+    of OnDrop:
+      # TODO: implement.
+      discard
+
   # Check if clicks on editable nodes.
   if window.buttonPressed[MouseLeft]:
     for selector in editableSelectors:
       for node in findAll(selector):
-        if node.inTree(thisFrame) and node in underMouseNodes:
+        if node.inTree(thisFrame) and node in hoverNodes:
 
           if textBoxFocus != nil:
             # Call onUnfocus on any old text box.
@@ -651,6 +765,10 @@ proc processEvents() {.measure.} =
   thisCb = nil
   redisplay = false
 
+  if window.buttonPressed[KeyF2]:
+    echo "Current node tree: "
+    echo thisFrame.dumpTree()
+
   if window.buttonPressed[KeyF4]:
     echo "Writing 'atlas.png'"
     bxy.readAtlas().writeFile("atlas.png")
@@ -659,6 +777,10 @@ proc processEvents() {.measure.} =
     echo "Reloading from web '", currentFigmaUrl, "'"
     use(currentFigmaUrl)
     thisFrame = find(entryFramePath)
+
+  if thisCursor.kind != window.cursor.kind:
+    # Only set the cursor if it has changed.
+    window.cursor = thisCursor
 
 proc `imageUrl=`*(paint: schema.Paint, url: string) =
   when not defined(emscripten) and not defined(nimdoc):
@@ -706,6 +828,13 @@ proc navigateBack*() =
     return
   thisFrame = navigationHistory.pop()
   thisFrame.markTreeDirty()
+
+proc absolutePosition*(node: Node): Vec2 =
+  ## Gets the absolute position of the node.
+  ## TODO: Take transform and rotation into account.
+  if node.parent == nil or thisFrame == node:
+    return vec2(0, 0)
+  return node.parent.absolutePosition + node.position
 
 proc display() {.measure.} =
   ## Called every frame by the main while loop.
@@ -850,12 +979,12 @@ proc initFidget*(
 
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
-  
+
   setupWindowAndEvents(
     windowTitle = windowTitle,
     windowStyle = windowStyle
   )
-   
+
 proc startFidget*(
   figmaUrl: string,
   windowTitle: string,
@@ -871,7 +1000,7 @@ proc startFidget*(
     dataDir = dataDir
   )
   runMainLoop()
-  
+
 proc startFidget*(
   figmaFile: FigmaFile,
   windowTitle: string,
@@ -881,17 +1010,17 @@ proc startFidget*(
 ) =
   ## Starts fidget with a manually created FigmaFile instead of loading from URL.
   ## This allows you to create UIs purely in code without needing Figma files.
-  
+
   # Set up the global figmaFile
   loader.figmaFile = figmaFile
   common.dataDir = dataDir
-  
+
   # Set up entry frame
   entryFramePath = entryFrame
   thisFrame = find(entryFramePath)
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
-  
+
   setupWindowAndEvents(
     windowTitle = windowTitle,
     windowStyle = windowStyle
