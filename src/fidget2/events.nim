@@ -94,6 +94,8 @@ var
   thisCb*: EventCb
   thisSelector*: string
   thisButton*: Button
+  thisCursor*: Cursor
+  hoverNodes*: seq[Node]
 
   selectorStack: seq[string]
 
@@ -426,9 +428,9 @@ proc onScroll() =
   if textBoxFocus != nil:
     textBoxFocus.scrollBy(-window.scrollDelta.y * 50)
 
-  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+  let hoverNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
 
-  for node in underMouseNodes:
+  for node in hoverNodes:
     if node.overflowDirection == VerticalScrolling:
       # TODO make it scroll both x and y.
       node.scrollPos.y -= window.scrollDelta.y * 50
@@ -569,11 +571,13 @@ proc swapBuffers() {.measure.} =
 proc processEvents() {.measure.} =
   ## Processes window and input events.
 
-  # Get the node list under the mouse.
-  let underMouseNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+  thisCursor = Cursor(kind: ArrowCursor)
 
-  # echo "underMouseNodes: "
-  # for n in underMouseNodes:
+  # Get the node list under the mouse.
+  hoverNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+
+  # echo "hoverNodes: "
+  # for n in hoverNodes:
   #   echo n.path
   # echo "--------------------------------"
 
@@ -589,7 +593,7 @@ proc processEvents() {.measure.} =
   # Do hovering logic.
   var hovering = false
   if hoverNode != nil:
-    for n in underMouseNodes:
+    for n in hoverNodes:
       if n == hoverNode:
         hovering = true
         break
@@ -599,7 +603,7 @@ proc processEvents() {.measure.} =
       hoverNode.setVariant("State", "Default")
     hoverNode = nil
 
-  for n in underMouseNodes:
+  for n in hoverNodes:
     if n.isInstance:
       var stateDown = false
       if window.buttonDown[MouseLeft]:
@@ -633,20 +637,20 @@ proc processEvents() {.measure.} =
     of OnClick:
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisCb.glob):
-          if node.inTree(thisFrame) and node in underMouseNodes:
+          if node.inTree(thisFrame) and node in hoverNodes:
             thisCb.handler(node)
 
     of OnRightClick:
       if window.buttonPressed[MouseRight]:
         for node in findAll(thisCb.glob):
-          if node.inTree(thisFrame) and node in underMouseNodes:
+          if node.inTree(thisFrame) and node in hoverNodes:
             thisCb.handler(node)
 
     of OnClickOutside:
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and
-            node notin underMouseNodes and
+            node notin hoverNodes and
             node.visible:
               thisCb.handler(node)
 
@@ -665,7 +669,7 @@ proc processEvents() {.measure.} =
 
     of OnMouseMove:
       for node in findAll(thisCb.glob):
-        if node.inTree(thisFrame) and node in underMouseNodes:
+        if node.inTree(thisFrame) and node in hoverNodes:
           thisCb.handler(node)
 
     of OnFrame:
@@ -701,7 +705,7 @@ proc processEvents() {.measure.} =
                 thisCb.handler(dragNode)
                 dragCandidate = nil
             # First: we get a candidate drag node, but it's not the drag node yet.
-            if window.buttonPressed[MouseLeft] and node in underMouseNodes:
+            if window.buttonPressed[MouseLeft] and node in hoverNodes:
               dragCandidate = node
               dragCandidatePos = window.mousePos.vec2
       if dragCandidate != nil and not window.buttonDown[MouseLeft]:
@@ -728,7 +732,7 @@ proc processEvents() {.measure.} =
   if window.buttonPressed[MouseLeft]:
     for selector in editableSelectors:
       for node in findAll(selector):
-        if node.inTree(thisFrame) and node in underMouseNodes:
+        if node.inTree(thisFrame) and node in hoverNodes:
 
           if textBoxFocus != nil:
             # Call onUnfocus on any old text box.
@@ -773,6 +777,10 @@ proc processEvents() {.measure.} =
     echo "Reloading from web '", currentFigmaUrl, "'"
     use(currentFigmaUrl)
     thisFrame = find(entryFramePath)
+
+  if thisCursor.kind != window.cursor.kind:
+    # Only set the cursor if it has changed.
+    window.cursor = thisCursor
 
 proc `imageUrl=`*(paint: schema.Paint, url: string) =
   when not defined(emscripten) and not defined(nimdoc):

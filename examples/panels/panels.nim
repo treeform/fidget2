@@ -2,7 +2,8 @@
 
 import
   std/[random, sequtils],
-  fidget2, bumpy, chroma
+  fidget2, bumpy, chroma, windy
+
 type
   AreaLayout = enum
     Horizontal
@@ -349,24 +350,30 @@ find "/UI/Main":
       dropHighlight.sendToFront()
 
   find "**/Area":
+    onMouseMove:
+      if thisNode == hoverNodes[0]:
+        let area = findAreaByNode(thisNode)
+        if area != nil:
+          if area.layout == Horizontal:
+            thisCursor = Cursor(kind: ResizeUpDownCursor)
+          else:
+            thisCursor = Cursor(kind: ResizeLeftRightCursor)
     onDragStart:
-      echo "onDragStart: ", thisNode.path
       let area = findAreaByNode(thisNode)
       if area != nil and area.areas.len > 0:
         dragArea = area
         dropHighlight.visible = true
     onDrag:
-      echo "onDrag: ", thisNode.path
       if dragArea != nil:
-        echo "Dragging area with name: ", dragArea.panels.len, " panels and ", dragArea.areas.len, " subareas"
         if dragArea.layout == Horizontal:
           dropHighlight.position = vec2(dragArea.node.absolutePosition.x, window.mousePos.vec2.y)
           dropHighlight.size = vec2(dragArea.node.size.x, AreaMargin)
+          thisCursor = Cursor(kind: ResizeUpDownCursor)
         else:
           dropHighlight.position = vec2(window.mousePos.vec2.x, dragArea.node.absolutePosition.y)
           dropHighlight.size = vec2(AreaMargin, dragArea.node.size.y)
+          thisCursor = Cursor(kind: ResizeLeftRightCursor)
     onDragEnd:
-      echo "onDragEnd: ", thisNode.path
       if dragArea != nil:
         if dragArea.layout == Horizontal:
           dragArea.split = (window.mousePos.vec2.y - dragArea.node.absolutePosition.y) / dragArea.node.size.y
@@ -376,19 +383,14 @@ find "/UI/Main":
       dragArea = nil
       dropHighlight.visible = false
 
-
   find "**/PanelHeader":
     onClick:
-      echo "Clicked: ", thisNode.name
       let panel = findPanelByHeader(thisNode)
-      echo "Panel: ", panel != nil
       if panel != nil:
         panel.parentArea.selectedPanelNum = thisNode.childIndex
-        echo "Selected panel: ", panel.parentArea.selectedPanelNum
         panel.parentArea.refresh()
 
     onDragStart:
-      echo "onDragStart: ", thisNode.path
       dropHighlight.visible = true
 
     onDrag:
@@ -397,7 +399,6 @@ find "/UI/Main":
       dropHighlight.size = rect.wh
 
     onDragEnd:
-      echo "onDragEnd: ", thisNode.path
       dropHighlight.visible = false
       let (targetArea, areaScan, _) = rootArea.scan()
       if targetArea != nil:
