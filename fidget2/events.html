@@ -150,6 +150,14 @@
   <li><a class="reference" href="#resizeWindow%2Cint%2Cint" title="resizeWindow(x, y: int)">resizeWindow(x, y: int)</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">runMainLoop
+  <li><a class="reference" href="#runMainLoop" title="runMainLoop()">runMainLoop()</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">setupWindowAndEvents
+  <li><a class="reference" href="#setupWindowAndEvents%2Cstring" title="setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)">setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">showPopup
   <li><a class="reference" href="#showPopup%2Cstring" title="showPopup(name: string)">showPopup(name: string)</a></li>
 
@@ -159,7 +167,10 @@
 
 </ul>
 <ul class="simple nested-toc-section">startFidget
-  <li><a class="reference" href="#startFidget%2Cstring%2Cstring%2Cstring%2Cstring" title="startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;
+  <li><a class="reference" href="#startFidget%2CFigmaFile%2Cstring%2Cstring%2Cstring" title="startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;
+            windowStyle = DecoratedResizable; dataDir = &quot;data&quot;)">startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;
+            windowStyle = DecoratedResizable; dataDir = &quot;data&quot;)</a></li>
+<li><a class="reference" href="#startFidget%2Cstring%2Cstring%2Cstring%2Cstring" title="startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;
             windowStyle = DecoratedResizable; dataDir = &quot;data&quot;)">startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;
             windowStyle = DecoratedResizable; dataDir = &quot;data&quot;)</a></li>
 
@@ -418,8 +429,8 @@
   <dd>
     
     Clears all handlers. Used mainly for writing tests.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L455" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L455" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L464" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L464" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -474,8 +485,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L681" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L681" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L690" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L690" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -488,8 +499,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L654" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L654" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L663" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L663" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -507,8 +518,8 @@
   <dd>
     
     Starts the Fidget main loop.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L747" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L747" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L834" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L834" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -525,8 +536,8 @@
   <dd>
     
     Main application loop.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L735" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L735" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L745" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L745" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -538,8 +549,8 @@
   <dd>
     
     Navigates back through the navigation history.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L694" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L694" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L703" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L703" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -552,8 +563,8 @@
   <dd>
     
     Navigates to a new frame. Smart will try to preserve all nodes with the same name.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L685" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L685" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L694" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L694" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -566,8 +577,8 @@
   <dd>
     
     Gets the mouse position relative to a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L273" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L273" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L272" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L272" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -579,8 +590,41 @@
   <dd>
     
     Resizes the window to the specified dimensions.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L460" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L460" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L469" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L469" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="runMainLoop-procs-all">
+  <div id="runMainLoop">
+  <dt><pre><span class="Keyword">proc</span> <a href="#runMainLoop"><span class="Identifier">runMainLoop</span></a><span class="Other">(</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">GlobbyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span>
+                              <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">CatchableError</span><span class="Other">,</span> <span class="Identifier">FidgetError</span><span class="Other">,</span>
+                              <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">PuppyError</span><span class="Other">,</span> <span class="Identifier">JsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
+                              <span class="Identifier">JsonParsingError</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span>
+    <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">,</span>
+    <span class="Identifier">ReadEnvEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Runs the main loop.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L757" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L757" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="setupWindowAndEvents-procs-all">
+  <div id="setupWindowAndEvents,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#setupWindowAndEvents%2Cstring"><span class="Identifier">setupWindowAndEvents</span></a><span class="Other">(</span><span class="Identifier">windowTitle</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">windowStyle</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">)</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">WindyError</span><span class="Other">,</span> <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Sets up the window and events.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L770" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L770" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -606,15 +650,31 @@
   <dd>
     
     Simulates a mouse click on a node. Used mainly for writing tests.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L398" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L398" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L407" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L407" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="startFidget-procs-all">
-  <div id="startFidget,string,string,string,string">
+  <div id="startFidget,FigmaFile,string,string,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#startFidget%2CFigmaFile%2Cstring%2Cstring%2Cstring"><span class="Identifier">startFidget</span></a><span class="Other">(</span><span class="Identifier">figmaFile</span><span class="Other">:</span> <a href="schema.html#FigmaFile"><span class="Identifier">FigmaFile</span></a><span class="Other">;</span> <span class="Identifier">windowTitle</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">entryFrame</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
+                 <span class="Identifier">windowStyle</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">;</span> <span class="Identifier">dataDir</span> <span class="Other">=</span> <span class="StringLit">&quot;data&quot;</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span>
+    <span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">GlobbyError</span><span class="Other">,</span> <span class="Identifier">WindyError</span><span class="Other">,</span> <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span>
+    <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">CatchableError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">PuppyError</span><span class="Other">,</span>
+    <span class="Identifier">JsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">JsonParsingError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">,</span>
+    <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Starts fidget with a manually created FigmaFile instead of loading from URL. This allows you to create UIs purely in code without needing Figma files.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L875" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L875" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="startFidget,string,string,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#startFidget%2Cstring%2Cstring%2Cstring%2Cstring"><span class="Identifier">startFidget</span></a><span class="Other">(</span><span class="Identifier">figmaUrl</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">windowTitle</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">entryFrame</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
                  <span class="Identifier">windowStyle</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">;</span> <span class="Identifier">dataDir</span> <span class="Other">=</span> <span class="StringLit">&quot;data&quot;</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span>
     <span class="Identifier">CatchableError</span><span class="Other">,</span> <span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">PuppyError</span><span class="Other">,</span> <span class="Identifier">JsonError</span><span class="Other">,</span>
@@ -625,8 +685,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L826" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L826" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L859" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L859" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -639,8 +699,8 @@
   <dd>
     
     Takes a screenshot of the current screen. Used mainly for writing tests.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L450" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L450" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L459" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L459" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -736,8 +796,8 @@
   <dd>
     
     When a text node is edited.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L409" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L409" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L418" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L418" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -749,8 +809,8 @@
   <dd>
     
     When a text node gets focused.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L430" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L430" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L439" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L439" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -853,8 +913,8 @@
   <dd>
     
     When a text node loses focus.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L420" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L420" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L429" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L429" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -876,7 +936,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-21 16:07:39 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-25 14:06:59 UTC</small>
       </div>
     </div>
   </div>
