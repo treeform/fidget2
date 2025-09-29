@@ -95,6 +95,10 @@
   <li><a class="reference" href="#copy%2CNode" title="copy(node: Node): Node">copy(node: Node): Node</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">dumpTree
+  <li><a class="reference" href="#dumpTree%2CNode%2Cstring" title="dumpTree(node: Node; indent: string = &quot;&quot;): string">dumpTree(node: Node; indent: string = &quot;&quot;): string</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">findNodeById
   <li><a class="reference" href="#findNodeById%2Cstring" title="findNodeById(id: string): Node">findNodeById(id: string): Node</a></li>
 
@@ -159,6 +163,22 @@
 </ul>
 <ul class="simple nested-toc-section">removeChildren
   <li><a class="reference" href="#removeChildren%2CNode" title="removeChildren(node: Node)">removeChildren(node: Node)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">sendBackward
+  <li><a class="reference" href="#sendBackward%2CNode" title="sendBackward(node: Node)">sendBackward(node: Node)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">sendForward
+  <li><a class="reference" href="#sendForward%2CNode" title="sendForward(node: Node)">sendForward(node: Node)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">sendToBack
+  <li><a class="reference" href="#sendToBack%2CNode" title="sendToBack(node: Node)">sendToBack(node: Node)</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">sendToFront
+  <li><a class="reference" href="#sendToFront%2CNode" title="sendToFront(node: Node)">sendToFront(node: Node)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">setVariant
@@ -227,8 +247,8 @@
   <dd>
     
     Gets a key out of PropName.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L230" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L230" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L234" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L234" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -241,8 +261,8 @@
   <dd>
     
     Sets a key in the PropName. If key is not there appends a new key-value pair at the end.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L242" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L242" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L246" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L246" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -280,8 +300,8 @@
   <dd>
     
     Gets the child index of the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L406" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L406" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L410" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L410" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -294,8 +314,8 @@
   <dd>
     
     Does the query contain this key?
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L236" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L236" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L240" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L240" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -309,6 +329,20 @@
     Copies a node creating a new one.
     <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L128" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L128" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="dumpTree-procs-all">
+  <div id="dumpTree,Node,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#dumpTree%2CNode%2Cstring"><span class="Identifier">dumpTree</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">indent</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Dumps the tree to a string.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L434" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L434" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -334,8 +368,8 @@
   <dd>
     
     Gets the variant for the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L390" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L390" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L394" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L394" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -348,8 +382,8 @@
   <dd>
     
     Checks if the variant exists for the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L377" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L377" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L381" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L381" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -384,8 +418,8 @@
   <dd>
     
     Returns true if node is a subnode of the other.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L206" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L206" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L210" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L210" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -397,8 +431,8 @@
   <dd>
     
     Checks if node is an instance node. And can have variants.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L397" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L397" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L401" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L401" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -451,8 +485,8 @@
   <dd>
     
     Gets the master component if this is an instance and it exists.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L402" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L402" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L406" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L406" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -550,6 +584,58 @@
 </div>
 
 </div>
+<div id="sendBackward-procs-all">
+  <div id="sendBackward,Node">
+  <dt><pre><span class="Keyword">proc</span> <a href="#sendBackward%2CNode"><span class="Identifier">sendBackward</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Sends the node backward in the parent's children.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L429" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L429" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="sendForward-procs-all">
+  <div id="sendForward,Node">
+  <dt><pre><span class="Keyword">proc</span> <a href="#sendForward%2CNode"><span class="Identifier">sendForward</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Sends the node forward in the parent's children.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L424" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L424" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="sendToBack-procs-all">
+  <div id="sendToBack,Node">
+  <dt><pre><span class="Keyword">proc</span> <a href="#sendToBack%2CNode"><span class="Identifier">sendToBack</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Sends the node to the back of the parent's children.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L419" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L419" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="sendToFront-procs-all">
+  <div id="sendToFront,Node">
+  <dt><pre><span class="Keyword">proc</span> <a href="#sendToFront%2CNode"><span class="Identifier">sendToFront</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Sends the node to the front of the parent's children.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L414" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L414" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="setVariant-procs-all">
   <div id="setVariant,Node,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#setVariant%2CNode%2Cstring%2Cstring"><span class="Identifier">setVariant</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">name</span><span class="Other">,</span> <span class="Identifier">value</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
@@ -557,8 +643,8 @@
   <dd>
     
     Changes the variant of the node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L331" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L331" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L335" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L335" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -568,8 +654,8 @@
   <dd>
     
     Changes the variant of the node to &quot;True&quot; or &quot;False&quot;.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L370" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L370" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L374" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L374" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -579,8 +665,8 @@
   <dd>
     
     Changes the variant of the nodes.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L365" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L365" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/nodes.nim#L369" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/nodes.nim#L369" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -647,7 +733,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-25 14:06:58 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-09-29 23:25:48 UTC</small>
       </div>
     </div>
   </div>
