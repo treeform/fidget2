@@ -372,10 +372,7 @@ proc setupWindow*(
   )
   # Adjust size to account for content scale.
   if window.contentScale != 1.0:
-    echo "Scale the window?", window.contentScale
-    echo "size before: ", window.size
     window.size = (window.size.vec2 * window.contentScale).ivec2
-    echo "size after: ", window.size
   window.style = style
 
   window.makeContextCurrent()
