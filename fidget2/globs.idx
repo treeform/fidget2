@@ -1,7 +1,7 @@
 nimTitle	globs	fidget2/globs.html	module src/fidget2/globs		0
-nim	GlobbyError	fidget2/globs.html#GlobbyError	object GlobbyError		10
-nim	treeLen	fidget2/globs.html#treeLen,Node	proc treeLen(node: Node): int		14
-nim	scan	fidget2/globs.html#scan,Node	proc scan(node: Node): seq[Node]		20
-nim	walk	fidget2/globs.html#walk,Node	proc walk(node: Node): seq[(string, Node)]		29
-nim	findAll	fidget2/globs.html#findAll,Node,string	proc findAll(node: Node; glob: string): seq[Node]		110
-nim	find	fidget2/globs.html#find,Node,string	proc find(node: Node; glob: string): Node		141
+nim	`$`	fidget2/globs.html#$,Glob	proc `$`(glob: Glob): string		12
+nim	treeLen	fidget2/globs.html#treeLen,Node	proc treeLen(node: Node): int		16
+nim	scan	fidget2/globs.html#scan,Node	proc scan(node: Node): seq[Node]		22
+nim	walk	fidget2/globs.html#walk,Node	proc walk(node: Node): seq[(string, Node)]		31
+nim	findAll	fidget2/globs.html#findAll,Node,string	proc findAll(node: Node; glob: string): seq[Node]		112
+nim	find	fidget2/globs.html#find,Node,string	proc find(node: Node; glob: string): Node		143
