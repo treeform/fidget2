@@ -1,15 +1,17 @@
 import
   std/[strutils],
-  schema
+  schema, common
 
 # Globs are used to match paths in the tree.
 # Globs style paths are central to the fidget2 library.
 # They sort of resemble unix paths or CSS selectors.
 
 type
-  GlobbyError* = object of ValueError
-
   Glob = seq[string]
+
+proc `$`*(glob: Glob): string =
+  ## Returns a string representation of a glob.
+  glob.join("/")
 
 proc treeLen*(node: Node): int =
   ## Returns the number of nodes in the tree.
@@ -40,7 +42,7 @@ proc globMatchOne(path, glob: string, pathStart = 0, globStart = 0): bool =
   ## Matches a single entry string to glob.
 
   proc error(glob: string) =
-    raise newException(GlobbyError, "Invalid glob: `" & glob & "`")
+    raise newException(FidgetError, "Invalid glob: `" & glob & "`")
 
   var
     i = pathStart
@@ -171,3 +173,6 @@ proc find*(node: Node, glob: string): Node =
 
   for c in node.children:
     c.visit(result, glob)
+
+  if result == nil:
+    raise newException(FidgetError, "Not found: " & $glob)
