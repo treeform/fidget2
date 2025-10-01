@@ -958,7 +958,7 @@ proc setupWindowAndEvents*(
   for cb in eventCbs:
     if cb.kind == OnLoad:
       thisSelector = cb.glob
-      cb.handler(thisFrame)
+      cb.handler(find(cb.glob))
 
 proc initFidget*(
   figmaUrl: string,
