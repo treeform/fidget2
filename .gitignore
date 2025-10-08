@@ -29,8 +29,7 @@ tmp
 *.dSYM
 
 # figma tmp files
-figma
-data
+fidget
 
 # test tmp
 tests/frames/index.html
