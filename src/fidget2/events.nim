@@ -1,5 +1,5 @@
 import
-  std/[algorithm, json, os, strformat, strutils, tables, unicode, times],
+  std/[algorithm, os, json, strformat, strutils, tables, unicode, times],
   bumpy, pixie, vmath, windy,
   common, globs, internal, loader, nodes, perf, schema, textboxes
 
