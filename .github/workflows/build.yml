@@ -35,4 +35,4 @@ jobs:
         run: cd examples/calculator && nim c calculator.nim
       
       - name: Compile examples for Emscripten
-        run: cd examples/calculator && nim c -d:emscripten calculator.ni
+        run: cd examples/calculator && nim c -d:emscripten calculator.nim
