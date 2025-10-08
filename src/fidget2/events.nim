@@ -592,25 +592,28 @@ proc processEvents() {.measure.} =
         hovering = true
         break
 
-  # if not hovering and hoverNode != nil:
-  #   if hoverNode.hasVariant("State", "Default"):
-  #     hoverNode.setVariant("State", "Default")
-  #   hoverNode = nil
+  if not hovering and hoverNode != nil:
+    if hoverNode.hasVariant("State", "Default"):
+      echo "setVariant: Default"
+      hoverNode.setVariant("State", "Default")
+    hoverNode = nil
 
-  # for n in hoverNodes:
-  #   if n.isInstance:
-  #     var stateDown = false
-  #     if window.buttonDown[MouseLeft]:
-  #       # Is an instance has potential to Down.
-  #       if n.hasVariant("State", "Down"):
-  #           stateDown = true
-  #           hoverNode = n
-  #           n.setVariant("State", "Down")
+  for n in hoverNodes:
+    if n.isInstance:
+      var stateDown = false
+      if window.buttonDown[MouseLeft]:
+        # Is an instance has potential to Down.
+        if n.hasVariant("State", "Down"):
+          echo "setVariant: Down"
+          stateDown = true
+          hoverNode = n
+          n.setVariant("State", "Down")
 
-  #     # Is an instance has potential to hover.
-  #     if not stateDown and n.hasVariant("State", "Hover"):
-  #         hoverNode = n
-  #         n.setVariant("State", "Hover")
+      # Is an instance has potential to hover.
+      if not stateDown and n.hasVariant("State", "Hover"):
+        echo "setVariant: Hover"
+        hoverNode = n
+        n.setVariant("State", "Hover")
 
   for cb in eventCbs:
     thisCb = cb

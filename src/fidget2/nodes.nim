@@ -254,12 +254,17 @@ func `[]=`*(query: var seq[(string, string)], key, value: string) =
 
 proc triMerge(current, previousMaster, currentMaster: Node) =
   ## Does a tri-merge of the node trees.
-  # If current.x and previousMaster.x are same, we can change to currentMaster.x
-  # TODO: changes all the way back to the original restores maybe?
 
+  # How does it work? Just like Figma.
+  # Components have master components. The nodes are very similar their master.
+  # But different in some key ways. Well we want to preserve the differences.
+  # So when we change the master component, to a different one, we want to
+  # preserve the differences only, but change the similar properties.
+
+  # If current.x and previousMaster.x are same, we can change to currentMaster.x
   template mergeField(x: untyped) =
-    if hashy(current.x) == hashy(previousMaster.x):
-      current.x = currentMaster.x.copy()
+    if current.x == previousMaster.x:
+      current.x = currentMaster.x
       current.dirty = true
 
   # Ids
