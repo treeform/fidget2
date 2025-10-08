@@ -29,8 +29,9 @@ when defined(emscripten):
   switch(
     "passL",
     (&"""
-    -o {projectName()}.html
+    -o ../emscripten/{projectName()}.html
     --preload-file data
+    --shell-file ../emscripten/emscripten.html
     -s ASYNCIFY
     -s USE_WEBGL2=1
     -s MAX_WEBGL_VERSION=2
@@ -46,9 +47,10 @@ when defined(emscripten):
   if paramStr(1) == "run" or paramStr(1) == "r":
     setCommand("c")
     echo "To run emscripten, use:"
-    echo "emrun " & projectName() & ".html"
+    echo "emrun examples/" & projectName() & ".html"
 
-when not defined(debug):
-  --define:noAutoGLerrorCheck
-  --define:release
-  --define:ssl
+else:
+  when not defined(debug):
+    --define:noAutoGLerrorCheck
+    --define:release
+    --define:ssl
