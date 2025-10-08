@@ -1,6 +1,6 @@
 import
   std/[sequtils, strformat, tables, times],
-  chroma, fidget2, fidget2/common, jsony, pixie, puppy, vmath
+  chroma, fidget2, fidget2/common, jsony, pixie, vmath
 
 type
   Category = ref object
@@ -61,34 +61,37 @@ proc formatActivity(activity: int): string =
 
 find "/UI/MainScreen":
   onShow:
-    var
-      data = fetch("https://forum.nim-lang.org/threads.json")
-    threadPage = fromJson(data, ThreadPage)
+    var req = startHttpRequest("https://forum.nim-lang.org/threads.json")
+    req.onResponse = proc(response: HttpResponse) =
+      threadPage = fromJson(response.body, ThreadPage)
 
-    var
-      threadRowMaster = find("/UI/ThreadRow/State=Default")
-      threadList = find("/UI/MainScreen/ThreadList")
+      var
+        threadRowMaster = find("/UI/ThreadRow/State=Default")
+        threadList = find("/UI/MainScreen/ThreadList")
 
-    threadList.removeChildren()
+      threadList.removeChildren()
 
-    for thread in threadPage.threads:
-      let threadRow = threadRowMaster.newInstance()
+      for thread in threadPage.threads:
+        let threadRow = threadRowMaster.newInstance()
 
-      threadRow.find("Topic").text = thread.topic
-      threadRow.find("Category").text = thread.category.name
-      threadRow.find("Replies").text = $thread.replies
-      threadRow.find("Views").text = $thread.views
-      threadRow.find("Time").text = formatActivity(thread.activity)
+        threadRow.find("Topic").text = thread.topic
+        threadRow.find("Category").text = thread.category.name
+        threadRow.find("Replies").text = $thread.replies
+        threadRow.find("Views").text = $thread.views
+        threadRow.find("Time").text = formatActivity(thread.activity)
 
-      for i, userIcon in threadRow.findAll("Users/*"):
-        if i >= thread.users.len:
-          userIcon.visible = false
-        else:
-          userIcon.visible = true
-          userIcon.fills[0].imageUrl = thread.users[i].avatarUrl
+        for i, userIcon in threadRow.findAll("Users/*"):
+          if i >= thread.users.len:
+            userIcon.visible = false
+          else:
+            userIcon.visible = true
+            userIcon.fills[0].imageUrl = thread.users[i].avatarUrl
 
-      threadRow.find("CategoryMark").fills[0].color = thread.category.getColor
-      threadList.addChild(threadRow)
+        threadRow.find("CategoryMark").fills[0].color = thread.category.getColor
+        threadList.addChild(threadRow)
+
+    req.onError = proc(msg: string) =
+      echo "Error fetching threads: ", msg
 
 startFidget(
   figmaUrl = "https://www.figma.com/file/KbOeyQXdW9FzZBqy9loS7C",

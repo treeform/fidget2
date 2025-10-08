@@ -869,6 +869,7 @@ proc runMainLoop*() =
   while internal.running:
     processEvents()
     display()
+    pollHttp()
     pollEvents()
   #Destroy the window.
   window.close()
