@@ -17,7 +17,7 @@ jobs:
       - uses: mymindstorm/setup-emsdk@v14  
   
       - name: Install system dependencies
-        if: ${{ matrix.os }} == 'ubuntu-latest'
+        if: runner.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
