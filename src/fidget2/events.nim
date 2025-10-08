@@ -5,6 +5,11 @@ import
 
 export textboxes, nodes, common, windy
 
+# TODO: Remove soon.
+when defined(linux)
+  import windy/http
+  export http
+
 const
   ## After N pixels of mouse button down and dragging,
   ## having onDrag event handler,
