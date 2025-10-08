@@ -632,7 +632,6 @@ proc processEvents() {.measure.} =
       if window.buttonPressed[MouseLeft]:
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node in hoverNodes:
-            echo "OnClick: ", node.path
             thisCb.handler(node)
 
     of OnRightClick:
