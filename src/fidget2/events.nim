@@ -766,9 +766,10 @@ proc processEvents() {.measure.} =
     echo "Current node tree: "
     echo thisFrame.dumpTree()
 
-  if window.buttonPressed[KeyF4]:
-    echo "Writing 'atlas.png'"
-    bxy.readAtlas().writeFile("atlas.png")
+  when not defined(emscripten):
+    if window.buttonPressed[KeyF4]:
+        echo "Writing 'atlas.png'"
+        bxy.readAtlas().writeFile("atlas.png")
 
   if window.buttonPressed[KeyF5]:
     echo "Reloading from web '", currentFigmaUrl, "'"
