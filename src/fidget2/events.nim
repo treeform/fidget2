@@ -9,6 +9,9 @@ export textboxes, nodes, common, windy
 when defined(linux):
   import windy/http
   export http
+when defined(windows):
+  proc pollHttp() =
+    discard
 
 const
   ## After N pixels of mouse button down and dragging,
