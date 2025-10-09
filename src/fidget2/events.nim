@@ -6,7 +6,7 @@ import
 export textboxes, nodes, common, windy
 
 # TODO: Remove soon.
-when not defined(pollHttp):
+when defined(linux):
   import windy/http
   export http
 
