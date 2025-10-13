@@ -74,7 +74,7 @@ proc compute() =
   proc operate(number: float) =
     ## Saves the operation back as a symbol.
     symbols[i-1].number = fromFloat(number)
-    symbols.delete(i, i+1)
+    symbols.delete(i .. i+1)
     dec i
 
   # Runs the symbols, × and ÷ first then + and -.

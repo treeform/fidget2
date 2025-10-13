@@ -1,25 +1,23 @@
-name: Github Actions
 
+name: Github Actions
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master ]
   pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
-
+    branches: [ master ]
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Nim
-        uses: jiro4989/setup-nim-action@v2
-        with:
-          nim-version: '2.2.4'
+      - uses: actions/checkout@v3
+      - uses: treeform/setup-nim-action@v2
+      - uses: mymindstorm/setup-emsdk@v14  
   
       - name: Install system dependencies
+        if: runner.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
@@ -33,3 +31,8 @@ jobs:
       - name: Build and run tests
         run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
+      - name: Compile examples natively
+        run: cd examples/calculator && nim c calculator.nim
+      
+      - name: Compile examples for Emscripten
+        run: cd examples/calculator && nim c -d:emscripten calculator.nim

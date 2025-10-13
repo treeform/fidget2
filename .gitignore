@@ -6,6 +6,10 @@
 # normal ignores:
 *.exe
 *.dll
+*.html
+*.data
+*.wasm
+*.js
 *.a
 *.o
 *.so
@@ -22,10 +26,10 @@ package-lock.json
 package.json
 tmp
 *.plist
+*.dSYM
 
 # figma tmp files
-figma
-data
+fidget
 
 # test tmp
 tests/frames/index.html

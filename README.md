@@ -267,3 +267,24 @@ In Fidget, action handlers are attached to glob paths, not nodes. This is powerf
 ## Minimal and fully custom
 
 Another thing I want to emphasize is philosophy. Many UI libraries give you complicated controls like tree views, tab controls, color pickers, and date pickers. They look simple, but once you try to style them, they become very cumbersome. Every app wants its own style. In Fidget2 I do not provide high level widgets like that. Instead, I provide simple Figma primitives from which you can build any control you need. This makes it easy to build advanced controls that match the style of your app.
+
+## Emscripten
+
+Fidget can be compiled to WebAssembly using Emscripten. See the [Emscripten tutorial](https://github.com/treeform/nim_emscripten_tutorial) for more information on how Emscripten works with Nim and things you need to know.
+
+To compile any of the examples:
+```sh
+cd examples/calculator 
+nim c -d:emscripten calculator.nim
+```
+
+This will generate:
+* HTML shell: `calculator.html`
+* Preloaded data: `calculator.data`
+* JavaScript: `calculator.js`
+* WebAssembly: `calculator.wasm`
+
+Then run the compiled HTML file:
+```sh
+emrun calculator.html
+```

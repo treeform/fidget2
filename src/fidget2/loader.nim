@@ -1,6 +1,5 @@
 import
-  std/[json, os, sets, strutils, tables],
-  jsony,
+  std/[os],
   common, schema
 
 # Loader is responsible for loading the figma file.
@@ -52,7 +51,10 @@ when defined(emscripten):
 
 else:
 
-  import puppy
+  import
+    std/[json, strutils, sets, tables],
+    jsony,
+    puppy
 
   proc figmaHeaders(): HttpHeaders =
     ## Gets the Figma headers.

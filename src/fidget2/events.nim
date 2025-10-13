@@ -1,9 +1,17 @@
 import
-  std/[algorithm, json, os, strformat, strutils, tables, unicode, times],
+  std/[algorithm, os, json, strformat, strutils, tables, unicode, times],
   bumpy, pixie, vmath, windy,
   common, globs, internal, loader, nodes, perf, schema, textboxes
 
 export textboxes, nodes, common, windy
+
+# TODO: Remove soon.
+when defined(linux):
+  import windy/http
+  export http
+when defined(windows):
+  proc pollHttp() =
+    discard
 
 const
   ## After N pixels of mouse button down and dragging,
@@ -100,9 +108,6 @@ var
   selectorStack: seq[string]
 
   navigationHistory*: seq[Node]
-
-  #requestPool* = newRequestPool(10)
-
   onResizeCache: Table[string, Vec2]
 
 proc display()
@@ -584,9 +589,6 @@ proc processEvents() {.measure.} =
   if window.buttonDown[MouseLeft]:
     window.closeIme()
 
-  # if requestPool.requestsCompleted():
-  #   redisplay = true
-
   if window.buttonDown.len > 0 or window.scrollDelta.length != 0:
     redisplay = true
 
@@ -609,14 +611,14 @@ proc processEvents() {.measure.} =
       if window.buttonDown[MouseLeft]:
         # Is an instance has potential to Down.
         if n.hasVariant("State", "Down"):
-            stateDown = true
-            hoverNode = n
-            n.setVariant("State", "Down")
+          stateDown = true
+          hoverNode = n
+          n.setVariant("State", "Down")
 
       # Is an instance has potential to hover.
       if not stateDown and n.hasVariant("State", "Hover"):
-          hoverNode = n
-          n.setVariant("State", "Hover")
+        hoverNode = n
+        n.setVariant("State", "Hover")
 
   for cb in eventCbs:
     thisCb = cb
@@ -769,9 +771,10 @@ proc processEvents() {.measure.} =
     echo "Current node tree: "
     echo thisFrame.dumpTree()
 
-  if window.buttonPressed[KeyF4]:
-    echo "Writing 'atlas.png'"
-    bxy.readAtlas().writeFile("atlas.png")
+  when not defined(emscripten):
+    if window.buttonPressed[KeyF4]:
+        echo "Writing 'atlas.png'"
+        bxy.readAtlas().writeFile("atlas.png")
 
   if window.buttonPressed[KeyF5]:
     echo "Reloading from web '", currentFigmaUrl, "'"
@@ -862,7 +865,6 @@ proc display() {.measure.} =
     drawToScreen(thisFrame)
     swapBuffers()
   else:
-    # skip frame
     when defined(emscripten):
       # Emscripten needs to return as soon as possible.
       discard
@@ -870,31 +872,15 @@ proc display() {.measure.} =
       # Native needs to sleep to avoid 100% CPU usage.
       sleep(7)
 
-
-proc mainLoop*() {.cdecl.} =
-  ## Main application loop.
-  processEvents()
-  pollEvents()
-  display()
-
-  if window.buttonToggle[KeyF8]:
-    dumpMeasures()
-
-  if window.buttonToggle[KeyF9]:
-    dumpMeasures(16)
-
 proc runMainLoop*() =
   ## Runs the main loop.
-  when defined(emscripten):
-    # Emscripten can't block so it will call this callback instead.
-    window.run(mainLoop)
-  else:
-    # When running native code we can block in an infinite loop.
-    while internal.running:
-      mainLoop()
-
-    # Destroy the window.
-    window.close()
+  while internal.running:
+    processEvents()
+    display()
+    pollHttp()
+    pollEvents()
+  #Destroy the window.
+  window.close()
 
 proc setupWindowAndEvents*(
   windowTitle: string,
