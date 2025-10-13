@@ -6,7 +6,7 @@ const
 
 type
   FlightType = enum
-    ReturnFlight, 
+    ReturnFlight,
     OneWayFlight
 
 var
@@ -39,7 +39,7 @@ find "/UI/BookingFrame":
             thisNode.characters = "return flight"
       onClick:
         find("/UI/BookingFrame/Picker").visible = true
-        
+
     find "DepartInput":
       find "text":
         onShow:
@@ -79,3 +79,6 @@ startFidget(
   entryFrame = "/UI/BookingFrame",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

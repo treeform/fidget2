@@ -5,3 +5,6 @@ startFidget(
   windowTitle = "UI Layouts",
   entryFrame = "UI/Layout1"
 )
+while isRunning():
+  tickFidget()
+closeFidget()

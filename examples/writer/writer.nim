@@ -14,3 +14,6 @@ startFidget(
   windowTitle = "Writer",
   entryFrame = "/UI/TextFrame"
 )
+while isRunning():
+  tickFidget()
+closeFidget()

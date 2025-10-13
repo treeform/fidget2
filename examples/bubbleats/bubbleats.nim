@@ -168,3 +168,6 @@ startFidget(
   entryFrame = "Main/PlayArea",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

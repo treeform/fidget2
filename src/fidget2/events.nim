@@ -770,7 +770,7 @@ proc processEvents() {.measure.} =
 
   if window.buttonPressed[KeyF5]:
     echo "Reloading from web '", currentFigmaUrl, "'"
-    use(currentFigmaUrl)
+    figmaFile = loadFigmaUrl(currentFigmaUrl)
     thisFrame = find(entryFramePath)
 
   if thisCursor.kind != window.cursor.kind:
@@ -864,15 +864,11 @@ proc display() {.measure.} =
       # Native needs to sleep to avoid 100% CPU usage.
       sleep(7)
 
-proc runMainLoop*() =
-  ## Runs the main loop.
-  while internal.running:
-    processEvents()
-    display()
-    pollHttp()
-    pollEvents()
-  #Destroy the window.
-  window.close()
+proc tickFidget*() =
+  ## Processes events and displays the frame.
+  processEvents()
+  display()
+  pollEvents()
 
 proc setupWindowAndEvents*(
   windowTitle: string,
@@ -938,47 +934,6 @@ proc setupWindowAndEvents*(
       thisSelector = cb.glob
       cb.handler(find(cb.glob))
 
-proc initFidget*(
-  figmaUrl: string,
-  windowTitle: string,
-  entryFrame: string,
-  windowStyle = DecoratedResizable,
-  dataDir = "data"
-) =
-  ## Starts the Fidget main loop.
-  currentFigmaUrl = figmaUrl
-  common.dataDir = dataDir
-  use(currentFigmaUrl)
-
-  entryFramePath = entryFrame
-  thisFrame = find(entryFramePath)
-  if thisFrame == nil:
-    quit(entryFrame & ", not found in " & currentFigmaUrl & ".")
-
-  if thisFrame == nil:
-    raise newException(FidgetError, &"Frame \"{entryFrame}\" not found")
-
-  setupWindowAndEvents(
-    windowTitle = windowTitle,
-    windowStyle = windowStyle
-  )
-
-proc startFidget*(
-  figmaUrl: string,
-  windowTitle: string,
-  entryFrame: string,
-  windowStyle = DecoratedResizable,
-  dataDir = "data"
-) =
-  initFidget(
-    figmaUrl = figmaUrl,
-    windowTitle = windowTitle,
-    entryFrame = entryFrame,
-    windowStyle = windowStyle,
-    dataDir = dataDir
-  )
-  runMainLoop()
-
 proc startFidget*(
   figmaFile: FigmaFile,
   windowTitle: string,
@@ -991,6 +946,7 @@ proc startFidget*(
 
   # Set up the global figmaFile
   loader.figmaFile = figmaFile
+  echo "Figma data dir: ", dataDir
   common.dataDir = dataDir
 
   # Set up entry frame
@@ -1003,4 +959,29 @@ proc startFidget*(
     windowTitle = windowTitle,
     windowStyle = windowStyle
   )
-  runMainLoop()
+
+proc startFidget*(
+  figmaUrl: string,
+  windowTitle: string,
+  entryFrame: string,
+  windowStyle = DecoratedResizable,
+  dataDir = "data"
+) =
+  ## Starts fidget with a figma URL.
+  common.dataDir = dataDir
+  let figmaFile = loadFigmaUrl(figmaUrl)
+  startFidget(
+    figmaFile = figmaFile,
+    windowTitle = windowTitle,
+    entryFrame = entryFrame,
+    windowStyle = windowStyle,
+    dataDir = dataDir
+  )
+
+proc isRunning*(): bool =
+  ## Checks if fidget is running.
+  internal.running
+
+proc closeFidget*() =
+  ## Closes the fidget window.
+  window.close()

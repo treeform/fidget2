@@ -22,3 +22,6 @@ startFidget(
   entryFrame = "/UI/CirclesFrame",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

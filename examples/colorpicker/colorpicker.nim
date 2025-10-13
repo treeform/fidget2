@@ -5,3 +5,6 @@ startFidget(
   windowTitle = "Color Picker",
   entryFrame = "/Main/Spectrum"
 )
+while isRunning():
+  tickFidget()
+closeFidget()

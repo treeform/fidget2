@@ -38,3 +38,6 @@ startFidget(
   entryFrame = "/UI/CrudFrame",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

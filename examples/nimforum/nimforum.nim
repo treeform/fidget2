@@ -99,3 +99,6 @@ startFidget(
   entryFrame = "/UI/MainScreen",
   windowStyle = DecoratedResizable
 )
+while isRunning():
+  tickFidget()
+closeFidget()

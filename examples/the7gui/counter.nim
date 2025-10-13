@@ -21,3 +21,6 @@ startFidget(
   entryFrame = "/UI/CounterFrame", # Frame to use as the entry from.
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

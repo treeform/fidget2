@@ -1,4 +1,4 @@
-# This example shows how to construct your own nodes 
+# This example shows how to construct your own nodes
 # and attach handlers to them with pure code, no Figma needed.
 # We will make a menu with a buttons.
 
@@ -76,7 +76,7 @@ menuFrame.paddingRight = 51.0
 menuFrame.paddingTop = 39.0
 menuFrame.paddingBottom = 39.0
 menuFrame.itemSpacing = 20.0
-menuFrame.fills = @[newSolidPaint(color(0.55, 0.48, 0.87, 1.0))]  
+menuFrame.fills = @[newSolidPaint(color(0.55, 0.48, 0.87, 1.0))]
 canvasNode.addChild(menuFrame)
 
 # Create New Game button
@@ -208,24 +208,6 @@ startFidget(
   entryFrame = "/UI/Menu",
   windowStyle = Decorated
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+while isRunning():
+  tickFidget()
+closeFidget()
