@@ -1,78 +1,77 @@
 nimTitle	events	fidget2/events.html	module src/fidget2/events		0
-nim	Keyboard	fidget2/events.html#Keyboard	type Keyboard		21
-nim	OnClick	fidget2/events.html#OnClick	EventCbKind.OnClick		25
-nim	OnClickOutside	fidget2/events.html#OnClickOutside	EventCbKind.OnClickOutside		25
-nim	OnRightClick	fidget2/events.html#OnRightClick	EventCbKind.OnRightClick		25
-nim	OnMouseMove	fidget2/events.html#OnMouseMove	EventCbKind.OnMouseMove		25
-nim	OnLoad	fidget2/events.html#OnLoad	EventCbKind.OnLoad		25
-nim	OnFrame	fidget2/events.html#OnFrame	EventCbKind.OnFrame		25
-nim	OnDisplay	fidget2/events.html#OnDisplay	EventCbKind.OnDisplay		25
-nim	OnEdit	fidget2/events.html#OnEdit	EventCbKind.OnEdit		25
-nim	OnFocus	fidget2/events.html#OnFocus	EventCbKind.OnFocus		25
-nim	OnUnfocus	fidget2/events.html#OnUnfocus	EventCbKind.OnUnfocus		25
-nim	OnShow	fidget2/events.html#OnShow	EventCbKind.OnShow		25
-nim	OnHide	fidget2/events.html#OnHide	EventCbKind.OnHide		25
-nim	OnButtonPress	fidget2/events.html#OnButtonPress	EventCbKind.OnButtonPress		25
-nim	OnButtonRelease	fidget2/events.html#OnButtonRelease	EventCbKind.OnButtonRelease		25
-nim	OnResize	fidget2/events.html#OnResize	EventCbKind.OnResize		25
-nim	OnDragStart	fidget2/events.html#OnDragStart	EventCbKind.OnDragStart		25
-nim	OnDrag	fidget2/events.html#OnDrag	EventCbKind.OnDrag		25
-nim	OnDragEnd	fidget2/events.html#OnDragEnd	EventCbKind.OnDragEnd		25
-nim	OnDrop	fidget2/events.html#OnDrop	EventCbKind.OnDrop		25
-nim	EventCbKind	fidget2/events.html#EventCbKind	enum EventCbKind		25
-nim	EventCb	fidget2/events.html#EventCb	type EventCb		76
-nim	requestedFrame	fidget2/events.html#requestedFrame	var requestedFrame		85
-nim	redisplay	fidget2/events.html#redisplay	var redisplay		86
-nim	keyboard	fidget2/events.html#keyboard_2	var keyboard		88
-nim	thisFrame	fidget2/events.html#thisFrame	var thisFrame		90
-nim	dragNode	fidget2/events.html#dragNode	var dragNode		91
-nim	dragCandidate	fidget2/events.html#dragCandidate	var dragCandidate		92
-nim	dragCandidatePos	fidget2/events.html#dragCandidatePos	var dragCandidatePos		93
-nim	thisCb	fidget2/events.html#thisCb	var thisCb		94
-nim	thisSelector	fidget2/events.html#thisSelector	var thisSelector		95
-nim	thisButton	fidget2/events.html#thisButton	var thisButton		96
-nim	thisCursor	fidget2/events.html#thisCursor	var thisCursor		97
-nim	hoverNodes	fidget2/events.html#hoverNodes	var hoverNodes		98
-nim	navigationHistory	fidget2/events.html#navigationHistory	var navigationHistory		102
-nim	showPopup	fidget2/events.html#showPopup,string	proc showPopup(name: string)		110
-nim	addCb	fidget2/events.html#addCb,EventCbKind,int,string,proc(Node)	proc addCb(kind: EventCbKind; priority: int; glob: string;\n      handler: proc (thisNode: Node))		115
-nim	find	fidget2/events.html#find,string	proc find(glob: string): Node		129
-nim	findAll	fidget2/events.html#findAll,string	proc findAll(glob: string): seq[Node]		140
-nim	find	fidget2/events.html#find.t,string,untyped	template find(glob: string; body: untyped)		166
-nim	focused	fidget2/events.html#focused,Node	proc focused(node: Node): bool		175
-nim	onLoad	fidget2/events.html#onLoad.t,untyped	template onLoad(body: untyped)		179
-nim	onFrame	fidget2/events.html#onFrame.t,untyped	template onFrame(body: untyped)		189
-nim	onDisplay	fidget2/events.html#onDisplay.t,untyped	template onDisplay(body: untyped)		199
-nim	onShow	fidget2/events.html#onShow.t,untyped	template onShow(body: untyped)		209
-nim	onHide	fidget2/events.html#onHide.t,untyped	template onHide(body: untyped)		219
-nim	onClick	fidget2/events.html#onClick.t,untyped	template onClick(body: untyped)		229
-nim	onRightClick	fidget2/events.html#onRightClick.t,untyped	template onRightClick(body: untyped)		239
-nim	onClickOutside	fidget2/events.html#onClickOutside.t,untyped	template onClickOutside(body: untyped)		249
-nim	onMouseMove	fidget2/events.html#onMouseMove.t,untyped	template onMouseMove(body: untyped)		259
-nim	onButtonPress	fidget2/events.html#onButtonPress.t,untyped	template onButtonPress(body: untyped)		269
-nim	onButtonRelease	fidget2/events.html#onButtonRelease.t,untyped	template onButtonRelease(body: untyped)		279
-nim	onResize	fidget2/events.html#onResize.t,untyped	template onResize(body: untyped)		289
-nim	relativeMousePos	fidget2/events.html#relativeMousePos,Window,Node	proc relativeMousePos(window: Window; node: Node): Vec2		315
-nim	onEdit	fidget2/events.html#onEdit.t,untyped	template onEdit(body: untyped)		450
-nim	onUnfocus	fidget2/events.html#onUnfocus.t,untyped	template onUnfocus(body: untyped)		461
-nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped)		471
-nim	onDragStart	fidget2/events.html#onDragStart.t,untyped	template onDragStart(body: untyped)		481
-nim	onDrag	fidget2/events.html#onDrag.t,untyped	template onDrag(body: untyped)		491
-nim	onDragEnd	fidget2/events.html#onDragEnd.t,untyped	template onDragEnd(body: untyped)		501
-nim	onDrop	fidget2/events.html#onDrop.t,untyped	template onDrop(body: untyped)		511
-nim	simulateClick	fidget2/events.html#simulateClick,string	proc simulateClick(glob: string)		521
-nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		542
-nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		547
-nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		552
-nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		785
-nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		812
-nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		816
-nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		825
-nim	absolutePosition	fidget2/events.html#absolutePosition,Node	proc absolutePosition(node: Node): Vec2		832
-nim	mainLoop	fidget2/events.html#mainLoop	proc mainLoop()		874
-nim	runMainLoop	fidget2/events.html#runMainLoop	proc runMainLoop()		886
-nim	setupWindowAndEvents	fidget2/events.html#setupWindowAndEvents,string	proc setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)		899
-nim	initFidget	fidget2/events.html#initFidget,string,string,string,string	proc initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n           windowStyle = DecoratedResizable; dataDir = "data")		963
-nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		988
-nim	startFidget	fidget2/events.html#startFidget,FigmaFile,string,string,string	proc startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		1004
-nimgrp	startfidget	fidget2/events.html#startFidget-procs-all	proc		988
+nim	Keyboard	fidget2/events.html#Keyboard	type Keyboard		29
+nim	OnClick	fidget2/events.html#OnClick	EventCbKind.OnClick		33
+nim	OnClickOutside	fidget2/events.html#OnClickOutside	EventCbKind.OnClickOutside		33
+nim	OnRightClick	fidget2/events.html#OnRightClick	EventCbKind.OnRightClick		33
+nim	OnMouseMove	fidget2/events.html#OnMouseMove	EventCbKind.OnMouseMove		33
+nim	OnLoad	fidget2/events.html#OnLoad	EventCbKind.OnLoad		33
+nim	OnFrame	fidget2/events.html#OnFrame	EventCbKind.OnFrame		33
+nim	OnDisplay	fidget2/events.html#OnDisplay	EventCbKind.OnDisplay		33
+nim	OnEdit	fidget2/events.html#OnEdit	EventCbKind.OnEdit		33
+nim	OnFocus	fidget2/events.html#OnFocus	EventCbKind.OnFocus		33
+nim	OnUnfocus	fidget2/events.html#OnUnfocus	EventCbKind.OnUnfocus		33
+nim	OnShow	fidget2/events.html#OnShow	EventCbKind.OnShow		33
+nim	OnHide	fidget2/events.html#OnHide	EventCbKind.OnHide		33
+nim	OnButtonPress	fidget2/events.html#OnButtonPress	EventCbKind.OnButtonPress		33
+nim	OnButtonRelease	fidget2/events.html#OnButtonRelease	EventCbKind.OnButtonRelease		33
+nim	OnResize	fidget2/events.html#OnResize	EventCbKind.OnResize		33
+nim	OnDragStart	fidget2/events.html#OnDragStart	EventCbKind.OnDragStart		33
+nim	OnDrag	fidget2/events.html#OnDrag	EventCbKind.OnDrag		33
+nim	OnDragEnd	fidget2/events.html#OnDragEnd	EventCbKind.OnDragEnd		33
+nim	OnDrop	fidget2/events.html#OnDrop	EventCbKind.OnDrop		33
+nim	EventCbKind	fidget2/events.html#EventCbKind	enum EventCbKind		33
+nim	EventCb	fidget2/events.html#EventCb	type EventCb		84
+nim	requestedFrame	fidget2/events.html#requestedFrame	var requestedFrame		93
+nim	redisplay	fidget2/events.html#redisplay	var redisplay		94
+nim	keyboard	fidget2/events.html#keyboard_2	var keyboard		96
+nim	thisFrame	fidget2/events.html#thisFrame	var thisFrame		98
+nim	dragNode	fidget2/events.html#dragNode	var dragNode		99
+nim	dragCandidate	fidget2/events.html#dragCandidate	var dragCandidate		100
+nim	dragCandidatePos	fidget2/events.html#dragCandidatePos	var dragCandidatePos		101
+nim	thisCb	fidget2/events.html#thisCb	var thisCb		102
+nim	thisSelector	fidget2/events.html#thisSelector	var thisSelector		103
+nim	thisButton	fidget2/events.html#thisButton	var thisButton		104
+nim	thisCursor	fidget2/events.html#thisCursor	var thisCursor		105
+nim	hoverNodes	fidget2/events.html#hoverNodes	var hoverNodes		106
+nim	navigationHistory	fidget2/events.html#navigationHistory	var navigationHistory		110
+nim	showPopup	fidget2/events.html#showPopup,string	proc showPopup(name: string)		115
+nim	addCb	fidget2/events.html#addCb,EventCbKind,int,string,proc(Node)	proc addCb(kind: EventCbKind; priority: int; glob: string;\n      handler: proc (thisNode: Node))		120
+nim	find	fidget2/events.html#find,string	proc find(glob: string): Node		134
+nim	findAll	fidget2/events.html#findAll,string	proc findAll(glob: string): seq[Node]		145
+nim	find	fidget2/events.html#find.t,string,untyped	template find(glob: string; body: untyped)		171
+nim	focused	fidget2/events.html#focused,Node	proc focused(node: Node): bool		180
+nim	onLoad	fidget2/events.html#onLoad.t,untyped	template onLoad(body: untyped)		184
+nim	onFrame	fidget2/events.html#onFrame.t,untyped	template onFrame(body: untyped)		194
+nim	onDisplay	fidget2/events.html#onDisplay.t,untyped	template onDisplay(body: untyped)		204
+nim	onShow	fidget2/events.html#onShow.t,untyped	template onShow(body: untyped)		214
+nim	onHide	fidget2/events.html#onHide.t,untyped	template onHide(body: untyped)		224
+nim	onClick	fidget2/events.html#onClick.t,untyped	template onClick(body: untyped)		234
+nim	onRightClick	fidget2/events.html#onRightClick.t,untyped	template onRightClick(body: untyped)		244
+nim	onClickOutside	fidget2/events.html#onClickOutside.t,untyped	template onClickOutside(body: untyped)		254
+nim	onMouseMove	fidget2/events.html#onMouseMove.t,untyped	template onMouseMove(body: untyped)		264
+nim	onButtonPress	fidget2/events.html#onButtonPress.t,untyped	template onButtonPress(body: untyped)		274
+nim	onButtonRelease	fidget2/events.html#onButtonRelease.t,untyped	template onButtonRelease(body: untyped)		284
+nim	onResize	fidget2/events.html#onResize.t,untyped	template onResize(body: untyped)		294
+nim	relativeMousePos	fidget2/events.html#relativeMousePos,Window,Node	proc relativeMousePos(window: Window; node: Node): Vec2		320
+nim	onEdit	fidget2/events.html#onEdit.t,untyped	template onEdit(body: untyped)		455
+nim	onUnfocus	fidget2/events.html#onUnfocus.t,untyped	template onUnfocus(body: untyped)		466
+nim	onFocus	fidget2/events.html#onFocus.t,untyped	template onFocus(body: untyped)		476
+nim	onDragStart	fidget2/events.html#onDragStart.t,untyped	template onDragStart(body: untyped)		486
+nim	onDrag	fidget2/events.html#onDrag.t,untyped	template onDrag(body: untyped)		496
+nim	onDragEnd	fidget2/events.html#onDragEnd.t,untyped	template onDragEnd(body: untyped)		506
+nim	onDrop	fidget2/events.html#onDrop.t,untyped	template onDrop(body: untyped)		516
+nim	simulateClick	fidget2/events.html#simulateClick,string	proc simulateClick(glob: string)		526
+nim	takeScreenShot	fidget2/events.html#takeScreenShot	proc takeScreenShot(): Image		547
+nim	clearAllEventHandlers	fidget2/events.html#clearAllEventHandlers	proc clearAllEventHandlers()		552
+nim	resizeWindow	fidget2/events.html#resizeWindow,int,int	proc resizeWindow(x, y: int)		557
+nim	imageUrl=	fidget2/events.html#imageUrl=,,string	proc imageUrl=(paint: schema.Paint; url: string)		788
+nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; image: Image)		815
+nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		819
+nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		828
+nim	absolutePosition	fidget2/events.html#absolutePosition,Node	proc absolutePosition(node: Node): Vec2		835
+nim	runMainLoop	fidget2/events.html#runMainLoop	proc runMainLoop()		875
+nim	setupWindowAndEvents	fidget2/events.html#setupWindowAndEvents,string	proc setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)		885
+nim	initFidget	fidget2/events.html#initFidget,string,string,string,string	proc initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n           windowStyle = DecoratedResizable; dataDir = "data")		949
+nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		974
+nim	startFidget	fidget2/events.html#startFidget,FigmaFile,string,string,string	proc startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		990
+nimgrp	startfidget	fidget2/events.html#startFidget-procs-all	proc		974

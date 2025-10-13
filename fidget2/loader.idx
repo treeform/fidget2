@@ -1,6 +1,6 @@
 nimTitle	loader	fidget2/loader.html	module src/fidget2/loader		0
-nim	figmaFile	fidget2/loader.html#figmaFile	var figmaFile		9
-nim	figmaImagePath	fidget2/loader.html#figmaImagePath,string	proc figmaImagePath(imageRef: string): string		24
-nim	figmaFontPath	fidget2/loader.html#figmaFontPath,string	proc figmaFontPath(fontPostScriptName: string): string		28
-nim	userFontPath	fidget2/loader.html#userFontPath,string	proc userFontPath(fontPostScriptName: string): string		32
-nim	use	fidget2/loader.html#use,string	proc use(figmaUrl: string)		270
+nim	figmaFile	fidget2/loader.html#figmaFile	var figmaFile		8
+nim	figmaImagePath	fidget2/loader.html#figmaImagePath,string	proc figmaImagePath(imageRef: string): string		23
+nim	figmaFontPath	fidget2/loader.html#figmaFontPath,string	proc figmaFontPath(fontPostScriptName: string): string		27
+nim	userFontPath	fidget2/loader.html#userFontPath,string	proc userFontPath(fontPostScriptName: string): string		31
+nim	use	fidget2/loader.html#use,string	proc use(figmaUrl: string)		272
