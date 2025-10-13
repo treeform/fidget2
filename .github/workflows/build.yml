@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: treeform/setup-nim-action@v2
-      - uses: mymindstorm/setup-emsdk@v14  
-  
+      - uses: mymindstorm/setup-emsdk@v14
+
       - name: Install system dependencies
         if: runner.os == 'ubuntu-latest'
         run: |
@@ -25,14 +25,17 @@ jobs:
       - name: Install Nim packages
         run: nimble install -y
 
+      - name: List Installed Nim packages
+        run: nimble list -i --ver
+
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
-  
+
       - name: Build and run tests
         run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
       - name: Compile examples natively
         run: cd examples/calculator && nim c calculator.nim
-      
+
       - name: Compile examples for Emscripten
         run: cd examples/calculator && nim c -d:emscripten calculator.nim
