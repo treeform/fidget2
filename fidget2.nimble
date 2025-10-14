@@ -1,4 +1,4 @@
-version     = "0.0.7"
+version     = "0.0.8"
 author      = "Andre von Houck"
 description = "Description of your library"
 license     = "MIT"
