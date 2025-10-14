@@ -140,6 +140,10 @@
   <li><a class="reference" href="#clearAllEventHandlers" title="clearAllEventHandlers()">clearAllEventHandlers()</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">closeFidget
+  <li><a class="reference" href="#closeFidget" title="closeFidget()">closeFidget()</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">find
   <li><a class="reference" href="#find%2Cstring" title="find(glob: string): Node">find(glob: string): Node</a></li>
 
@@ -160,10 +164,8 @@
   <li><a class="reference" href="#imageUrl%3D%2C%2Cstring" title="imageUrl=(paint: schema.Paint; url: string)">imageUrl=(paint: schema.Paint; url: string)</a></li>
 
 </ul>
-<ul class="simple nested-toc-section">initFidget
-  <li><a class="reference" href="#initFidget%2Cstring%2Cstring%2Cstring%2Cstring" title="initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;
-           windowStyle = DecoratedResizable; dataDir = &quot;data&quot;)">initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;
-           windowStyle = DecoratedResizable; dataDir = &quot;data&quot;)</a></li>
+<ul class="simple nested-toc-section">isRunning
+  <li><a class="reference" href="#isRunning" title="isRunning(): bool">isRunning(): bool</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">navigateBack
@@ -180,10 +182,6 @@
 </ul>
 <ul class="simple nested-toc-section">resizeWindow
   <li><a class="reference" href="#resizeWindow%2Cint%2Cint" title="resizeWindow(x, y: int)">resizeWindow(x, y: int)</a></li>
-
-</ul>
-<ul class="simple nested-toc-section">runMainLoop
-  <li><a class="reference" href="#runMainLoop" title="runMainLoop()">runMainLoop()</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">setupWindowAndEvents
@@ -209,6 +207,10 @@
 </ul>
 <ul class="simple nested-toc-section">takeScreenShot
   <li><a class="reference" href="#takeScreenShot" title="takeScreenShot(): Image">takeScreenShot(): Image</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">tickFidget
+  <li><a class="reference" href="#tickFidget" title="tickFidget()">tickFidget()</a></li>
 
 </ul>
 
@@ -574,6 +576,19 @@
 </div>
 
 </div>
+<div id="closeFidget-procs-all">
+  <div id="closeFidget">
+  <dt><pre><span class="Keyword">proc</span> <a href="#closeFidget"><span class="Identifier">closeFidget</span></a><span class="Other">(</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Closes the fidget window.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L985" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L985" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
 <div id="find-procs-all">
   <div id="find,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#find%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -643,20 +658,14 @@
 </div>
 
 </div>
-<div id="initFidget-procs-all">
-  <div id="initFidget,string,string,string,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#initFidget%2Cstring%2Cstring%2Cstring%2Cstring"><span class="Identifier">initFidget</span></a><span class="Other">(</span><span class="Identifier">figmaUrl</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">windowTitle</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">entryFrame</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
-                <span class="Identifier">windowStyle</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">;</span> <span class="Identifier">dataDir</span> <span class="Other">=</span> <span class="StringLit">&quot;data&quot;</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span>
-    <span class="Identifier">CatchableError</span><span class="Other">,</span> <span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">PuppyError</span><span class="Other">,</span> <span class="Identifier">JsonError</span><span class="Other">,</span>
-    <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">JsonParsingError</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">WindyError</span><span class="Other">,</span>
-    <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span>
-                                <span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span>
-                                <span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+<div id="isRunning-procs-all">
+  <div id="isRunning">
+  <dt><pre><span class="Keyword">proc</span> <a href="#isRunning"><span class="Identifier">isRunning</span></a><span class="Other">(</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    Starts the Fidget main loop.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L941" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L941" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    Checks if fidget is running.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L981" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L981" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -716,24 +725,6 @@
 </div>
 
 </div>
-<div id="runMainLoop-procs-all">
-  <div id="runMainLoop">
-  <dt><pre><span class="Keyword">proc</span> <a href="#runMainLoop"><span class="Identifier">runMainLoop</span></a><span class="Other">(</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span>
-                              <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">CatchableError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span>
-                              <span class="Identifier">PuppyError</span><span class="Other">,</span> <span class="Identifier">JsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
-                              <span class="Identifier">JsonParsingError</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span>
-    <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">,</span>
-    <span class="Identifier">ReadEnvEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-  <dd>
-    
-    Runs the main loop.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L867" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L867" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-
-</div>
 <div id="setupWindowAndEvents-procs-all">
   <div id="setupWindowAndEvents,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#setupWindowAndEvents%2Cstring"><span class="Identifier">setupWindowAndEvents</span></a><span class="Other">(</span><span class="Identifier">windowTitle</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">windowStyle</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">)</span> {.
@@ -742,8 +733,8 @@
   <dd>
     
     Sets up the window and events.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L877" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L877" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L873" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L873" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -779,16 +770,14 @@
 <div id="startFidget-procs-all">
   <div id="startFidget,FigmaFile,string,string,string">
   <dt><pre><span class="Keyword">proc</span> <a href="#startFidget%2CFigmaFile%2Cstring%2Cstring%2Cstring"><span class="Identifier">startFidget</span></a><span class="Other">(</span><span class="Identifier">figmaFile</span><span class="Other">:</span> <a href="schema.html#FigmaFile"><span class="Identifier">FigmaFile</span></a><span class="Other">;</span> <span class="Identifier">windowTitle</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">entryFrame</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
-                 <span class="Identifier">windowStyle</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">;</span> <span class="Identifier">dataDir</span> <span class="Other">=</span> <span class="StringLit">&quot;data&quot;</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span>
-    <span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">WindyError</span><span class="Other">,</span> <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span>
-    <span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">CatchableError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span> <span class="Identifier">PuppyError</span><span class="Other">,</span> <span class="Identifier">JsonError</span><span class="Other">,</span>
-    <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">JsonParsingError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span>
-    <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+                 <span class="Identifier">windowStyle</span> <span class="Other">=</span> <span class="Identifier">DecoratedResizable</span><span class="Other">;</span> <span class="Identifier">dataDir</span> <span class="Other">=</span> <span class="StringLit">&quot;data&quot;</span><span class="Other">)</span> {.
+    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">WindyError</span><span class="Other">,</span> <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">ReadEnvEffect</span><span class="Other">,</span> <span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Starts fidget with a manually created FigmaFile instead of loading from URL. This allows you to create UIs purely in code without needing Figma files.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L982" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L982" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L937" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L937" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -802,9 +791,9 @@
                                 <span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L966" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L966" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    Starts fidget with a figma URL.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L963" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L963" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -819,6 +808,24 @@
     Takes a screenshot of the current screen. Used mainly for writing tests.
     <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L539" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L539" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="tickFidget-procs-all">
+  <div id="tickFidget">
+  <dt><pre><span class="Keyword">proc</span> <a href="#tickFidget"><span class="Identifier">tickFidget</span></a><span class="Other">(</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">KeyError</span><span class="Other">,</span>
+                             <span class="Identifier">IOError</span><span class="Other">,</span> <span class="Identifier">GLerror</span><span class="Other">,</span> <span class="Identifier">CatchableError</span><span class="Other">,</span> <span class="Identifier">OSError</span><span class="Other">,</span>
+                             <span class="Identifier">PuppyError</span><span class="Other">,</span> <span class="Identifier">JsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span>
+                             <span class="Identifier">JsonParsingError</span><span class="Other">,</span> <span class="Identifier">BoxyError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span>
+    <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">,</span> <span class="Identifier">WriteDirEffect</span><span class="Other">,</span>
+    <span class="Identifier">ReadEnvEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Processes events and displays the frame.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L867" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L867" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1106,7 +1113,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-13 18:16:35 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-14 00:07:41 UTC</small>
       </div>
     </div>
   </div>

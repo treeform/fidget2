@@ -69,9 +69,10 @@ nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; im
 nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		811
 nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		820
 nim	absolutePosition	fidget2/events.html#absolutePosition,Node	proc absolutePosition(node: Node): Vec2		827
-nim	runMainLoop	fidget2/events.html#runMainLoop	proc runMainLoop()		867
-nim	setupWindowAndEvents	fidget2/events.html#setupWindowAndEvents,string	proc setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)		877
-nim	initFidget	fidget2/events.html#initFidget,string,string,string,string	proc initFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n           windowStyle = DecoratedResizable; dataDir = "data")		941
-nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		966
-nim	startFidget	fidget2/events.html#startFidget,FigmaFile,string,string,string	proc startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		982
-nimgrp	startfidget	fidget2/events.html#startFidget-procs-all	proc		966
+nim	tickFidget	fidget2/events.html#tickFidget	proc tickFidget()		867
+nim	setupWindowAndEvents	fidget2/events.html#setupWindowAndEvents,string	proc setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)		873
+nim	startFidget	fidget2/events.html#startFidget,FigmaFile,string,string,string	proc startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		937
+nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		963
+nim	isRunning	fidget2/events.html#isRunning	proc isRunning(): bool		981
+nim	closeFidget	fidget2/events.html#closeFidget	proc closeFidget()		985
+nimgrp	startfidget	fidget2/events.html#startFidget-procs-all	proc		937
