@@ -6,3 +6,6 @@ startFidget(
   entryFrame = "/Cover/UberLightUIKit",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

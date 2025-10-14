@@ -1,6 +1,6 @@
 <img src="docs/banner.png">
 
-👏 Check out video about the library: [Fidget: Let's rethink UI development with Nim (NimConf 2020)](https://www.youtube.com/watch?v=IB8Yt2dqZbo) 👏 
+👏 Check out video about the library: [Fidget: Let's rethink UI development with Nim (NimConf 2020)](https://www.youtube.com/watch?v=IB8Yt2dqZbo) 👏
 
 # Fidget - A cross platform UI library for nim
 
@@ -77,7 +77,7 @@ If you don't know how to use Figma or how to do UI design I highly recommend giv
 
 Figma also has a whole library of designs https://www.figma.com/community licensed under CC BY 4.0! Yes that means you can use these designs for free, by simply giving credit! Just duplicate them into your account, modify and remix them. The amount of high quality designs there can really boost any UI project!
 
-> "Let somebody else figure out how to make it look pretty, as long as you can move rectanges around you are good." - Ryan 
+> "Let somebody else figure out how to make it look pretty, as long as you can move rectanges around you are good." - Ryan
 
 ## Philosophy
 
@@ -96,7 +96,7 @@ Or you can start with code and just have ugly boxes at first, then make a pretty
 
 ## Making an app
 
-To open a window and start the app call `startFidget` with the figma file and other window properties.
+To open a window and start the app call `startFidget` with the figma file and other window properties. Then use `while isRunning(): tickFidget()` to run the app and `closeFidget()` to close the window.
 
 ```nim
 startFidget(
@@ -105,6 +105,9 @@ startFidget(
   entryFrame = "/UI/TemperatureFrame",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()
 ```
 
 Then use `find` to build the event tree using glob patterns:
@@ -134,7 +137,7 @@ thisNode.text = "hello world"
 * Relative to the current `find` scope: `find "CelsiusInput/text"`
 * Globs are supported: `find "**/Button*"` (descendants), `find "*/icon"` (children by name)
 
-Find works both as top level thing: 
+Find works both as top level thing:
 
 ```nim
 find "/UI/TemperatureFrame":
@@ -274,7 +277,7 @@ Fidget can be compiled to WebAssembly using Emscripten. See the [Emscripten tuto
 
 To compile any of the examples:
 ```sh
-cd examples/calculator 
+cd examples/calculator
 nim c -d:emscripten calculator.nim
 ```
 

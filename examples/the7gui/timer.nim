@@ -49,3 +49,6 @@ startFidget(
   entryFrame = "/UI/TimerFrame",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

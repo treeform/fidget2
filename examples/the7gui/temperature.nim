@@ -44,3 +44,6 @@ startFidget(
   entryFrame = "/UI/TemperatureFrame",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

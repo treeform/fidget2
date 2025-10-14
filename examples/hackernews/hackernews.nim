@@ -5,3 +5,6 @@ startFidget(
   windowTitle = "Hacker News",
   entryFrame = "/Main/MainScreen"
 )
+while isRunning():
+  tickFidget()
+closeFidget()

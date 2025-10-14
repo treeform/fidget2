@@ -6,3 +6,6 @@ startFidget(
   entryFrame = "Page 1/dragon",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

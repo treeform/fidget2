@@ -12,3 +12,6 @@ startFidget(
   entryFrame = "/UI/CellsFrame",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

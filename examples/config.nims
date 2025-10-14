@@ -26,6 +26,11 @@ when defined(emscripten):
   --define:noAutoGLerrorCheck
   --define:release
 
+  # If data dir doesn't exist, create it.
+  if not dirExists("data"):
+    mkDir("data")
+    writeFile("data/dummy.txt", "dummy")
+
   # Pass this to Emscripten linker to generate html file scaffold for us.
   switch(
     "passL",

@@ -1,5 +1,5 @@
 import cligen, os, pixie, strformat, strutils, times, windy
-import fidget2/loader, fidget2/schema, fidget2/perf
+import fidget2/loader, fidget2/schema, fidget2/perf, fidget2/common
 
 when defined(benchy):
   import benchy
@@ -25,7 +25,7 @@ proc main(r = "", e = "", l = 10000) =
   var totalDiff = 0.0
   var firstTime = true
 
-  use("https://www.figma.com/file/TQOSRucXGFQpuOpyTkDYj1/")
+  loader.figmaFile = loadFigmaUrl("https://www.figma.com/file/TQOSRucXGFQpuOpyTkDYj1/")
   assert figmaFile.document != nil, "Empty document?"
   var framesHtml = """
   <style>

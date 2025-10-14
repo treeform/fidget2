@@ -169,3 +169,6 @@ startFidget(
   entryFrame = "UI/Main",
   windowStyle = Decorated
 )
+while isRunning():
+  tickFidget()
+closeFidget()

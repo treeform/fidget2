@@ -6,3 +6,6 @@ startFidget(
   entryFrame = "Page 1/Widgets",
   windowStyle = DecoratedResizable
 )
+while isRunning():
+  tickFidget()
+closeFidget()

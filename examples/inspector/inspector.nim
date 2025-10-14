@@ -6,3 +6,6 @@ startFidget(
   entryFrame = "Main/InspectorWhite",
   windowStyle = DecoratedResizable
 )
+while isRunning():
+  tickFidget()
+closeFidget()

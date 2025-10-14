@@ -32,11 +32,11 @@ proc userFontPath*(fontPostScriptName: string): string =
   ## Gets the user font path.
   dataDir / "fonts" / fontPostScriptName & ".ttf"
 
-when defined(emscripten):
+when defined(emscripten) or defined(fidgetUseCached):
 
   import webby
 
-  proc use*(figmaUrl: string) =
+  proc loadFigmaUrl*(figmaUrl: string): FigmaFile =
     ## Use the figma url as a new figmaFile.
     ## Will download the full file if it needs to.
     var figmaFileKey: string
@@ -47,7 +47,7 @@ when defined(emscripten):
     else:
       raise newException(FidgetError, "Invalid Figma URL: " & figmaUrl)
 
-    figmaFile = loadFigmaFile(figmaFileKey)
+    return loadFigmaFile(figmaFileKey)
 
 else:
 
@@ -224,21 +224,18 @@ else:
         removeFile(dataDir / "fidget" / path)
 
     var useCached: bool
-    when defined(fidgetUseCached):
-      useCached = true
-    else:
-      if fileExists(figmaFilePath) and fileExists(lastModifiedFilePath):
-        # If we have a saved Figma file, is it up to date?
-        let
-          url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
-          request = newRequest(url, headers = figmaHeaders())
-          response = fetch(request)
-        if response.code == 200:
-          let liveFile = parseFigmaFile(response.body)
-          if liveFile.lastModified == readFile(lastModifiedFilePath):
-            useCached = true
-          else:
-            echo "Cached Figma file out of date, downloading latest."
+    if fileExists(figmaFilePath) and fileExists(lastModifiedFilePath):
+      # If we have a saved Figma file, is it up to date?
+      let
+        url = "https://api.figma.com/v1/files/" & fileKey & "?depth=1"
+        request = newRequest(url, headers = figmaHeaders())
+        response = fetch(request)
+      if response.code == 200:
+        let liveFile = parseFigmaFile(response.body)
+        if liveFile.lastModified == readFile(lastModifiedFilePath):
+          useCached = true
+        else:
+          echo "Cached Figma file out of date, downloading latest."
 
     if useCached:
       echo "Using cached Figma file."
@@ -269,7 +266,7 @@ else:
     writeFile(lastModifiedFilePath, liveFile.lastModified)
     echo "Downloaded latest Figma file."
 
-  proc use*(figmaUrl: string) =
+  proc loadFigmaUrl*(figmaUrl: string): FigmaFile =
     ## Use the figma url as a new figmaFile.
     ## Will download the full file if it needs to.
     var figmaFileKey: string
@@ -281,4 +278,4 @@ else:
       raise newException(FidgetError, "Invalid Figma URL: " & figmaUrl)
 
     downloadFigmaFile(figmaFileKey)
-    figmaFile = loadFigmaFile(figmaFileKey)
+    return loadFigmaFile(figmaFileKey)

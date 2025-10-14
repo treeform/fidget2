@@ -6,3 +6,6 @@ startFidget(
   entryFrame = "/UI/MainMenu",
   windowStyle = DecoratedResizable
 )
+while isRunning():
+  tickFidget()
+closeFidget()
