@@ -282,6 +282,23 @@ proc `$`*(node: Node): string =
   ## Returns a string representation of a node.
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
+proc similar*(a: Paint, b: Paint): bool =
+  ## Checks if two Paint objects are similar.
+  if a.isNil or b.isNil:
+    return a == b
+  result =
+    a.kind == b.kind and
+    a.visible == b.visible and
+    a.opacity == b.opacity and
+    a.color == b.color and
+    a.scaleMode == b.scaleMode and
+    a.imageRef == b.imageRef and
+    a.imageTransform == b.imageTransform and
+    a.scalingFactor == b.scalingFactor and
+    a.rotation == b.rotation and
+    a.gradientHandlePositions == b.gradientHandlePositions and
+    a.gradientStops == b.gradientStops
+
 proc newHook(v: var Paint) =
   ## Jsony houok to initialize a new Paint object.
   v = Paint()

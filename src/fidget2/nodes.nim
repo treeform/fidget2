@@ -267,6 +267,12 @@ proc triMerge(current, previousMaster, currentMaster: Node) =
       current.x = currentMaster.x
       current.dirty = true
 
+  template mergeArray(x: untyped) =
+    for i in 0 ..< current.x.len:
+      if current.x[i].similar(previousMaster.x[i]):
+        current.x[i] = currentMaster.x[i]
+        current.dirty = true
+
   # Ids
   mergeField componentId
   # Transform
@@ -285,8 +291,8 @@ proc triMerge(current, previousMaster, currentMaster: Node) =
   mergeField rectangleCornerRadii
   # Visual
   mergeField blendMode
-  mergeField fills
-  mergeField strokes
+  mergeArray fills
+  mergeArray strokes
   mergeField effects
   mergeField opacity
   mergeField visible
