@@ -24,20 +24,20 @@ nim	inTree	fidget2/nodes.html#inTree,Node,Node	proc inTree(node, other: Node): b
 nim	`[]`	fidget2/nodes.html#[],seq[],string	proc `[]`(query: seq[(string, string)]; key: string): string		234
 nim	contains	fidget2/nodes.html#contains,seq[],string	proc contains(query: seq[(string, string)]; key: string): bool		240
 nim	`[]=`	fidget2/nodes.html#[]=,seq[],string,string	proc `[]=`(query: var seq[(string, string)]; key, value: string)		246
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		340
-nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		374
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		379
-nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		386
-nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		399
-nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		406
-nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		411
-nim	childIndex	fidget2/nodes.html#childIndex,Node	proc childIndex(node: Node): int		415
-nim	sendToFront	fidget2/nodes.html#sendToFront,Node	proc sendToFront(node: Node)		419
-nim	sendToBack	fidget2/nodes.html#sendToBack,Node	proc sendToBack(node: Node)		424
-nim	sendForward	fidget2/nodes.html#sendForward,Node	proc sendForward(node: Node)		429
-nim	sendBackward	fidget2/nodes.html#sendBackward,Node	proc sendBackward(node: Node)		434
-nim	dumpTree	fidget2/nodes.html#dumpTree,Node,string	proc dumpTree(node: Node; indent: string = ""): string		439
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		346
+nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		380
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		385
+nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		392
+nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		405
+nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		412
+nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		417
+nim	childIndex	fidget2/nodes.html#childIndex,Node	proc childIndex(node: Node): int		421
+nim	sendToFront	fidget2/nodes.html#sendToFront,Node	proc sendToFront(node: Node)		425
+nim	sendToBack	fidget2/nodes.html#sendToBack,Node	proc sendToBack(node: Node)		430
+nim	sendForward	fidget2/nodes.html#sendForward,Node	proc sendForward(node: Node)		435
+nim	sendBackward	fidget2/nodes.html#sendBackward,Node	proc sendBackward(node: Node)		440
+nim	dumpTree	fidget2/nodes.html#dumpTree,Node,string	proc dumpTree(node: Node; indent: string = ""): string		445
 nimgrp	show	fidget2/nodes.html#show-procs-all	proc		60
-nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		340
+nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		346
 nimgrp	remove	fidget2/nodes.html#remove-procs-all	proc		104
 nimgrp	hide	fidget2/nodes.html#hide-procs-all	proc		65
