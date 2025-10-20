@@ -187,7 +187,9 @@
   shown*: bool               ## for onShow/onHide events.
   scrollable*: bool          ## Can this node scroll.
   scrollPos*: Vec2           ## How does it scroll it's children.
-  onRenderCallback*: proc (thisNode: Node)">Node</a></li>
+  onRenderCallback*: proc (thisNode: Node)
+  userKey*: string
+  userId*: int">Node</a></li>
 <li><a class="reference" href="#NodeKind" title="NodeKind = enum
   DocumentNode, CanvasNode, RectangleNode, FrameNode, GroupNode, ComponentNode,
   InstanceNode, VectorNode, StarNode, EllipseNode, LineNode, RegularPolygonNode,
@@ -375,8 +377,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L271" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L271" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L275" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L275" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -561,7 +563,9 @@
   <span class="Identifier">shown</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>               <span class="Comment">## for onShow/onHide events.</span>
   <span class="Identifier">scrollable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>          <span class="Comment">## Can this node scroll.</span>
   <span class="Identifier">scrollPos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>           <span class="Comment">## How does it scroll it's children.</span>
-  <span class="Identifier">onRenderCallback</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span></pre></dt>
+  <span class="Identifier">onRenderCallback</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span>
+  <span class="Identifier">userKey</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">userId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
   <dd>
     
     
@@ -736,8 +740,8 @@
   <dd>
     
     Returns a string representation of a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L281" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L281" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L285" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L285" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -751,8 +755,8 @@
   <dd>
     
     Parses a Figma file from JSON data.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L737" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L737" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L741" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L741" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -764,8 +768,8 @@
   <dd>
     
     Checks if two Paint objects are similar.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L285" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L285" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L289" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L289" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -781,7 +785,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-15 18:42:29 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-20 22:48:22 UTC</small>
       </div>
     </div>
   </div>

@@ -95,7 +95,7 @@ nim	VerticalScrolling	fidget2/schema.html#VerticalScrolling	OverflowDirection.Ve
 nim	HorizontalAndVerticalScrolling	fidget2/schema.html#HorizontalAndVerticalScrolling	OverflowDirection.HorizontalAndVerticalScrolling		176
 nim	OverflowDirection	fidget2/schema.html#OverflowDirection	enum OverflowDirection		176
 nim	Node	fidget2/schema.html#Node	type Node		182
-nim	FigmaFile	fidget2/schema.html#FigmaFile	type FigmaFile		271
-nim	`$`	fidget2/schema.html#$,Node	proc `$`(node: Node): string		281
-nim	similar	fidget2/schema.html#similar,Paint,Paint	proc similar(a: Paint; b: Paint): bool		285
-nim	parseFigmaFile	fidget2/schema.html#parseFigmaFile,string	proc parseFigmaFile(data: string): FigmaFile		737
+nim	FigmaFile	fidget2/schema.html#FigmaFile	type FigmaFile		275
+nim	`$`	fidget2/schema.html#$,Node	proc `$`(node: Node): string		285
+nim	similar	fidget2/schema.html#similar,Paint,Paint	proc similar(a: Paint; b: Paint): bool		289
+nim	parseFigmaFile	fidget2/schema.html#parseFigmaFile,string	proc parseFigmaFile(data: string): FigmaFile		741
