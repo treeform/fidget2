@@ -268,6 +268,10 @@ type
     # Event handling
     onRenderCallback*: proc(thisNode: Node)
 
+    # User defined data.
+    userKey*: string
+    userId*: int
+
   FigmaFile* = ref object
     document*: Node
     components*: Table[string, Component]
