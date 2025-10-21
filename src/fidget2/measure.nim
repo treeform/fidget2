@@ -1,33 +1,25 @@
-## Second way of perf
+## Profile Tracing
 
 import
   std/[macros, json, monotimes, strformat, strutils, tables, os],
   jsony
 
 type
-  EventArgs = JsonNode  # For flexible args object
-
   Event = ref object
+    ## Chrome Tracing Event.
     name: string
-    ph: string      # e.g., "B", "E", "X"
-    ts: float       # Timestamp in microseconds
+    ph: string      # Event type.
+    ts: float       # Timestamp in microseconds.
     pid: int
     tid: int
     cat: string     # Optional, comma-separated
-    args: EventArgs # Optional data
+    args: JsonNode # Optional data
     dur: float      # Optional for "X" phase
     id: string      # Optional for linking
     tts: float      # Optional thread timestamp
 
   Trace = ref object
     traceEvents: seq[Event]
-
-proc getTicks*(): int =
-  ## Gets accurate time.
-  when defined(emscripten):
-    0
-  else:
-    getMonoTime().ticks.int
 
 var
   measureStart: int
@@ -41,6 +33,13 @@ var
   traceCategory: string
   traceData: Trace
   traceStartTicks: seq[int]
+
+proc getTicks*(): int =
+  ## Gets accurate time.
+  when defined(emscripten):
+    0
+  else:
+    getMonoTime().ticks.int
 
 proc startTrace*(pid = 1, tid = 1, category = "measure") =
   ## Starts a chrome://tracing compatible capture and enables tracing.
@@ -153,7 +152,7 @@ when isMainModule:
   for i in 0 ..< 2:
     run(10)
 
-  dumpMeasures(0.0, "trace.json")
   endTrace()
+  dumpMeasures(0.0, "trace.json")
 
   echo "done"
