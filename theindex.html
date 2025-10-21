@@ -25,7 +25,7 @@
   <div class="document" id="documentId">
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="fidget2.html">fidget2</a>, <a href="fidget2/common.html">fidget2/common</a>, <a href="fidget2/cpurender.html">fidget2/cpurender</a>, <a href="fidget2/events.html">fidget2/events</a>, <a href="fidget2/globs.html">fidget2/globs</a>, <a href="fidget2/hybridrender.html">fidget2/hybridrender</a>, <a href="fidget2/internal.html">fidget2/internal</a>, <a href="fidget2/layout.html">fidget2/layout</a>, <a href="fidget2/loader.html">fidget2/loader</a>, <a href="fidget2/nodes.html">fidget2/nodes</a>, <a href="fidget2/perf.html">fidget2/perf</a>, <a href="fidget2/schema.html">fidget2/schema</a>, <a href="fidget2/textboxes.html">fidget2/textboxes</a>, <a href="fidget2/u.html">fidget2/u</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="fidget2.html">fidget2</a>, <a href="fidget2/common.html">fidget2/common</a>, <a href="fidget2/cpurender.html">fidget2/cpurender</a>, <a href="fidget2/events.html">fidget2/events</a>, <a href="fidget2/globs.html">fidget2/globs</a>, <a href="fidget2/hybridrender.html">fidget2/hybridrender</a>, <a href="fidget2/internal.html">fidget2/internal</a>, <a href="fidget2/layout.html">fidget2/layout</a>, <a href="fidget2/loader.html">fidget2/loader</a>, <a href="fidget2/measure.html">fidget2/measure</a>, <a href="fidget2/nodes.html">fidget2/nodes</a>, <a href="fidget2/schema.html">fidget2/schema</a>, <a href="fidget2/textboxes.html">fidget2/textboxes</a>, <a href="fidget2/u.html">fidget2/u</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="globs: proc `$`(glob: Glob): string" href="fidget2/globs.html#%24%2CGlob">globs: proc `$`(glob: Glob): string</a></li>
@@ -322,7 +322,7 @@
           </ul></dd>
 <dt><a name="dumpMeasures" href="#dumpMeasures"><span>dumpMeasures:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="perf: proc dumpMeasures(overTotalMs = 0.0)" href="fidget2/perf.html#dumpMeasures%2Cfloat">perf: proc dumpMeasures(overTotalMs = 0.0)</a></li>
+          data-doc-search-tag="measure: proc dumpMeasures(overTotalMs = 0.0; tracePath = &quot;&quot;)" href="fidget2/measure.html#dumpMeasures%2Cfloat%2Cstring">measure: proc dumpMeasures(overTotalMs = 0.0; tracePath = &quot;&quot;)</a></li>
           </ul></dd>
 <dt><a name="dumpTree" href="#dumpTree"><span>dumpTree:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -343,6 +343,10 @@
 <dt><a name="endOfLine" href="#endOfLine"><span>endOfLine:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="textboxes: proc endOfLine(node: Node; shift = false)" href="fidget2/textboxes.html#endOfLine%2CNode">textboxes: proc endOfLine(node: Node; shift = false)</a></li>
+          </ul></dd>
+<dt><a name="endTrace" href="#endTrace"><span>endTrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="measure: proc endTrace()" href="fidget2/measure.html#endTrace">measure: proc endTrace()</a></li>
           </ul></dd>
 <dt><a name="entryFramePath" href="#entryFramePath"><span>entryFramePath:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -474,7 +478,7 @@
           </ul></dd>
 <dt><a name="getTicks" href="#getTicks"><span>getTicks:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="perf: proc getTicks(): int" href="fidget2/perf.html#getTicks">perf: proc getTicks(): int</a></li>
+          data-doc-search-tag="measure: proc getTicks(): int" href="fidget2/measure.html#getTicks">measure: proc getTicks(): int</a></li>
           </ul></dd>
 <dt><a name="getVariant" href="#getVariant"><span>getVariant:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -692,15 +696,15 @@
           </ul></dd>
 <dt><a name="measure" href="#measure"><span>measure:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="perf: macro measure(fn: untyped)" href="fidget2/perf.html#measure.m%2Cuntyped">perf: macro measure(fn: untyped)</a></li>
+          data-doc-search-tag="measure: macro measure(fn: untyped)" href="fidget2/measure.html#measure.m%2Cuntyped">measure: macro measure(fn: untyped)</a></li>
           </ul></dd>
 <dt><a name="measurePop" href="#measurePop"><span>measurePop:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="perf: proc measurePop()" href="fidget2/perf.html#measurePop">perf: proc measurePop()</a></li>
+          data-doc-search-tag="measure: proc measurePop()" href="fidget2/measure.html#measurePop">measure: proc measurePop()</a></li>
           </ul></dd>
 <dt><a name="measurePush" href="#measurePush"><span>measurePush:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="perf: proc measurePush(what: string)" href="fidget2/perf.html#measurePush%2Cstring">perf: proc measurePush(what: string)</a></li>
+          data-doc-search-tag="measure: proc measurePush(what: string)" href="fidget2/measure.html#measurePush%2Cstring">measure: proc measurePush(what: string)</a></li>
           </ul></dd>
 <dt><a name="MinConstraint" href="#MinConstraint"><span>MinConstraint:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1132,6 +1136,10 @@
 <li><a class="reference external"
           data-doc-search-tag="textboxes: proc setCursor(node: Node; loc: int)" href="fidget2/textboxes.html#setCursor%2CNode%2Cint">textboxes: proc setCursor(node: Node; loc: int)</a></li>
           </ul></dd>
+<dt><a name="setTraceEnabled" href="#setTraceEnabled"><span>setTraceEnabled:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="measure: proc setTraceEnabled(on: bool)" href="fidget2/measure.html#setTraceEnabled%2Cbool">measure: proc setTraceEnabled(on: bool)</a></li>
+          </ul></dd>
 <dt><a name="setupWindow" href="#setupWindow"><span>setupWindow:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="cpurender: proc setupWindow(frameNode: Node; size: IVec2; visible = true; style = Decorated)" href="fidget2/cpurender.html#setupWindow%2CNode%2CIVec2">cpurender: proc setupWindow(frameNode: Node; size: IVec2; visible = true; style = Decorated)</a></li>
@@ -1191,6 +1199,10 @@
 <dt><a name="startOfLine" href="#startOfLine"><span>startOfLine:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="textboxes: proc startOfLine(node: Node; shift = false)" href="fidget2/textboxes.html#startOfLine%2CNode">textboxes: proc startOfLine(node: Node; shift = false)</a></li>
+          </ul></dd>
+<dt><a name="startTrace" href="#startTrace"><span>startTrace:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="measure: proc startTrace(pid = 1; tid = 1; category = &quot;measure&quot;)" href="fidget2/measure.html#startTrace%2Cint%2Cint%2Cstring">measure: proc startTrace(pid = 1; tid = 1; category = &quot;measure&quot;)</a></li>
           </ul></dd>
 <dt><a name="StretchConstraint" href="#StretchConstraint"><span>StretchConstraint:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -1362,7 +1374,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-20 22:48:24 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-21 21:47:15 UTC</small>
       </div>
     </div>
   </div>
