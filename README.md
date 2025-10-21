@@ -251,7 +251,7 @@ This does go against the Fidget philosophy, but I get it. You are a propgrammer,
 
 It is a little bit of a departure from the Fidget1 model, but the main idea is the same. You should not need to design a UI once in a design program like Figma, and then rebuild it again in code using boxes, elements, CSS, or whatever. The basic idea is that you design your UI in Figma, and it just stays in Figma forever. You take that UI and bring it into programming land. You add hooks, events, and small pieces of logic, but you continue to work with the design itself. You can always go back to the Figma file and modify it slightly, and you should not need to modify the code very much. If you add new nodes, new elements, or rename things, in your design: then you will need code changes. But if you only move things around or change colors, sizes, or fonts, then no code changes are necessary!
 
-## Live reload.
+## Live reload (F5)
 
 One really cool aspect of this new system is that I use the Figma API directly. In Fidget1 you had to use a plugin to export Figma code. After export you could no longer really design, since the code was stuck. If you wanted to make changes you had to go back to Figma, export new code, and copy paste it in. That was cumbersome, and I wanted to fix it. That is why I went full Figma API. No more copying code around. The library connects to Figma and downloads the design directly.
 
@@ -291,3 +291,7 @@ Then run the compiled HTML file:
 ```sh
 emrun calculator.html
 ```
+
+## Dump the atlas (F4)
+
+Some times when your app is slow and you want to debug what all is it drawing you can press F4 to dump the atlas to a file. This will show you all the images that are currently in the atlas. This might help you see unnecessary images or too large of images that are not being used.
