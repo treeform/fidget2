@@ -1,7 +1,7 @@
 import
   std/[tables],
   boxy, bumpy, pixie, opengl, vmath, windy,
-  common, cpurender, internal, layout, loader, nodes, perf, schema
+  common, cpurender, internal, layout, loader, nodes, measure, schema
 
 export cpurender.underMouse
 

@@ -1,7 +1,7 @@
 import
   std/[algorithm, os, json, strformat, strutils, tables, unicode, times],
   bumpy, pixie, vmath, windy,
-  common, globs, internal, loader, nodes, perf, schema, textboxes
+  common, globs, internal, loader, nodes, measure, schema, textboxes
 
 export textboxes, nodes, common, windy
 
@@ -101,6 +101,10 @@ var
 
   navigationHistory*: seq[Node]
   onResizeCache: Table[string, Vec2]
+
+  traceOneFrameRequested: bool
+  traceActive: bool
+  traceOutputPath: string
 
 proc display()
 
@@ -764,6 +768,11 @@ proc processEvents() {.measure.} =
     echo thisFrame.dumpTree()
 
   when not defined(emscripten):
+    if window.buttonPressed[KeyF3]:
+      traceOneFrameRequested = true
+      traceOutputPath = "tmp/trace.json"
+
+  when not defined(emscripten):
     if window.buttonPressed[KeyF4]:
         echo "Writing 'atlas.png'"
         bxy.readAtlas().writeFile("atlas.png")
@@ -866,9 +875,23 @@ proc display() {.measure.} =
 
 proc tickFidget*() =
   ## Processes events and displays the frame.
+  when not defined(emscripten):
+    if traceOneFrameRequested and not traceActive:
+      traceActive = true
+      traceOneFrameRequested = false
+      startTrace()
+
   processEvents()
   display()
   pollEvents()
+
+  when not defined(emscripten):
+    if traceActive:
+      endTrace()
+      if not dirExists("tmp"):
+        createDir("tmp")
+      dumpMeasures(tracepath = traceOutputPath)
+      traceActive = false
 
 proc setupWindowAndEvents*(
   windowTitle: string,

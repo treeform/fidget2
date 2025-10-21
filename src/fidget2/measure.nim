@@ -133,6 +133,7 @@ proc dumpMeasures*(overTotalMs = 0.0, tracePath = "") =
   if tracePath.len > 0 and not traceData.isNil:
     let jsonText = toJson(traceData[])
     writeFile(tracePath, jsonText)
+    echo "Trace written to ", tracePath
 
 when isMainModule:
 
