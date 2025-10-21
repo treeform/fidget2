@@ -1,7 +1,7 @@
 import
   std/[options, os, tables, unicode, times],
   bumpy, chroma, pixie, pixie/fontformats/opentype, vmath, windy,
-  common, loader, perf, schema
+  common, loader, measure, schema
 
 ## Common vars shared across renderers.
 var
@@ -34,7 +34,7 @@ var
   defaultTextHighlightColor* = color(1, 1, 1, 1)
 
   ## Cursor blink duration in seconds.
-  cursorBlinkDuration* = 0.530 
+  cursorBlinkDuration* = 0.530
   ## Current cursor blink state and timing.
   cursorBlinkTime*: float64
   ## Current cursor blink state.
@@ -369,7 +369,7 @@ proc computeArrangement*(node: Node) {.measure.} =
 
   let bounds =
     if node.singleline:
-      # Single-line don't have bounds in the X direction. 
+      # Single-line don't have bounds in the X direction.
       vec2(0, node.size.y)
     else:
       node.size

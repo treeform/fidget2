@@ -1,7 +1,7 @@
 import
   std/[math, tables],
   bumpy, chroma, pixie, vmath, windy,
-  common, internal, layout, loader, perf, schema, textboxes
+  common, internal, layout, loader, measure, schema, textboxes
 
 # CPU Renderer renders objects in a single thread using the CPU.
 # It serves as a backing to the hybrid renderer.
@@ -112,7 +112,7 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
     if node.clipsContent:
       # For clipping, check if mouse is within the node's bounds, not just its geometry
       let localMousePos = mat.inverse() * mousePos
-      if localMousePos.x < 0 or localMousePos.y < 0 or 
+      if localMousePos.x < 0 or localMousePos.y < 0 or
          localMousePos.x > node.size.x or localMousePos.y > node.size.y:
         return
 

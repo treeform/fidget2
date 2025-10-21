@@ -1,5 +1,5 @@
 import os, pixie, strformat, strutils, times, windy,
-    fidget2/loader, fidget2/schema, fidget2/perf, fidget2/internal
+    fidget2/loader, fidget2/schema, fidget2/measure, fidget2/internal
 
 # This test is similar to run_frames.nim but it does not
 # save the frames to disk or does any diffing, so it is much faster to run.
