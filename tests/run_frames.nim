@@ -1,5 +1,5 @@
 import cligen, os, pixie, strformat, strutils, times, windy
-import fidget2/loader, fidget2/schema, fidget2/perf, fidget2/common
+import fidget2/loader, fidget2/schema, fidget2/measure, fidget2/common
 
 when defined(benchy):
   import benchy
