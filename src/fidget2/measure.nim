@@ -20,6 +20,7 @@ type
 
   Trace = ref object
     traceEvents: seq[Event]
+    displayTimeUnit: string = "ns"
 
 var
   measureStart: int
@@ -85,22 +86,17 @@ proc measurePop*() =
   if traceStartTicks.len > 0:
     let startTick = traceStartTicks.pop()
     if not traceData.isNil and tracingEnabled:
-      let
-        tsMicro = (startTick - traceStartTick).float / 1000.0
-        durMicro = (now - startTick).float / 1000.0
-      # Filter out extremely short events to reduce noise in traces.
-      if durMicro >= 1.0:
-        let ev = Event(
-          name: key,
-          ph: "X",
-          ts: tsMicro, # Microseconds.
-          pid: tracePid,
-          tid: traceTid,
-          cat: traceCategory,
-          args: newJNull(),
-          dur: durMicro
-        )
-        traceData.traceEvents.add(ev)
+      let ev = Event(
+        name: key,
+        ph: "X",
+        ts: (startTick - traceStartTick).float / 1000.0, # microseconds
+        pid: tracePid,
+        tid: traceTid,
+        cat: traceCategory,
+        args: newJNull(),
+        dur: (now - startTick).float / 1000.0
+      )
+      traceData.traceEvents.add(ev)
 
 macro measure*(fn: untyped) =
   ## Macro that adds performance measurement to a function.
@@ -160,5 +156,23 @@ when isMainModule:
 
   endTrace()
   dumpMeasures(0.0, "trace.json")
+
+  # Trace test: nested functions with high precision timings.
+  # best tested with -d:release
+  proc leaf() {.measure.} =
+    discard
+
+  proc inner() {.measure.} =
+    for i in 0 ..< 12:
+      leaf()
+
+  proc outer() {.measure.} =
+    for i in 0 ..< 8:
+      inner()
+
+  startTrace()
+  outer()
+  endTrace()
+  dumpMeasures(0.0, "trace_nested.json")
 
   echo "done"
