@@ -5,12 +5,12 @@ import
 # Layout tries to match figma's layout engine.
 # It is responsible for computing the layout of a node, both constraints and auto-layout.
 
-proc computeTextBounds(node: Node): Vec2 {.measure.} =
+proc computeTextBounds(node: INode): Vec2 {.measure.} =
   ## Computes the text bounds of a node.
   node.computeArrangement()
   result = node.arrangement.layoutBounds()
 
-proc computeLayout*(parent, node: Node) {.measure.} =
+proc computeLayout*(parent, node: INode) {.measure.} =
   ## Computes constraints and auto-layout.
 
   doAssert not node.position.x.isNan

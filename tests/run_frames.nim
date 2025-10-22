@@ -53,7 +53,7 @@ proc main(r = "", e = "", l = 10000) =
       setupWindow(frame, size = ivec2(800, 600), visible = false, style = Decorated)
       firstTime = false
 
-    proc drawFrame(frame: Node): Image =
+    proc drawFrame(frame: INode): Image =
       when defined(cpu):
         result = drawCompleteFrame(frame)
       elif defined(hyb):

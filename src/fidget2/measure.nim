@@ -55,9 +55,15 @@ proc startTrace*(pid = 1, tid = 1, category = "measure") =
   else:
     traceData.traceEvents.setLen(0)
 
+  echo "Trace started"
+  echo " trace events: ", traceData.traceEvents.len
+
 proc endTrace*() =
   ## Ends tracing capture without writing to disk. Use dumpTrace to export.
   tracingEnabled = false
+
+  echo "Trace ended"
+  echo " trace events: ", traceData.traceEvents.len
 
 proc setTraceEnabled*(on: bool) =
   ## Sets tracing enabled state without resetting buffers.
@@ -65,38 +71,39 @@ proc setTraceEnabled*(on: bool) =
 
 proc measurePush*(what: string) =
   ## Used by {.measure.} pragma to push a measure section.
-  let now = getTicks()
-  if measureStack.len > 0:
-    let dt = now - measureStart
-    let key = measureStack[^1]
-    measures.inc(key, dt)
-  measureStart = now
-  measureStack.add(what)
-  calls.inc(what)
   if tracingEnabled:
+    let now = getTicks()
+    if measureStack.len > 0:
+      let dt = now - measureStart
+      let key = measureStack[^1]
+      measures.inc(key, dt)
+    measureStart = now
+    measureStack.add(what)
+    calls.inc(what)
     traceStartTicks.add(now)
 
 proc measurePop*() =
   ## Used by {.measure.} pragma to pop a measure section.
-  let now = getTicks()
-  let key = measureStack.pop()
-  let dt = now - measureStart
-  measures.inc(key, dt)
-  measureStart = now
-  if traceStartTicks.len > 0:
-    let startTick = traceStartTicks.pop()
-    if not traceData.isNil and tracingEnabled:
-      let ev = Event(
-        name: key,
-        ph: "X",
-        ts: (startTick - traceStartTick).float / 1000.0, # microseconds
-        pid: tracePid,
-        tid: traceTid,
-        cat: traceCategory,
-        args: newJNull(),
-        dur: (now - startTick).float / 1000.0
-      )
-      traceData.traceEvents.add(ev)
+  if tracingEnabled:
+    let now = getTicks()
+    let key = measureStack.pop()
+    let dt = now - measureStart
+    measures.inc(key, dt)
+    measureStart = now
+    if traceStartTicks.len > 0:
+      let startTick = traceStartTicks.pop()
+      if not traceData.isNil and tracingEnabled:
+        let ev = Event(
+          name: key,
+          ph: "X",
+          ts: (startTick - traceStartTick).float / 1000.0, # microseconds
+          pid: tracePid,
+          tid: traceTid,
+          cat: traceCategory,
+          args: newJNull(),
+          dur: (now - startTick).float / 1000.0
+        )
+        traceData.traceEvents.add(ev)
 
 macro measure*(fn: untyped) =
   ## Macro that adds performance measurement to a function.

@@ -1,7 +1,7 @@
 import
   std/[tables],
   boxy, bumpy, pixie, opengl, vmath, windy,
-  common, cpurender, internal, layout, loader, nodes, measure, schema
+  common, cpurender, internal, layout, loader, inodes, measure, schema
 
 export cpurender.underMouse
 
@@ -19,7 +19,7 @@ proc quasiEqual(a, b: Rect): bool =
     fract(a.x) == fract(b.x) and
     fract(a.y) == fract(b.y)
 
-proc willDrawSomething(node: Node): bool =
+proc willDrawSomething(node: INode): bool =
   ## Checks if node will draw something, or it's fully transparent with no fills
   ## or strokes.
   if not node.visible or node.opacity == 0:
@@ -46,7 +46,7 @@ proc willDrawSomething(node: Node): bool =
 
   return false
 
-proc isSimpleImage*(node: Node): bool =
+proc isSimpleImage*(node: INode): bool =
   ## Checks if node is a simple image and can be drawn purely with GPU and
   ## not go through CPU rendering path to resize it.
   node.strokes.len == 0 and
@@ -55,7 +55,7 @@ proc isSimpleImage*(node: Node): bool =
   node.fills[0].scaleMode == FitScaleMode and
   node.cornerRadius == 0
 
-proc drawToAtlas(node: Node, level: int) {.measure.} =
+proc drawToAtlas(node: INode, level: int) {.measure.} =
   ## Draws the nodes into the atlas (and sets up the pixel box).
 
   if not node.visible or node.opacity == 0:
@@ -64,21 +64,18 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
 
   let prevMat = mat
   mat = mat * node.transform()
-
   node.mat = mat # Needed for picking.
 
-  var pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
+  # if node.frozenId.len > 0:
+  #   node.pixelBox = pixelBox
+  #   mat = prevMat
+  #   return
 
-  if node.frozenId.len > 0:
-    node.pixelBox = pixelBox
-    mat = prevMat
-    return
-
-  if node.dirty or not quasiEqual(pixelBox, node.pixelBox):
+  if node.dirty:
 
     node.dirty = false
     # compute bounds
-    node.pixelBox = pixelBox
+    node.pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
 
     ## Any special thing we can't do on the GPU
     ## we have to collapse the node so that CPU draws it all
@@ -152,10 +149,6 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
     else:
       bxy.removeImage(node.id)
 
-  else:
-    # Update pixel bounds even if no redraw was needed.
-    node.pixelBox = pixelBox
-
   if not node.collapse:
     for child in node.children:
       drawToAtlas(child, level + 1)
@@ -164,7 +157,7 @@ proc drawToAtlas(node: Node, level: int) {.measure.} =
 
   mat = prevMat
 
-proc drawWithAtlas(node: Node) {.measure.} =
+proc drawWithAtlas(node: INode) {.measure.} =
   ## Draws the nodes from the atlas to the screen.
   if not node.visible or node.opacity == 0:
     return
@@ -302,7 +295,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
     node.onRenderCallback(node)
 
   if not node.collapse:
-    var masks: seq[Node]
+    var masks: seq[INode]
     for child in node.children:
       if child.isMask:
         masks.add(child)
@@ -329,7 +322,7 @@ proc drawWithAtlas(node: Node) {.measure.} =
   for i in 0 ..< pushedLayers:
     bxy.popLayer(tint = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
 
-proc drawToScreen*(screenNode: Node) {.measure.} =
+proc drawToScreen*(screenNode: INode) {.measure.} =
   ## Draws the current node onto the screen.
 
   if window.size.vec2 != screenNode.size:
@@ -352,13 +345,14 @@ proc drawToScreen*(screenNode: Node) {.measure.} =
     mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
   mat = mat * screenNode.transform().inverse()
 
-  drawToAtlas(screenNode, 0)
+  if screenNode.dirty:
+    drawToAtlas(screenNode, 0)
 
   drawWithAtlas(screenNode)
   bxy.endFrame()
 
 proc setupWindow*(
-  frameNode: Node,
+  frameNode: INode,
   size: IVec2,
   visible = true,
   style = DecoratedResizable
@@ -402,7 +396,7 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   screen.flipVertical()
   return screen
 
-proc freeze*(node: Node, scaleFactor = 1.0f) =
+proc freeze*(node: INode, scaleFactor = 1.0f) =
   ## Freezes a node.
   ## This is used to speed up rendering by caching the node as an image.
   ## It is not a good idea to freeze nodes that are animated or that are
@@ -428,11 +422,11 @@ proc freeze*(node: Node, scaleFactor = 1.0f) =
       node.drawNodeInternal(withChildren=true)
       bxy.addImage(node.frozenId, layer)
 
-deleteNodeHook = proc(node: Node) =
-  ## Hook to delete a node from the atlas.
-  if node.id in bxy:
-    bxy.removeImage(node.id)
-  if node.id & ".mask" in bxy:
-    bxy.removeImage(node.id & ".mask")
-  if node.frozenId in bxy:
-    bxy.removeImage(node.frozenId)
+# deleteNodeHook = proc(node: INode) =
+#   ## Hook to delete a node from the atlas.
+#   if node.id in bxy:
+#     bxy.removeImage(node.id)
+#   if node.id & ".mask" in bxy:
+#     bxy.removeImage(node.id & ".mask")
+#   if node.frozenId in bxy:
+#     bxy.removeImage(node.frozenId)

@@ -79,7 +79,7 @@ else:
 
     # Walk the Figma file and find all the images used
     var imagesUsed: HashSet[string]
-    proc walk(node: Node) =
+    proc walk(node: INode) =
       for fill in node.fills:
         if fill.imageRef != "":
           imagesUsed.incl(fill.imageRef)
@@ -158,7 +158,7 @@ else:
       elif style.fontFamily != "":
         fontsUsed.incl(style.fontFamily & "-Regular")
 
-    proc walk(node: Node) =
+    proc walk(node: INode) =
       if node.characterStyleOverrides.len == 0:
         if node.style != nil:
           incl(node.style)

@@ -1,6 +1,6 @@
 import
   std/[strutils],
-  schema, common
+  schema, common, nodes
 
 # Globs are used to match paths in the tree.
 # Globs style paths are central to the fidget2 library.
@@ -176,3 +176,11 @@ proc find*(node: Node, glob: string): Node =
 
   if result == nil:
     raise newException(FidgetError, "Not found: " & $glob)
+
+proc find*(node: INode, glob: string): Node =
+  ## Converts an INode to a Node and finds it.
+  node.Node().find(glob).Node()
+
+proc findAll*(node: INode, glob: string): seq[Node] =
+  ## Converts an INode to a Node and finds all nodes that match a glob.
+  cast[seq[Node]](node.Node().findAll(glob))

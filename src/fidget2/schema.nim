@@ -179,13 +179,16 @@ type
     VerticalScrolling
     HorizontalAndVerticalScrolling
 
-  Node* = ref object
+  INode* = ref object
+    ## Internal node object, only fidget uses this node directly,
+    ## other code should use the Node type.
+
     # Basic Node properties
     id*: string     ## A string uniquely identifying this node.
     kind*: NodeKind ## The type of the node, refer to table below for details.
     name*: string   ## The name given to the node by the user in the tool.
-    children*: seq[Node]
-    parent*: Node
+    children*: seq[INode]
+    parent*: INode
     prototypeStartNodeID*: string
     componentId*: string
 
@@ -266,14 +269,14 @@ type
     scrollPos*: Vec2    ## How does it scroll it's children.
 
     # Event handling
-    onRenderCallback*: proc(thisNode: Node)
+    onRenderCallback*: proc(thisNode: INode)
 
     # User defined data.
     userKey*: string
     userId*: int
 
   FigmaFile* = ref object
-    document*: Node
+    document*: INode
     components*: Table[string, Component]
     schemaVersion*: int
     name*: string
@@ -282,7 +285,7 @@ type
     version*: string
     role*: string
 
-proc `$`*(node: Node): string =
+proc `$`*(node: INode): string =
   ## Returns a string representation of a node.
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
 
@@ -593,8 +596,8 @@ type FigmaNode = ref object
   id: string
   kind: NodeKind
   name: string
-  children: seq[Node]
-  parent: Node
+  children: seq[INode]
+  parent: INode
   prototypeStartNodeID: string
   componentId: string
 
@@ -648,13 +651,13 @@ proc renameHook(node: var FigmaNode, fieldName: var string) =
   if fieldName == "type":
     fieldName = "kind"
 
-proc parseHook(s: string, i: var int, node: var Node) =
+proc parseHook(s: string, i: var int, node: var INode) =
   ## Jsony houok to parse Node objects from JSON with special handling.
   # Handle vectors some times having {x: null, y: null}.
 
   var f: FigmaNode
   parseHook(s, i, f)
-  node = Node()
+  node = INode()
 
   node.visible = true
   node.opacity = 1.0
@@ -737,6 +740,7 @@ proc parseHook(s: string, i: var int, node: var Node) =
 
   # Node has never been drawn.
   node.dirty = true
+
 
 proc parseFigmaFile*(data: string): FigmaFile =
   ## Parses a Figma file from JSON data.

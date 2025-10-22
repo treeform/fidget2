@@ -1,7 +1,7 @@
 import
   std/[unicode],
   bumpy, pixie, vmath, windy,
-  common, internal, nodes, schema, u
+  common, internal, inodes, schema, u
 
 #[
 It's hard to implement a text. A text box has many complex features one does not think about
@@ -75,11 +75,11 @@ proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
         minGlyph = i
   return minGlyph
 
-proc layout*(node: Node): seq[Rect] =
+proc layout*(node: INode): seq[Rect] =
   ## Gets the layout rectangles for a node.
   return node.arrangement.selectionRects
 
-proc innerHeight*(node: Node): float32 =
+proc innerHeight*(node: INode): float32 =
   ## Returns the inner height where content can be drawn.
   let layout = node.layout()
   if layout.len > 0:
@@ -88,7 +88,7 @@ proc innerHeight*(node: Node): float32 =
   else:
     return node.font.lineHeight
 
-proc locationRect*(node: Node, loc: int): Rect =
+proc locationRect*(node: INode, loc: int): Rect =
   ## Rectangle where the cursor should be drawn.
   let layout = node.layout()
   if layout.len > 0:
@@ -107,51 +107,51 @@ proc locationRect*(node: Node, loc: int): Rect =
   result.w = node.font.cursorWidth
   result.h = max(node.font.size, node.font.lineHeight)
 
-proc cursorRect*(node: Node): Rect =
+proc cursorRect*(node: INode): Rect =
   ## Rectangle where the cursor should be drawn.
   node.locationRect(node.cursor + window.imeCursorIndex)
 
-proc cursorPos*(node: Node): Vec2 =
+proc cursorPos*(node: INode): Vec2 =
   ## Position where the cursor should be drawn.
   node.cursorRect.xy
 
-proc selectorRect*(node: Node): Rect =
+proc selectorRect*(node: INode): Rect =
   ## Rectangle where the selection cursor should be drawn.
   node.locationRect(node.selector)
 
-proc selectorPos*(node: Node): Vec2 =
+proc selectorPos*(node: INode): Vec2 =
   ## Position where the selection cursor should be drawn.
   node.cursorRect.xy
 
-proc selectionRegions*(node: Node): seq[Rect] =
+proc selectionRegions*(node: INode): seq[Rect] =
   ## Selection regions to draw the selection of text.
   let sel = node.selection
   node.arrangement.getSelection(sel.a, sel.b)
 
-proc undoSave(node: Node) =
+proc undoSave(node: INode) =
   ## Saves the current state for undo.
   node.undoStack.add((node.characters, node.cursor))
   node.redoStack.setLen(0)
 
-proc undo*(node: Node) =
+proc undo*(node: INode) =
   ## Goes back in history.
   if node.undoStack.len > 0:
     node.redoStack.add((node.characters, node.cursor))
     (node.characters, node.cursor) = node.undoStack.pop()
     node.selector = node.cursor
 
-proc redo*(node: Node) =
+proc redo*(node: INode) =
   ## Goes forward in history.
   if node.redoStack.len > 0:
     node.undoStack.add((node.characters, node.cursor))
     (node.characters, node.cursor) = node.redoStack.pop()
     node.selector = node.cursor
 
-proc runesChanged(node: Node) =
+proc runesChanged(node: INode) =
   ## Called when runes in a text node change.
   node.makeTextDirty()
 
-proc removedSelection*(node: Node): bool =
+proc removedSelection*(node: INode): bool =
   ## Removes selected runes.
   ## Returns true if anything was removed.
   let sel = node.selection
@@ -164,11 +164,11 @@ proc removedSelection*(node: Node): bool =
     return true
   return false
 
-proc removeSelection(node: Node) =
+proc removeSelection(node: INode) =
   ## Removes selected runes.
   discard node.removedSelection()
 
-proc scrollToCursor*(node: Node) =
+proc scrollToCursor*(node: INode) =
   ## Adjusts scroll to make sure the cursor is in the window.
   if node.scrollable:
     let
@@ -188,7 +188,7 @@ proc scrollToCursor*(node: Node) =
       node.scrollPos.x = r.x + r.w - node.size.x
       node.makeTextDirty()
 
-proc typeCharacter*(node: Node, rune: Rune) =
+proc typeCharacter*(node: INode, rune: Rune) =
   ## Adds a character to the text box.
   if not node.editable:
     return
@@ -210,11 +210,11 @@ proc typeCharacter*(node: Node, rune: Rune) =
   node.makeTextDirty()
   resetCursorBlink()
 
-proc typeCharacter*(node: Node, letter: char) =
+proc typeCharacter*(node: INode, letter: char) =
   ## Adds a character to the text box.
   node.typeCharacter(Rune(letter))
 
-proc typeCharacters*(node: Node, s: string) =
+proc typeCharacters*(node: INode, s: string) =
   ## Adds characters to the text box.
   if not node.editable:
     return
@@ -230,20 +230,20 @@ proc typeCharacters*(node: Node, s: string) =
   node.makeTextDirty()
   resetCursorBlink()
 
-proc copyText*(node: Node): string =
+proc copyText*(node: INode): string =
   ## Returns the text that was copied.
   let sel = node.selection
   if sel.a != sel.b:
     return $node.characters.u[sel.a ..< sel.b]
 
-proc pasteText*(node: Node, s: string) =
+proc pasteText*(node: INode, s: string) =
   ## Pastes a string.
   if not node.editable:
     return
   node.typeCharacters(s)
   node.savedX = node.cursorPos.x
 
-proc cutText*(node: Node): string =
+proc cutText*(node: INode): string =
   ## Returns the text that was cut.
   result = node.copyText()
   if not node.editable or result == "":
@@ -251,12 +251,12 @@ proc cutText*(node: Node): string =
   node.removeSelection()
   node.savedX = node.cursorPos.x
 
-proc setCursor*(node: Node, loc: int) =
+proc setCursor*(node: INode, loc: int) =
   ## Sets the cursor position in a text node.
   node.cursor = clamp(loc, 0, node.characters.u.len + 1)
   node.selector = node.cursor
 
-proc backspace*(node: Node, shift = false) =
+proc backspace*(node: INode, shift = false) =
   ## Backspace command.
   if node.editable:
     if node.removedSelection(): return
@@ -268,7 +268,7 @@ proc backspace*(node: Node, shift = false) =
       node.makeTextDirty()
   node.scrollToCursor()
 
-proc delete*(node: Node, shift = false) =
+proc delete*(node: INode, shift = false) =
   ## Delete command.
   if node.editable:
     if node.removedSelection(): return
@@ -278,7 +278,7 @@ proc delete*(node: Node, shift = false) =
       node.makeTextDirty()
   node.scrollToCursor()
 
-proc backspaceWord*(node: Node, shift = false) =
+proc backspaceWord*(node: INode, shift = false) =
   ## Backspace word command. (Usually ctrl + backspace).
   if node.editable:
     if node.removedSelection(): return
@@ -292,7 +292,7 @@ proc backspaceWord*(node: Node, shift = false) =
       node.makeTextDirty()
   node.scrollToCursor()
 
-proc deleteWord*(node: Node, shift = false) =
+proc deleteWord*(node: INode, shift = false) =
   ## Delete word command. (Usually ctrl + delete).
   if node.editable:
     if node.removedSelection(): return
@@ -304,7 +304,7 @@ proc deleteWord*(node: Node, shift = false) =
       node.makeTextDirty()
   node.scrollToCursor()
 
-proc left*(node: Node, shift = false) =
+proc left*(node: INode, shift = false) =
   ## Moves the cursor left.
   if node.cursor > 0:
     dec node.cursor
@@ -314,7 +314,7 @@ proc left*(node: Node, shift = false) =
   node.scrollToCursor()
   resetCursorBlink()
 
-proc right*(node: Node, shift = false) =
+proc right*(node: INode, shift = false) =
   ## Moves the cursor right.
   if node.cursor < node.characters.u.len:
     inc node.cursor
@@ -324,7 +324,7 @@ proc right*(node: Node, shift = false) =
   node.scrollToCursor()
   resetCursorBlink()
 
-proc down*(node: Node, shift = false) =
+proc down*(node: INode, shift = false) =
   ## Moves the cursor down.
   let layout = node.layout()
   if layout.len > 0:
@@ -342,7 +342,7 @@ proc down*(node: Node, shift = false) =
   node.scrollToCursor()
   resetCursorBlink()
 
-proc up*(node: Node, shift = false) =
+proc up*(node: INode, shift = false) =
   ## Moves the cursor up.
   let layout = node.layout()
   if layout.len > 0:
@@ -360,7 +360,7 @@ proc up*(node: Node, shift = false) =
   node.scrollToCursor()
   resetCursorBlink()
 
-proc leftWord*(node: Node, shift = false) =
+proc leftWord*(node: INode, shift = false) =
   ## Moves the cursor left by a word. (Usually ctrl + left).
   if node.cursor > 0:
     dec node.cursor
@@ -372,7 +372,7 @@ proc leftWord*(node: Node, shift = false) =
   node.savedX = node.cursorPos.x
   node.scrollToCursor()
 
-proc rightWord*(node: Node, shift = false) =
+proc rightWord*(node: INode, shift = false) =
   ## Moves the cursor right by a word. (Usually ctrl + right).
   if node.cursor < node.characters.u.len:
     inc node.cursor
@@ -384,7 +384,7 @@ proc rightWord*(node: Node, shift = false) =
   node.savedX = node.cursorPos.x
   node.scrollToCursor()
 
-proc startOfLine*(node: Node, shift = false) =
+proc startOfLine*(node: INode, shift = false) =
   ## Moves the cursor to the start of the line.
   while node.cursor > 0 and
     node.characters.u[node.cursor - 1] != Rune(10):
@@ -394,7 +394,7 @@ proc startOfLine*(node: Node, shift = false) =
   node.savedX = node.cursorPos.x
   node.scrollToCursor()
 
-proc endOfLine*(node: Node, shift = false) =
+proc endOfLine*(node: INode, shift = false) =
   ## Moves the cursor to the end of the line.
   while node.cursor < node.characters.u.len and
     node.characters.u[node.cursor] != Rune(10):
@@ -404,7 +404,7 @@ proc endOfLine*(node: Node, shift = false) =
   node.savedX = node.cursorPos.x
   node.scrollToCursor()
 
-proc pageUp*(node: Node, shift = false) =
+proc pageUp*(node: INode, shift = false) =
   ## Moves the cursor up by half a text box height.
   let layout = node.layout()
   if layout.len == 0:
@@ -423,7 +423,7 @@ proc pageUp*(node: Node, shift = false) =
       node.selector = node.cursor
   node.scrollToCursor()
 
-proc pageDown*(node: Node, shift = false) =
+proc pageDown*(node: INode, shift = false) =
   ## Moves the cursor down by half a text box height.
   let layout = node.layout()
   if layout.len == 0:
@@ -444,7 +444,7 @@ proc pageDown*(node: Node, shift = false) =
       node.selector = node.cursor
 
 proc mouseAction*(
-  node: Node,
+  node: INode,
   mousePos: Vec2,
   click = true,
   shift = false
@@ -477,7 +477,7 @@ proc mouseAction*(
   node.makeTextDirty()
   resetCursorBlink()
 
-proc selectWord*(node: Node, mousePos: Vec2, extraSpace = false) =
+proc selectWord*(node: INode, mousePos: Vec2, extraSpace = false) =
   ## Selects the word under the cursor (double click).
   node.mouseAction(mousePos, click = true)
   while node.cursor > 0 and
@@ -494,7 +494,7 @@ proc selectWord*(node: Node, mousePos: Vec2, extraSpace = false) =
   node.makeTextDirty()
   node.dirty = true
 
-proc selectParagraph*(node: Node, mousePos: Vec2) =
+proc selectParagraph*(node: INode, mousePos: Vec2) =
   ## Selects the paragraph under the cursor (triple click).
   node.mouseAction(mousePos, click = true)
   while node.cursor > 0 and
@@ -504,12 +504,12 @@ proc selectParagraph*(node: Node, mousePos: Vec2) =
     node.characters.u[node.selector] != Rune(10):
     inc node.selector
 
-proc selectAll*(node: Node) =
+proc selectAll*(node: INode) =
   ## Selects all text (quad click or ctrl-a).
   node.cursor = 0
   node.selector = node.characters.u.len
 
-proc scrollBy*(node: Node, amount: float) =
+proc scrollBy*(node: INode, amount: float) =
   ## Scrolls the text box with a scroll wheel.
   node.scrollPos.y += amount
   node.makeTextDirty()
