@@ -46,3 +46,6 @@ tests/frames/rendered/*.png
 tests/shots/*
 cacert.pem
 tmp
+
+trace.json
+trace_nested.json
