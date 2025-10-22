@@ -85,17 +85,22 @@ proc measurePop*() =
   if traceStartTicks.len > 0:
     let startTick = traceStartTicks.pop()
     if not traceData.isNil and tracingEnabled:
-      let ev = Event(
-        name: key,
-        ph: "X",
-        ts: (startTick - traceStartTick).float / 1000.0, # microseconds
-        pid: tracePid,
-        tid: traceTid,
-        cat: traceCategory,
-        args: newJNull(),
-        dur: (now - startTick).float / 1000.0
-      )
-      traceData.traceEvents.add(ev)
+      let
+        tsMicro = (startTick - traceStartTick).float / 1000.0
+        durMicro = (now - startTick).float / 1000.0
+      # Filter out extremely short events to reduce noise in traces.
+      if durMicro >= 1.0:
+        let ev = Event(
+          name: key,
+          ph: "X",
+          ts: tsMicro, # Microseconds.
+          pid: tracePid,
+          tid: traceTid,
+          cat: traceCategory,
+          args: newJNull(),
+          dur: durMicro
+        )
+        traceData.traceEvents.add(ev)
 
 macro measure*(fn: untyped) =
   ## Macro that adds performance measurement to a function.
