@@ -16,6 +16,9 @@ proc computeLayout*(parent, node: INode) {.measure.} =
   doAssert not node.position.x.isNan
   doAssert not node.position.y.isNan
 
+  let oldPosition = node.position
+  let oldSize = node.size
+
   for n in node.children:
     computeLayout(node, n)
 
@@ -133,3 +136,6 @@ proc computeLayout*(parent, node: INode) {.measure.} =
 
   doAssert not node.position.x.isNan
   doAssert not node.position.y.isNan
+
+  if oldPosition != node.position or oldSize != node.size:
+    node.dirty = true

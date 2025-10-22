@@ -899,7 +899,6 @@ proc setupWindowAndEvents*(
 ) =
   ## Sets up the window and events.
   hybridrender.setupWindow(
-    thisFrame.internal,
     thisFrame.size.ivec2,
     style = windowStyle
   )
