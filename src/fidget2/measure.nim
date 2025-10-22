@@ -155,7 +155,7 @@ when isMainModule:
     run(10)
 
   endTrace()
-  dumpMeasures(0.0, "trace.json")
+  dumpMeasures(0.0, "tmp/trace.json")
 
   # Trace test: nested functions with high precision timings.
   # best tested with -d:release
@@ -173,6 +173,6 @@ when isMainModule:
   startTrace()
   outer()
   endTrace()
-  dumpMeasures(0.0, "trace_nested.json")
+  dumpMeasures(0.0, "tmp/trace_nested.json")
 
   echo "done"
