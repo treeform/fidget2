@@ -20,6 +20,7 @@ type
 
   Trace = ref object
     traceEvents: seq[Event]
+    displayTimeUnit: string = "ns" # this must be set to "ms" for chrome tracing to show properly
 
 var
   measureStart: int
@@ -154,6 +155,24 @@ when isMainModule:
     run(10)
 
   endTrace()
-  dumpMeasures(0.0, "trace.json")
+  dumpMeasures(0.0, "tmp/trace.json")
+
+  # Trace test: nested functions with high precision timings.
+  # best tested with -d:release
+  proc leaf() {.measure.} =
+    discard
+
+  proc inner() {.measure.} =
+    for i in 0 ..< 12:
+      leaf()
+
+  proc outer() {.measure.} =
+    for i in 0 ..< 8:
+      inner()
+
+  startTrace()
+  outer()
+  endTrace()
+  dumpMeasures(0.0, "tmp/trace_nested.json")
 
   echo "done"
