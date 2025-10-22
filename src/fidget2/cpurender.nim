@@ -648,13 +648,17 @@ proc drawNode*(node: INode, withChildren=true) {.measure.} =
 
   mat = prevMat
 
+proc layoutPass*(node: INode) {.measure.} =
+  ## Performs a layout pass on a node.
+  computeLayout(nil, node)
+
 proc drawCompleteFrame*(node: INode): pixie.Image {.measure.} =
   ## Draws the complete frame with all child nodes.
   let
     w = node.size.x.int
     h = node.size.y.int
 
-  computeLayout(nil, node)
+  layoutPass(node)
 
   layer = newImage(w, h)
   mat = translate(-node.position)
@@ -666,7 +670,6 @@ proc drawCompleteFrame*(node: INode): pixie.Image {.measure.} =
   return layer
 
 proc setupWindow*(
-  frameNode: INode,
   size: IVec2,
   visible = true,
   style = Decorated

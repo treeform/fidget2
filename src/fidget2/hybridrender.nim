@@ -55,7 +55,7 @@ proc isSimpleImage*(node: INode): bool =
   node.fills[0].scaleMode == FitScaleMode and
   node.cornerRadius == 0
 
-proc drawToAtlas(node: INode, level: int) {.measure.} =
+proc rasterize(node: INode, level: int) {.measure.} =
   ## Draws the nodes into the atlas (and sets up the pixel box).
 
   if not node.visible or node.opacity == 0:
@@ -151,13 +151,13 @@ proc drawToAtlas(node: INode, level: int) {.measure.} =
 
   if not node.collapse:
     for child in node.children:
-      drawToAtlas(child, level + 1)
+      rasterize(child, level + 1)
   else:
     node.markTreeClean()
 
   mat = prevMat
 
-proc drawWithAtlas(node: INode) {.measure.} =
+proc composite(node: INode) {.measure.} =
   ## Draws the nodes from the atlas to the screen.
   if not node.visible or node.opacity == 0:
     return
@@ -301,13 +301,13 @@ proc drawWithAtlas(node: INode) {.measure.} =
         masks.add(child)
       else:
         if masks.len == 0:
-          drawWithAtlas(child)
+          composite(child)
         else:
           bxy.pushLayer()
-          drawWithAtlas(child)
+          composite(child)
           bxy.pushLayer()
           for mask in masks:
-            drawWithAtlas(mask)
+            composite(mask)
           bxy.popLayer(blendMode = MaskBlend)
           bxy.popLayer(
             tint = color(1, 1, 1, child.opacity),
@@ -321,6 +321,14 @@ proc drawWithAtlas(node: INode) {.measure.} =
 
   for i in 0 ..< pushedLayers:
     bxy.popLayer(tint = color(1, 1, 1, node.opacity), blendMode = node.blendMode)
+
+proc rasterPass*(node: INode) {.measure.} =
+  ## Performs a raster pass on a node.
+  rasterize(node, 0)
+
+proc compositePass*(node: INode) {.measure.} =
+  ## Performs a composting pass on a node.
+  composite(node)
 
 proc drawToScreen*(screenNode: INode) {.measure.} =
   ## Draws the current node onto the screen.
@@ -337,7 +345,7 @@ proc drawToScreen*(screenNode: INode) {.measure.} =
 
   for i in 0 ..< 2:
     # TODO: figure out how to call layout only once.
-    computeLayout(nil, screenNode)
+    layoutPass(screenNode)
 
   # Setup proper matrix for drawing.
   mat = scale(vec2(window.contentScale, window.contentScale))
@@ -346,13 +354,13 @@ proc drawToScreen*(screenNode: INode) {.measure.} =
   mat = mat * screenNode.transform().inverse()
 
   if screenNode.dirty:
-    drawToAtlas(screenNode, 0)
+    rasterPass(screenNode)
 
-  drawWithAtlas(screenNode)
+  compositePass(screenNode)
+
   bxy.endFrame()
 
 proc setupWindow*(
-  frameNode: INode,
   size: IVec2,
   visible = true,
   style = DecoratedResizable
