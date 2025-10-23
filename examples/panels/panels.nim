@@ -426,7 +426,7 @@ find "/UI/Main":
         rootArea.refresh()
 
 startFidget(
-  figmaUrl = "https://www.figma.com/design/CvLIH2hh6B6V3rgxNV2gMD",
+  figmaUrl = "https://www.figma.com/design/qbenAI0nezzmOmxdKFQDFU",
   windowTitle = "Panels Example",
   entryFrame = "UI/Main",
   windowStyle = DecoratedResizable
