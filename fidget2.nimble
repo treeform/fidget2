@@ -1,6 +1,6 @@
-version     = "0.0.12"
+version     = "0.1.0"
 author      = "Andre von Houck"
-description = "Description of your library"
+description = "Fidget2 is a cross platform UI library leveraging Figma."
 license     = "MIT"
 
 srcDir = "src"
