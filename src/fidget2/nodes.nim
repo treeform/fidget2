@@ -12,6 +12,9 @@ type
 template internal*(node: Node): INode =
   cast[INode](node)
 
+proc `$`*(node: Node): string =
+  $node.internal
+
 proc `==`*(a, b: Node): bool {.inline.} =
   a.internal == b.internal
 
@@ -203,16 +206,10 @@ proc `opacity=`*(node: Node, value: float32) =
   node.internal.opacity = value
   node.internal.markTreeDirty()
 
-proc remove*(node: Node) =
-  ## Removes a node from its parent.
-  let parent = node.parent
-  parent.internal.removeChild(node.internal)
+proc addChild*(parent, child: Node) =
+  ## Adds a child to a parent node.
+  parent.internal.addChild(child.internal)
   parent.internal.markTreeDirty()
-
-proc remove*(nodes: seq[Node]) =
-  ## Removes multiple nodes.
-  for node in toSeq(nodes):
-    node.remove()
 
 proc removeChild*(parent: Node, child: Node) =
   ## Removes a child from a parent.
@@ -224,6 +221,15 @@ proc removeChildren*(parent: Node, children: seq[Node]) =
   for child in toSeq(children):
     parent.internal.removeChild(child.internal)
   parent.internal.markTreeDirty()
+
+proc remove*(node: Node) =
+  ## Removes a node from its parent.
+  node.parent.removeChild(node)
+
+proc remove*(nodes: seq[Node]) =
+  ## Removes multiple nodes.
+  for node in toSeq(nodes):
+    node.remove()
 
 proc removeChildren*(node: Node) =
   ## Clears a node and its children.
@@ -239,11 +245,6 @@ proc newInstance*(node: Node): Node =
   doAssert node.kind == ComponentNode
   result = node.copy()
   result.internal.componentId = node.id
-
-proc addChild*(parent, child: Node) =
-  ## Adds a child to a parent node.
-  parent.internal.addChild(child.internal)
-  parent.internal.markTreeDirty()
 
 proc isInstance*(node: Node): bool =
   ## Checks if node is an instance node.

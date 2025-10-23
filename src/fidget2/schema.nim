@@ -253,7 +253,7 @@ type
     overflowDirection*: OverflowDirection
 
     # Non-figma parameters:
-    dirty*: bool        ## Do the pixels need redrawing?
+    dirty*: bool = true ## Do the pixels need redrawing?
     pixels*: Image      ## Pixel image cache.
     pixelBox*: Rect     ## Pixel position and size.
     editable*: bool     ## Can the user edit the text?

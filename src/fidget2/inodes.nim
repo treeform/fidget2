@@ -62,8 +62,6 @@ proc removeChild*(parent, node: INode) =
   for i, n in parent.children:
     if n == node:
       parent.children.delete(i)
-      for child in toSeq(node.children):
-        node.removeChild(child)
       node.parent = nil
       return
 

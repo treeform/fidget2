@@ -141,11 +141,4 @@ proc computeLayout*(parent, node: INode) {.measure.} =
   doAssert not node.position.y.isNan
 
   if oldPosition.fractional != node.position.fractional or oldSize != node.size:
-    echo "Layout made node dirty: ", node.path
     node.dirty = true
-  elif oldPosition != node.position:
-    echo "Only the integer part of the position changed: ", node.path
-    if node.path == "/UI/Main/GlobalHeader/ShareButton":
-      echo "  Position: ", node.position
-      echo "  Old position: ", oldPosition
-    node.pixelBox.xy = node.position
