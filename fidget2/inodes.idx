@@ -1,0 +1,23 @@
+nimTitle	inodes	fidget2/inodes.html	module src/fidget2/inodes		0
+nim	markTreeDirty	fidget2/inodes.html#markTreeDirty,INode	proc markTreeDirty(node: INode)		8
+nim	markTreeClean	fidget2/inodes.html#markTreeClean,INode	proc markTreeClean(node: INode)		14
+nim	checkDirty	fidget2/inodes.html#checkDirty,INode	proc checkDirty(node: INode)		20
+nim	printDirtyStatus	fidget2/inodes.html#printDirtyStatus,INode,int	proc printDirtyStatus(node: INode; indent = 0)		28
+nim	makeTextDirty	fidget2/inodes.html#makeTextDirty,INode	proc makeTextDirty(node: INode)		34
+nim	text=	fidget2/inodes.html#text=,INode,string	proc text=(node: INode; text: string)		41
+nim	findNodeById	fidget2/inodes.html#findNodeById,string	proc findNodeById(id: string): INode		49
+nim	removeChild	fidget2/inodes.html#removeChild,INode,INode	proc removeChild(parent, node: INode)		60
+nim	removeChildren	fidget2/inodes.html#removeChildren,INode	proc removeChildren(node: INode)		68
+nim	copy	fidget2/inodes.html#copy,INode	proc copy(node: INode): INode		83
+nim	addChild	fidget2/inodes.html#addChild,INode,INode	proc addChild(parent, child: INode)		148
+nim	inTree	fidget2/inodes.html#inTree,INode,INode	proc inTree(node, other: INode): bool		155
+nim	`[]`	fidget2/inodes.html#[],seq[],string	proc `[]`(query: seq[(string, string)]; key: string): string		179
+nim	contains	fidget2/inodes.html#contains,seq[],string	proc contains(query: seq[(string, string)]; key: string): bool		185
+nim	`[]=`	fidget2/inodes.html#[]=,seq[],string,string	proc `[]=`(query: var seq[(string, string)]; key, value: string)		191
+nim	triMerge	fidget2/inodes.html#triMerge,INode,INode,INode	proc triMerge(current, previousMaster, currentMaster: INode)		200
+nim	isInstance	fidget2/inodes.html#isInstance,INode	proc isInstance(node: INode): bool		291
+nim	setVariant	fidget2/inodes.html#setVariant,INode,string,string	proc setVariant(node: INode; name, value: string)		296
+nim	hasVariant	fidget2/inodes.html#hasVariant,INode,string,string	proc hasVariant(node: INode; name, value: string): bool		330
+nim	getVariant	fidget2/inodes.html#getVariant,INode,string	proc getVariant(node: INode; name: string): string		343
+nim	masterComponent	fidget2/inodes.html#masterComponent,INode	proc masterComponent(node: INode): INode		350
+nim	dumpTree	fidget2/inodes.html#dumpTree,INode,string	proc dumpTree(node: INode; indent: string = ""): string		354

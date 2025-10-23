@@ -1,42 +1,42 @@
 nimTitle	textboxes	fidget2/textboxes.html	module src/fidget2/textboxes		0
 nim	getSelection	fidget2/textboxes.html#getSelection,Arrangement,int,int	proc getSelection(arrangement: Arrangement; start, stop: int): seq[Rect]		46
 nim	pickGlyphAt	fidget2/textboxes.html#pickGlyphAt,Arrangement,Vec2	proc pickGlyphAt(arrangement: Arrangement; pos: Vec2): int		62
-nim	layout	fidget2/textboxes.html#layout,Node	proc layout(node: Node): seq[Rect]		78
-nim	innerHeight	fidget2/textboxes.html#innerHeight,Node	proc innerHeight(node: Node): float32		82
-nim	locationRect	fidget2/textboxes.html#locationRect,Node,int	proc locationRect(node: Node; loc: int): Rect		91
-nim	cursorRect	fidget2/textboxes.html#cursorRect,Node	proc cursorRect(node: Node): Rect		110
-nim	cursorPos	fidget2/textboxes.html#cursorPos,Node	proc cursorPos(node: Node): Vec2		114
-nim	selectorRect	fidget2/textboxes.html#selectorRect,Node	proc selectorRect(node: Node): Rect		118
-nim	selectorPos	fidget2/textboxes.html#selectorPos,Node	proc selectorPos(node: Node): Vec2		122
-nim	selectionRegions	fidget2/textboxes.html#selectionRegions,Node	proc selectionRegions(node: Node): seq[Rect]		126
-nim	undo	fidget2/textboxes.html#undo,Node	proc undo(node: Node)		136
-nim	redo	fidget2/textboxes.html#redo,Node	proc redo(node: Node)		143
-nim	removedSelection	fidget2/textboxes.html#removedSelection,Node	proc removedSelection(node: Node): bool		154
-nim	scrollToCursor	fidget2/textboxes.html#scrollToCursor,Node	proc scrollToCursor(node: Node)		171
-nim	typeCharacter	fidget2/textboxes.html#typeCharacter,Node,Rune	proc typeCharacter(node: Node; rune: Rune)		191
-nim	typeCharacter	fidget2/textboxes.html#typeCharacter,Node,char	proc typeCharacter(node: Node; letter: char)		213
-nim	typeCharacters	fidget2/textboxes.html#typeCharacters,Node,string	proc typeCharacters(node: Node; s: string)		217
-nim	copyText	fidget2/textboxes.html#copyText,Node	proc copyText(node: Node): string		233
-nim	pasteText	fidget2/textboxes.html#pasteText,Node,string	proc pasteText(node: Node; s: string)		239
-nim	cutText	fidget2/textboxes.html#cutText,Node	proc cutText(node: Node): string		246
-nim	setCursor	fidget2/textboxes.html#setCursor,Node,int	proc setCursor(node: Node; loc: int)		254
-nim	backspace	fidget2/textboxes.html#backspace,Node	proc backspace(node: Node; shift = false)		259
-nim	delete	fidget2/textboxes.html#delete,Node	proc delete(node: Node; shift = false)		271
-nim	backspaceWord	fidget2/textboxes.html#backspaceWord,Node	proc backspaceWord(node: Node; shift = false)		281
-nim	deleteWord	fidget2/textboxes.html#deleteWord,Node	proc deleteWord(node: Node; shift = false)		295
-nim	left	fidget2/textboxes.html#left,Node	proc left(node: Node; shift = false)		307
-nim	right	fidget2/textboxes.html#right,Node	proc right(node: Node; shift = false)		317
-nim	down	fidget2/textboxes.html#down,Node	proc down(node: Node; shift = false)		327
-nim	up	fidget2/textboxes.html#up,Node	proc up(node: Node; shift = false)		345
-nim	leftWord	fidget2/textboxes.html#leftWord,Node	proc leftWord(node: Node; shift = false)		363
-nim	rightWord	fidget2/textboxes.html#rightWord,Node	proc rightWord(node: Node; shift = false)		375
-nim	startOfLine	fidget2/textboxes.html#startOfLine,Node	proc startOfLine(node: Node; shift = false)		387
-nim	endOfLine	fidget2/textboxes.html#endOfLine,Node	proc endOfLine(node: Node; shift = false)		397
-nim	pageUp	fidget2/textboxes.html#pageUp,Node	proc pageUp(node: Node; shift = false)		407
-nim	pageDown	fidget2/textboxes.html#pageDown,Node	proc pageDown(node: Node; shift = false)		426
-nim	mouseAction	fidget2/textboxes.html#mouseAction,Node,Vec2	proc mouseAction(node: Node; mousePos: Vec2; click = true; shift = false)		446
-nim	selectWord	fidget2/textboxes.html#selectWord,Node,Vec2	proc selectWord(node: Node; mousePos: Vec2; extraSpace = false)		480
-nim	selectParagraph	fidget2/textboxes.html#selectParagraph,Node,Vec2	proc selectParagraph(node: Node; mousePos: Vec2)		497
-nim	selectAll	fidget2/textboxes.html#selectAll,Node	proc selectAll(node: Node)		507
-nim	scrollBy	fidget2/textboxes.html#scrollBy,Node,float	proc scrollBy(node: Node; amount: float)		512
-nimgrp	typecharacter	fidget2/textboxes.html#typeCharacter-procs-all	proc		191
+nim	layout	fidget2/textboxes.html#layout,INode	proc layout(node: INode): seq[Rect]		77
+nim	innerHeight	fidget2/textboxes.html#innerHeight,INode	proc innerHeight(node: INode): float32		81
+nim	locationRect	fidget2/textboxes.html#locationRect,INode,int	proc locationRect(node: INode; loc: int): Rect		90
+nim	cursorRect	fidget2/textboxes.html#cursorRect,INode	proc cursorRect(node: INode): Rect		109
+nim	cursorPos	fidget2/textboxes.html#cursorPos,INode	proc cursorPos(node: INode): Vec2		113
+nim	selectorRect	fidget2/textboxes.html#selectorRect,INode	proc selectorRect(node: INode): Rect		117
+nim	selectorPos	fidget2/textboxes.html#selectorPos,INode	proc selectorPos(node: INode): Vec2		121
+nim	selectionRegions	fidget2/textboxes.html#selectionRegions,INode	proc selectionRegions(node: INode): seq[Rect]		125
+nim	undo	fidget2/textboxes.html#undo,INode	proc undo(node: INode)		135
+nim	redo	fidget2/textboxes.html#redo,INode	proc redo(node: INode)		142
+nim	removedSelection	fidget2/textboxes.html#removedSelection,INode	proc removedSelection(node: INode): bool		153
+nim	scrollToCursor	fidget2/textboxes.html#scrollToCursor,INode	proc scrollToCursor(node: INode)		170
+nim	typeCharacter	fidget2/textboxes.html#typeCharacter,INode,Rune	proc typeCharacter(node: INode; rune: Rune)		190
+nim	typeCharacter	fidget2/textboxes.html#typeCharacter,INode,char	proc typeCharacter(node: INode; letter: char)		212
+nim	typeCharacters	fidget2/textboxes.html#typeCharacters,INode,string	proc typeCharacters(node: INode; s: string)		216
+nim	copyText	fidget2/textboxes.html#copyText,INode	proc copyText(node: INode): string		232
+nim	pasteText	fidget2/textboxes.html#pasteText,INode,string	proc pasteText(node: INode; s: string)		238
+nim	cutText	fidget2/textboxes.html#cutText,INode	proc cutText(node: INode): string		245
+nim	setCursor	fidget2/textboxes.html#setCursor,INode,int	proc setCursor(node: INode; loc: int)		253
+nim	backspace	fidget2/textboxes.html#backspace,INode	proc backspace(node: INode; shift = false)		258
+nim	delete	fidget2/textboxes.html#delete,INode	proc delete(node: INode; shift = false)		270
+nim	backspaceWord	fidget2/textboxes.html#backspaceWord,INode	proc backspaceWord(node: INode; shift = false)		280
+nim	deleteWord	fidget2/textboxes.html#deleteWord,INode	proc deleteWord(node: INode; shift = false)		294
+nim	left	fidget2/textboxes.html#left,INode	proc left(node: INode; shift = false)		306
+nim	right	fidget2/textboxes.html#right,INode	proc right(node: INode; shift = false)		316
+nim	down	fidget2/textboxes.html#down,INode	proc down(node: INode; shift = false)		326
+nim	up	fidget2/textboxes.html#up,INode	proc up(node: INode; shift = false)		344
+nim	leftWord	fidget2/textboxes.html#leftWord,INode	proc leftWord(node: INode; shift = false)		362
+nim	rightWord	fidget2/textboxes.html#rightWord,INode	proc rightWord(node: INode; shift = false)		374
+nim	startOfLine	fidget2/textboxes.html#startOfLine,INode	proc startOfLine(node: INode; shift = false)		386
+nim	endOfLine	fidget2/textboxes.html#endOfLine,INode	proc endOfLine(node: INode; shift = false)		396
+nim	pageUp	fidget2/textboxes.html#pageUp,INode	proc pageUp(node: INode; shift = false)		406
+nim	pageDown	fidget2/textboxes.html#pageDown,INode	proc pageDown(node: INode; shift = false)		425
+nim	mouseAction	fidget2/textboxes.html#mouseAction,INode,Vec2	proc mouseAction(node: INode; mousePos: Vec2; click = true; shift = false)		445
+nim	selectWord	fidget2/textboxes.html#selectWord,INode,Vec2	proc selectWord(node: INode; mousePos: Vec2; extraSpace = false)		479
+nim	selectParagraph	fidget2/textboxes.html#selectParagraph,INode,Vec2	proc selectParagraph(node: INode; mousePos: Vec2)		496
+nim	selectAll	fidget2/textboxes.html#selectAll,INode	proc selectAll(node: INode)		506
+nim	scrollBy	fidget2/textboxes.html#scrollBy,INode,float	proc scrollBy(node: INode; amount: float)		511
+nimgrp	typecharacter	fidget2/textboxes.html#typeCharacter-procs-all	proc		190

@@ -70,9 +70,9 @@
   OnMouseMove,              ## When the node is loaded.
                              ## Called only once per node.
   OnLoad,                   ## Called once per frame.
-                             ## NOTE: Can caused performance issues if overused.
+                             ## NOTE: Can cause performance issues if overused.
   OnFrame,                  ## When a node is displayed.
-                             ## NOTE: Can caused performance issues if overused.
+                             ## NOTE: Can cause performance issues if overused.
   OnDisplay,                ## When a text node is edited.
                              ## Only text nodes with this event can be edited.
   OnEdit,                   ## When a text node is focused.
@@ -177,7 +177,8 @@
 
 </ul>
 <ul class="simple nested-toc-section">relativeMousePos
-  <li><a class="reference" href="#relativeMousePos%2CWindow%2CNode" title="relativeMousePos(window: Window; node: Node): Vec2">relativeMousePos(window: Window; node: Node): Vec2</a></li>
+  <li><a class="reference" href="#relativeMousePos%2CWindow%2CINode" title="relativeMousePos(window: Window; node: INode): Vec2">relativeMousePos(window: Window; node: INode): Vec2</a></li>
+<li><a class="reference" href="#relativeMousePos%2CWindow%2CNode" title="relativeMousePos(window: Window; node: Node): Vec2">relativeMousePos(window: Window; node: Node): Vec2</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">resizeWindow
@@ -305,9 +306,6 @@
     </ul>
   </details>
 </li>
-<li>
-  <a class="reference reference-toplevel" href="#19" id="69">Exports</a>
-</li>
 
 </ul>
 
@@ -322,7 +320,7 @@
     <div class="section" id="6">
   <h1><a class="toc-backref" href="#6">Imports</a></h1>
   <dl class="item">
-    <a class="reference external" href="common.html">common</a>, <a class="reference external" href="globs.html">globs</a>, <a class="reference external" href="internal.html">internal</a>, <a class="reference external" href="loader.html">loader</a>, <a class="reference external" href="nodes.html">nodes</a>, <a class="reference external" href="measure.html">measure</a>, <a class="reference external" href="schema.html">schema</a>, <a class="reference external" href="textboxes.html">textboxes</a>, <a class="reference external" href="hybridrender.html">hybridrender</a>, <a class="reference external" href="cpurender.html">cpurender</a>
+    <a class="reference external" href="common.html">common</a>, <a class="reference external" href="globs.html">globs</a>, <a class="reference external" href="internal.html">internal</a>, <a class="reference external" href="loader.html">loader</a>, <a class="reference external" href="nodes.html">nodes</a>, <a class="reference external" href="inodes.html">inodes</a>, <a class="reference external" href="measure.html">measure</a>, <a class="reference external" href="schema.html">schema</a>, <a class="reference external" href="textboxes.html">textboxes</a>, <a class="reference external" href="hybridrender.html">hybridrender</a>, <a class="reference external" href="cpurender.html">cpurender</a>
   </dl>
 </div>
 <div class="section" id="7">
@@ -333,12 +331,12 @@
   <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="events.html#EventCbKind"><span class="Identifier">EventCbKind</span></a>
   <span class="Identifier">priority</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
   <span class="Identifier">glob</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">handler</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span></pre></dt>
+  <span class="Identifier">handler</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span></pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L76" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L76" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L74" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L74" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -350,9 +348,9 @@
   <span class="Identifier">OnMouseMove</span><span class="Other">,</span>              <span class="Comment">## When the node is loaded.</span>
                              <span class="Comment">## Called only once per node.</span>
   <span class="Identifier">OnLoad</span><span class="Other">,</span>                   <span class="Comment">## Called once per frame.</span>
-                             <span class="Comment">## NOTE: Can caused performance issues if overused.</span>
+                             <span class="Comment">## NOTE: Can cause performance issues if overused.</span>
   <span class="Identifier">OnFrame</span><span class="Other">,</span>                  <span class="Comment">## When a node is displayed.</span>
-                             <span class="Comment">## NOTE: Can caused performance issues if overused.</span>
+                             <span class="Comment">## NOTE: Can cause performance issues if overused.</span>
   <span class="Identifier">OnDisplay</span><span class="Other">,</span>                <span class="Comment">## When a text node is edited.</span>
                              <span class="Comment">## Only text nodes with this event can be edited.</span>
   <span class="Identifier">OnEdit</span><span class="Other">,</span>                   <span class="Comment">## When a text node is focused.</span>
@@ -377,20 +375,20 @@
   <dd>
     
     When user clicks on a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L25" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L25" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L23" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L23" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 <div id="Keyboard">
   <dt><pre><a href="events.html#Keyboard"><span class="Identifier">Keyboard</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">onFocusNode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a>
-  <span class="Identifier">onUnfocusNode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a></pre></dt>
+  <span class="Identifier">onFocusNode</span><span class="Operator">*</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a>
+  <span class="Identifier">onUnfocusNode</span><span class="Operator">*</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a></pre></dt>
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L21" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L21" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L19" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L19" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -401,117 +399,7 @@
   <h1><a class="toc-backref" href="#8">Vars</a></h1>
   <dl class="item">
     <div id="dragCandidate">
-  <dt><pre><a href="events.html#dragCandidate"><span class="Identifier">dragCandidate</span></a><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L92" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L92" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="dragCandidatePos">
-  <dt><pre><a href="events.html#dragCandidatePos"><span class="Identifier">dragCandidatePos</span></a><span class="Other">:</span> <span class="Identifier">Vec2</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L93" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L93" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="dragNode">
-  <dt><pre><a href="events.html#dragNode"><span class="Identifier">dragNode</span></a><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L91" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L91" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="hoverNodes">
-  <dt><pre><a href="events.html#hoverNodes"><span class="Identifier">hoverNodes</span></a><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L98" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L98" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="keyboard_2">
-  <dt><pre><a href="events.html#keyboard"><span class="Identifier">keyboard</span></a> <span class="Other">=</span> <a href="events.html#Keyboard"><span class="Identifier">Keyboard</span></a><span class="Other">(</span><span class="Other">)</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L88" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L88" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="navigationHistory">
-  <dt><pre><a href="events.html#navigationHistory"><span class="Identifier">navigationHistory</span></a><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L102" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L102" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="redisplay">
-  <dt><pre><a href="events.html#redisplay"><span class="Identifier">redisplay</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L86" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L86" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="requestedFrame">
-  <dt><pre><a href="events.html#requestedFrame"><span class="Identifier">requestedFrame</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L85" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L85" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="thisButton">
-  <dt><pre><a href="events.html#thisButton"><span class="Identifier">thisButton</span></a><span class="Other">:</span> <span class="Identifier">Button</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L96" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L96" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="thisCb">
-  <dt><pre><a href="events.html#thisCb"><span class="Identifier">thisCb</span></a><span class="Other">:</span> <a href="events.html#EventCb"><span class="Identifier">EventCb</span></a></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L94" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="thisCursor">
-  <dt><pre><a href="events.html#thisCursor"><span class="Identifier">thisCursor</span></a><span class="Other">:</span> <span class="Identifier">Cursor</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L97" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L97" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="thisFrame">
-  <dt><pre><a href="events.html#thisFrame"><span class="Identifier">thisFrame</span></a><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a></pre></dt>
+  <dt><pre><a href="events.html#dragCandidate"><span class="Identifier">dragCandidate</span></a><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a></pre></dt>
   <dd>
     
     
@@ -520,13 +408,123 @@
 
   </dd>
 </div>
-<div id="thisSelector">
-  <dt><pre><a href="events.html#thisSelector"><span class="Identifier">thisSelector</span></a><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+<div id="dragCandidatePos">
+  <dt><pre><a href="events.html#dragCandidatePos"><span class="Identifier">dragCandidatePos</span></a><span class="Other">:</span> <span class="Identifier">Vec2</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L91" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L91" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="dragNode">
+  <dt><pre><a href="events.html#dragNode"><span class="Identifier">dragNode</span></a><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L89" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L89" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="hoverNodes">
+  <dt><pre><a href="events.html#hoverNodes"><span class="Identifier">hoverNodes</span></a><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L96" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L96" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="keyboard_2">
+  <dt><pre><a href="events.html#keyboard"><span class="Identifier">keyboard</span></a> <span class="Other">=</span> <a href="events.html#Keyboard"><span class="Identifier">Keyboard</span></a><span class="Other">(</span><span class="Other">)</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L86" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L86" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="navigationHistory">
+  <dt><pre><a href="events.html#navigationHistory"><span class="Identifier">navigationHistory</span></a><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L100" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L100" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="redisplay">
+  <dt><pre><a href="events.html#redisplay"><span class="Identifier">redisplay</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L84" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L84" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="requestedFrame">
+  <dt><pre><a href="events.html#requestedFrame"><span class="Identifier">requestedFrame</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L83" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L83" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="thisButton">
+  <dt><pre><a href="events.html#thisButton"><span class="Identifier">thisButton</span></a><span class="Other">:</span> <span class="Identifier">Button</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L94" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="thisCb">
+  <dt><pre><a href="events.html#thisCb"><span class="Identifier">thisCb</span></a><span class="Other">:</span> <a href="events.html#EventCb"><span class="Identifier">EventCb</span></a></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L92" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L92" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="thisCursor">
+  <dt><pre><a href="events.html#thisCursor"><span class="Identifier">thisCursor</span></a><span class="Other">:</span> <span class="Identifier">Cursor</span></pre></dt>
   <dd>
     
     
     <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L95" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L95" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="thisFrame">
+  <dt><pre><a href="events.html#thisFrame"><span class="Identifier">thisFrame</span></a><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L88" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L88" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="thisSelector">
+  <dt><pre><a href="events.html#thisSelector"><span class="Identifier">thisSelector</span></a><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L93" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L93" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -538,12 +536,12 @@
   <dl class="item">
     <div id="absolutePosition-procs-all">
   <div id="absolutePosition,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#absolutePosition%2CNode"><span class="Identifier">absolutePosition</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#absolutePosition%2CNode"><span class="Identifier">absolutePosition</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Gets the absolute position of the node. TODO: Take transform and rotation into account.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L836" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L836" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L850" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L850" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -552,12 +550,12 @@
 <div id="addCb-procs-all">
   <div id="addCb,EventCbKind,int,string,proc(Node)">
   <dt><pre><span class="Keyword">proc</span> <a href="#addCb%2CEventCbKind%2Cint%2Cstring%2Cproc%28Node%29"><span class="Identifier">addCb</span></a><span class="Other">(</span><span class="Identifier">kind</span><span class="Other">:</span> <a href="events.html#EventCbKind"><span class="Identifier">EventCbKind</span></a><span class="Other">;</span> <span class="Identifier">priority</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span>
-           <span class="Identifier">handler</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+           <span class="Identifier">handler</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Adds a generic callback.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L116" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L116" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L112" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L112" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -569,8 +567,8 @@
   <dd>
     
     Clears all handlers. Used mainly for writing tests.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L548" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L548" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L551" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L551" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -582,8 +580,8 @@
   <dd>
     
     Closes the fidget window.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L1008" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L1008" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L1007" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L1007" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -591,12 +589,12 @@
 </div>
 <div id="find-procs-all">
   <div id="find,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#find%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#find%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Finds a node matching a glob pattern.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L130" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L130" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L126" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L126" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -604,13 +602,13 @@
 </div>
 <div id="findAll-procs-all">
   <div id="findAll,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
                                         <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Finds all nodes matching a glob pattern.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L141" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L141" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L137" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L137" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -618,12 +616,12 @@
 </div>
 <div id="focused-procs-all">
   <div id="focused,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#focused%2CNode"><span class="Identifier">focused</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#focused%2CNode"><span class="Identifier">focused</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Checks if a node is focused.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L176" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L176" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L172" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L172" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -637,8 +635,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L816" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L816" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L830" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L830" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -651,8 +649,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L789" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L789" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L803" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L803" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -664,8 +662,8 @@
   <dd>
     
     Checks if fidget is running.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L1004" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L1004" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L1003" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L1003" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -677,8 +675,8 @@
   <dd>
     
     Navigates back through the navigation history.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L829" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L829" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L843" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L843" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -691,22 +689,33 @@
   <dd>
     
     Navigates to a new frame. Smart will try to preserve all nodes with the same name.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L820" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L820" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L834" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L834" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="relativeMousePos-procs-all">
-  <div id="relativeMousePos,Window,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#relativeMousePos%2CWindow%2CNode"><span class="Identifier">relativeMousePos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <span class="Identifier">Window</span><span class="Other">;</span> <span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <div id="relativeMousePos,Window,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#relativeMousePos%2CWindow%2CINode"><span class="Identifier">relativeMousePos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <span class="Identifier">Window</span><span class="Other">;</span> <span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Gets the mouse position relative to a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L316" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L316" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L312" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L312" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="relativeMousePos,Window,Node">
+  <dt><pre><span class="Keyword">proc</span> <a href="#relativeMousePos%2CWindow%2CNode"><span class="Identifier">relativeMousePos</span></a><span class="Other">(</span><span class="Identifier">window</span><span class="Other">:</span> <span class="Identifier">Window</span><span class="Other">;</span> <span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vec2</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Gets the mouse position relative to a node.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L319" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L319" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -718,8 +727,8 @@
   <dd>
     
     Resizes the window to the specified dimensions.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L553" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L553" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L556" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L556" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -746,8 +755,8 @@
   <dd>
     
     Pops up a given node as a popup. TODO: implement.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L111" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L111" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L107" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L107" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -760,8 +769,8 @@
   <dd>
     
     Simulates a mouse click on a node. Used mainly for writing tests.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L522" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L522" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L525" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L525" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -776,8 +785,8 @@
   <dd>
     
     Starts fidget with a manually created FigmaFile instead of loading from URL. This allows you to create UIs purely in code without needing Figma files.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L960" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L960" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L959" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L959" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -792,8 +801,8 @@
   <dd>
     
     Starts fidget with a figma URL.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L986" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L986" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L985" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L985" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -806,8 +815,8 @@
   <dd>
     
     Takes a screenshot of the current screen. Used mainly for writing tests.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L543" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L543" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L546" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L546" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -824,8 +833,8 @@
   <dd>
     
     Processes events and displays the frame.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L876" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L876" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L890" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L890" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -843,8 +852,8 @@
   <dd>
     
     Sets the root to the glob, everything inside will be relative to this glob pattern.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L167" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L167" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L163" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L163" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -856,8 +865,8 @@
   <dd>
     
     When a key is pressed.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L270" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L270" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L266" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L266" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -868,9 +877,9 @@
   <dt><pre><span class="Keyword">template</span> <a href="#onButtonRelease.t%2Cuntyped"><span class="Identifier">onButtonRelease</span></a><span class="Other">(</span><span class="Identifier">body</span><span class="Other">:</span> <span class="Identifier">untyped</span><span class="Other">)</span></pre></dt>
   <dd>
     
-    When a key is pressed.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L280" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L280" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    When a key is released.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L276" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L276" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -882,8 +891,8 @@
   <dd>
     
     When a node is clicked.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L230" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L230" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L226" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L226" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -895,8 +904,8 @@
   <dd>
     
     When clicked outside a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L250" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L250" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L246" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L246" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -908,8 +917,8 @@
   <dd>
     
     When a node is displayed.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L200" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L200" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L196" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L196" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -921,8 +930,8 @@
   <dd>
     
     When a node is dragged.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L492" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L492" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L495" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L495" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -934,8 +943,8 @@
   <dd>
     
     When a node is dragged.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L502" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L502" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L505" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L505" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -947,8 +956,8 @@
   <dd>
     
     When a node is dragged.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L482" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L482" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L485" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L485" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -960,8 +969,8 @@
   <dd>
     
     When a node is dropped.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L512" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L512" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L515" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L515" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -973,8 +982,8 @@
   <dd>
     
     When a text node is edited.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L451" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L451" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L454" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L454" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -986,8 +995,8 @@
   <dd>
     
     When a text node gets focused.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L472" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L472" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L475" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L475" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -999,8 +1008,8 @@
   <dd>
     
     Called once for each frame drawn.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L190" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L190" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L186" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L186" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1012,8 +1021,8 @@
   <dd>
     
     When a node is hidden.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L220" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L220" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L216" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L216" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1025,8 +1034,8 @@
   <dd>
     
     Called when the node is loaded.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L180" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L180" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L176" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L176" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1038,8 +1047,8 @@
   <dd>
     
     When the mouse moves over a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L260" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L260" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L256" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L256" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1051,8 +1060,8 @@
   <dd>
     
     When the window is resized.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L290" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L290" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L286" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L286" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1064,8 +1073,8 @@
   <dd>
     
     When a node is right-clicked.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L240" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L240" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L236" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L236" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1077,8 +1086,8 @@
   <dd>
     
     When a node is shown.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L210" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L210" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L206" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L206" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1090,20 +1099,14 @@
   <dd>
     
     When a text node loses focus.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L462" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L462" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/events.nim#L465" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/events.nim#L465" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 
-  </dl>
-</div>
-<div class="section" id="19">
-  <h1><a class="toc-backref" href="#19">Exports</a></h1>
-  <dl class="item">
-    <a href="textboxes.html#left,Node"><span class="Identifier">left</span></a>, <a href="textboxes.html#innerHeight,Node"><span class="Identifier">innerHeight</span></a>, <a href="textboxes.html#endOfLine,Node"><span class="Identifier">endOfLine</span></a>, <a href="textboxes.html#selectorRect,Node"><span class="Identifier">selectorRect</span></a>, <a href="textboxes.html#removedSelection,Node"><span class="Identifier">removedSelection</span></a>, <a href="textboxes.html#backspaceWord,Node"><span class="Identifier">backspaceWord</span></a>, <a href="textboxes.html#redo,Node"><span class="Identifier">redo</span></a>, <a href="textboxes.html#backspace,Node"><span class="Identifier">backspace</span></a>, <a href="textboxes.html#selectionRegions,Node"><span class="Identifier">selectionRegions</span></a>, <a href="textboxes.html#down,Node"><span class="Identifier">down</span></a>, <a href="textboxes.html#undo,Node"><span class="Identifier">undo</span></a>, <a href="textboxes.html#typeCharacter,Node,Rune"><span class="Identifier">typeCharacter</span></a>, <a href="textboxes.html#selectorPos,Node"><span class="Identifier">selectorPos</span></a>, <a href="textboxes.html#pageUp,Node"><span class="Identifier">pageUp</span></a>, <a href="textboxes.html#typeCharacters,Node,string"><span class="Identifier">typeCharacters</span></a>, <a href="textboxes.html#cursorPos,Node"><span class="Identifier">cursorPos</span></a>, <a href="textboxes.html#layout,Node"><span class="Identifier">layout</span></a>, <a href="textboxes.html#pasteText,Node,string"><span class="Identifier">pasteText</span></a>, <a href="textboxes.html#pickGlyphAt,Arrangement,Vec2"><span class="Identifier">pickGlyphAt</span></a>, <a href="textboxes.html#selectParagraph,Node,Vec2"><span class="Identifier">selectParagraph</span></a>, <a href="textboxes.html#setCursor,Node,int"><span class="Identifier">setCursor</span></a>, <a href="textboxes.html#locationRect,Node,int"><span class="Identifier">locationRect</span></a>, <a href="textboxes.html#right,Node"><span class="Identifier">right</span></a>, <a href="textboxes.html#getSelection,Arrangement,int,int"><span class="Identifier">getSelection</span></a>, <a href="textboxes.html#up,Node"><span class="Identifier">up</span></a>, <a href="textboxes.html#cursorRect,Node"><span class="Identifier">cursorRect</span></a>, <a href="textboxes.html#scrollBy,Node,float"><span class="Identifier">scrollBy</span></a>, <a href="textboxes.html#startOfLine,Node"><span class="Identifier">startOfLine</span></a>, <a href="textboxes.html#delete,Node"><span class="Identifier">delete</span></a>, <a href="textboxes.html#rightWord,Node"><span class="Identifier">rightWord</span></a>, <a href="textboxes.html#selectAll,Node"><span class="Identifier">selectAll</span></a>, <a href="textboxes.html#cutText,Node"><span class="Identifier">cutText</span></a>, <a href="textboxes.html#scrollToCursor,Node"><span class="Identifier">scrollToCursor</span></a>, <a href="textboxes.html#leftWord,Node"><span class="Identifier">leftWord</span></a>, <a href="textboxes.html#selectWord,Node,Vec2"><span class="Identifier">selectWord</span></a>, <a href="textboxes.html#typeCharacter,Node,char"><span class="Identifier">typeCharacter</span></a>, <a href="textboxes.html#mouseAction,Node,Vec2"><span class="Identifier">mouseAction</span></a>, <a href="textboxes.html#pageDown,Node"><span class="Identifier">pageDown</span></a>, <a href="textboxes.html#deleteWord,Node"><span class="Identifier">deleteWord</span></a>, <a href="textboxes.html#copyText,Node"><span class="Identifier">copyText</span></a>, <a href="nodes.html#sendBackward,Node"><span class="Identifier">sendBackward</span></a>, <a href="nodes.html#isInstance,Node"><span class="Identifier">isInstance</span></a>, <a href="nodes.html#checkDirty,Node"><span class="Identifier">checkDirty</span></a>, <a href="nodes.html#getVariant,Node,string"><span class="Identifier">getVariant</span></a>, <a href="nodes.html#copy,Node"><span class="Identifier">copy</span></a>, <a href="nodes.html#childIndex,Node"><span class="Identifier">childIndex</span></a>, <a href="nodes.html#contains,seq[],string"><span class="Identifier">contains</span></a>, <a href="nodes.html#show,Node"><span class="Identifier">show</span></a>, <a href="nodes.html#text=,Node,string"><span class="Identifier">text=</span></a>, <a href="nodes.html#findNodeById,string"><span class="Identifier">findNodeById</span></a>, <a href="nodes.html#markTreeDirty,Node"><span class="Identifier">markTreeDirty</span></a>, <a href="nodes.html#makeTextDirty,Node"><span class="Identifier">makeTextDirty</span></a>, <a href="nodes.html#hide,seq[Node]"><span class="Identifier">hide</span></a>, <a href="nodes.html#masterComponent,Node"><span class="Identifier">masterComponent</span></a>, <a href="nodes.html#show,seq[Node]"><span class="Identifier">show</span></a>, <a href="nodes.html#hasVariant,Node,string,string"><span class="Identifier">hasVariant</span></a>, <a href="nodes.html#[]=,seq[],string,string"><span class="Identifier">[]=</span></a>, <a href="nodes.html#dumpTree,Node,string"><span class="Identifier">dumpTree</span></a>, <a href="nodes.html#setVariant,Node,string,string"><span class="Identifier">setVariant</span></a>, <a href="nodes.html#sendToFront,Node"><span class="Identifier">sendToFront</span></a>, <a href="nodes.html#remove,Node"><span class="Identifier">remove</span></a>, <a href="nodes.html#sendForward,Node"><span class="Identifier">sendForward</span></a>, <a href="nodes.html#hide,Node"><span class="Identifier">hide</span></a>, <a href="nodes.html#text,Node"><span class="Identifier">text</span></a>, <a href="nodes.html#addChild,Node,Node"><span class="Identifier">addChild</span></a>, <a href="nodes.html#printDirtyStatus,Node,int"><span class="Identifier">printDirtyStatus</span></a>, <a href="nodes.html#setVariant,seq[Node],string,string"><span class="Identifier">setVariant</span></a>, <a href="nodes.html#setVariant,Node,string,bool"><span class="Identifier">setVariant</span></a>, <a href="nodes.html#inTree,Node,Node"><span class="Identifier">inTree</span></a>, <a href="nodes.html#removeChild,Node,Node"><span class="Identifier">removeChild</span></a>, <a href="nodes.html#path,Node"><span class="Identifier">path</span></a>, <a href="nodes.html#markTreeClean,Node"><span class="Identifier">markTreeClean</span></a>, <a href="nodes.html#removeChildren,Node"><span class="Identifier">removeChildren</span></a>, <a href="nodes.html#remove,seq[Node]"><span class="Identifier">remove</span></a>, <a href="nodes.html#deleteNodeHook"><span class="Identifier">deleteNodeHook</span></a>, <a href="nodes.html#[],seq[],string"><span class="Identifier">[]</span></a>, <a href="nodes.html#sendToBack,Node"><span class="Identifier">sendToBack</span></a>, <a href="nodes.html#newInstance,Node"><span class="Identifier">newInstance</span></a>, <a href="common.html#FidgetError"><span class="Identifier">FidgetError</span></a>, <a href="common.html#clearFrame"><span class="Identifier">clearFrame</span></a>, <a href="common.html#dataDir"><span class="Identifier">dataDir</span></a>, <a href="common.html#window"><span class="Identifier">window</span></a>
   </dl>
 </div>
 
@@ -1113,7 +1116,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-22 20:43:14 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-23 18:55:13 UTC</small>
       </div>
     </div>
   </div>

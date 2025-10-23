@@ -67,12 +67,12 @@
 <li><a class="reference" href="#entryFramePath" title="entryFramePath: string">entryFramePath</a></li>
 <li><a class="reference" href="#fetchRequests" title="fetchRequests: Table[string, HttpRequestHandle]">fetchRequests</a></li>
 <li><a class="reference" href="#fetchResponses" title="fetchResponses: Table[string, HttpResponse]">fetchResponses</a></li>
-<li><a class="reference" href="#hoverNode" title="hoverNode: Node">hoverNode</a></li>
+<li><a class="reference" href="#hoverNode" title="hoverNode: INode">hoverNode</a></li>
 <li><a class="reference" href="#imageCache" title="imageCache: Table[string, Image]">imageCache</a></li>
 <li><a class="reference" href="#mat" title="mat: Mat3">mat</a></li>
 <li><a class="reference" href="#rtl" title="rtl: bool">rtl</a></li>
 <li><a class="reference" href="#running" title="running: bool">running</a></li>
-<li><a class="reference" href="#textBoxFocus" title="textBoxFocus: Node">textBoxFocus</a></li>
+<li><a class="reference" href="#textBoxFocus" title="textBoxFocus: INode">textBoxFocus</a></li>
 <li><a class="reference" href="#typefaceCache" title="typefaceCache: Table[string, Typeface]">typefaceCache</a></li>
 
     </ul>
@@ -87,11 +87,11 @@
 
 </ul>
 <ul class="simple nested-toc-section">computeArrangement
-  <li><a class="reference" href="#computeArrangement%2CNode" title="computeArrangement(node: Node)">computeArrangement(node: Node)</a></li>
+  <li><a class="reference" href="#computeArrangement%2CINode" title="computeArrangement(node: INode)">computeArrangement(node: INode)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">computeScrollBounds
-  <li><a class="reference" href="#computeScrollBounds%2CNode" title="computeScrollBounds(node: Node): Rect">computeScrollBounds(node: Node): Rect</a></li>
+  <li><a class="reference" href="#computeScrollBounds%2CINode" title="computeScrollBounds(node: INode): Rect">computeScrollBounds(node: INode): Rect</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">cursorWidth
@@ -99,23 +99,23 @@
 
 </ul>
 <ul class="simple nested-toc-section">font
-  <li><a class="reference" href="#font%2CNode" title="font(node: Node): Font">font(node: Node): Font</a></li>
+  <li><a class="reference" href="#font%2CINode" title="font(node: INode): Font">font(node: INode): Font</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">genFillGeometry
-  <li><a class="reference" href="#genFillGeometry%2CNode" title="genFillGeometry(node: Node)">genFillGeometry(node: Node)</a></li>
+  <li><a class="reference" href="#genFillGeometry%2CINode" title="genFillGeometry(node: INode)">genFillGeometry(node: INode)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">genHitTestGeometry
-  <li><a class="reference" href="#genHitTestGeometry%2CNode" title="genHitTestGeometry(node: Node)">genHitTestGeometry(node: Node)</a></li>
+  <li><a class="reference" href="#genHitTestGeometry%2CINode" title="genHitTestGeometry(node: INode)">genHitTestGeometry(node: INode)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">genStrokeGeometry
-  <li><a class="reference" href="#genStrokeGeometry%2CNode" title="genStrokeGeometry(node: Node)">genStrokeGeometry(node: Node)</a></li>
+  <li><a class="reference" href="#genStrokeGeometry%2CINode" title="genStrokeGeometry(node: INode)">genStrokeGeometry(node: INode)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">genTextGeometry
-  <li><a class="reference" href="#genTextGeometry%2CNode" title="genTextGeometry(node: Node)">genTextGeometry(node: Node)</a></li>
+  <li><a class="reference" href="#genTextGeometry%2CINode" title="genTextGeometry(node: INode)">genTextGeometry(node: INode)</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">getFont
@@ -124,7 +124,7 @@
 
 </ul>
 <ul class="simple nested-toc-section">overlaps
-  <li><a class="reference" href="#overlaps%2CNode%2CVec2" title="overlaps(node: Node; mouse: Vec2): bool">overlaps(node: Node; mouse: Vec2): bool</a></li>
+  <li><a class="reference" href="#overlaps%2CINode%2CVec2" title="overlaps(node: INode; mouse: Vec2): bool">overlaps(node: INode; mouse: Vec2): bool</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">resetCursorBlink
@@ -132,11 +132,11 @@
 
 </ul>
 <ul class="simple nested-toc-section">selection
-  <li><a class="reference" href="#selection%2CNode" title="selection(node: Node): HSlice[int, int]">selection(node: Node): HSlice[int, int]</a></li>
+  <li><a class="reference" href="#selection%2CINode" title="selection(node: INode): HSlice[int, int]">selection(node: INode): HSlice[int, int]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">transform
-  <li><a class="reference" href="#transform%2CNode" title="transform(node: Node): Mat3">transform(node: Node): Mat3</a></li>
+  <li><a class="reference" href="#transform%2CINode" title="transform(node: INode): Mat3">transform(node: INode): Mat3</a></li>
 
 </ul>
 
@@ -270,7 +270,7 @@
   </dd>
 </div>
 <div id="hoverNode">
-  <dt><pre><a href="internal.html#hoverNode"><span class="Identifier">hoverNode</span></a><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a></pre></dt>
+  <dt><pre><a href="internal.html#hoverNode"><span class="Identifier">hoverNode</span></a><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a></pre></dt>
   <dd>
     
     
@@ -320,7 +320,7 @@
   </dd>
 </div>
 <div id="textBoxFocus">
-  <dt><pre><a href="internal.html#textBoxFocus"><span class="Identifier">textBoxFocus</span></a><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a></pre></dt>
+  <dt><pre><a href="internal.html#textBoxFocus"><span class="Identifier">textBoxFocus</span></a><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a></pre></dt>
   <dd>
     
     
@@ -359,10 +359,10 @@
 
 </div>
 <div id="computeArrangement-procs-all">
-  <div id="computeArrangement,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#computeArrangement%2CNode"><span class="Identifier">computeArrangement</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+  <div id="computeArrangement,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#computeArrangement%2CINode"><span class="Identifier">computeArrangement</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
     <span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span>
-                                      <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+                                       <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -374,8 +374,8 @@
 
 </div>
 <div id="computeScrollBounds-procs-all">
-  <div id="computeScrollBounds,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#computeScrollBounds%2CNode"><span class="Identifier">computeScrollBounds</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Rect</span> {.
+  <div id="computeScrollBounds,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#computeScrollBounds%2CINode"><span class="Identifier">computeScrollBounds</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Rect</span> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
@@ -403,10 +403,10 @@
 
 </div>
 <div id="font-procs-all">
-  <div id="font,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#font%2CNode"><span class="Identifier">font</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Font</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+  <div id="font,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#font%2CINode"><span class="Identifier">font</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Font</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
     <span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span>
-                              <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+                               <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Gets the font of a node.
@@ -418,8 +418,8 @@
 
 </div>
 <div id="genFillGeometry-procs-all">
-  <div id="genFillGeometry,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#genFillGeometry%2CNode"><span class="Identifier">genFillGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <div id="genFillGeometry,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#genFillGeometry%2CINode"><span class="Identifier">genFillGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -431,9 +431,9 @@
 
 </div>
 <div id="genHitTestGeometry-procs-all">
-  <div id="genHitTestGeometry,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#genHitTestGeometry%2CNode"><span class="Identifier">genHitTestGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
-                                      <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <div id="genHitTestGeometry,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#genHitTestGeometry%2CINode"><span class="Identifier">genHitTestGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+                                       <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -445,8 +445,9 @@
 
 </div>
 <div id="genStrokeGeometry-procs-all">
-  <div id="genStrokeGeometry,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#genStrokeGeometry%2CNode"><span class="Identifier">genStrokeGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <div id="genStrokeGeometry,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#genStrokeGeometry%2CINode"><span class="Identifier">genStrokeGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span>
+                                      <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -458,10 +459,10 @@
 
 </div>
 <div id="genTextGeometry-procs-all">
-  <div id="genTextGeometry,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#genTextGeometry%2CNode"><span class="Identifier">genTextGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
+  <div id="genTextGeometry,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#genTextGeometry%2CINode"><span class="Identifier">genTextGeometry</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">,</span> <span class="Identifier">IOError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span>
     <span class="Identifier">TimeEffect</span><span class="Other">,</span> <span class="Identifier">ReadDirEffect</span><span class="Other">,</span> <span class="Identifier">ReadIOEffect</span><span class="Other">,</span> <span class="Identifier">RootEffect</span><span class="Other">,</span> <span class="Identifier">WriteIOEffect</span><span class="Other">]</span><span class="Other">,</span>
-                                   <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+                                    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     
@@ -500,8 +501,8 @@
 
 </div>
 <div id="overlaps-procs-all">
-  <div id="overlaps,Node,Vec2">
-  <dt><pre><span class="Keyword">proc</span> <a href="#overlaps%2CNode%2CVec2"><span class="Identifier">overlaps</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">mouse</span><span class="Other">:</span> <span class="Identifier">Vec2</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">PixieError</span><span class="Other">]</span><span class="Other">,</span>
+  <div id="overlaps,INode,Vec2">
+  <dt><pre><span class="Keyword">proc</span> <a href="#overlaps%2CINode%2CVec2"><span class="Identifier">overlaps</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">;</span> <span class="Identifier">mouse</span><span class="Other">:</span> <span class="Identifier">Vec2</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">PixieError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">TimeEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -527,8 +528,9 @@
 
 </div>
 <div id="selection-procs-all">
-  <div id="selection,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#selection%2CNode"><span class="Identifier">selection</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">HSlice</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <div id="selection,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#selection%2CINode"><span class="Identifier">selection</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">HSlice</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Returns the current selection from the node.
@@ -540,8 +542,8 @@
 
 </div>
 <div id="transform-procs-all">
-  <div id="transform,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#transform%2CNode"><span class="Identifier">transform</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Mat3</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <div id="transform,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#transform%2CINode"><span class="Identifier">transform</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Mat3</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Returns Mat3 transform of the node.
@@ -594,7 +596,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-22 20:43:13 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-23 18:55:12 UTC</small>
       </div>
     </div>
   </div>

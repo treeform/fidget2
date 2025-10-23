@@ -80,7 +80,7 @@
 <li><a class="reference" href="#EffectKind" title="EffectKind = enum
   DropShadow, InnerShadow, LayerBlur, BackgroundBlur">EffectKind</a></li>
 <li><a class="reference" href="#FigmaFile" title="FigmaFile = ref object
-  document*: Node
+  document*: INode
   components*: Table[string, Component]
   schemaVersion*: int
   name*: string
@@ -97,34 +97,12 @@
   shapesBounds*: Rect">Geometry</a></li>
 <li><a class="reference" href="#GridAlign" title="GridAlign = enum
   MinGridAlign, StretchGridAlign, CenterGridAlign">GridAlign</a></li>
-<li><a class="reference" href="#LayoutAlign" title="LayoutAlign = enum
-  InheritLayout, StretchLayout">LayoutAlign</a></li>
-<li><a class="reference" href="#LayoutConstraint" title="LayoutConstraint = ref object
-  vertical*: ConstraintKind
-  horizontal*: ConstraintKind">LayoutConstraint</a></li>
-<li><a class="reference" href="#LayoutGrid" title="LayoutGrid = object
-  pattern*: LayoutPattern
-  sectionSize*: float32
-  visible*: bool
-  color*: Color
-  alignment*: GridAlign      ## Only min, stretch and center
-  gutterSize*: float32
-  offset*: float32
-  count*: int">LayoutGrid</a></li>
-<li><a class="reference" href="#LayoutMode" title="LayoutMode = enum
-  NoneLayout, HorizontalLayout, VerticalLayout">LayoutMode</a></li>
-<li><a class="reference" href="#LayoutPattern" title="LayoutPattern = enum
-  ColumnsLayoutPattern, RowsLayoutPattern, GridLayoutPattern">LayoutPattern</a></li>
-<li><a class="reference" href="#LeadingTrim" title="LeadingTrim = enum
-  NoLeadingTrim, CapHeight">LeadingTrim</a></li>
-<li><a class="reference" href="#LineHeightUnit" title="LineHeightUnit = enum
-  PixelUnit, FontSizePercentUnit, IntrinsicPercentUnit">LineHeightUnit</a></li>
-<li><a class="reference" href="#Node" title="Node = ref object
+<li><a class="reference" href="#INode" title="INode = ref object
   id*: string                ## A string uniquely identifying this node.
   kind*: NodeKind            ## The type of the node, refer to table below for details.
   name*: string              ## The name given to the node by the user in the tool.
-  children*: seq[Node]
-  parent*: Node
+  children*: seq[INode]
+  parent*: INode
   prototypeStartNodeID*: string
   componentId*: string
   position*: Vec2
@@ -173,7 +151,7 @@
   paddingTop*: float32
   paddingBottom*: float32
   overflowDirection*: OverflowDirection
-  dirty*: bool               ## Do the pixels need redrawing?
+  dirty*: bool = true        ## Do the pixels need redrawing?
   pixels*: Image             ## Pixel image cache.
   pixelBox*: Rect            ## Pixel position and size.
   editable*: bool            ## Can the user edit the text?
@@ -182,14 +160,34 @@
   idNum*: int                ## Integer ID of the node
   mat*: Mat3                 ## Useful to get back to the node.
   collapse*: bool            ## Is the node drawn as a single texture (CPU internals)
-  frozen*: bool
-  frozenId*: string          ## If the node is frozen, points to its frozen image.
   shown*: bool               ## for onShow/onHide events.
   scrollable*: bool          ## Can this node scroll.
   scrollPos*: Vec2           ## How does it scroll it's children.
-  onRenderCallback*: proc (thisNode: Node)
+  onRenderCallback*: proc (thisNode: INode)
   userKey*: string
-  userId*: int">Node</a></li>
+  userId*: int">INode</a></li>
+<li><a class="reference" href="#LayoutAlign" title="LayoutAlign = enum
+  InheritLayout, StretchLayout">LayoutAlign</a></li>
+<li><a class="reference" href="#LayoutConstraint" title="LayoutConstraint = ref object
+  vertical*: ConstraintKind
+  horizontal*: ConstraintKind">LayoutConstraint</a></li>
+<li><a class="reference" href="#LayoutGrid" title="LayoutGrid = object
+  pattern*: LayoutPattern
+  sectionSize*: float32
+  visible*: bool
+  color*: Color
+  alignment*: GridAlign      ## Only min, stretch and center
+  gutterSize*: float32
+  offset*: float32
+  count*: int">LayoutGrid</a></li>
+<li><a class="reference" href="#LayoutMode" title="LayoutMode = enum
+  NoneLayout, HorizontalLayout, VerticalLayout">LayoutMode</a></li>
+<li><a class="reference" href="#LayoutPattern" title="LayoutPattern = enum
+  ColumnsLayoutPattern, RowsLayoutPattern, GridLayoutPattern">LayoutPattern</a></li>
+<li><a class="reference" href="#LeadingTrim" title="LeadingTrim = enum
+  NoLeadingTrim, CapHeight">LeadingTrim</a></li>
+<li><a class="reference" href="#LineHeightUnit" title="LineHeightUnit = enum
+  PixelUnit, FontSizePercentUnit, IntrinsicPercentUnit">LineHeightUnit</a></li>
 <li><a class="reference" href="#NodeKind" title="NodeKind = enum
   DocumentNode, CanvasNode, RectangleNode, FrameNode, GroupNode, ComponentNode,
   InstanceNode, VectorNode, StarNode, EllipseNode, LineNode, RegularPolygonNode,
@@ -254,11 +252,15 @@
     <summary><a class="reference reference-toplevel" href="#12" id="62">Procs</a></summary>
     <ul class="simple simple-toc-section">
       <ul class="simple nested-toc-section">$
-  <li><a class="reference" href="#%24%2CNode" title="`$`(node: Node): string">`$`(node: Node): string</a></li>
+  <li><a class="reference" href="#%24%2CINode" title="`$`(node: INode): string">`$`(node: INode): string</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">parseFigmaFile
   <li><a class="reference" href="#parseFigmaFile%2Cstring" title="parseFigmaFile(data: string): FigmaFile">parseFigmaFile(data: string): FigmaFile</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">path
+  <li><a class="reference" href="#path%2CINode" title="path(node: INode): string">path(node: INode): string</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">similar
@@ -366,7 +368,7 @@
 </div>
 <div id="FigmaFile">
   <dt><pre><a href="schema.html#FigmaFile"><span class="Identifier">FigmaFile</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">document</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a>
+  <span class="Identifier">document</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a>
   <span class="Identifier">components</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="schema.html#Component"><span class="Identifier">Component</span></a><span class="Other">]</span>
   <span class="Identifier">schemaVersion</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
   <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
@@ -377,8 +379,8 @@
   <dd>
     
     
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L275" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L275" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L276" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L276" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -406,6 +408,84 @@
     
     <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L94" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="INode">
+  <dt><pre><a href="schema.html#INode"><span class="Identifier">INode</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">id</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>                <span class="Comment">## A string uniquely identifying this node.</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#NodeKind"><span class="Identifier">NodeKind</span></a>            <span class="Comment">## The type of the node, refer to table below for details.</span>
+  <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>              <span class="Comment">## The name given to the node by the user in the tool.</span>
+  <span class="Identifier">children</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">]</span>
+  <span class="Identifier">parent</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a>
+  <span class="Identifier">prototypeStartNodeID</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">componentId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">position</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>
+  <span class="Identifier">size</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>                <span class="Comment">## Size of the box in pixels.</span>
+  <span class="Identifier">scale</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>               <span class="Comment">## Zoom/Scale of the node.</span>
+  <span class="Identifier">rotation</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
+  <span class="Identifier">flipHorizontal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+  <span class="Identifier">flipVertical</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+  <span class="Identifier">fillGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
+  <span class="Identifier">strokeWeight</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
+  <span class="Identifier">strokeAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#StrokeAlign"><span class="Identifier">StrokeAlign</span></a>
+  <span class="Identifier">strokeGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
+  <span class="Identifier">cornerRadius</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>     <span class="Comment">## For any shape.</span>
+  <span class="Identifier">rectangleCornerRadii</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">array</span><span class="Other">[</span><span class="DecNumber">4</span><span class="Other">,</span> <span class="Identifier">float32</span><span class="Other">]</span> <span class="Comment">## Only for rectangles.</span>
+  <span class="Identifier">blendMode</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">BlendMode</span>      <span class="Comment">## Blend modes such as darken, screen, overlay...</span>
+  <span class="Identifier">fills</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>         <span class="Comment">## Fill colors and gradients.</span>
+  <span class="Identifier">strokes</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>       <span class="Comment">## Stroke colors and gradients.</span>
+  <span class="Identifier">effects</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Effect"><span class="Identifier">Effect</span></a><span class="Other">]</span>      <span class="Comment">## Effects such as shadows and blurs.</span>
+  <span class="Identifier">opacity</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>          <span class="Comment">## Opacity, 0 .. 1</span>
+  <span class="Identifier">visible</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>             <span class="Comment">## Visibility on/off.</span>
+  <span class="Identifier">isMask</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>              <span class="Comment">## Used by masking</span>
+  <span class="Identifier">isMaskOutline</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>       <span class="Comment">## ???</span>
+  <span class="Identifier">booleanOperation</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#BooleanOperation"><span class="Identifier">BooleanOperation</span></a> <span class="Comment">## Used by boolean nodes</span>
+  <span class="Identifier">clipsContent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>        <span class="Comment">## Used by frame nodes to cut children.</span>
+  <span class="Identifier">characters</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">style</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#TypeStyle"><span class="Identifier">TypeStyle</span></a>
+  <span class="Identifier">characterStyleOverrides</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">]</span>
+  <span class="Identifier">styleOverrideTable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="schema.html#TypeStyle"><span class="Identifier">TypeStyle</span></a><span class="Other">]</span>
+  <span class="Identifier">spans</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">Span</span><span class="Other">]</span>
+  <span class="Identifier">arrangement</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Arrangement</span>
+  <span class="Identifier">cursor</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">selector</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
+  <span class="Identifier">singleline</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+  <span class="Identifier">wordWrap</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
+  <span class="Identifier">savedX</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float</span>
+  <span class="Identifier">undoStack</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">]</span>
+  <span class="Identifier">redoStack</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">]</span>
+  <span class="Identifier">constraints</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutConstraint"><span class="Identifier">LayoutConstraint</span></a>
+  <span class="Identifier">layoutAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutAlign"><span class="Identifier">LayoutAlign</span></a>
+  <span class="Identifier">layoutGrids</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#LayoutGrid"><span class="Identifier">LayoutGrid</span></a><span class="Other">]</span>
+  <span class="Identifier">layoutMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutMode"><span class="Identifier">LayoutMode</span></a>
+  <span class="Identifier">itemSpacing</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
+  <span class="Identifier">counterAxisSizingMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#AxisSizingMode"><span class="Identifier">AxisSizingMode</span></a>
+  <span class="Identifier">paddingLeft</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
+  <span class="Identifier">paddingRight</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
+  <span class="Identifier">paddingTop</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
+  <span class="Identifier">paddingBottom</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
+  <span class="Identifier">overflowDirection</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#OverflowDirection"><span class="Identifier">OverflowDirection</span></a>
+  <span class="Identifier">dirty</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="DecNumber">true</span>        <span class="Comment">## Do the pixels need redrawing?</span>
+  <span class="Identifier">pixels</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Image</span>             <span class="Comment">## Pixel image cache.</span>
+  <span class="Identifier">pixelBox</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Rect</span>            <span class="Comment">## Pixel position and size.</span>
+  <span class="Identifier">editable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>            <span class="Comment">## Can the user edit the text?</span>
+  <span class="Identifier">origPosition</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>        <span class="Comment">## Original position used by constraints.</span>
+  <span class="Identifier">origSize</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>            <span class="Comment">## Original size used by constraints.</span>
+  <span class="Identifier">idNum</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>                <span class="Comment">## Integer ID of the node</span>
+  <span class="Identifier">mat</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Mat3</span>                 <span class="Comment">## Useful to get back to the node.</span>
+  <span class="Identifier">collapse</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>            <span class="Comment">## Is the node drawn as a single texture (CPU internals)</span>
+  <span class="Identifier">shown</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>               <span class="Comment">## for onShow/onHide events.</span>
+  <span class="Identifier">scrollable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>          <span class="Comment">## Can this node scroll.</span>
+  <span class="Identifier">scrollPos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>           <span class="Comment">## How does it scroll it's children.</span>
+  <span class="Identifier">onRenderCallback</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span>
+  <span class="Identifier">userKey</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
+  <span class="Identifier">userId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
+  <dd>
+    
+    Internal node object, only fidget uses this node directly, other code should use the Node type.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L182" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L182" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -491,86 +571,6 @@
     
     <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L121" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L121" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-<div id="Node">
-  <dt><pre><a href="schema.html#Node"><span class="Identifier">Node</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">id</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>                <span class="Comment">## A string uniquely identifying this node.</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#NodeKind"><span class="Identifier">NodeKind</span></a>            <span class="Comment">## The type of the node, refer to table below for details.</span>
-  <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>              <span class="Comment">## The name given to the node by the user in the tool.</span>
-  <span class="Identifier">children</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span>
-  <span class="Identifier">parent</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a>
-  <span class="Identifier">prototypeStartNodeID</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">componentId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">position</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>
-  <span class="Identifier">size</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>                <span class="Comment">## Size of the box in pixels.</span>
-  <span class="Identifier">scale</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>               <span class="Comment">## Zoom/Scale of the node.</span>
-  <span class="Identifier">rotation</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">flipHorizontal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">flipVertical</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">fillGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
-  <span class="Identifier">strokeWeight</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">strokeAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#StrokeAlign"><span class="Identifier">StrokeAlign</span></a>
-  <span class="Identifier">strokeGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
-  <span class="Identifier">cornerRadius</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>     <span class="Comment">## For any shape.</span>
-  <span class="Identifier">rectangleCornerRadii</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">array</span><span class="Other">[</span><span class="DecNumber">4</span><span class="Other">,</span> <span class="Identifier">float32</span><span class="Other">]</span> <span class="Comment">## Only for rectangles.</span>
-  <span class="Identifier">blendMode</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">BlendMode</span>      <span class="Comment">## Blend modes such as darken, screen, overlay...</span>
-  <span class="Identifier">fills</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>         <span class="Comment">## Fill colors and gradients.</span>
-  <span class="Identifier">strokes</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>       <span class="Comment">## Stroke colors and gradients.</span>
-  <span class="Identifier">effects</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Effect"><span class="Identifier">Effect</span></a><span class="Other">]</span>      <span class="Comment">## Effects such as shadows and blurs.</span>
-  <span class="Identifier">opacity</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>          <span class="Comment">## Opacity, 0 .. 1</span>
-  <span class="Identifier">visible</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>             <span class="Comment">## Visibility on/off.</span>
-  <span class="Identifier">isMask</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>              <span class="Comment">## Used by masking</span>
-  <span class="Identifier">isMaskOutline</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>       <span class="Comment">## ???</span>
-  <span class="Identifier">booleanOperation</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#BooleanOperation"><span class="Identifier">BooleanOperation</span></a> <span class="Comment">## Used by boolean nodes</span>
-  <span class="Identifier">clipsContent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>        <span class="Comment">## Used by frame nodes to cut children.</span>
-  <span class="Identifier">characters</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">style</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#TypeStyle"><span class="Identifier">TypeStyle</span></a>
-  <span class="Identifier">characterStyleOverrides</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">]</span>
-  <span class="Identifier">styleOverrideTable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="schema.html#TypeStyle"><span class="Identifier">TypeStyle</span></a><span class="Other">]</span>
-  <span class="Identifier">spans</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">Span</span><span class="Other">]</span>
-  <span class="Identifier">arrangement</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Arrangement</span>
-  <span class="Identifier">cursor</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
-  <span class="Identifier">selector</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
-  <span class="Identifier">singleline</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">wordWrap</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">savedX</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float</span>
-  <span class="Identifier">undoStack</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">]</span>
-  <span class="Identifier">redoStack</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">]</span>
-  <span class="Identifier">constraints</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutConstraint"><span class="Identifier">LayoutConstraint</span></a>
-  <span class="Identifier">layoutAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutAlign"><span class="Identifier">LayoutAlign</span></a>
-  <span class="Identifier">layoutGrids</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#LayoutGrid"><span class="Identifier">LayoutGrid</span></a><span class="Other">]</span>
-  <span class="Identifier">layoutMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutMode"><span class="Identifier">LayoutMode</span></a>
-  <span class="Identifier">itemSpacing</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">counterAxisSizingMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#AxisSizingMode"><span class="Identifier">AxisSizingMode</span></a>
-  <span class="Identifier">paddingLeft</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">paddingRight</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">paddingTop</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">paddingBottom</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">overflowDirection</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#OverflowDirection"><span class="Identifier">OverflowDirection</span></a>
-  <span class="Identifier">dirty</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>               <span class="Comment">## Do the pixels need redrawing?</span>
-  <span class="Identifier">pixels</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Image</span>             <span class="Comment">## Pixel image cache.</span>
-  <span class="Identifier">pixelBox</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Rect</span>            <span class="Comment">## Pixel position and size.</span>
-  <span class="Identifier">editable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>            <span class="Comment">## Can the user edit the text?</span>
-  <span class="Identifier">origPosition</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>        <span class="Comment">## Original position used by constraints.</span>
-  <span class="Identifier">origSize</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>            <span class="Comment">## Original size used by constraints.</span>
-  <span class="Identifier">idNum</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>                <span class="Comment">## Integer ID of the node</span>
-  <span class="Identifier">mat</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Mat3</span>                 <span class="Comment">## Useful to get back to the node.</span>
-  <span class="Identifier">collapse</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>            <span class="Comment">## Is the node drawn as a single texture (CPU internals)</span>
-  <span class="Identifier">frozen</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">frozenId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>          <span class="Comment">## If the node is frozen, points to its frozen image.</span>
-  <span class="Identifier">shown</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>               <span class="Comment">## for onShow/onHide events.</span>
-  <span class="Identifier">scrollable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>          <span class="Comment">## Can this node scroll.</span>
-  <span class="Identifier">scrollPos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>           <span class="Comment">## How does it scroll it's children.</span>
-  <span class="Identifier">onRenderCallback</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span>
-  <span class="Identifier">userKey</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">userId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
-  <dd>
-    
-    
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L182" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L182" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -735,13 +735,13 @@
   <h1><a class="toc-backref" href="#12">Procs</a></h1>
   <dl class="item">
     <div id="$-procs-all">
-  <div id="$,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%24%2CNode"><span class="Identifier">`$`</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <div id="$,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#%24%2CINode"><span class="Identifier">`$`</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Returns a string representation of a node.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L285" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L285" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L286" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L286" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -755,8 +755,21 @@
   <dd>
     
     Parses a Figma file from JSON data.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L741" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L741" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L750" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L750" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="path-procs-all">
+  <div id="path,INode">
+  <dt><pre><span class="Keyword">proc</span> <a href="#path%2CINode"><span class="Identifier">path</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Returns the full path of the node back to the root.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L290" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L290" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -768,8 +781,8 @@
   <dd>
     
     Checks if two Paint objects are similar.
-    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L289" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L289" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/schema.nim#L297" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/schema.nim#L297" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -785,7 +798,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-22 20:43:13 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-23 18:55:12 UTC</small>
       </div>
     </div>
   </div>

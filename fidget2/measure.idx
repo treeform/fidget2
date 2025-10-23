@@ -1,9 +1,9 @@
 nimTitle	measure	fidget2/measure.html	module src/fidget2/measure		0
-nim	getTicks	fidget2/measure.html#getTicks	proc getTicks(): int		38
-nim	startTrace	fidget2/measure.html#startTrace,int,int,string	proc startTrace(pid = 1; tid = 1; category = "measure")		45
-nim	endTrace	fidget2/measure.html#endTrace	proc endTrace()		58
-nim	setTraceEnabled	fidget2/measure.html#setTraceEnabled,bool	proc setTraceEnabled(on: bool)		62
-nim	measurePush	fidget2/measure.html#measurePush,string	proc measurePush(what: string)		66
-nim	measurePop	fidget2/measure.html#measurePop	proc measurePop()		79
-nim	measure	fidget2/measure.html#measure.m,untyped	macro measure(fn: untyped)		101
-nim	dumpMeasures	fidget2/measure.html#dumpMeasures,float,string	proc dumpMeasures(overTotalMs = 0.0; tracePath = "")		110
+nim	getTicks	fidget2/measure.html#getTicks	proc getTicks(): int		39
+nim	startTrace	fidget2/measure.html#startTrace,int,int,string	proc startTrace(pid = 1; tid = 1; category = "measure")		46
+nim	endTrace	fidget2/measure.html#endTrace	proc endTrace()		62
+nim	setTraceEnabled	fidget2/measure.html#setTraceEnabled,bool	proc setTraceEnabled(on: bool)		69
+nim	measurePush	fidget2/measure.html#measurePush,string	proc measurePush(what: string)		73
+nim	measurePop	fidget2/measure.html#measurePop	proc measurePop()		86
+nim	measure	fidget2/measure.html#measure.m,untyped	macro measure(fn: untyped)		109
+nim	dumpMeasures	fidget2/measure.html#dumpMeasures,float,string	proc dumpMeasures(overTotalMs = 0.0; tracePath = "")		118

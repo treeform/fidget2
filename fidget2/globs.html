@@ -63,11 +63,13 @@
 
 </ul>
 <ul class="simple nested-toc-section">find
-  <li><a class="reference" href="#find%2CNode%2Cstring" title="find(node: Node; glob: string): Node">find(node: Node; glob: string): Node</a></li>
+  <li><a class="reference" href="#find%2CINode%2Cstring" title="find(node: INode; glob: string): Node">find(node: INode; glob: string): Node</a></li>
+<li><a class="reference" href="#find%2CNode%2Cstring" title="find(node: Node; glob: string): Node">find(node: Node; glob: string): Node</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">findAll
-  <li><a class="reference" href="#findAll%2CNode%2Cstring" title="findAll(node: Node; glob: string): seq[Node]">findAll(node: Node; glob: string): seq[Node]</a></li>
+  <li><a class="reference" href="#findAll%2CINode%2Cstring" title="findAll(node: INode; glob: string): seq[Node]">findAll(node: INode; glob: string): seq[Node]</a></li>
+<li><a class="reference" href="#findAll%2CNode%2Cstring" title="findAll(node: Node; glob: string): seq[Node]">findAll(node: Node; glob: string): seq[Node]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">scan
@@ -100,7 +102,7 @@
     <div class="section" id="6">
   <h1><a class="toc-backref" href="#6">Imports</a></h1>
   <dl class="item">
-    <a class="reference external" href="schema.html">schema</a>, <a class="reference external" href="common.html">common</a>
+    <a class="reference external" href="schema.html">schema</a>, <a class="reference external" href="common.html">common</a>, <a class="reference external" href="nodes.html">nodes</a>
   </dl>
 </div>
 <div class="section" id="12">
@@ -120,8 +122,19 @@
 
 </div>
 <div id="find-procs-all">
-  <div id="find,Node,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#find%2CNode%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+  <div id="find,INode,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#find%2CINode%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Converts an INode to a Node and finds it.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/globs.nim#L180" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/globs.nim#L180" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="find,Node,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#find%2CNode%2Cstring"><span class="Identifier">find</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -134,8 +147,19 @@
 
 </div>
 <div id="findAll-procs-all">
-  <div id="findAll,Node,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2CNode%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span>
+  <div id="findAll,INode,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2CINode%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dd>
+    
+    Converts an INode to a Node and finds all nodes that match a glob.
+    <a href="https://github.com/treeform/fidget2/tree/master/src/fidget2/globs.nim#L184" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/treeform/fidget2/edit/devel/src/fidget2/globs.nim#L184" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="findAll,Node,string">
+  <dt><pre><span class="Keyword">proc</span> <a href="#findAll%2CNode%2Cstring"><span class="Identifier">findAll</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">;</span> <span class="Identifier">glob</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">FidgetError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
@@ -149,7 +173,7 @@
 </div>
 <div id="scan-procs-all">
   <div id="scan,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#scan%2CNode"><span class="Identifier">scan</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#scan%2CNode"><span class="Identifier">scan</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Iterates the tree and returns a flat list.
@@ -162,7 +186,7 @@
 </div>
 <div id="treeLen-procs-all">
   <div id="treeLen,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#treeLen%2CNode"><span class="Identifier">treeLen</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#treeLen%2CNode"><span class="Identifier">treeLen</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Returns the number of nodes in the tree.
@@ -175,7 +199,7 @@
 </div>
 <div id="walk-procs-all">
   <div id="walk,Node">
-  <dt><pre><span class="Keyword">proc</span> <a href="#walk%2CNode"><span class="Identifier">walk</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <a href="schema.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#walk%2CNode"><span class="Identifier">walk</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <a href="nodes.html#Node"><span class="Identifier">Node</span></a><span class="Other">)</span><span class="Other">]</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Iterates the tree with paths:Node.
@@ -196,7 +220,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-22 20:43:13 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2025-10-23 18:55:12 UTC</small>
       </div>
     </div>
   </div>
