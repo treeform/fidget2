@@ -45,3 +45,9 @@ jobs:
 
       - name: Compile Dragon for Emscripten
         run: cd examples/dragon && nim c -d:emscripten dragon.nim
+
+      - name: Compile Panels Natively
+        run: cd examples/panels && nim c panels.nim
+
+      - name: Compile Panels for Emscripten
+        run: cd examples/panels && nim c -d:emscripten panels.nim
