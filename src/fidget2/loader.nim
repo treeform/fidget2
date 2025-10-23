@@ -2,10 +2,10 @@ import
   std/[os],
   common, schema
 
-# Loader is responsible for loading the figma file.
+# Loader is responsible for loading the Figma file.
 # It also downloads images and fonts and manages the cache.
 
-var figmaFile*: FigmaFile             ## Main figma file.
+var figmaFile*: FigmaFile             ## Main Figma file.
 
 proc figmaFilePath(fileKey: string): string =
   ## Gets the Figma file path.
@@ -17,7 +17,7 @@ proc loadFigmaFile(fileKey: string): FigmaFile =
   parseFigmaFile(data)
 
 proc lastModifiedFilePath(fileKey: string): string =
-  ## Gets the last modified file path.
+  ## Gets the last-modified file path.
   dataDir / "fidget" / fileKey & ".lastModified"
 
 proc figmaImagePath*(imageRef: string): string =
@@ -37,7 +37,7 @@ when defined(emscripten) or defined(fidgetUseCached):
   import webby
 
   proc loadFigmaUrl*(figmaUrl: string): FigmaFile =
-    ## Use the figma url as a new figmaFile.
+    ## Use the Figma URL as a new figmaFile.
     ## Will download the full file if it needs to.
     var figmaFileKey: string
 
@@ -90,7 +90,7 @@ else:
         walk(c)
     walk(figmaFile.document)
 
-    # Walk images dir and remove any unused images
+    # Walk images dir and remove any unused images.
     for kind, path in walkDir(dataDir / "fidget" / "images", relative = true):
       case kind:
       of pcFile:
@@ -102,7 +102,7 @@ else:
       of pcLinkToFile, pcLinkToDir:
         removeFile(dataDir / "fidget" / "images" / path)
 
-    # Check if we need to download any images
+    # Check if we need to download any images.
     var needsDownload: bool
     for imageRef in imagesUsed:
       if not fileExists(figmaImagePath(imageRef)):
@@ -143,7 +143,7 @@ else:
     if not dirExists(dataDir / "fidget" / "fonts"):
       createDir(dataDir / "fidget" / "fonts")
 
-    # Walk the Figma file and find all the fonts used
+    # Walk the Figma file and find all the fonts used.
 
     var fontsUsed: HashSet[string]
 
@@ -171,7 +171,7 @@ else:
 
     walk(figmaFile.document)
 
-    # Walk font dir and remove any unused fonts
+    # Walk font dir and remove any unused fonts.
 
     for kind, path in walkDir(dataDir / "fidget" / "fonts", relative = true):
       case kind:
@@ -184,7 +184,7 @@ else:
       of pcLinkToFile, pcLinkToDir:
         removeFile(dataDir / "fidget" / "fonts" / path)
 
-    # Check if we need to download any fonts
+    # Check if we need to download any fonts.
 
     var needsDownload: bool
     for fontPostScriptName in fontsUsed:
@@ -195,7 +195,7 @@ else:
     if not needsDownload:
       return
 
-    # We need to download one or more fonts
+    # We need to download one or more fonts.
 
     for fontPostScriptName in fontsUsed:
       downloadFont(fontPostScriptName)
@@ -209,7 +209,7 @@ else:
       figmaFilePath = figmaFilePath(fileKey)
       lastModifiedFilePath = lastModifiedFilePath(fileKey)
 
-    # Walk data/fidget dir and remove any unexpected entries
+    # Walk data/fidget dir and remove any unexpected entries.
 
     for kind, path in walkDir(dataDir / "fidget", relative = true):
       case kind:
@@ -267,7 +267,7 @@ else:
     echo "Downloaded latest Figma file."
 
   proc loadFigmaUrl*(figmaUrl: string): FigmaFile =
-    ## Use the figma url as a new figmaFile.
+    ## Use the Figma URL as a new figmaFile.
     ## Will download the full file if it needs to.
     var figmaFileKey: string
 

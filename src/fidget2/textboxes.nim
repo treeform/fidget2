@@ -11,7 +11,7 @@ because it is so natural. Here is a small list of the most important ones:
 * Cursor going left and right
 * Backspace and delete
 * Cursor going up and down must take into account font and line wrap
-* Clicking should select a character edge. Closet edge wins.
+* Clicking should select a character edge. Closest edge wins.
 * Click and drag should select text, selected text will be between text cursor and select cursor
 * Any insert when typing or copy pasting and have selected text, it should get removed and then do normal action
 * Copy text should set it to system clipboard
@@ -21,10 +21,10 @@ because it is so natural. Here is a small list of the most important ones:
 * Clicking at the end of text should select last character
 * Click at the end of the end of the line should select character before the new line
 * Click at the end of the start of the line should select character first character and not the newline
-* Double click should select current word and space (TODO: stops non world characters, TODO: and enter into word selection mode)
+* Double click should select current word and space (TODO: stop on non-word characters, TODO: enter word selection mode)
 * Double click again should select current paragraph
 * Double click again should select everything
-* TODO: Selecting during world selection mode should select whole words.
+* TODO: Selecting during word selection mode should select whole words.
 * Text area needs to be able to have margins that can be clicked
 * There should be a scroll bar and a scroll window
 * Scroll window should stay with the text cursor
@@ -60,7 +60,7 @@ proc getSelection*(arrangement: Arrangement, start, stop: int): seq[Rect] =
       result.add selectRect
 
 proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
-  ## Given X,Y coordinate, return the GlyphPosition picked.
+  ## Given position, return the GlyphPosition picked.
   ## If direct click not happened finds closest to the right.
   var minGlyph = -1
   var minDistance = -1.0
@@ -68,7 +68,6 @@ proc pickGlyphAt*(arrangement: Arrangement, pos: Vec2): int =
     if selectRect.y <= pos.y and pos.y < selectRect.y + selectRect.h:
       # on same line
       let dist = abs(pos.x - (selectRect.x))
-      # closet character
       if minDistance < 0 or dist < minDistance:
         # min distance here
         minDistance = dist
@@ -466,7 +465,7 @@ proc mouseAction*(
     # If above the text select first character.
     if mousePos.y < 0:
       node.cursor = 0
-    # If below text select last character + 1.
+    # If below the text select last character + 1.
     if mousePos.y > node.innerHeight:
       node.cursor = node.characters.u.len
   node.savedX = mousePos.x
@@ -487,7 +486,7 @@ proc selectWord*(node: INode, mousePos: Vec2, extraSpace = false) =
     not node.characters.u[node.selector].isWhiteSpace():
     inc node.selector
   if extraSpace:
-    # Select extra space to the right if its there.
+    # Select extra space to the right if it's there.
     if node.selector < node.characters.u.len and
       node.characters.u[node.selector] == Rune(32):
       inc node.selector
@@ -505,7 +504,7 @@ proc selectParagraph*(node: INode, mousePos: Vec2) =
     inc node.selector
 
 proc selectAll*(node: INode) =
-  ## Selects all text (quad click or ctrl-a).
+  ## Selects all text (quadruple click or Ctrl+A).
   node.cursor = 0
   node.selector = node.characters.u.len
 

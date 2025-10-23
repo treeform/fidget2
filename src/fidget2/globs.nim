@@ -3,8 +3,8 @@ import
   schema, common, nodes
 
 # Globs are used to match paths in the tree.
-# Globs style paths are central to the fidget2 library.
-# They sort of resemble unix paths or CSS selectors.
+# Glob-style paths are central to the fidget2 library.
+# They resemble Unix paths or CSS selectors.
 
 type
   Glob = seq[string]
@@ -123,7 +123,7 @@ proc findAll*(node: Node, glob: string): seq[Node] =
         for c in node.scan:
           list.add(c)
       else:
-        # "**" can patch any tree level, branch out the search!
+        # "**" can match any tree level; branch out the search.
         node.visit(list, glob, globAt + 1)
         for c in node.children:
           c.visit(list, glob, globAt)
@@ -152,7 +152,7 @@ proc find*(node: Node, glob: string): Node =
           # "**" at last level means this node.
           one = node
         else:
-          # "**" can patch any tree level, branch out the search!
+          # "**" can match any tree level; branch out the search.
           node.visit(one, glob, globAt + 1)
           if one != nil:
             return

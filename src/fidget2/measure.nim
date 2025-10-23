@@ -19,7 +19,7 @@ type
     tts: float      # Optional thread timestamp
 
   Trace = ref object
-    ## This must be set to "ns" for chrome tracing to show properly.
+    ## This must be set to "ns" for Chrome tracing to show properly.
     displayTimeUnit: string = "ns"
     traceEvents: seq[Event]
 

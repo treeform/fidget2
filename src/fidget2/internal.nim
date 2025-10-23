@@ -210,7 +210,7 @@ proc genStrokeGeometry*(node: INode) {.measure.} =
     discard
 
 proc genHitTestGeometry*(node: INode) {.measure.} =
-  ## Generates geometry thats a simple rect over the node,
+  ## Generates geometry that's a simple rect over the node,
   ## no matter what kind of node it is.
   ## Used for simple mouse hit prediction
   var geom = Geometry()
@@ -402,8 +402,8 @@ proc font*(node: INode): Font =
     node.style.getFont()
 
 proc genTextGeometry*(node: INode) {.measure.} =
-  ## Generates text bounds geometry, can be more or less then
-  ## nodes hit area. Effected by internal scroll.
+  ## Generates text bounds geometry; can be more or less than
+  ## the node's hit area. Affected by internal scroll.
   var geom = Geometry()
   geom.path = newPath()
   geom.mat = mat3()

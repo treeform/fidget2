@@ -309,7 +309,7 @@ proc rasterPass*(node: INode) {.measure.} =
   rasterize(node, 0)
 
 proc compositePass*(node: INode) {.measure.} =
-  ## Performs a composting pass on a node.
+  ## Performs a compositing pass on a node.
   composite(node)
 
 proc drawToScreen*(screenNode: INode) {.measure.} =

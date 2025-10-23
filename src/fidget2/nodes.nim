@@ -3,8 +3,8 @@ import
   flatty, flatty/hashy2, vmath, pixie/common,
   loader, schema, inodes
 
-# Are extensions for the INode type. The getters are zero cost, but
-# the setters set the dirty flag and some times mark the whole tree dirty.
+# Extensions for the INode type. The getters are zero cost, but
+# the setters set the dirty flag and sometimes mark the whole tree dirty.
 
 type
   Node* = distinct INode ## A user-friendly node type.

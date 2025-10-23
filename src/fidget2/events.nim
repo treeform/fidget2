@@ -33,10 +33,10 @@ type
     ## Called only once per node.
     OnLoad
     ## Called once per frame.
-    ## NOTE: Can caused performance issues if overused.
+    ## NOTE: Can cause performance issues if overused.
     OnFrame
     ## When a node is displayed.
-    ## NOTE: Can caused performance issues if overused.
+    ## NOTE: Can cause performance issues if overused.
     OnDisplay
     ## When a text node is edited.
     ## Only text nodes with this event can be edited.
@@ -274,7 +274,7 @@ template onButtonPress*(body: untyped) =
   )
 
 template onButtonRelease*(body: untyped) =
-  ## When a key is pressed.
+  ## When a key is released.
   addCb(
     OnButtonRelease,
     100,
@@ -736,7 +736,7 @@ proc processEvents() =
       # TODO: implement.
       discard
 
-  # Check if clicks on editable nodes.
+  # Check clicks on editable nodes.
   if window.buttonPressed[MouseLeft]:
     for selector in editableSelectors:
       for node in findAll(selector):
@@ -950,7 +950,7 @@ proc setupWindowAndEvents*(
 
   redisplay = true
 
-  # All all onLoad callbacks.
+  # Call all onLoad callbacks.
   for cb in eventCbs:
     if cb.kind == OnLoad:
       thisSelector = cb.glob

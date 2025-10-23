@@ -312,44 +312,44 @@ proc similar*(a: Paint, b: Paint): bool =
     a.gradientStops == b.gradientStops
 
 proc newHook(v: var Paint) =
-  ## Jsony houok to initialize a new Paint object.
+  ## Jsony hook to initialize a new Paint object.
   v = Paint()
   v.visible = true
   v.opacity = 1.0
 
 proc newHook(v: var TypeStyle) =
-  ## Jsony houok to initialize a new TypeStyle object.
+  ## Jsony hook to initialize a new TypeStyle object.
   v = TypeStyle()
   v.lineHeightPercent = 100
   v.opentypeFlags.KERN = 1
 
 proc newHook(v: var LayoutGrid) =
-  ## Jsony houok to initialize a new LayoutGrid object.
+  ## Jsony hook to initialize a new LayoutGrid object.
   v.visible = true
 
 proc newHook(v: var Geometry) =
-  ## Jsony houok to initialize a new Geometry object.
+  ## Jsony hook to initialize a new Geometry object.
   v.mat = mat3()
 
 proc renameHook(v: var Paint, fieldName: var string) =
-  ## Jsony houok to rename fields during JSON parsing for Paint objects.
+  ## Jsony hook to rename fields during JSON parsing for Paint objects.
   if fieldName == "type":
     fieldName = "kind"
 
 proc renameHook(v: var Effect, fieldName: var string) =
-  ## Jsony houok to rename fields during JSON parsing for Effect objects.
+  ## Jsony hook to rename fields during JSON parsing for Effect objects.
   if fieldName == "type":
     fieldName = "kind"
 
 proc renameHook(v: var Rect, fieldName: var string) =
-  ## Jsony houok to rename fields during JSON parsing for Rect objects.
+  ## Jsony hook to rename fields during JSON parsing for Rect objects.
   if fieldName == "width":
     fieldName = "w"
   if fieldName == "height":
     fieldName = "h"
 
 proc enumHook(s: string, v: var BlendMode) =
-  ## Jsony houok to convert string to BlendMode enum during JSON parsing.
+  ## Jsony hook to convert string to BlendMode enum during JSON parsing.
   v = case s:
     of "PASS_THROUGH": NormalBlend
     of "NORMAL": NormalBlend
@@ -373,7 +373,7 @@ proc enumHook(s: string, v: var BlendMode) =
     else: raise newException(PixieError, "Unsupported blend mode: " & s)
 
 proc enumHook(s: string, v: var TextCase) =
-  ## Jsony houok to convert string to TextCase enum during JSON parsing.
+  ## Jsony hook to convert string to TextCase enum during JSON parsing.
   v = case s:
     of "UPPER": UpperCase
     of "LOWER": LowerCase
@@ -384,7 +384,7 @@ proc enumHook(s: string, v: var TextCase) =
     else: NormalCase
 
 proc enumHook(s: string, v: var NodeKind) =
-  ## Jsony houok to convert string to NodeKind enum during JSON parsing.
+  ## Jsony hook to convert string to NodeKind enum during JSON parsing.
   v = case s:
     of "DOCUMENT": DocumentNode
     of "CANVAS": CanvasNode
@@ -405,7 +405,7 @@ proc enumHook(s: string, v: var NodeKind) =
     else: raise newException(FidgetError, "Invalid node type:" & s)
 
 proc enumHook(s: string, v: var PaintKind) =
-  ## Jsony houok to convert string to PaintKind enum during JSON parsing.
+  ## Jsony hook to convert string to PaintKind enum during JSON parsing.
   v = case s:
     of "SOLID": pkSolid
     of "IMAGE": pkImage
@@ -416,7 +416,7 @@ proc enumHook(s: string, v: var PaintKind) =
     else: raise newException(FidgetError, "Invalid paint type:" & s)
 
 proc enumHook(s: string, v: var EffectKind) =
-  ## Jsony houok to convert string to EffectKind enum during JSON parsing.
+  ## Jsony hook to convert string to EffectKind enum during JSON parsing.
   v = case s:
     of "DROP_SHADOW": DropShadow
     of "INNER_SHADOW": InnerShadow
@@ -425,7 +425,7 @@ proc enumHook(s: string, v: var EffectKind) =
     else: raise newException(FidgetError, "Invalid effect type:" & s)
 
 proc enumHook(s: string, v: var BooleanOperation) =
-  ## Jsony houok to convert string to BooleanOperation enum during JSON parsing.
+  ## Jsony hook to convert string to BooleanOperation enum during JSON parsing.
   v = case s:
     of "SUBTRACT": SubtractOperation
     of "INTERSECT": IntersectOperation
@@ -434,7 +434,7 @@ proc enumHook(s: string, v: var BooleanOperation) =
     else: raise newException(FidgetError, "Invalid boolean operation:" & s)
 
 proc enumHook(s: string, v: var ScaleMode) =
-  ## Jsony houok to convert string to ScaleMode enum during JSON parsing.
+  ## Jsony hook to convert string to ScaleMode enum during JSON parsing.
   v = case s:
     of "FILL": FillScaleMode
     of "FIT": FitScaleMode
@@ -443,21 +443,21 @@ proc enumHook(s: string, v: var ScaleMode) =
     else: raise newException(FidgetError, "Invalid scale mode:" & s)
 
 proc enumHook(s: string, v: var TextAutoResize) =
-  ## Jsony houok to convert string to TextAutoResize enum during JSON parsing.
+  ## Jsony hook to convert string to TextAutoResize enum during JSON parsing.
   v = case s:
     of "HEIGHT": HeightTextResize
     of "WIDTH_AND_HEIGHT": WidthAndHeightTextResize
     else: raise newException(FidgetError, "Invalid text auto resize:" & s)
 
 proc enumHook(s: string, v: var TextDecoration) =
-  ## Jsony houok to convert string to TextDecoration enum during JSON parsing.
+  ## Jsony hook to convert string to TextDecoration enum during JSON parsing.
   v = case s:
     of "STRIKETHROUGH": Strikethrough
     of "UNDERLINE": Underline
     else: raise newException(FidgetError, "Invalid text decoration:" & s)
 
 proc enumHook(s: string, v: var LineHeightUnit) =
-  ## Jsony houok to convert string to LineHeightUnit enum during JSON parsing.
+  ## Jsony hook to convert string to LineHeightUnit enum during JSON parsing.
   v = case s:
     of "PIXELS": PixelUnit
     of "FONT_SIZE_%": FontSizePercentUnit
@@ -465,14 +465,14 @@ proc enumHook(s: string, v: var LineHeightUnit) =
     else: raise newException(FidgetError, "Invalid text line height unit:" & s)
 
 proc enumHook(s: string, v: var LeadingTrim) =
-  ## Jsony houok to convert string to LeadingTrim enum during JSON parsing.
+  ## Jsony hook to convert string to LeadingTrim enum during JSON parsing.
   v = case s:
     of "NONE": NoLeadingTrim
     of "CAP_HEIGHT": CapHeight
     else: raise newException(FidgetError, "Invalid leading trim:" & s)
 
 proc enumHook(s: string, v: var StrokeAlign) =
-  ## Jsony houok to convert string to StrokeAlign enum during JSON parsing.
+  ## Jsony hook to convert string to StrokeAlign enum during JSON parsing.
   v = case s:
     of "INSIDE": InsideStroke
     of "OUTSIDE": OutsideStroke
@@ -480,7 +480,7 @@ proc enumHook(s: string, v: var StrokeAlign) =
     else: raise newException(FidgetError, "Invalid stroke align:" & s)
 
 proc enumHook(s: string, v: var HorizontalAlignment) =
-  ## Jsony houok to convert string to HorizontalAlignment enum during JSON parsing.
+  ## Jsony hook to convert string to HorizontalAlignment enum during JSON parsing.
   v = case s:
     of "CENTER": CenterAlign
     of "LEFT": LeftAlign
@@ -488,7 +488,7 @@ proc enumHook(s: string, v: var HorizontalAlignment) =
     else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var VerticalAlignment) =
-  ## Jsony houok to convert string to VerticalAlignment enum during JSON parsing.
+  ## Jsony hook to convert string to VerticalAlignment enum during JSON parsing.
   v = case s:
     of "CENTER": MiddleAlign
     of "TOP": TopAlign
@@ -496,14 +496,14 @@ proc enumHook(s: string, v: var VerticalAlignment) =
     else: raise newException(FidgetError, "Invalid text align mode:" & s)
 
 proc enumHook(s: string, v: var WindingRule) =
-  ## Jsony houok to convert string to WindingRule enum during JSON parsing.
+  ## Jsony hook to convert string to WindingRule enum during JSON parsing.
   v = case s:
     of "EVENODD": EvenOdd
     of "NONZERO": NonZero
     else: raise newException(FidgetError, "Invalid winding rule:" & s)
 
 proc enumHook(s: string, v: var ConstraintKind) =
-  ## Jsony houok to convert string to ConstraintKind enum during JSON parsing.
+  ## Jsony hook to convert string to ConstraintKind enum during JSON parsing.
   v = case s:
     of "TOP": MinConstraint
     of "BOTTOM": MaxConstraint
@@ -516,7 +516,7 @@ proc enumHook(s: string, v: var ConstraintKind) =
     else: raise newException(FidgetError, "Invalid constraint kind:" & s)
 
 proc enumHook(s: string, v: var GridAlign) =
-  ## Jsony houok to convert string to GridAlign enum during JSON parsing.
+  ## Jsony hook to convert string to GridAlign enum during JSON parsing.
   v = case s:
     of "STRETCH": StretchGridAlign
     of "MIN": MinGridAlign
@@ -524,14 +524,14 @@ proc enumHook(s: string, v: var GridAlign) =
     else: raise newException(FidgetError, "Invalid grid align:" & s)
 
 proc enumHook(s: string, v: var LayoutAlign) =
-  ## Jsony houok to convert string to LayoutAlign enum during JSON parsing.
+  ## Jsony hook to convert string to LayoutAlign enum during JSON parsing.
   v = case s:
     of "INHERIT": InheritLayout
     of "STRETCH": StretchLayout
     else: raise newException(FidgetError, "Invalid layout align:" & s)
 
 proc enumHook(s: string, v: var LayoutPattern) =
-  ## Jsony houok to convert string to LayoutPattern enum during JSON parsing.
+  ## Jsony hook to convert string to LayoutPattern enum during JSON parsing.
   v = case s:
     of "COLUMNS": ColumnsLayoutPattern
     of "ROWS": RowsLayoutPattern
@@ -539,7 +539,7 @@ proc enumHook(s: string, v: var LayoutPattern) =
     else: raise newException(FidgetError, "Invalid layout pattern:" & s)
 
 proc enumHook(s: string, v: var LayoutMode) =
-  ## Jsony houok to convert string to LayoutMode enum during JSON parsing.
+  ## Jsony hook to convert string to LayoutMode enum during JSON parsing.
   v = case s:
     of "NONE": NoneLayout
     of "HORIZONTAL": HorizontalLayout
@@ -547,14 +547,14 @@ proc enumHook(s: string, v: var LayoutMode) =
     else: raise newException(FidgetError, "Invalid layout mode:" & s)
 
 proc enumHook(s: string, v: var AxisSizingMode) =
-  ## Jsony houok to convert string to AxisSizingMode enum during JSON parsing.
+  ## Jsony hook to convert string to AxisSizingMode enum during JSON parsing.
   v = case s:
     of "AUTO": AutoAxis
     of "FIXED": FixedAxis
     else: raise newException(FidgetError, "Invalid axis sizing mode:" & s)
 
 proc enumHook(s: string, v: var OverflowDirection) =
-  ## Jsony houok to convert string to OverflowDirection enum during JSON parsing.
+  ## Jsony hook to convert string to OverflowDirection enum during JSON parsing.
   v = case s:
     of "NONE": NoScrolling
     of "HORIZONTAL_SCROLLING": HorizontalScrolling
@@ -578,7 +578,7 @@ proc parseHook(s: string, i: var int, v: var float32) =
 
 proc parseHook(s: string, i: var int, v: var Vec2) =
   ## Parses Vec2 values, handling null coordinates.
-  # Handle vectors some times having {x: null, y: null}.
+  # Handle vectors sometimes having {x: null, y: null}.
   type Vec2Obj = object
     x: ref float32
     y: ref float32
@@ -652,13 +652,13 @@ type FigmaNode = ref object
   overflowDirection: OverflowDirection
 
 proc renameHook(node: var FigmaNode, fieldName: var string) =
-  ## Jsony houok to rename fields during JSON parsing for FigmaNode objects.
+  ## Jsony hook to rename fields during JSON parsing for FigmaNode objects.
   if fieldName == "type":
     fieldName = "kind"
 
 proc parseHook(s: string, i: var int, node: var INode) =
-  ## Jsony houok to parse Node objects from JSON with special handling.
-  # Handle vectors some times having {x: null, y: null}.
+  ## Jsony hook to parse Node objects from JSON with special handling.
+  # Handle vectors sometimes having {x: null, y: null}.
 
   var f: FigmaNode
   parseHook(s, i, f)
@@ -740,7 +740,7 @@ proc parseHook(s: string, i: var int, node: var INode) =
   node.origSize = node.size
 
   # Figma API can give us \r\n -> \n
-  # TODO: that might effect styles.
+  # TODO: that might affect styles.
   # node.characters = node.characters.replace("\r\n", "\n")
 
   # Node has never been drawn.
