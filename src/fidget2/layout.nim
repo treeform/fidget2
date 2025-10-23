@@ -41,7 +41,6 @@ proc computeLayout*(parent, node: INode) {.measure.} =
         let bounds = computeTextBounds(node)
         node.size.x = bounds.x
         node.size.y = bounds.y
-
   # Auto-layout code.
   if node.layoutMode == VerticalLayout:
 

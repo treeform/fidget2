@@ -262,8 +262,6 @@ type
     idNum*: int         ## Integer ID of the node
     mat*: Mat3          ## Useful to get back to the node.
     collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
-    # frozen*: bool
-    # frozenId*: string   ## If the node is frozen, points to its frozen image.
     shown*: bool        ## for onShow/onHide events.
     scrollable*: bool   ## Can this node scroll.
     scrollPos*: Vec2    ## How does it scroll it's children.

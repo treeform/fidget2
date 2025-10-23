@@ -62,20 +62,15 @@ proc rasterize(node: INode, level: int) {.measure.} =
     node.markTreeClean()
     return
 
+  # TODO: Move this to layout pass.
   let prevMat = mat
   mat = mat * node.transform()
   node.mat = mat # Needed for picking.
-
-  # if node.frozenId.len > 0:
-  #   node.pixelBox = pixelBox
-  #   mat = prevMat
-  #   return
+  node.pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
 
   if node.dirty:
 
     node.dirty = false
-    # compute bounds
-    node.pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
 
     ## Any special thing we can't do on the GPU
     ## we have to collapse the node so that CPU draws it all
@@ -161,18 +156,6 @@ proc composite(node: INode) {.measure.} =
   ## Draws the nodes from the atlas to the screen.
   if not node.visible or node.opacity == 0:
     return
-
-  # if node.frozen:
-  #   bxy.saveTransform()
-  #   bxy.applyTransform(node.mat)
-  #   let size = bxy.getImageSize(node.frozenId).vec2
-  #   bxy.scale(vec2(
-  #     node.size.x / size.x,
-  #     node.size.y / size.y
-  #   ))
-  #   bxy.drawImage(node.frozenId, pos = vec2(0, 0))
-  #   bxy.restoreTransform()
-  #   return
 
   var pushedLayers = 0
 
@@ -288,8 +271,6 @@ proc composite(node: INode) {.measure.} =
     doAssert fract(node.pixelBox.x) == 0
     doAssert fract(node.pixelBox.y) == 0
     doAssert node.willDrawSomething()
-    if node.path == "/UI/Main/GlobalHeader/ShareButton":
-      echo "composite box: ", node.pixelBox
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
   if node.onRenderCallback != nil:
@@ -402,38 +383,3 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   )
   screen.flipVertical()
   return screen
-
-# proc freeze*(node: INode, scaleFactor = 1.0f) =
-#   ## Freezes a node.
-#   ## This is used to speed up rendering by caching the node as an image.
-#   ## It is not a good idea to freeze nodes that are animated or that are
-#   ## being edited.
-#   let s = scaleFactor
-#   if node.isSimpleImage:
-#     return
-#   if node.isInstance:
-#     node.frozen = true
-#     node.frozenId = node.masterComponent.id & ".frozen"
-#     if node.frozenId notin bxy:
-#       mat = scale(vec2(s, s))
-#       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
-#       node.drawNodeInternal(withChildren=true)
-#       bxy.addImage(node.frozenId, layer)
-#   else:
-#     echo "Warning: Freezing non instance: ", node.path
-#     node.frozen = true
-#     node.frozenId = node.id
-#     if node.frozenId notin bxy:
-#       mat = scale(vec2(s, s))
-#       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
-#       node.drawNodeInternal(withChildren=true)
-#       bxy.addImage(node.frozenId, layer)
-
-# deleteNodeHook = proc(node: INode) =
-#   ## Hook to delete a node from the atlas.
-#   if node.id in bxy:
-#     bxy.removeImage(node.id)
-#   if node.id & ".mask" in bxy:
-#     bxy.removeImage(node.id & ".mask")
-#   if node.frozenId in bxy:
-#     bxy.removeImage(node.frozenId)
