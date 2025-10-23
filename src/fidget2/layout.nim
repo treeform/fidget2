@@ -5,16 +5,23 @@ import
 # Layout tries to match figma's layout engine.
 # It is responsible for computing the layout of a node, both constraints and auto-layout.
 
-proc computeTextBounds(node: Node): Vec2 {.measure.} =
+proc fractional(v: Vec2): Vec2 =
+  vec2(v.x.fractional, v.y.fractional)
+
+proc computeTextBounds(node: INode): Vec2 {.measure.} =
   ## Computes the text bounds of a node.
   node.computeArrangement()
   result = node.arrangement.layoutBounds()
 
-proc computeLayout*(parent, node: Node) {.measure.} =
+proc computeLayout*(parent, node: INode) {.measure.} =
   ## Computes constraints and auto-layout.
 
   doAssert not node.position.x.isNan
   doAssert not node.position.y.isNan
+
+  let
+    oldPosition = node.position
+    oldSize = node.size
 
   for n in node.children:
     computeLayout(node, n)
@@ -34,7 +41,6 @@ proc computeLayout*(parent, node: Node) {.measure.} =
         let bounds = computeTextBounds(node)
         node.size.x = bounds.x
         node.size.y = bounds.y
-
   # Auto-layout code.
   if node.layoutMode == VerticalLayout:
 
@@ -133,3 +139,6 @@ proc computeLayout*(parent, node: Node) {.measure.} =
 
   doAssert not node.position.x.isNan
   doAssert not node.position.y.isNan
+
+  if oldPosition.fractional != node.position.fractional or oldSize != node.size:
+    node.dirty = true

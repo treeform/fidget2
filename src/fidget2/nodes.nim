@@ -1,71 +1,183 @@
 import
   std/[algorithm, random, sequtils, strutils],
-  flatty, flatty/hashy2, vmath,
-  internal, loader, schema
+  flatty, flatty/hashy2, vmath, pixie/common,
+  loader, schema, inodes
+
+# Extensions for the INode type. The getters are zero cost, but
+# the setters set the dirty flag and sometimes mark the whole tree dirty.
+
+type
+  Node* = distinct INode ## A user-friendly node type.
+
+template internal*(node: Node): INode =
+  cast[INode](node)
+
+proc `$`*(node: Node): string =
+  $node.internal
+
+proc `==`*(a, b: Node): bool {.inline.} =
+  a.internal == b.internal
+
+proc `!=`*(a, b: Node): bool {.inline.} =
+  a.internal != b.internal
+
+proc `==`*(a: Node, p: pointer): bool {.inline.} =
+  cast[pointer](a.internal) == p
+
+proc `!=`*(a: Node, p: pointer): bool {.inline.} =
+  cast[pointer](a.internal) != p
+
+proc isNil*(node: Node): bool {.inline.} =
+  node.internal == nil
+
+proc isNotNil*(node: Node): bool {.inline.} =
+  node.internal != nil
+
+proc kind*(node: Node): NodeKind {.inline.} =
+  node.internal.kind
+
+proc name*(node: Node): string {.inline.} =
+  node.internal.name
+
+proc id*(node: Node): string {.inline.} =
+  node.internal.id
+
+proc componentId*(node: Node): string {.inline.} =
+  node.internal.componentId
+
+proc position*(node: Node): Vec2 {.inline.} =
+  node.internal.position
+
+proc `position=`*(node: Node, value: Vec2) =
+  node.internal.position = value
+  node.internal.dirty = true
+
+proc mat*(node: Node): Mat3 {.inline.} =
+  node.internal.mat
+
+type NodeSize* = distinct INode
+
+proc size*(node: Node): Vec2 {.inline.} =
+  node.internal.size
+
+proc `size=`*(node: Node, value: Vec2) =
+  node.internal.size = value
+  node.internal.markTreeDirty()
+
+proc scale*(node: Node): Vec2 {.inline.} =
+  node.internal.scale
+
+proc rotation*(node: Node): float32 {.inline.} =
+  node.internal.rotation
+
+proc flipHorizontal*(node: Node): bool {.inline.} =
+  node.internal.flipHorizontal
+
+proc flipVertical*(node: Node): bool {.inline.} =
+  node.internal.flipVertical
+
+proc fillGeometry*(node: Node): seq[Geometry] {.inline.} =
+  node.internal.fillGeometry
+
+proc strokeWeight*(node: Node): float32 {.inline.} =
+  node.internal.strokeWeight
+
+proc strokeAlign*(node: Node): StrokeAlign {.inline.} =
+  node.internal.strokeAlign
+
+proc strokeGeometry*(node: Node): seq[Geometry] {.inline.} =
+  node.internal.strokeGeometry
+
+proc cornerRadius*(node: Node): float32 {.inline.} =
+  node.internal.cornerRadius
+
+proc rectangleCornerRadii*(node: Node): array[4, float32] {.inline.} =
+  node.internal.rectangleCornerRadii
+
+proc blendMode*(node: Node): BlendMode {.inline.} =
+  node.internal.blendMode
+
+proc fills*(node: Node): seq[Paint] {.inline.} =
+  node.internal.fills
+
+proc strokes*(node: Node): seq[Paint] {.inline.} =
+  node.internal.strokes
+
+proc effects*(node: Node): seq[Effect] {.inline.} =
+  node.internal.effects
+
+proc children*(node: Node): seq[Node] {.inline.} =
+  cast[seq[Node]](node.internal.children)
+
+proc parent*(node: Node): Node {.inline.} =
+  cast[Node](node.internal.parent)
+
+proc wordWrap*(node: Node): bool {.inline.} =
+  node.internal.wordWrap
+
+proc `wordWrap=`*(node: Node, value: bool) =
+  node.internal.wordWrap = value
+  node.internal.markTreeDirty()
+
+proc scrollable*(node: Node): bool {.inline.} =
+  node.internal.scrollable
+
+proc `scrollable=`*(node: Node, value: bool) =
+  node.internal.scrollable = value
+  node.internal.markTreeDirty()
+
+proc scrollPos*(node: Node): Vec2 {.inline.} =
+  node.internal.scrollPos
+
+proc `scrollPos=`*(node: Node, value: Vec2) =
+  node.internal.scrollPos = value
+  node.internal.markTreeDirty()
+
+proc editable*(node: Node): bool {.inline.} =
+  node.internal.editable
+
+proc `editable=`*(node: Node, value: bool) =
+  node.internal.editable = value
+  node.internal.markTreeDirty()
+
+proc dirty*(node: Node): bool {.inline.} =
+  node.internal.dirty
+
+proc `dirty=`*(node: Node, value: bool) =
+  node.internal.dirty = value
+
+proc prototypeStartNodeID*(node: Node): string {.inline.} =
+  node.internal.prototypeStartNodeID
 
 proc path*(node: Node): string =
   ## Returns the full path of the node back to the root.
-  var walkNode = node
-  while walkNode != nil and walkNode.kind != DocumentNode:
-    result = "/" & walkNode.name & result
-    walkNode = walkNode.parent
+  node.internal.path()
 
 proc markTreeDirty*(node: Node) =
-  ## Marks the entire tree dirty or not dirty.
-  node.dirty = true
-  for c in node.children:
-    markTreeDirty(c)
-
-proc markTreeClean*(node: Node) =
-  ## Marks the entire tree dirty or not dirty.
-  node.dirty = false
-  for c in node.children:
-    markTreeClean(c)
-
-proc checkDirty*(node: Node) =
-  ## Makes sure that if children are dirty, parents are dirty too.
-  for c in node.children:
-    checkDirty(c)
-    if c.dirty == true:
-      node.dirty = true
-      break
-
-proc printDirtyStatus*(node: Node, indent = 0) =
-  ## Prints the dirty status of a node and its children.
-  echo " ".repeat(indent), node.name, ":", node.dirty
-  for child in node.children:
-    printDirtyStatus(child, indent + 1)
+  node.internal.markTreeDirty()
 
 proc makeTextDirty*(node: Node) =
-  ## Marks a text node as dirty and clears its arrangement.
-  node.dirty = true
-  if node.kind == TextNode:
-    node.arrangement = nil
-    node.computeArrangement()
-
-proc `text=`*(node: Node, text: string) =
-  ## Sets the text content of a text node.
-  if node.kind != TextNode:
-    echo "Trying to set text of non text node: '" & node.path & "'"
-  if node.characters != text:
-    node.characters = text
-    node.makeTextDirty()
+  node.internal.makeTextDirty()
 
 proc text*(node: Node): string =
   ## Gets the text content of a text node.
   if node.kind != TextNode:
     echo "Trying to get text of non text node: '" & node.path & "'"
-  return node.characters
+  return node.internal.characters
+
+proc `text=`*(node: Node, value: string) =
+  node.internal.text = value
+  node.internal.markTreeDirty()
 
 proc show*(node: Node) =
   ## Shows a node by making it visible.
-  node.visible = true
-  node.markTreeDirty()
+  node.internal.visible = true
+  node.internal.markTreeDirty()
 
 proc hide*(node: Node) =
   ## Hides a node by making it invisible.
-  node.visible = false
-  node.markTreeDirty()
+  node.internal.visible = false
+  node.internal.markTreeDirty()
 
 proc show*(nodes: seq[Node]) =
   ## Shows multiple nodes.
@@ -77,29 +189,38 @@ proc hide*(nodes: seq[Node]) =
   for node in nodes:
     node.hide()
 
-proc findNodeById*(id: string): Node =
-  ## Finds a node by ID (slow).
-  proc search(node: Node): Node =
-    if node.id == id:
-      return node
-    for n in node.children:
-      let c = search(n)
-      if c != nil:
-        return c
-  return search(figmaFile.document)
+proc visible*(node: Node): bool =
+  ## Checks if the node is visible.
+  node.internal.visible
 
-var deleteNodeHook*: proc(node: Node)
-proc removeChild*(parent, node: Node) =
-  ## Removes the node from the document.
-  for i, n in parent.children:
-    if n == node:
-      parent.children.delete(i)
-      for child in toSeq(node.children):
-        node.removeChild(child)
-      parent.markTreeDirty()
-      node.parent = nil
-      deleteNodeHook(node)
-      return
+proc `visible=`*(node: Node, value: bool) =
+  if value:
+    node.show()
+  else:
+    node.hide()
+
+proc opacity*(node: Node): float32 =
+  node.internal.opacity
+
+proc `opacity=`*(node: Node, value: float32) =
+  node.internal.opacity = value
+  node.internal.markTreeDirty()
+
+proc addChild*(parent, child: Node) =
+  ## Adds a child to a parent node.
+  parent.internal.addChild(child.internal)
+  parent.internal.markTreeDirty()
+
+proc removeChild*(parent: Node, child: Node) =
+  ## Removes a child from a parent.
+  parent.internal.removeChild(child.internal)
+  parent.internal.markTreeDirty()
+
+proc removeChildren*(parent: Node, children: seq[Node]) =
+  ## Removes multiple children from a parent.
+  for child in toSeq(children):
+    parent.internal.removeChild(child.internal)
+  parent.internal.markTreeDirty()
 
 proc remove*(node: Node) =
   ## Removes a node from its parent.
@@ -111,271 +232,41 @@ proc remove*(nodes: seq[Node]) =
     node.remove()
 
 proc removeChildren*(node: Node) =
-  ## Removes all children from a node.
-  for child in toSeq(node.children):
-    node.removeChild(child)
-
-proc assignIdsToTree(node: Node) =
-  ## Walks the tree giving everyone a new ID.
-  node.id = $rand(int.high)
-  for c in node.children:
-    c.assignIdsToTree()
-
-proc copy[T](a: T): T =
-  ## Copies a value.
-  toFlatty(a).fromFlatty(T)
+  ## Clears a node and its children.
+  node.internal.removeChildren()
+  node.internal.markTreeDirty()
 
 proc copy*(node: Node): Node =
-  ## Copies a node creating a new one.
-  result = Node()
-
-  template copyField(x: untyped) =
-    result.x = node.x.copy()
-
-  # Base
-  copyField componentId
-  copyField name
-  copyField kind
-  if node.kind == ComponentNode:
-    result.kind = InstanceNode
-  # Transform
-  copyField position
-  copyField origPosition
-  copyField size
-  copyField origSize
-  copyField rotation
-  copyField scale
-  copyField flipHorizontal
-  copyField flipVertical
-  copyField size
-  # Shape
-  copyField fillGeometry
-  copyField strokeWeight
-  copyField strokeAlign
-  copyField strokeGeometry
-  copyField cornerRadius
-  copyField rectangleCornerRadii
-  # Visual
-  copyField blendMode
-  copyField fills
-  copyField strokes
-  copyField effects
-  copyField opacity
-  copyField visible
-  # Masking
-  copyField isMask
-  copyField isMaskOutline
-  copyField booleanOperation
-  copyField clipsContent
-  # Text
-  copyField characters
-  copyField style
-  # Layout
-  copyField constraints
-  copyField layoutAlign
-  copyField layoutGrids
-  copyField layoutMode
-  copyField itemSpacing
-  copyField counterAxisSizingMode
-  copyField paddingLeft
-  copyField paddingRight
-  copyField paddingTop
-  copyField paddingBottom
-  copyField overflowDirection
-
-  for child in node.children:
-    let childNode = child.copy()
-    childNode.parent = result
-    result.children.add(childNode)
-
-  result.assignIdsToTree()
+  Node(node.internal.copy())
 
 proc newInstance*(node: Node): Node =
   ## Creates a new instance of a master node.
   doAssert node != nil
   doAssert node.kind == ComponentNode
   result = node.copy()
-  result.componentId = node.id
+  result.internal.componentId = node.id
 
-proc addChild*(parent, child: Node) =
-  ## Adds a child to a parent node.
-  if child.parent != nil:
-    child.parent.children.delete(child.parent.children.find(child))
-    child.parent.markTreeDirty()
-    child.parent = nil
-  parent.children.add(child)
-  child.parent = parent
-  parent.markTreeDirty()
+proc isInstance*(node: Node): bool =
+  ## Checks if node is an instance node.
+  ## And can have variants.
+  node.internal.isInstance()
 
-proc inTree*(node, other: Node): bool =
-  ## Returns true if node is a subnode of the other.
-  var node = node
-  while node != nil:
-    if node.id == other.id:
-      return true
-    node = node.parent
+proc masterComponent*(node: Node): Node =
+  ## Gets the master component if this is an instance and it exists.
+  node.internal.masterComponent().Node()
 
-proc normalize(props: var seq[(string, string)]) =
-  ## Makes sure that prop names are sorted.
-  props.sort proc(a, b: (string, string)): int = cmp(a[0], b[0])
+proc hasVariant*(node: Node, name, value: string): bool =
+  ## Checks if the node has a variant.
+  node.internal.hasVariant(name, value)
 
-proc parseName(name: string): seq[(string, string)] =
-  ## Parses a name like "State=Off,Color=blue" into PropName.
-  for pair in name.split(","):
-    let
-      arr = pair.split("=")
-    if arr.len >= 2:
-      let
-        k = arr[0]
-        v = arr[1]
-      result.add((k.strip(), v.strip()))
-  result.normalize()
-
-func `[]`*(query: seq[(string, string)], key: string): string =
-  ## Gets a key out of PropName.
-  for (k, v) in query:
-    if k == key:
-      return v
-
-func contains*(query: seq[(string, string)], key: string): bool =
-  ## Does the query contain this key?
-  for (k, v) in query:
-    if k == key:
-      return true
-
-func `[]=`*(query: var seq[(string, string)], key, value: string) =
-  ## Sets a key in the PropName. If key is not there appends a
-  ## new key-value pair at the end.
-  for pair in query.mitems:
-    if pair[0] == key:
-      pair[1] = value
-      return
-  query.add((key, value))
-
-proc triMerge(current, previousMaster, currentMaster: Node) =
-  ## Does a tri-merge of the node trees.
-
-  # How does it work? Just like Figma.
-  # Components have master components. The nodes are very similar their master.
-  # But different in some key ways. Well we want to preserve the differences.
-  # So when we change the master component, to a different one, we want to
-  # preserve the differences only, but change the similar properties.
-
-  # If current.x and previousMaster.x are same, we can change to currentMaster.x
-  template mergeField(x: untyped) =
-    if current.x == previousMaster.x:
-      current.x = currentMaster.x
-      current.dirty = true
-
-  template mergeArray(x: untyped) =
-    for i in 0 ..< current.x.len:
-      if current.x[i].similar(previousMaster.x[i]):
-        current.x[i] = currentMaster.x[i]
-        current.dirty = true
-
-  # Ids
-  mergeField componentId
-  # Transform
-  mergeField position
-  mergeField origPosition
-  mergeField rotation
-  mergeField scale
-  mergeField flipHorizontal
-  mergeField flipVertical
-  # Shape
-  mergeField fillGeometry
-  mergeField strokeWeight
-  mergeField strokeAlign
-  mergeField strokeGeometry
-  mergeField cornerRadius
-  mergeField rectangleCornerRadii
-  # Visual
-  mergeField blendMode
-  mergeArray fills
-  mergeArray strokes
-  mergeField effects
-  mergeField opacity
-  mergeField visible
-  # Masking
-  mergeField isMask
-  mergeField isMaskOutline
-  mergeField booleanOperation
-  mergeField clipsContent
-  # Text
-  mergeField characters
-  mergeField style
-  # Layout
-  mergeField constraints
-  mergeField layoutAlign
-  mergeField layoutGrids
-  mergeField layoutMode
-  mergeField itemSpacing
-  mergeField counterAxisSizingMode
-  mergeField paddingLeft
-  mergeField paddingRight
-  mergeField paddingTop
-  mergeField paddingBottom
-  mergeField overflowDirection
-
-  let minChildren = min(min(
-    current.children.len,
-    previousMaster.children.len),
-    current.children.len
-  )
-
-  for i in 0 ..< minChildren:
-    if current.children[i].kind == InstanceNode and
-      previousMaster.children[i].kind == InstanceNode and
-      currentMaster.children[i].kind == InstanceNode:
-      # Don't do anything with instance nodes.
-      continue
-    elif current.children[i].name == previousMaster.children[i].name and
-      current.children[i].name == currentMaster.children[i].name:
-      triMerge(
-        current.children[i],
-        previousMaster.children[i],
-        currentMaster.children[i]
-      )
-    else:
-      echo "name error?", current.children[i].path
-      echo "node.kind ", current.children[i].kind
-      echo "current name     ", current.children[i].name
-      echo "name prev master ", previousMaster.children[i].name
-      echo "name curr master ", currentMaster.children[i].name
+proc getVariant*(node: Node, name: string): string =
+  ## Gets the variant of the node.
+  node.internal.getVariant(name)
 
 proc setVariant*(node: Node, name, value: string) =
-  ## Changes the variant of the node.
-  var previousMaster = findNodeById(node.componentId)
-  if previousMaster == nil:
-    echo "Previous master not found for node: '" & node.path & "'"
-    return
-  var props = previousMaster.name.parseName()
-  if props[name] == value:
-    # no change
-    return
-  props[name] = value
-  props.normalize()
-
-  var componentSet = previousMaster.parent
-  var foundNode: Node
-  for n in componentSet.children:
-    var nodeProps = n.name.parseName()
-    if nodeProps == props:
-      foundNode = n
-      break
-
-  if foundNode != nil:
-    var currentMaster = foundNode
-    var currentPos = node.position
-    triMerge(node, previousMaster, currentMaster)
-    node.position = currentPos
-    node.componentId = currentMaster.id
-  else:
-    var needName = ""
-    for (k, v) in props:
-      needName &= k & "=" & v & ","
-    needName.removeSuffix(",")
-    echo "Node '", needName, "' not found in component set: ", node.path
+  ## Sets the variant of the node.
+  node.internal.setVariant(name, value)
+  node.internal.markTreeDirty()
 
 proc setVariant*(nodes: seq[Node], name, value: string) =
   ## Changes the variant of the nodes.
@@ -389,62 +280,44 @@ proc setVariant*(node: Node, name: string, value: bool) =
   else:
     node.setVariant(name, "False")
 
-proc hasVariant*(node: Node, name, value: string): bool =
-  ## Checks if the variant exists for the node.
-  var previousMaster = findNodeById(node.componentId)
-  if previousMaster != nil:
-    var props = previousMaster.name.parseName()
-    props[name] = value
-    props.normalize()
-    var componentSet = previousMaster.parent
-    for n in componentSet.children:
-      var nodeProps = n.name.parseName()
-      if nodeProps == props:
-        return true
-
-proc getVariant*(node: Node, name: string): string =
-  ## Gets the variant for the node.
-  var previousMaster = findNodeById(node.componentId)
-  var props = previousMaster.name.parseName()
-  if name in props:
-    return props[name]
-
-proc isInstance*(node: Node): bool =
-  ## Checks if node is an instance node.
-  ## And can have variants.
-  node.componentId != ""
-
-proc masterComponent*(node: Node): Node =
-  ## Gets the master component if this is an instance and it exists.
-  findNodeById(node.componentId)
-
 proc childIndex*(node: Node): int =
   ## Gets the child index of the node.
-  node.parent.children.find(node)
+  node.parent.internal.children.find(node.internal)
+
+proc inTree*(node, other: Node): bool =
+  ## Checks if the node is a subnode of the other.
+  node.internal.inTree(other.internal)
 
 proc sendToFront*(node: Node) =
   ## Sends the node to the front of the parent's children.
-  node.parent.children.delete(node.parent.children.find(node))
-  node.parent.children.add(node)
+  node.parent.internal.removeChild(node.internal)
+  node.parent.internal.children.add(node.internal)
+  node.parent.markTreeDirty()
 
 proc sendToBack*(node: Node) =
   ## Sends the node to the back of the parent's children.
-  node.parent.children.delete(node.parent.children.find(node))
-  node.parent.children.insert(node, 0)
+  node.parent.internal.removeChild(node.internal)
+  node.parent.internal.children.insert(node.internal, 0)
+  node.parent.markTreeDirty()
 
 proc sendForward*(node: Node) =
   ## Sends the node forward in the parent's children.
-  node.parent.children.delete(node.parent.children.find(node))
-  node.parent.children.add(node)
+  let index = node.parent.children.find(node)
+  node.parent.internal.children.delete(index)
+  node.parent.internal.children.insert(node.internal, index + 1)
+  node.parent.markTreeDirty()
 
 proc sendBackward*(node: Node) =
   ## Sends the node backward in the parent's children.
-  node.parent.children.delete(node.parent.children.find(node))
-  node.parent.children.insert(node, 0)
+  let index = node.parent.children.find(node)
+  node.parent.internal.children.delete(index)
+  node.parent.internal.children.insert(node.internal, index - 1)
+  node.parent.markTreeDirty()
 
-proc dumpTree*(node: Node, indent: string = ""): string =
-  ## Dumps the tree to a string.
-  result = indent & node.name & "\n"
-  for child in node.children:
-    result &= dumpTree(child, indent & "  ")
-  return result
+proc dumpTree*(node: Node): string =
+  node.internal.dumpTree()
+
+proc `onRenderCallback=`*(node: Node, callback: proc(thisNode: Node) {.closure.}) =
+  ## Sets the on render callback for a node.
+  let castedCallback = cast[proc(thisNode: INode) {.closure.}](callback)
+  node.internal.onRenderCallback = castedCallback

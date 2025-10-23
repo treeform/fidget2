@@ -24,7 +24,7 @@ proc draw(a, b: Image) {.measure.} =
   ## Draws image b onto image a, wrapped for metrics.
   pixie.draw(a, b)
 
-proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measure.} =
+proc computeIntBounds*(node: INode, mat: Mat3, withChildren=false): Rect {.measure.} =
   ## Compute self bounds of a given node.
 
   # Generate the geometry.
@@ -90,10 +90,10 @@ proc computeIntBounds*(node: Node, mat: Mat3, withChildren=false): Rect {.measur
         withChildren
       )
 
-proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
+proc underMouse*(screenNode: INode, mousePos: Vec2): seq[INode] {.measure.} =
   ## Computes a list of nodes under the mouse.
 
-  proc visit(node: Node, mat: Mat3, mousePos: Vec2, s: var seq[Node]): bool =
+  proc visit(node: INode, mat: Mat3, mousePos: Vec2, s: var seq[INode]): bool =
     ## Visits each node and checks if its geometry overlaps the mouse.
 
     let mat = mat * node.transform()
@@ -130,7 +130,7 @@ proc underMouse*(screenNode: Node, mousePos: Vec2): seq[Node] {.measure.} =
 
   discard screenNode.visit(screenNode.transform().inverse(), mousePos, result)
 
-proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
+proc toPixiePaint(paint: schema.Paint, node: INode): pixie.Paint =
   ## Converts a Figma paint to a pixie paint.
   let paintKind = case paint.kind:
     of schema.pkSolid: SolidPaint
@@ -154,7 +154,7 @@ proc toPixiePaint(paint: schema.Paint, node: Node): pixie.Paint =
     result.gradientHandlePositions.setLen(2)
   result.gradientStops = paint.gradientStops
 
-proc drawFill(node: Node, paint: Paint): Image {.measure.} =
+proc drawFill(node: INode, paint: Paint): Image {.measure.} =
   ## Creates a fill image based on the paint.
   result = newImage(layer.width, layer.height)
 
@@ -250,7 +250,7 @@ proc drawFill(node: Node, paint: Paint): Image {.measure.} =
   of schema.PaintKind.pkGradientDiamond:
     result.fillGradient(paint.toPixiePaint(node))
 
-proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.measure.} =
+proc drawPaint*(node: INode, paints: seq[Paint], geometries: seq[Geometry]) {.measure.} =
   ## Draws a paint onto a node.
 
   if paints.len == 0 or geometries.len == 0:
@@ -295,7 +295,7 @@ proc drawPaint*(node: Node, paints: seq[Paint], geometries: seq[Geometry]) {.mea
       fillImage.draw(mask, blendMode = MaskBlend)
       layer.draw(fillImage, blendMode = paint.blendMode)
 
-proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Image) {.measure.} =
+proc drawInnerShadowEffect*(effect: Effect, node: INode, fillMask: Image) {.measure.} =
   ## Draws the inner shadow.
   var shadow = newImage(fillMask.width, fillMask.height)
   shadow.draw(fillMask, translate(effect.offset), blendMode = OverwriteBlend)
@@ -312,7 +312,7 @@ proc drawInnerShadowEffect*(effect: Effect, node: Node, fillMask: Image) {.measu
   # Draw it back.
   layer.draw(color)
 
-proc maskSelfImage*(node: Node): Image {.measure.} =
+proc maskSelfImage*(node: INode): Image {.measure.} =
   ## Returns a self mask (used for clips-content).
   var mask = newImage(layer.width, layer.height)
   let paint = newPaint(SolidPaint)
@@ -326,14 +326,14 @@ proc maskSelfImage*(node: Node): Image {.measure.} =
     )
   return mask
 
-proc drawInnerShadow(node: Node) =
+proc drawInnerShadow(node: INode) =
   ## Draws the inner shadow.
   for effect in node.effects:
     if effect.visible:
       if effect.kind == InnerShadow:
         drawInnerShadowEffect(effect, node, node.maskSelfImage())
 
-proc drawGeometry*(node: Node) {.measure.} =
+proc drawGeometry*(node: INode) {.measure.} =
   ## Draws the geometry of a node.
   if node.strokeGeometry.len == 0:
     # No stroke just fill.
@@ -387,7 +387,7 @@ proc drawGeometry*(node: Node) {.measure.} =
       strokeLayer.draw(fillMask, blendMode = SubtractMaskBlend)
       layer.draw(strokeLayer)
 
-proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: Node) {.measure.} =
+proc drawDropShadowEffect*(lowerLayer: Image, layer: Image, effect: Effect, node: INode) {.measure.} =
   ## Draws the drop shadow.
   var shadow = newImage(layer.width, layer.height)
   shadow.draw(layer, blendMode = OverwriteBlend)
@@ -405,7 +405,7 @@ proc drawBackgroundBlur*(lowerLayer: Image, effect: Effect) {.measure.} =
   blurLayer.draw(layer)
   layer = blurLayer
 
-proc drawText*(node: Node) {.measure.} =
+proc drawText*(node: INode) {.measure.} =
   ## Draws the text (including editing of text).
   node.computeArrangement()
   # Scroll inside the text box
@@ -473,9 +473,9 @@ proc drawText*(node: Node) {.measure.} =
   ## Fills the text arrangement.
   layer.fillText(node.arrangement, mat)
 
-proc drawNode*(node: Node, withChildren=true)
+proc drawNode*(node: INode, withChildren=true)
 
-proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
+proc drawBooleanNode*(node: INode, blendMode: BlendMode) =
   ## Draws a boolean subnode.
   let prevMat = mat
   mat = mat * node.transform()
@@ -507,7 +507,7 @@ proc drawBooleanNode*(node: Node, blendMode: BlendMode) =
 
   mat = prevMat
 
-proc drawBoolean*(node: Node) {.measure.} =
+proc drawBoolean*(node: INode) {.measure.} =
   ## Draws a boolean node.
   maskLayer = newImage(layer.width, layer.height)
   mat = mat * node.transform().inverse()
@@ -519,7 +519,7 @@ proc drawBoolean*(node: Node) {.measure.} =
     fillImage.draw(maskLayer, blendMode = MaskBlend)
     layer.draw(fillImage)
 
-proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
+proc drawNodeInternal*(node: INode, withChildren=true) {.measure.} =
   ## Draws the internal parts of a node, with or without children.
 
   if not node.visible or node.opacity == 0:
@@ -635,7 +635,7 @@ proc drawNodeInternal*(node: Node, withChildren=true) {.measure.} =
       layer = lowerLayer
     measurePop()
 
-proc drawNode*(node: Node, withChildren=true) {.measure.} =
+proc drawNode*(node: INode, withChildren=true) {.measure.} =
   ## Draws a node.
   let prevMat = mat
   mat = mat * node.transform()
@@ -648,13 +648,19 @@ proc drawNode*(node: Node, withChildren=true) {.measure.} =
 
   mat = prevMat
 
-proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
+proc layoutPass*(node: INode) {.measure.} =
+  ## Performs a layout pass on a node.
+  for i in 0 ..< 2:
+    # TODO: figure out optimal number of passes.
+    computeLayout(nil, node)
+
+proc drawCompleteFrame*(node: INode): pixie.Image {.measure.} =
   ## Draws the complete frame with all child nodes.
   let
     w = node.size.x.int
     h = node.size.y.int
 
-  computeLayout(nil, node)
+  layoutPass(node)
 
   layer = newImage(w, h)
   mat = translate(-node.position)
@@ -666,7 +672,6 @@ proc drawCompleteFrame*(node: Node): pixie.Image {.measure.} =
   return layer
 
 proc setupWindow*(
-  frameNode: Node,
   size: IVec2,
   visible = true,
   style = Decorated

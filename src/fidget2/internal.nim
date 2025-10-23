@@ -16,7 +16,7 @@ var
   mat*: Mat3
 
   ## Node that is currently being hovered over.
-  hoverNode*: Node
+  hoverNode*: INode
 
   running*: bool
 
@@ -27,7 +27,7 @@ var
   entryFramePath*: string
 
   ## Node that is focused and has the current text box.
-  textBoxFocus*: Node
+  textBoxFocus*:INode
 
   ## Default text highlight color (blueish by default).
   defaultTextBackgroundHighlightColor* = rgbx(50, 150, 250, 255)
@@ -45,7 +45,7 @@ proc resetCursorBlink*() =
   cursorBlinkTime = epochTime()
   cursorVisible = true
 
-proc transform*(node: Node): Mat3 =
+proc transform*(node: INode): Mat3 =
   ## Returns Mat3 transform of the node.
   result = translate(node.position)
   if node.flipHorizontal:
@@ -93,7 +93,7 @@ proc getFont*(fontName: string): Font =
     typefaceCache[fontName] = typeface
   newFont(typefaceCache[fontName])
 
-proc rectangleFillGeometry(node: Node): Geometry =
+proc rectangleFillGeometry(node: INode): Geometry =
   ## Creates a fill geometry from a rectangle-like node.
   result = Geometry()
   result.path = newPath()
@@ -128,7 +128,7 @@ proc rectangleFillGeometry(node: Node): Geometry =
       h = node.size.y,
     )
 
-proc rectangleStrokeGeometry(node: Node): Geometry =
+proc rectangleStrokeGeometry(node: INode): Geometry =
   ## Creates a stroke geometry from a rectangle-like node.
   result = Geometry()
   result.path = newPath()
@@ -191,7 +191,7 @@ proc rectangleStrokeGeometry(node: Node): Geometry =
       clockwise = false
     )
 
-proc genFillGeometry*(node: Node) {.measure.} =
+proc genFillGeometry*(node: INode) {.measure.} =
   ## Either gets existing geometry (VectorNode etc..)
   ## or generates it if (FrameNode, GroupNode...).
   case node.kind:
@@ -200,7 +200,7 @@ proc genFillGeometry*(node: Node) {.measure.} =
   else:
     discard
 
-proc genStrokeGeometry*(node: Node) {.measure.} =
+proc genStrokeGeometry*(node: INode) {.measure.} =
   ## Either gets existing geometry (VectorNode etc..)
   ## or generates it if (FrameNode, GroupNode...).
   case node.kind:
@@ -209,8 +209,8 @@ proc genStrokeGeometry*(node: Node) {.measure.} =
   else:
     discard
 
-proc genHitTestGeometry*(node: Node) {.measure.} =
-  ## Generates geometry thats a simple rect over the node,
+proc genHitTestGeometry*(node: INode) {.measure.} =
+  ## Generates geometry that's a simple rect over the node,
   ## no matter what kind of node it is.
   ## Used for simple mouse hit prediction
   var geom = Geometry()
@@ -270,7 +270,7 @@ proc cursorWidth*(font: Font): float =
   ## Returns the width of the cursor.
   min(font.size / 12, 1)
 
-proc selection*(node: Node): HSlice[int, int] =
+proc selection*(node: INode): HSlice[int, int] =
   ## Returns the current selection from the node.
   result.a = min(node.cursor, node.selector)
   result.b = max(node.cursor, node.selector)
@@ -306,7 +306,7 @@ proc modifySpans(spans: var seq[Span], slice: HSlice[int, int]): seq[Span] =
     spans.insert(start, i)
     break
 
-proc computeArrangement*(node: Node) {.measure.} =
+proc computeArrangement*(node: INode) {.measure.} =
   ## Computes the arrangement of a node.
   if node.arrangement != nil:
     return
@@ -393,7 +393,7 @@ proc computeArrangement*(node: Node) {.measure.} =
       node.arrangement.positions[i].y -= leadingTrim
       node.arrangement.selectionRects[i].y -= leadingTrim
 
-proc font*(node: Node): Font =
+proc font*(node: INode): Font =
   ## Gets the font of a node.
   node.computeArrangement()
   if node.spans.len > 0:
@@ -401,9 +401,9 @@ proc font*(node: Node): Font =
   else:
     node.style.getFont()
 
-proc genTextGeometry*(node: Node) {.measure.} =
-  ## Generates text bounds geometry, can be more or less then
-  ## nodes hit area. Effected by internal scroll.
+proc genTextGeometry*(node: INode) {.measure.} =
+  ## Generates text bounds geometry; can be more or less than
+  ## the node's hit area. Affected by internal scroll.
   var geom = Geometry()
   geom.path = newPath()
   geom.mat = mat3()
@@ -420,7 +420,7 @@ proc genTextGeometry*(node: Node) {.measure.} =
   )
   node.fillGeometry = @[geom]
 
-proc computeScrollBounds*(node: Node): Rect =
+proc computeScrollBounds*(node: INode): Rect =
   ## Computes the scroll bounds of a node.
   if node.kind != TextNode:
     for child in node.children:
@@ -430,7 +430,7 @@ proc computeScrollBounds*(node: Node): Rect =
     result.wh = node.arrangement.layoutBounds()
   result.h = max(0, result.h - node.size.y)
 
-proc overlaps*(node: Node, mouse: Vec2): bool =
+proc overlaps*(node: INode, mouse: Vec2): bool =
   ## Does the mouse overlap the node?
   # Generates the geometry.
   if node.kind == TextNode:

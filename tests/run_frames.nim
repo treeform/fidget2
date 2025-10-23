@@ -50,10 +50,10 @@ proc main(r = "", e = "", l = 10000) =
       "gpu",
       "gpu_vs_zpu", "hyb", "cpu_vs_hyb"
     ]:
-      setupWindow(frame, size = ivec2(800, 600), visible = false, style = Decorated)
+      setupWindow(size = ivec2(800, 600), visible = false, style = Decorated)
       firstTime = false
 
-    proc drawFrame(frame: Node): Image =
+    proc drawFrame(frame: INode): Image =
       when defined(cpu):
         result = drawCompleteFrame(frame)
       elif defined(hyb):

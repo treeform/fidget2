@@ -1,9 +1,7 @@
 import
   std/[algorithm, os, json, strformat, strutils, tables, unicode, times],
   bumpy, pixie, vmath, windy,
-  common, globs, internal, loader, nodes, measure, schema, textboxes
-
-export textboxes, nodes, common, windy
+  common, globs, internal, loader, nodes, inodes, measure, schema, textboxes
 
 const
   ## After N pixels of mouse button down and dragging,
@@ -35,10 +33,10 @@ type
     ## Called only once per node.
     OnLoad
     ## Called once per frame.
-    ## NOTE: Can caused performance issues if overused.
+    ## NOTE: Can cause performance issues if overused.
     OnFrame
     ## When a node is displayed.
-    ## NOTE: Can caused performance issues if overused.
+    ## NOTE: Can cause performance issues if overused.
     OnDisplay
     ## When a text node is edited.
     ## Only text nodes with this event can be edited.
@@ -102,9 +100,7 @@ var
   navigationHistory*: seq[Node]
   onResizeCache: Table[string, Vec2]
 
-  traceOneFrameRequested: bool
   traceActive: bool
-  traceOutputPath: string
 
 proc display()
 
@@ -175,7 +171,7 @@ template find*(glob: string, body: untyped) =
 
 proc focused*(node: Node): bool =
   ## Checks if a node is focused.
-  node == textBoxFocus
+  node.internal == textBoxFocus
 
 template onLoad*(body: untyped) =
   ## Called when the node is loaded.
@@ -278,7 +274,7 @@ template onButtonPress*(body: untyped) =
   )
 
 template onButtonRelease*(body: untyped) =
-  ## When a key is pressed.
+  ## When a key is released.
   addCb(
     OnButtonRelease,
     100,
@@ -299,10 +295,10 @@ template onResize*(body: untyped) =
 
 proc setupTextBox(node: Node) =
   ## Sets up this node as a text box.
-  keyboard.onUnfocusNode = textBoxFocus
-  textBoxFocus = node
+  keyboard.onUnfocusNode = textBoxFocus.Node()
+  textBoxFocus = node.internal
   node.dirty = true
-  keyboard.onFocusNode = textBoxFocus
+  keyboard.onFocusNode = textBoxFocus.Node()
 
   if keyboard.onUnfocusNode != nil:
     keyboard.onUnfocusNode.dirty = true
@@ -313,12 +309,16 @@ proc setupTextBox(node: Node) =
   node.scrollable = true
   node.editable = true
 
-proc relativeMousePos*(window: Window, node: Node): Vec2 =
+proc relativeMousePos*(window: Window, node: INode): Vec2 =
   ## Gets the mouse position relative to a node.
   let
     mat = scale(vec2(1, 1) / window.contentScale) *
       node.mat * translate(-node.scrollPos)
   return mat.inverse() * window.mousePos.vec2
+
+proc relativeMousePos*(window: Window, node: Node): Vec2 =
+  ## Gets the mouse position relative to a node.
+  relativeMousePos(window, node.internal)
 
 proc textBoxKeyboardAction(button: Button) =
   ## Handles keyboard actions for text boxes.
@@ -401,7 +401,7 @@ proc textBoxKeyboardAction(button: Button) =
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
-        cb.handler(textBoxFocus)
+        cb.handler(textBoxFocus.Node())
 
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
@@ -417,7 +417,7 @@ proc onRune(rune: Rune) =
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
         thisSelector = textBoxFocus.path
-        cb.handler(textBoxFocus)
+        cb.handler(textBoxFocus.Node())
 
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
@@ -429,7 +429,10 @@ proc onScroll() =
   if textBoxFocus != nil:
     textBoxFocus.scrollBy(-window.scrollDelta.y * 50)
 
-  let hoverNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+  let hoverNodes = underMouse(
+    thisFrame.internal,
+    window.mousePos.vec2 / window.contentScale
+  )
 
   for node in hoverNodes:
     if node.overflowDirection == VerticalScrolling:
@@ -560,7 +563,7 @@ proc onMouseMove() =
   if textBoxFocus != nil:
     if window.buttonDown[MouseLeft]:
       textBoxFocus.mouseAction(
-        window.relativeMousePos(textBoxFocus),
+        window.relativeMousePos(textBoxFocus.Node()),
         false,
         false
       )
@@ -569,13 +572,20 @@ proc swapBuffers() {.measure.} =
   ## Swaps the display buffers.
   window.swapBuffers()
 
-proc processEvents() {.measure.} =
+proc underMouse(node: Node, mousePos: Vec2): seq[Node] =
+  ## Gets the nodes under the mouse.
+  cast[seq[Node]](underMouse(node.internal, mousePos))
+
+proc processEvents() =
   ## Processes window and input events.
 
   thisCursor = Cursor(kind: ArrowCursor)
 
   # Get the node list under the mouse.
-  hoverNodes = underMouse(thisFrame, window.mousePos.vec2 / window.contentScale)
+  hoverNodes = underMouse(
+    thisFrame,
+    window.mousePos.vec2 / window.contentScale
+  )
 
   # echo "hoverNodes: "
   # for n in hoverNodes:
@@ -592,7 +602,7 @@ proc processEvents() {.measure.} =
   var hovering = false
   if hoverNode != nil:
     for n in hoverNodes:
-      if n == hoverNode:
+      if n.internal == hoverNode:
         hovering = true
         break
 
@@ -608,12 +618,12 @@ proc processEvents() {.measure.} =
         # Is an instance has potential to Down.
         if n.hasVariant("State", "Down"):
           stateDown = true
-          hoverNode = n
+          hoverNode = n.internal
           n.setVariant("State", "Down")
 
       # Is an instance has potential to hover.
       if not stateDown and n.hasVariant("State", "Hover"):
-        hoverNode = n
+        hoverNode = n.internal
         n.setVariant("State", "Hover")
 
   for cb in eventCbs:
@@ -627,8 +637,8 @@ proc processEvents() {.measure.} =
     of OnShow:
       for node in findAll(thisCb.glob):
         if node.inTree(thisFrame):
-          if node.shown == false:
-            node.shown = true
+          if node.internal.shown == false:
+            node.internal.shown = true
             thisSelector = thisCb.glob
             thisCb.handler(node)
 
@@ -661,8 +671,8 @@ proc processEvents() {.measure.} =
     of OnHide:
       for node in findAll(thisCb.glob):
         if not node.inTree(thisFrame):
-          if node.shown == true:
-            node.shown = false
+          if node.internal.shown == true:
+            node.internal.shown = false
             thisCb.handler(node)
 
     of OnMouseMove:
@@ -687,8 +697,8 @@ proc processEvents() {.measure.} =
       for node in findAll(thisCb.glob):
         if node.inTree(thisFrame):
           if node.path notin onResizeCache or
-            onResizeCache[node.path] != node.size:
-              onResizeCache[node.path] = node.size
+            onResizeCache[node.path] != node.size.vec2:
+              onResizeCache[node.path] = node.size.vec2
               thisCb.handler(node)
 
     of OnDragStart:
@@ -701,13 +711,13 @@ proc processEvents() {.measure.} =
               if dragDistance.length > DragThreshold:
                 dragNode = dragCandidate
                 thisCb.handler(dragNode)
-                dragCandidate = nil
+                dragCandidate = Node(nil)
             # First: we get a candidate drag node, but it's not the drag node yet.
             if window.buttonPressed[MouseLeft] and node in hoverNodes:
               dragCandidate = node
               dragCandidatePos = window.mousePos.vec2
       if dragCandidate != nil and not window.buttonDown[MouseLeft]:
-        dragCandidate = nil
+        dragCandidate = Node(nil)
 
     of OnDrag:
       if dragNode != nil:
@@ -720,13 +730,13 @@ proc processEvents() {.measure.} =
         for node in findAll(thisCb.glob):
           if node.inTree(thisFrame) and node == dragNode:
             thisCb.handler(node)
-            dragNode = nil
+            dragNode = Node(nil)
 
     of OnDrop:
       # TODO: implement.
       discard
 
-  # Check if clicks on editable nodes.
+  # Check clicks on editable nodes.
   if window.buttonPressed[MouseLeft]:
     for selector in editableSelectors:
       for node in findAll(selector):
@@ -737,7 +747,7 @@ proc processEvents() {.measure.} =
             for cb in eventCbs:
               if cb.kind == OnUnfocus and cb.glob == textBoxFocus.path:
                 thisSelector = textBoxFocus.path
-                cb.handler(textBoxFocus)
+                cb.handler(textBoxFocus.Node())
 
           setupTextBox(node)
           textBoxFocus.mouseAction(
@@ -750,7 +760,7 @@ proc processEvents() {.measure.} =
           for cb in eventCbs:
             if cb.kind == OnFocus and cb.glob == textBoxFocus.path:
               thisSelector = node.path
-              cb.handler(textBoxFocus)
+              cb.handler(textBoxFocus.Node())
 
   if textBoxFocus != nil:
     let cursor = textBoxFocus.cursorRect()
@@ -769,18 +779,22 @@ proc processEvents() {.measure.} =
 
   when not defined(emscripten):
     if window.buttonPressed[KeyF3]:
-      traceOneFrameRequested = true
-      traceOutputPath = "tmp/trace.json"
+      if traceActive == false:
+        traceActive = true
+        startTrace()
+      else:
+        traceActive = false
+        endTrace()
+        dumpMeasures(0, "tmp/trace.json")
 
-  when not defined(emscripten):
     if window.buttonPressed[KeyF4]:
         echo "Writing 'atlas.png'"
         bxy.readAtlas().writeFile("atlas.png")
 
-  if window.buttonPressed[KeyF5]:
-    echo "Reloading from web '", currentFigmaUrl, "'"
-    figmaFile = loadFigmaUrl(currentFigmaUrl)
-    thisFrame = find(entryFramePath)
+    if window.buttonPressed[KeyF5]:
+      echo "Reloading from web '", currentFigmaUrl, "'"
+      figmaFile = loadFigmaUrl(currentFigmaUrl)
+      thisFrame = find(entryFramePath)
 
   if thisCursor.kind != window.cursor.kind:
     # Only set the cursor if it has changed.
@@ -855,15 +869,15 @@ proc display() {.measure.} =
       # Mark text box dirty if cursor is visible.
       textBoxFocus.makeTextDirty()
 
-  keyboard.onFocusNode = nil
-  keyboard.onUnfocusNode = nil
+  keyboard.onFocusNode = Node(nil)
+  keyboard.onUnfocusNode = Node(nil)
 
   window.runeInputEnabled = textBoxFocus != nil
 
   # thisFrame.dirty = true
-  thisFrame.checkDirty()
+  thisFrame.internal.checkDirty()
   if true or thisFrame.dirty:
-    drawToScreen(thisFrame)
+    drawToScreen(thisFrame.internal)
     swapBuffers()
   else:
     when defined(emscripten):
@@ -875,23 +889,9 @@ proc display() {.measure.} =
 
 proc tickFidget*() =
   ## Processes events and displays the frame.
-  when not defined(emscripten):
-    if traceOneFrameRequested and not traceActive:
-      traceActive = true
-      traceOneFrameRequested = false
-      startTrace()
-
   processEvents()
   display()
   pollEvents()
-
-  when not defined(emscripten):
-    if traceActive:
-      endTrace()
-      if not dirExists("tmp"):
-        createDir("tmp")
-      dumpMeasures(tracepath = traceOutputPath)
-      traceActive = false
 
 proc setupWindowAndEvents*(
   windowTitle: string,
@@ -899,7 +899,6 @@ proc setupWindowAndEvents*(
 ) =
   ## Sets up the window and events.
   hybridrender.setupWindow(
-    thisFrame,
     thisFrame.size.ivec2,
     style = windowStyle
   )
@@ -951,7 +950,7 @@ proc setupWindowAndEvents*(
 
   redisplay = true
 
-  # All all onLoad callbacks.
+  # Call all onLoad callbacks.
   for cb in eventCbs:
     if cb.kind == OnLoad:
       thisSelector = cb.glob

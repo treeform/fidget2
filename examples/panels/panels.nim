@@ -287,10 +287,6 @@ find "/UI/Main":
     rootArea.areas[0].addPanel("Super Panel 1")
     rootArea.areas[0].addPanel("Cool Panel 2")
 
-    # rootArea.areas[1].addPanel("Panel 3")
-    # rootArea.areas[1].addPanel("Panel 4")
-    # rootArea.areas[1].addPanel("Panel 5")
-
     rootArea.areas[1].split(Horizontal)
     rootArea.areas[1].split = 0.5
 
@@ -430,7 +426,7 @@ find "/UI/Main":
         rootArea.refresh()
 
 startFidget(
-  figmaUrl = "https://www.figma.com/design/CvLIH2hh6B6V3rgxNV2gMD",
+  figmaUrl = "https://www.figma.com/design/qbenAI0nezzmOmxdKFQDFU",
   windowTitle = "Panels Example",
   entryFrame = "UI/Main",
   windowStyle = DecoratedResizable
