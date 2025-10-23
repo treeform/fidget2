@@ -162,17 +162,17 @@ proc composite(node: INode) {.measure.} =
   if not node.visible or node.opacity == 0:
     return
 
-  if node.frozen:
-    bxy.saveTransform()
-    bxy.applyTransform(node.mat)
-    let size = bxy.getImageSize(node.frozenId).vec2
-    bxy.scale(vec2(
-      node.size.x / size.x,
-      node.size.y / size.y
-    ))
-    bxy.drawImage(node.frozenId, pos = vec2(0, 0))
-    bxy.restoreTransform()
-    return
+  # if node.frozen:
+  #   bxy.saveTransform()
+  #   bxy.applyTransform(node.mat)
+  #   let size = bxy.getImageSize(node.frozenId).vec2
+  #   bxy.scale(vec2(
+  #     node.size.x / size.x,
+  #     node.size.y / size.y
+  #   ))
+  #   bxy.drawImage(node.frozenId, pos = vec2(0, 0))
+  #   bxy.restoreTransform()
+  #   return
 
   var pushedLayers = 0
 
@@ -284,11 +284,12 @@ proc composite(node: INode) {.measure.} =
             y += image.height.float32 * paint.scalingFactor
           x += image.width.float32 * paint.scalingFactor
 
-
   elif node.id in bxy:
     doAssert fract(node.pixelBox.x) == 0
     doAssert fract(node.pixelBox.y) == 0
     doAssert node.willDrawSomething()
+    if node.path == "/UI/Main/GlobalHeader/ShareButton":
+      echo "composite box: ", node.pixelBox
     bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
   if node.onRenderCallback != nil:
@@ -343,9 +344,7 @@ proc drawToScreen*(screenNode: INode) {.measure.} =
 
   bxy.beginFrame(window.size, clearFrame=clearFrame)
 
-  for i in 0 ..< 2:
-    # TODO: figure out how to call layout only once.
-    layoutPass(screenNode)
+  layoutPass(screenNode)
 
   # Setup proper matrix for drawing.
   mat = scale(vec2(window.contentScale, window.contentScale))
@@ -404,31 +403,31 @@ proc readGpuPixelsFromScreen*(): pixie.Image =
   screen.flipVertical()
   return screen
 
-proc freeze*(node: INode, scaleFactor = 1.0f) =
-  ## Freezes a node.
-  ## This is used to speed up rendering by caching the node as an image.
-  ## It is not a good idea to freeze nodes that are animated or that are
-  ## being edited.
-  let s = scaleFactor
-  if node.isSimpleImage:
-    return
-  if node.isInstance:
-    node.frozen = true
-    node.frozenId = node.masterComponent.id & ".frozen"
-    if node.frozenId notin bxy:
-      mat = scale(vec2(s, s))
-      layer = newImage((node.size.x * s).int, (node.size.y * s).int)
-      node.drawNodeInternal(withChildren=true)
-      bxy.addImage(node.frozenId, layer)
-  else:
-    echo "Warning: Freezing non instance: ", node.path
-    node.frozen = true
-    node.frozenId = node.id
-    if node.frozenId notin bxy:
-      mat = scale(vec2(s, s))
-      layer = newImage((node.size.x * s).int, (node.size.y * s).int)
-      node.drawNodeInternal(withChildren=true)
-      bxy.addImage(node.frozenId, layer)
+# proc freeze*(node: INode, scaleFactor = 1.0f) =
+#   ## Freezes a node.
+#   ## This is used to speed up rendering by caching the node as an image.
+#   ## It is not a good idea to freeze nodes that are animated or that are
+#   ## being edited.
+#   let s = scaleFactor
+#   if node.isSimpleImage:
+#     return
+#   if node.isInstance:
+#     node.frozen = true
+#     node.frozenId = node.masterComponent.id & ".frozen"
+#     if node.frozenId notin bxy:
+#       mat = scale(vec2(s, s))
+#       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
+#       node.drawNodeInternal(withChildren=true)
+#       bxy.addImage(node.frozenId, layer)
+#   else:
+#     echo "Warning: Freezing non instance: ", node.path
+#     node.frozen = true
+#     node.frozenId = node.id
+#     if node.frozenId notin bxy:
+#       mat = scale(vec2(s, s))
+#       layer = newImage((node.size.x * s).int, (node.size.y * s).int)
+#       node.drawNodeInternal(withChildren=true)
+#       bxy.addImage(node.frozenId, layer)
 
 # deleteNodeHook = proc(node: INode) =
 #   ## Hook to delete a node from the atlas.

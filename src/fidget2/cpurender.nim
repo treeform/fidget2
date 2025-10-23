@@ -650,7 +650,9 @@ proc drawNode*(node: INode, withChildren=true) {.measure.} =
 
 proc layoutPass*(node: INode) {.measure.} =
   ## Performs a layout pass on a node.
-  computeLayout(nil, node)
+  for i in 0 ..< 2:
+    # TODO: figure out optimal number of passes.
+    computeLayout(nil, node)
 
 proc drawCompleteFrame*(node: INode): pixie.Image {.measure.} =
   ## Draws the complete frame with all child nodes.

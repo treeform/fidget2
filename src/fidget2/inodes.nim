@@ -5,13 +5,6 @@ import
 
 # INodes are the internal nodes of the tree, this file defines the API for them.
 
-proc path*(node: INode): string =
-  ## Returns the full path of the node back to the root.
-  var walkNode = node
-  while walkNode != nil and walkNode.kind != DocumentNode:
-    result = "/" & walkNode.name & result
-    walkNode = walkNode.parent
-
 proc markTreeDirty*(node: INode) =
   ## Marks the entire tree dirty or not dirty.
   node.dirty = true

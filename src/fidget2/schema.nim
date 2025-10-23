@@ -262,8 +262,8 @@ type
     idNum*: int         ## Integer ID of the node
     mat*: Mat3          ## Useful to get back to the node.
     collapse*: bool     ## Is the node drawn as a single texture (CPU internals)
-    frozen*: bool
-    frozenId*: string   ## If the node is frozen, points to its frozen image.
+    # frozen*: bool
+    # frozenId*: string   ## If the node is frozen, points to its frozen image.
     shown*: bool        ## for onShow/onHide events.
     scrollable*: bool   ## Can this node scroll.
     scrollPos*: Vec2    ## How does it scroll it's children.
@@ -288,6 +288,13 @@ type
 proc `$`*(node: INode): string =
   ## Returns a string representation of a node.
   "<" & $node.kind & ": " & node.name & " (" & node.id & ")>"
+
+proc path*(node: INode): string =
+  ## Returns the full path of the node back to the root.
+  var walkNode = node
+  while walkNode != nil and walkNode.kind != DocumentNode:
+    result = "/" & walkNode.name & result
+    walkNode = walkNode.parent
 
 proc similar*(a: Paint, b: Paint): bool =
   ## Checks if two Paint objects are similar.

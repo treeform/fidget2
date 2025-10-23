@@ -5,6 +5,9 @@ import
 # Layout tries to match figma's layout engine.
 # It is responsible for computing the layout of a node, both constraints and auto-layout.
 
+proc fractional(v: Vec2): Vec2 =
+  vec2(v.x.fractional, v.y.fractional)
+
 proc computeTextBounds(node: INode): Vec2 {.measure.} =
   ## Computes the text bounds of a node.
   node.computeArrangement()
@@ -16,8 +19,9 @@ proc computeLayout*(parent, node: INode) {.measure.} =
   doAssert not node.position.x.isNan
   doAssert not node.position.y.isNan
 
-  let oldPosition = node.position
-  let oldSize = node.size
+  let
+    oldPosition = node.position
+    oldSize = node.size
 
   for n in node.children:
     computeLayout(node, n)
@@ -137,5 +141,12 @@ proc computeLayout*(parent, node: INode) {.measure.} =
   doAssert not node.position.x.isNan
   doAssert not node.position.y.isNan
 
-  if oldPosition != node.position or oldSize != node.size:
+  if oldPosition.fractional != node.position.fractional or oldSize != node.size:
+    echo "Layout made node dirty: ", node.path
     node.dirty = true
+  elif oldPosition != node.position:
+    echo "Only the integer part of the position changed: ", node.path
+    if node.path == "/UI/Main/GlobalHeader/ShareButton":
+      echo "  Position: ", node.position
+      echo "  Old position: ", oldPosition
+    node.pixelBox.xy = node.position
