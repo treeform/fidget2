@@ -1,5 +1,5 @@
 
-name: Github Actions 2
+name: Run with Git
 on:
   push:
     branches: [ master ]

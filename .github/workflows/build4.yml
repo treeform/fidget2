@@ -1,4 +1,4 @@
-name: Github Actions 4
+name: Run with Curl and Unzip in Parallel
 on:
   push:
     branches: [ master ]
