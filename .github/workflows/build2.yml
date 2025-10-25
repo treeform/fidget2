@@ -1,0 +1,58 @@
+
+name: Github Actions 2
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: treeform/setup-nim-action@v2
+      - uses: mymindstorm/setup-emsdk@v14
+
+      - name: Install system dependencies
+        if: runner.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Install Nim packages without Nimble
+        run: |
+          git clone https://github.com/c-blake/cligen.git
+          git clone https://github.com/treeform/jsony.git
+          git clone https://github.com/treeform/puppy.git
+          git clone https://github.com/Araq/libcurl.git
+          git clone https://github.com/guzba/zippy.git
+          git clone https://github.com/treeform/webby.git
+          git clone https://github.com/treeform/boxy.git
+          git clone https://github.com/treeform/shady.git
+          git clone https://github.com/treeform/vmath.git
+          git clone https://github.com/treeform/pixie.git
+          git clone https://github.com/treeform/chroma.git
+          git clone https://github.com/treeform/flatty.git
+          git clone https://github.com/guzba/nimsimd.git
+          git clone https://github.com/treeform/bumpy.git
+          git clone https://github.com/guzba/crunchy.git
+          git clone https://github.com/treeform/bitty.git
+          git clone https://github.com/treeform/windy.git
+          git clone https://github.com/nim-lang/opengl.git
+          git clone https://github.com/nim-lang/x11.git
+          git clone https://github.com/treeform/urlly.git
+          git clone https://github.com/treeform/ws.git
+          git clone https://github.com/treeform/chroma.git
+          git clone https://github.com/treeform/webby.git
+          git clone https://github.com/treeform/vmath.git
+          git clone https://github.com/c-blake/cligen.git
+          git clone https://github.com/guzba/nimsimd.git
+          git clone https://github.com/guzba/crunchy.git
+          git clone https://github.com/guzba/zippy.git
+          git clone https://github.com/treeform/pixie.git
+          git clone https://github.com/nim-lang/x11.git
+          git clone https://github.com/nim-lang/opengl.git
+          git clone https://github.com/treeform/urlly.git
