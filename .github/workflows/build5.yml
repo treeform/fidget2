@@ -23,8 +23,8 @@ jobs:
       - name: Init Atlas
         run: atlas init
         
-      - name: Install Nim packages
-        run: atlas use fidget2
+      - name: Install Dependencies
+        run: atlas update
 
       - name: List Installed Nim packages
         run: atlas list
