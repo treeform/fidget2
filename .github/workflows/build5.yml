@@ -24,7 +24,7 @@ jobs:
         run: atlas init
         
       - name: Install Dependencies
-        run: atlas update
+        run: atlas install fidget2.nimble
 
       - name: List Installed Nim packages
         run: atlas list
