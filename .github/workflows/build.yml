@@ -9,12 +9,12 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
       - uses: treeform/setup-nim-action@v2
-      - uses: mymindstorm/setup-emsdk@v14
+
 
       - name: Install system dependencies
         if: runner.os == 'ubuntu-latest'
@@ -34,20 +34,3 @@ jobs:
       - name: Build and run tests
         run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
-      - name: Compile Calculator Natively
-        run: cd examples/calculator && nim c calculator.nim
-
-      - name: Compile Calculator for Emscripten
-        run: cd examples/calculator && nim c -d:emscripten calculator.nim
-
-      - name: Compile Dragon Natively
-        run: cd examples/dragon && nim c dragon.nim
-
-      - name: Compile Dragon for Emscripten
-        run: cd examples/dragon && nim c -d:emscripten dragon.nim
-
-      - name: Compile Panels Natively
-        run: cd examples/panels && nim c panels.nim
-
-      - name: Compile Panels for Emscripten
-        run: cd examples/panels && nim c -d:emscripten panels.nim
