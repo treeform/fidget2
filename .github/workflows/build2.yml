@@ -67,28 +67,6 @@ jobs:
           cat '--path:"urlly/src"\n' >> nim.cfg
           git clone https://github.com/treeform/ws.git
           cat '--path:"ws/src"\n' >> nim.cfg
-          git clone https://github.com/treeform/chroma.git
-          cat '--path:"chroma/src"\n' >> nim.cfg
-          git clone https://github.com/treeform/webby.git
-          cat '--path:"webby/src"\n' >> nim.cfg
-          git clone https://github.com/treeform/vmath.git
-          cat '--path:"vmath/src"\n' >> nim.cfg
-          git clone https://github.com/c-blake/cligen.git
-          cat '--path:"cligen/src"\n' >> nim.cfg
-          git clone https://github.com/guzba/nimsimd.git
-          cat '--path:"nimsimd/src"\n' >> nim.cfg
-          git clone https://github.com/guzba/crunchy.git
-          cat '--path:"crunchy/src"\n' >> nim.cfg
-          git clone https://github.com/guzba/zippy.git
-          cat '--path:"zippy/src"\n' >> nim.cfg
-          git clone https://github.com/treeform/pixie.git
-          cat '--path:"pixie/src"\n' >> nim.cfg
-          git clone https://github.com/nim-lang/x11.git
-          cat '--path:"x11/src"\n' >> nim.cfg
-          git clone https://github.com/nim-lang/opengl.git
-          cat '--path:"opengl/src"\n' >> nim.cfg
-          git clone https://github.com/treeform/urlly.git
-          cat '--path:"urlly/src"\n' >> nim.cfg
 
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
