@@ -27,47 +27,47 @@ jobs:
           cd ..
           pwd
           git clone https://github.com/c-blake/cligen.git
-          echo "--path:\"cligen/src\"\n" >> nim.cfg
+          echo `--path:\"cligen/src\"` >> nim.cfg
           git clone https://github.com/treeform/jsony.git
-          echo "--path:\"jsony/src\"\n" >> nim.cfg
+          echo `--path:\"jsony/src\"` >> nim.cfg
           git clone https://github.com/treeform/puppy.git
-          echo "--path:\"puppy/src\"\n" >> nim.cfg
+          echo `--path:\"puppy/src\"` >> nim.cfg
           git clone https://github.com/Araq/libcurl.git
-          echo "--path:\"libcurl/src\"\n" >> nim.cfg
+          echo `--path:\"libcurl/src\"` >> nim.cfg
           git clone https://github.com/guzba/zippy.git
-          echo "--path:\"zippy/src\"\n" >> nim.cfg
+          echo `--path:\"zippy/src\"` >> nim.cfg
           git clone https://github.com/treeform/webby.git
-          echo "--path:\"webby/src\"\n" >> nim.cfg
+          echo `--path:\"webby/src\"` >> nim.cfg
           git clone https://github.com/treeform/boxy.git
-          echo "--path:\"boxy/src\"\n" >> nim.cfg
+          echo `--path:\"boxy/src\"` >> nim.cfg
           git clone https://github.com/treeform/shady.git
-          echo "--path:\"shady/src\"\n" >> nim.cfg
+          echo `--path:\"shady/src\"` >> nim.cfg
           git clone https://github.com/treeform/vmath.git
-          echo "--path:\"vmath/src\"\n" >> nim.cfg
+          echo `--path:\"vmath/src\"` >> nim.cfg
           git clone https://github.com/treeform/pixie.git
-          echo "--path:\"pixie/src\"\n" >> nim.cfg
+          echo `--path:\"pixie/src\"` >> nim.cfg
           git clone https://github.com/treeform/chroma.git
-          echo "--path:\"chroma/src\"\n" >> nim.cfg
+          echo `--path:\"chroma/src\"` >> nim.cfg
           git clone https://github.com/treeform/flatty.git
-          echo "--path:\"flatty/src\"\n" >> nim.cfg
+          echo `--path:\"flatty/src\"` >> nim.cfg
           git clone https://github.com/guzba/nimsimd.git
-          echo "--path:\"nimsimd/src\"\n" >> nim.cfg
+          echo `--path:\"nimsimd/src\"` >> nim.cfg
           git clone https://github.com/treeform/bumpy.git
-          echo "--path:\"bumpy/src\"\n" >> nim.cfg
+          echo `--path:\"bumpy/src\"` >> nim.cfg
           git clone https://github.com/guzba/crunchy.git
-          echo "--path:\"crunchy/src\"\n" >> nim.cfg
+          echo `--path:\"crunchy/src\"` >> nim.cfg
           git clone https://github.com/treeform/bitty.git
-          echo "--path:\"bitty/src\"\n" >> nim.cfg
+          echo `--path:\"bitty/src\"` >> nim.cfg
           git clone https://github.com/treeform/windy.git
-          echo "--path:\"windy/src\"\n" >> nim.cfg
+          echo `--path:\"windy/src\"` >> nim.cfg
           git clone https://github.com/nim-lang/opengl.git
-          echo "--path:\"opengl/src\"\n" >> nim.cfg
+          echo `--path:\"opengl/src\"` >> nim.cfg
           git clone https://github.com/nim-lang/x11.git
-          echo "--path:\"x11/src\"\n" >> nim.cfg
+          echo `--path:\"x11/src\"` >> nim.cfg
           git clone https://github.com/treeform/urlly.git
-          echo "--path:\"urlly/src\"\n" >> nim.cfg
+          echo `--path:\"urlly/src\"` >> nim.cfg
           git clone https://github.com/treeform/ws.git
-          echo "--path:\"ws/src\"\n" >> nim.cfg
+          echo `--path:\"ws/src\"` >> nim.cfg
 
           cat nim.cfg
 
