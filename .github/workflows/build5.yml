@@ -27,7 +27,7 @@ jobs:
         run: atlas install fidget2.nimble
 
       - name: List Installed Nim packages
-        run: atlas list
+        run: ls deps 
 
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
