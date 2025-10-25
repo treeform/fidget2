@@ -25,6 +25,7 @@ jobs:
       - name: Install Nim packages without Nimble
         run: |
           cd ..
+          pwd
           git clone https://github.com/c-blake/cligen.git
           echo "--path:\"cligen/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/jsony.git
@@ -67,6 +68,8 @@ jobs:
           echo "--path:\"urlly/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/ws.git
           echo "--path:\"ws/src\"\n" >> nim.cfg
+
+          cat nim.cfg
 
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
