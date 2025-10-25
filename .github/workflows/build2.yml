@@ -26,47 +26,47 @@ jobs:
         run: |
           cd ..
           git clone https://github.com/c-blake/cligen.git
-          cat '--path:"cligen/src"\n' >> nim.cfg
+          cat "--path:\"cligen/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/jsony.git
-          cat '--path:"jsony/src"\n' >> nim.cfg
+          cat "--path:\"jsony/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/puppy.git
-          cat '--path:"puppy/src"\n' >> nim.cfg
+          cat "--path:\"puppy/src\"\n" >> nim.cfg
           git clone https://github.com/Araq/libcurl.git
-          cat '--path:"libcurl/src"\n' >> nim.cfg
+          cat "--path:\"libcurl/src\"\n" >> nim.cfg
           git clone https://github.com/guzba/zippy.git
-          cat '--path:"zippy/src"\n' >> nim.cfg
+          cat "--path:\"zippy/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/webby.git
-          cat '--path:"webby/src"\n' >> nim.cfg
+          cat "--path:\"webby/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/boxy.git
-          cat '--path:"boxy/src"\n' >> nim.cfg
+          cat "--path:\"boxy/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/shady.git
-          cat '--path:"shady/src"\n' >> nim.cfg
+          cat "--path:\"shady/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/vmath.git
-          cat '--path:"vmath/src"\n' >> nim.cfg
+          cat "--path:\"vmath/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/pixie.git
-          cat '--path:"pixie/src"\n' >> nim.cfg
+          cat "--path:\"pixie/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/chroma.git
-          cat '--path:"chroma/src"\n' >> nim.cfg
+          cat "--path:\"chroma/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/flatty.git
-          cat '--path:"flatty/src"\n' >> nim.cfg
+          cat "--path:\"flatty/src\"\n" >> nim.cfg
           git clone https://github.com/guzba/nimsimd.git
-          cat '--path:"nimsimd/src"\n' >> nim.cfg
+          cat "--path:\"nimsimd/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/bumpy.git
-          cat '--path:"bumpy/src"\n' >> nim.cfg
+          cat "--path:\"bumpy/src\"\n" >> nim.cfg
           git clone https://github.com/guzba/crunchy.git
-          cat '--path:"crunchy/src"\n' >> nim.cfg
+          cat "--path:\"crunchy/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/bitty.git
-          cat '--path:"bitty/src"\n' >> nim.cfg
+          cat "--path:\"bitty/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/windy.git
-          cat '--path:"windy/src"\n' >> nim.cfg
+          cat "--path:\"windy/src\"\n" >> nim.cfg
           git clone https://github.com/nim-lang/opengl.git
-          cat '--path:"opengl/src"\n' >> nim.cfg
+          cat "--path:\"opengl/src\"\n" >> nim.cfg
           git clone https://github.com/nim-lang/x11.git
-          cat '--path:"x11/src"\n' >> nim.cfg
+          cat "--path:\"x11/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/urlly.git
-          cat '--path:"urlly/src"\n' >> nim.cfg
+          cat "--path:\"urlly/src\"\n" >> nim.cfg
           git clone https://github.com/treeform/ws.git
-          cat '--path:"ws/src"\n' >> nim.cfg
+          cat "--path:\"ws/src\"\n" >> nim.cfg
 
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
