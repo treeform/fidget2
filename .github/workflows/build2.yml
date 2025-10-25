@@ -33,7 +33,7 @@ jobs:
           git clone https://github.com/treeform/puppy.git
           echo "--path:\"puppy/src\"" >> nim.cfg
           git clone https://github.com/Araq/libcurl.git
-          echo "--path:\"libcurl/src\"" >> nim.cfg
+          echo "--path:\"libcurl\"" >> nim.cfg
           git clone https://github.com/guzba/zippy.git
           echo "--path:\"zippy/src\"" >> nim.cfg
           git clone https://github.com/treeform/webby.git
@@ -63,7 +63,7 @@ jobs:
           git clone https://github.com/nim-lang/opengl.git
           echo "--path:\"opengl/src\"" >> nim.cfg
           git clone https://github.com/nim-lang/x11.git
-          echo "--path:\"x11/src\"" >> nim.cfg
+          echo "--path:\"x11\"" >> nim.cfg
           git clone https://github.com/treeform/urlly.git
           echo "--path:\"urlly/src\"" >> nim.cfg
           git clone https://github.com/treeform/ws.git
