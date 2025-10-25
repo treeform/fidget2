@@ -1,0 +1,39 @@
+name: Run with Atlas
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: treeform/setup-nim-action@v2
+
+      - name: Install system dependencies
+        if: runner.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Init Atlas
+        run: |
+          cd ..
+          atlas init
+        
+      - name: Install Nim packages
+        run: atlas use fidget2
+
+      - name: List Installed Nim packages
+        run: atlas list
+
+      - name: Set Figma Token
+        run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
+
+      - name: Build and run tests
+        run: nim c -r --d:cpu -d:release tests/run_frames.nim
+
