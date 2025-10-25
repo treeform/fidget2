@@ -27,7 +27,7 @@ jobs:
           cd ../../
           pwd
           git clone https://github.com/c-blake/cligen.git
-          echo "--path:\"cligen/src\"" >> nim.cfg
+          echo "--path:\"cligen/\"" >> nim.cfg
           git clone https://github.com/treeform/jsony.git
           echo "--path:\"jsony/src\"" >> nim.cfg
           git clone https://github.com/treeform/puppy.git
