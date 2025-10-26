@@ -1,0 +1,46 @@
+
+name: New Nimble
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: treeform/setup-nim-action@v2
+
+      - name: Install system dependencies
+        if: runner.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Download and build newest Nimble
+        run: |
+          git clone --depth 1 https://github.com/nim-lang/nimble.git
+          cd nimble
+          nim c -d:release src/nimble.nim
+          mv nimble $HOME/.nim_runtime/nimble
+          cd ..
+
+      - name: Print Nimble version
+        run: nimble -v
+ 
+      - name: Install Nim packages
+        run: nimble install -y
+
+      - name: List Installed Nim packages
+        run: nimble list -i --ver
+
+      - name: Set Figma Token
+        run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
+
+      - name: Build and run tests
+        run: nim c -r --d:cpu -d:release tests/run_frames.nim
+
