@@ -26,6 +26,7 @@ jobs:
           nimble install sat
           git clone --depth 1 https://github.com/nim-lang/nimble.git
           cd nimble
+          git submodule update --init
           nim c -d:release src/nimble.nim
           mv nimble $HOME/.nim_runtime/nimble
           cd ..
