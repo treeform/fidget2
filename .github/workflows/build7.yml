@@ -28,7 +28,7 @@ jobs:
           cd nimble
           git submodule update --init
           nim c -d:release src/nimble.nim
-          mv src/nimble $HOME/.nim_runtime/nimble
+          mv src/nimble $HOME/.nimble/bin/nimble
           cd ..
 
       - name: Print Nimble version
