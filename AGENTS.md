@@ -24,16 +24,16 @@ Here is the anatomy of a Nim file:
 
 Imports should start with std modules then external modules, then local modules. Ideally in 3 lines like this:
 ```
-import 
+import
   std/[os, random, strutils],
   fidget2, boxy, windy,
   common, internal, models, widgets.
 ```
 
-Use plural for modules unless it's common.nim. 
+Use plural for modules unless it's common.nim.
 If a module deals with Player, use `players.nim`.
 Always try to use single English words for module names.
-Some modules will have `test_` or `bench_` prefix.	
+Some modules will have `test_` or `bench_` prefix.
 
 ## Tests
 
@@ -45,20 +45,20 @@ Use a single tests/tests.nim file for all tests.
 echo "Testing equality"
 doAssert a == b, "a should be equal to b"
 ```
-	
+
 If it gets too big, split it into multiple files all starting with test_.
 
-After testing, benchmarking is just as important. 
+After testing, benchmarking is just as important.
 Also write bench_*.nim files for benchmarks using benchy library.
 
-```nim 
+```nim
 import benchy, std/os, std/random
 
 timeIt "number counter":
   var s = 0
   for i in 0 .. 1_000_000:
     s += s
-```	
+```
 
 ## Names
 
@@ -83,7 +83,7 @@ Avoid using emoji in the readme, avoid using fancy quotes, mdash, semicolon, and
 ## Indentation
 
 Use 2 spaces for indentation.
-Never use double lines even between types, procs or sections.	
+Never use double lines even between types, procs or sections.
 If breaking a large function call break it into a line per argument.
 
 ```nim
@@ -106,14 +106,14 @@ if condition or
 ```
 
 Don't indent the body of a case statement. Prefer to use enums and case statements together.
-	
+
 ```nim
 case expression:
 of value1:
   statement1
 of value2:
   statement2
-else:   
+else:
   statement4
 ```
 
@@ -153,7 +153,7 @@ proc toFlatty*(s: var string, x: float64) = s.addFloat64(x)
 
 Some functions that are just use to interface with external libraries its ok to be without a doc comment and be on long lines.
 
-```nim	
+```nim
 proc WinHttpReceiveResponse*(hRequest: HINTERNET, lpReserved: LPVOID): BOOL {.dynlib: "winhttp".}
 proc WinHttpQueryHeaders*(hRequest: HINTERNET, dwInfoLevel: DWORD, pwszName: LPCWSTR, lpBuffer: LPVOID, lpdwBufferLength: LPDWORD, lpdwIndex: LPDWORD): BOOL {.dynlib: "winhttp".}
 proc WinHttpReadData*(hFile: HINTERNET, lpBuffer: LPVOID, dwNumberOfBytesToRead: DWORD, lpdwNumberOfBytesRead: LPDWORD): BOOL {.dynlib: "winhttp".}
@@ -168,3 +168,14 @@ for i in 0 ..< 10:
   echo data[i * 3 + 2]
 ```
 
+## Initialization
+
+There is no need to initialize tables with `initTable` or arrays with `newSeq`.
+Nim does not have a concept of a null table or a null sequence.
+Just declare the table or sequence and use it.
+
+```nim
+var
+  table: Table[string, int]
+  sequence: seq[int]
+```
