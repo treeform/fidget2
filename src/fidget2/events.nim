@@ -876,22 +876,26 @@ proc display() {.measure.} =
 
   # thisFrame.dirty = true
   thisFrame.internal.checkDirty()
-  if true or thisFrame.dirty:
+  if thisFrame.dirty:
     drawToScreen(thisFrame.internal)
     swapBuffers()
-  else:
-    when defined(emscripten):
-      # Emscripten needs to return as soon as possible.
-      discard
-    else:
-      # Native needs to sleep to avoid 100% CPU usage.
-      sleep(7)
 
 proc tickFidget*() =
   ## Processes events and displays the frame.
+  let startSeconds = epochTime()
+
+  pollEvents()
   processEvents()
   display()
-  pollEvents()
+
+  let endSeconds = epochTime()
+  # Sleep to avoid 100% CPU.
+  # Sleep for 1/60th of a second minus the time taken to process the tick.
+  # Minus 1ms for good luck.
+  let sleepTime = 1.0 / 60.0 - (endSeconds - startSeconds) - 0.001
+  if sleepTime > 0:
+    when not defined(emscripten):
+      sleep((sleepTime * 1000).int)
 
 proc setupWindowAndEvents*(
   windowTitle: string,
