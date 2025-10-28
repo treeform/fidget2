@@ -894,9 +894,9 @@ proc sleepJustEnough(fps = 60.0) =
 
 proc tickFidget*() =
   ## Processes events and displays the frame.
-  pollEvents()
   processEvents()
   display()
+  pollEvents()
 
   sleepJustEnough()
 
