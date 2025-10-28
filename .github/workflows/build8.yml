@@ -39,7 +39,7 @@ jobs:
           nimby install fidget2/fidget2.nimble
 
       - name: List Installed Nim packages
-        run: nimby tree
+        run: nimby tree fidget2
 
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
