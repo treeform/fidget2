@@ -23,17 +23,20 @@ jobs:
 
       - name: Download and build newest Nimby
         run: |
+          cd ..
           git clone --depth 1 https://github.com/treeform/nimby.git
           cd nimby
           nim c -d:release src/nimby.nim
           mv src/nimby "$HOME/.nim_runtime/bin/nimby"
-          cd ..
 
       - name: Print Nimble version
         run: nimby -v
  
       - name: Install Nim packages
-        run: nimby install fidget2.nimble
+        run: |
+          cd ..
+          pwd
+          nimby install fidget2/fidget2.nimble
 
       - name: List Installed Nim packages
         run: nimby tree
