@@ -100,6 +100,8 @@ var
   navigationHistory*: seq[Node]
   onResizeCache: Table[string, Vec2]
 
+  lastTime: float64
+
   traceActive: bool
 
 proc display()
@@ -880,22 +882,23 @@ proc display() {.measure.} =
     drawToScreen(thisFrame.internal)
     swapBuffers()
 
+proc sleepJustEnough(fps = 60.0) =
+  let thisTime = epochTime()
+  # Sleep to avoid 100% CPU.
+  # Sleep for 1/fps of a second minus the time taken to process the tick.
+  # Minus 1ms for good luck.
+  let sleepTime = 1.0 / fps - (thisTime - lastTime) - 0.001
+  if sleepTime > 0:
+    sleep((sleepTime * 1000).int)
+  lastTime = thisTime
+
 proc tickFidget*() =
   ## Processes events and displays the frame.
-  let startSeconds = epochTime()
-
   pollEvents()
   processEvents()
   display()
 
-  let endSeconds = epochTime()
-  # Sleep to avoid 100% CPU.
-  # Sleep for 1/60th of a second minus the time taken to process the tick.
-  # Minus 1ms for good luck.
-  let sleepTime = 1.0 / 60.0 - (endSeconds - startSeconds) - 0.001
-  if sleepTime > 0:
-    when not defined(emscripten):
-      sleep((sleepTime * 1000).int)
+  sleepJustEnough()
 
 proc setupWindowAndEvents*(
   windowTitle: string,
