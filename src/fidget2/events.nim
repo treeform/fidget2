@@ -100,6 +100,8 @@ var
   navigationHistory*: seq[Node]
   onResizeCache: Table[string, Vec2]
 
+  lastTime: float64
+
   traceActive: bool
 
 proc display()
@@ -876,22 +878,27 @@ proc display() {.measure.} =
 
   # thisFrame.dirty = true
   thisFrame.internal.checkDirty()
-  if true or thisFrame.dirty:
+  if thisFrame.dirty:
     drawToScreen(thisFrame.internal)
     swapBuffers()
-  else:
-    when defined(emscripten):
-      # Emscripten needs to return as soon as possible.
-      discard
-    else:
-      # Native needs to sleep to avoid 100% CPU usage.
-      sleep(7)
+
+proc sleepJustEnough(fps = 60.0) =
+  let thisTime = epochTime()
+  # Sleep to avoid 100% CPU.
+  # Sleep for 1/fps of a second minus the time taken to process the tick.
+  # Minus 1ms for good luck.
+  let sleepTime = 1.0 / fps - (thisTime - lastTime) - 0.001
+  if sleepTime > 0:
+    sleep((sleepTime * 1000).int)
+  lastTime = thisTime
 
 proc tickFidget*() =
   ## Processes events and displays the frame.
   processEvents()
   display()
   pollEvents()
+
+  sleepJustEnough()
 
 proc setupWindowAndEvents*(
   windowTitle: string,
