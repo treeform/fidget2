@@ -5,38 +5,40 @@ import
 
 # INodes are the internal nodes of the tree, this file defines the API for them.
 
-proc markTreeDirty*(node: INode) =
-  ## Marks the entire tree dirty or not dirty.
-  node.dirty = true
-  for c in node.children:
-    markTreeDirty(c)
+# proc markTreeDirty*(node: INode) =
+#   ## Marks the entire tree dirty or not dirty.
+#   node.dirty = true
+#   for c in node.children:
+#     markTreeDirty(c)
 
 proc markTreeClean*(node: INode) =
   ## Marks the entire tree dirty or not dirty.
-  node.dirty = false
+  node.dirtyLayout = false
+  node.dirtyText = false
+  node.dirtyRaster = false
   for c in node.children:
     markTreeClean(c)
 
-proc checkDirty*(node: INode) =
-  ## Makes sure that if children are dirty, parents are dirty too.
-  for c in node.children:
-    checkDirty(c)
-    if c.dirty == true:
-      node.dirty = true
-      break
+# proc checkDirty*(node: INode) =
+#   ## Makes sure that if children are dirty, parents are dirty too.
+#   for c in node.children:
+#     checkDirty(c)
+#     if c.dirty == true:
+#       node.dirty = true
+#       break
 
-proc printDirtyStatus*(node: INode, indent = 0) =
-  ## Prints the dirty status of a node and its children.
-  echo " ".repeat(indent), node.name, ":", node.dirty
-  for child in node.children:
-    printDirtyStatus(child, indent + 1)
+# proc printDirtyStatus*(node: INode, indent = 0) =
+#   ## Prints the dirty status of a node and its children.
+#   echo " ".repeat(indent), node.name, ":", node.dirty
+#   for child in node.children:
+#     printDirtyStatus(child, indent + 1)
 
-proc makeTextDirty*(node: INode) =
-  ## Marks a text node as dirty and clears its arrangement.
-  node.dirty = true
-  if node.kind == TextNode:
-    node.arrangement = nil
-    node.computeArrangement()
+# proc makeTextDirty*(node: INode) =
+#   ## Marks a text node as dirty and clears its arrangement.
+#   node.dirty = true
+#   if node.kind == TextNode:
+#     node.arrangement = nil
+#     node.computeArrangement()
 
 proc `text=`*(node: INode, text: string) =
   ## Sets the text content of a text node.
@@ -44,7 +46,7 @@ proc `text=`*(node: INode, text: string) =
     echo "Trying to set text of non text node: '" & node.path & "'"
   if node.characters != text:
     node.characters = text
-    node.makeTextDirty()
+    node.dirtyText = true
 
 proc findNodeById*(id: string): INode =
   ## Finds a node by ID (slow).
@@ -207,60 +209,60 @@ proc triMerge*(current, previousMaster, currentMaster: INode) =
   # preserve the differences only, but change the similar properties.
 
   # If current.x and previousMaster.x are same, we can change to currentMaster.x
-  template mergeField(x: untyped) =
+  template mergeField(x: untyped, dirty: untyped) =
     if current.x == previousMaster.x:
       current.x = currentMaster.x
       current.dirty = true
 
-  template mergeArray(x: untyped) =
+  template mergeArray(x: untyped, dirty: untyped) =
     for i in 0 ..< current.x.len:
       if current.x[i].similar(previousMaster.x[i]):
         current.x[i] = currentMaster.x[i]
         current.dirty = true
 
   # Ids
-  mergeField componentId
+  current.componentId = currentMaster.componentId
   # Transform
-  mergeField position
-  mergeField origPosition
-  mergeField rotation
-  mergeField scale
-  mergeField flipHorizontal
-  mergeField flipVertical
+  mergeField position, dirtyLayout
+  mergeField origPosition, dirtyLayout
+  mergeField rotation, dirtyRaster
+  mergeField scale, dirtyLayout
+  mergeField flipHorizontal, dirtyRaster
+  mergeField flipVertical, dirtyRaster
   # Shape
-  mergeField fillGeometry
-  mergeField strokeWeight
-  mergeField strokeAlign
-  mergeField strokeGeometry
-  mergeField cornerRadius
-  mergeField rectangleCornerRadii
+  mergeField fillGeometry, dirtyRaster
+  mergeField strokeWeight, dirtyRaster
+  mergeField strokeAlign, dirtyRaster
+  mergeField strokeGeometry, dirtyRaster
+  mergeField cornerRadius, dirtyRaster
+  mergeField rectangleCornerRadii, dirtyRaster
   # Visual
-  mergeField blendMode
-  mergeArray fills
-  mergeArray strokes
-  mergeField effects
-  mergeField opacity
-  mergeField visible
+  mergeField blendMode, dirtyRaster
+  mergeArray fills, dirtyRaster
+  mergeArray strokes, dirtyRaster
+  mergeField effects, dirtyRaster
+  mergeField opacity, dirtyRaster
+  mergeField visible, dirtyRaster
   # Masking
-  mergeField isMask
-  mergeField isMaskOutline
-  mergeField booleanOperation
-  mergeField clipsContent
+  mergeField isMask, dirtyRaster
+  mergeField isMaskOutline, dirtyRaster
+  mergeField booleanOperation, dirtyRaster
+  mergeField clipsContent, dirtyLayout
   # Text
-  mergeField characters
-  mergeField style
+  mergeField characters, dirtyText
+  mergeField style, dirtyText
   # Layout
-  mergeField constraints
-  mergeField layoutAlign
-  mergeField layoutGrids
-  mergeField layoutMode
-  mergeField itemSpacing
-  mergeField counterAxisSizingMode
-  mergeField paddingLeft
-  mergeField paddingRight
-  mergeField paddingTop
-  mergeField paddingBottom
-  mergeField overflowDirection
+  mergeField constraints, dirtyLayout
+  mergeField layoutAlign, dirtyLayout
+  mergeField layoutGrids, dirtyLayout
+  mergeField layoutMode, dirtyLayout
+  mergeField itemSpacing, dirtyLayout
+  mergeField counterAxisSizingMode, dirtyLayout
+  mergeField paddingLeft, dirtyLayout
+  mergeField paddingRight, dirtyLayout
+  mergeField paddingTop, dirtyLayout
+  mergeField paddingBottom, dirtyLayout
+  mergeField overflowDirection, dirtyLayout
 
   let minChildren = min(min(
     current.children.len,

@@ -141,4 +141,4 @@ proc computeLayout*(parent, node: INode) {.measure.} =
   doAssert not node.position.y.isNan
 
   if oldPosition.fractional != node.position.fractional or oldSize != node.size:
-    node.dirty = true
+    node.dirtyRaster = true

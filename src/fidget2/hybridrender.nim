@@ -68,9 +68,9 @@ proc rasterize(node: INode, level: int) {.measure.} =
   node.mat = mat # Needed for picking.
   node.pixelBox = computeIntBounds(node, mat, node.kind == BooleanOperationNode)
 
-  if node.dirty:
+  if node.dirtyRaster:
 
-    node.dirty = false
+    node.dirtyRaster = false
 
     ## Any special thing we can't do on the GPU
     ## we have to collapse the node so that CPU draws it all
@@ -333,8 +333,7 @@ proc drawToScreen*(screenNode: INode) {.measure.} =
     mat = mat * scale(vec2(-1, 1)) * translate(vec2(-screenNode.size.x, 0))
   mat = mat * screenNode.transform().inverse()
 
-  if screenNode.dirty:
-    rasterPass(screenNode)
+  rasterPass(screenNode)
 
   compositePass(screenNode)
 
