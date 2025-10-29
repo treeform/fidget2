@@ -50,7 +50,9 @@ proc position*(node: Node): Vec2 {.inline.} =
 
 proc `position=`*(node: Node, value: Vec2) =
   node.internal.position = value
-  node.internal.dirty = true
+  node.internal.dirtyLayout = true
+  if node.internal.origPosition.fract != value.fract:
+    node.internal.dirtyRaster = true
 
 proc mat*(node: Node): Mat3 {.inline.} =
   node.internal.mat
@@ -62,13 +64,18 @@ proc size*(node: Node): Vec2 {.inline.} =
 
 proc `size=`*(node: Node, value: Vec2) =
   node.internal.size = value
-  node.internal.markTreeDirty()
+  node.internal.dirtyLayout = true
+  node.internal.dirtyRaster = true
 
 proc scale*(node: Node): Vec2 {.inline.} =
   node.internal.scale
 
 proc rotation*(node: Node): float32 {.inline.} =
   node.internal.rotation
+
+proc `rotation=`*(node: Node, value: float32) =
+  node.internal.rotation = value
+  node.internal.dirtyRaster = true
 
 proc flipHorizontal*(node: Node): bool {.inline.} =
   node.internal.flipHorizontal
@@ -117,34 +124,28 @@ proc wordWrap*(node: Node): bool {.inline.} =
 
 proc `wordWrap=`*(node: Node, value: bool) =
   node.internal.wordWrap = value
-  node.internal.markTreeDirty()
+  node.internal.dirtyText = true
 
 proc scrollable*(node: Node): bool {.inline.} =
   node.internal.scrollable
 
 proc `scrollable=`*(node: Node, value: bool) =
   node.internal.scrollable = value
-  node.internal.markTreeDirty()
+  node.internal.dirtyLayout = true
 
 proc scrollPos*(node: Node): Vec2 {.inline.} =
   node.internal.scrollPos
 
 proc `scrollPos=`*(node: Node, value: Vec2) =
   node.internal.scrollPos = value
-  node.internal.markTreeDirty()
+  node.internal.dirtyLayout = true
 
 proc editable*(node: Node): bool {.inline.} =
   node.internal.editable
 
 proc `editable=`*(node: Node, value: bool) =
   node.internal.editable = value
-  node.internal.markTreeDirty()
-
-proc dirty*(node: Node): bool {.inline.} =
-  node.internal.dirty
-
-proc `dirty=`*(node: Node, value: bool) =
-  node.internal.dirty = value
+  node.internal.dirtyText = true
 
 proc prototypeStartNodeID*(node: Node): string {.inline.} =
   node.internal.prototypeStartNodeID
@@ -152,12 +153,6 @@ proc prototypeStartNodeID*(node: Node): string {.inline.} =
 proc path*(node: Node): string =
   ## Returns the full path of the node back to the root.
   node.internal.path()
-
-proc markTreeDirty*(node: Node) =
-  node.internal.markTreeDirty()
-
-proc makeTextDirty*(node: Node) =
-  node.internal.makeTextDirty()
 
 proc text*(node: Node): string =
   ## Gets the text content of a text node.
@@ -167,17 +162,17 @@ proc text*(node: Node): string =
 
 proc `text=`*(node: Node, value: string) =
   node.internal.text = value
-  node.internal.markTreeDirty()
+  node.internal.dirtyText = true
 
 proc show*(node: Node) =
   ## Shows a node by making it visible.
   node.internal.visible = true
-  node.internal.markTreeDirty()
+  node.internal.dirtyLayout = true
 
 proc hide*(node: Node) =
   ## Hides a node by making it invisible.
   node.internal.visible = false
-  node.internal.markTreeDirty()
+  node.internal.dirtyLayout = true
 
 proc show*(nodes: seq[Node]) =
   ## Shows multiple nodes.
@@ -204,23 +199,23 @@ proc opacity*(node: Node): float32 =
 
 proc `opacity=`*(node: Node, value: float32) =
   node.internal.opacity = value
-  node.internal.markTreeDirty()
+  node.internal.dirtyRaster = true
 
 proc addChild*(parent, child: Node) =
   ## Adds a child to a parent node.
   parent.internal.addChild(child.internal)
-  parent.internal.markTreeDirty()
+  parent.internal.dirtyLayout = true
 
 proc removeChild*(parent: Node, child: Node) =
   ## Removes a child from a parent.
   parent.internal.removeChild(child.internal)
-  parent.internal.markTreeDirty()
+  parent.internal.dirtyLayout = true
 
 proc removeChildren*(parent: Node, children: seq[Node]) =
   ## Removes multiple children from a parent.
   for child in toSeq(children):
     parent.internal.removeChild(child.internal)
-  parent.internal.markTreeDirty()
+  parent.internal.dirtyLayout = true
 
 proc remove*(node: Node) =
   ## Removes a node from its parent.
@@ -234,7 +229,7 @@ proc remove*(nodes: seq[Node]) =
 proc removeChildren*(node: Node) =
   ## Clears a node and its children.
   node.internal.removeChildren()
-  node.internal.markTreeDirty()
+  node.internal.dirtyLayout = true
 
 proc copy*(node: Node): Node =
   Node(node.internal.copy())
@@ -266,7 +261,6 @@ proc getVariant*(node: Node, name: string): string =
 proc setVariant*(node: Node, name, value: string) =
   ## Sets the variant of the node.
   node.internal.setVariant(name, value)
-  node.internal.markTreeDirty()
 
 proc setVariant*(nodes: seq[Node], name, value: string) =
   ## Changes the variant of the nodes.
@@ -292,27 +286,27 @@ proc sendToFront*(node: Node) =
   ## Sends the node to the front of the parent's children.
   node.parent.internal.removeChild(node.internal)
   node.parent.internal.children.add(node.internal)
-  node.parent.markTreeDirty()
+  node.parent.internal.dirtyLayout = true
 
 proc sendToBack*(node: Node) =
   ## Sends the node to the back of the parent's children.
   node.parent.internal.removeChild(node.internal)
   node.parent.internal.children.insert(node.internal, 0)
-  node.parent.markTreeDirty()
+  node.parent.internal.dirtyLayout = true
 
 proc sendForward*(node: Node) =
   ## Sends the node forward in the parent's children.
   let index = node.parent.children.find(node)
   node.parent.internal.children.delete(index)
   node.parent.internal.children.insert(node.internal, index + 1)
-  node.parent.markTreeDirty()
+  node.parent.internal.dirtyLayout = true
 
 proc sendBackward*(node: Node) =
   ## Sends the node backward in the parent's children.
   let index = node.parent.children.find(node)
   node.parent.internal.children.delete(index)
   node.parent.internal.children.insert(node.internal, index - 1)
-  node.parent.markTreeDirty()
+  node.parent.internal.dirtyLayout = true
 
 proc dumpTree*(node: Node): string =
   node.internal.dumpTree()

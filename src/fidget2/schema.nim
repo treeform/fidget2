@@ -253,7 +253,9 @@ type
     overflowDirection*: OverflowDirection
 
     # Non-figma parameters:
-    dirty*: bool = true ## Do the pixels need redrawing?
+    dirtyLayout*: bool = true ## Do the layout need recalculating?
+    dirtyText*: bool = true ## Do the text need recalculating?
+    dirtyRaster*: bool = true ## Do the pixels need redrawing?
     pixels*: Image      ## Pixel image cache.
     pixelBox*: Rect     ## Pixel position and size.
     editable*: bool     ## Can the user edit the text?
@@ -744,8 +746,9 @@ proc parseHook(s: string, i: var int, node: var INode) =
   # node.characters = node.characters.replace("\r\n", "\n")
 
   # Node has never been drawn.
-  node.dirty = true
-
+  node.dirtyLayout = true
+  node.dirtyText = true
+  node.dirtyRaster = true
 
 proc parseFigmaFile*(data: string): FigmaFile =
   ## Parses a Figma file from JSON data.
