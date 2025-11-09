@@ -12,6 +12,8 @@ type
   SceneShader* = ref object
     ## Opaque shader reference for the scene graph.
     key*: string
+    vertSrc*: string
+    fragSrc*: string
     when defined(useGL):
       ## OpenGL shader program handle.
       programId*: GLuint

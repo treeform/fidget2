@@ -4,79 +4,117 @@ import
   windy,
   opengl,
   scenegraph,
-  glrender
+  glrender, shady,
+  flatty/binny
 
-proc appendFloat32(b: var seq[byte], f: float32) =
-  let n = b.len
-  b.setLen(n + 4)
-  copyMem(b[n].addr, unsafeAddr f, 4)
+var
+  uModel: shady.Uniform[Mat3]
+  uColor: shady.Uniform[Vec4]
+  uTex: shady.Uniform[Sampler2D]
+  uUseTex: shady.Uniform[int32]
 
-proc appendUint16(b: var seq[byte], x: uint16) =
-  let n = b.len
-  b.setLen(n + 2)
-  copyMem(b[n].addr, unsafeAddr x, 2)
+proc sceneVert*(aPos: Vec2, aUv: Vec2, vUv: var Vec2, gl_Position: var Vec4) =
+  let p = uModel * vec3(aPos, 1.0)
+  vUv = aUv
+  gl_Position = vec4(p.x, p.y, 0.0, 1.0)
+
+proc sceneFrag*(vUv: Vec2, FragColor: var Vec4) =
+  if uUseTex == 1:
+    FragColor = texture(uTex, vUv)
+  else:
+    FragColor = uColor
 
 when isMainModule:
   let scene = newScene()
   let node = newNode(scene, "triangle")
   scene.root.addChild(node)
 
-  var v: seq[byte] = @[]
-  # XY layout, three vertices
-  appendFloat32(v, -0.5'f32); appendFloat32(v, -0.5'f32)
-  appendFloat32(v,  0.5'f32); appendFloat32(v, -0.5'f32)
-  appendFloat32(v,  0.0'f32); appendFloat32(v,  0.5'f32)
+  # Triangle vertices (XY), pre-sized and written with binny
+  var vU8: seq[uint8] = @[]
+  vU8.setLen(3 * 2 * 4)
+  var off = 0
+  vU8.writeFloat32(off, -0.5'f32); off += 4
+  vU8.writeFloat32(off, -0.5'f32); off += 4
+  vU8.writeFloat32(off,  0.5'f32); off += 4
+  vU8.writeFloat32(off, -0.5'f32); off += 4
+  vU8.writeFloat32(off,  0.0'f32); off += 4
+  vU8.writeFloat32(off,  0.5'f32)
 
-  var ib: seq[byte] = @[]
-  appendUint16(ib, 0'u16)
-  appendUint16(ib, 1'u16)
-  appendUint16(ib, 2'u16)
+  var ibU8: seq[uint8] = @[]
+  ibU8.setLen(3 * 2)
+  off = 0
+  ibU8.writeUint16(off, 0'u16); off += 2
+  ibU8.writeUint16(off, 1'u16); off += 2
+  ibU8.writeUint16(off, 2'u16)
 
   let geom = Geometry(
     name: "tri",
     format: XY,
-    vertexData: v,
+    vertexData: cast[seq[byte]](vU8),
     indexFormat: Index16,
-    indexData: ib
+    indexData: cast[seq[byte]](ibU8)
   )
   node.addGeometry(geom)
 
-  let shader = SceneShader(key: "basic")
+  # Define shaders with Shady (Nim → GLSL) and store on shader nodes
+  let vertSrc = toGLSL(sceneVert, "410", "")
+  let fragSrc = toGLSL(sceneFrag, "410", "")
+
+  let shader = SceneShader(key: "basic", vertSrc: vertSrc, fragSrc: fragSrc)
   node.attachShader(shader)
   node.setUniform("uColor", color(1, 0, 0, 1))
 
   # Add a textured quad node
   let quadNode = newNode(scene, "texturedQuad")
   scene.root.addChild(quadNode)
-  var qv: seq[byte] = @[]
-  # XYUV for 4 vertices (two triangles). Place on the right side.
+  var qvU8: seq[uint8] = @[]
+  qvU8.setLen(4 * 4 * 4) # 4 vertices * (xyuv) * 4 bytes
+  off = 0
   # v0
-  appendFloat32(qv, 0.1'f32); appendFloat32(qv, -0.5'f32)
-  appendFloat32(qv, 0.0'f32); appendFloat32(qv, 0.0'f32)
+  qvU8.writeFloat32(off, 0.1'f32); off += 4
+  qvU8.writeFloat32(off, -0.5'f32); off += 4
+  qvU8.writeFloat32(off, 0.0'f32); off += 4
+  qvU8.writeFloat32(off, 0.0'f32); off += 4
   # v1
-  appendFloat32(qv, 0.9'f32); appendFloat32(qv, -0.5'f32)
-  appendFloat32(qv, 1.0'f32); appendFloat32(qv, 0.0'f32)
+  qvU8.writeFloat32(off, 0.9'f32); off += 4
+  qvU8.writeFloat32(off, -0.5'f32); off += 4
+  qvU8.writeFloat32(off, 1.0'f32); off += 4
+  qvU8.writeFloat32(off, 0.0'f32); off += 4
   # v2
-  appendFloat32(qv, 0.9'f32); appendFloat32(qv, 0.5'f32)
-  appendFloat32(qv, 1.0'f32); appendFloat32(qv, 1.0'f32)
+  qvU8.writeFloat32(off, 0.9'f32); off += 4
+  qvU8.writeFloat32(off, 0.5'f32); off += 4
+  qvU8.writeFloat32(off, 1.0'f32); off += 4
+  qvU8.writeFloat32(off, 1.0'f32); off += 4
   # v3
-  appendFloat32(qv, 0.1'f32); appendFloat32(qv, 0.5'f32)
-  appendFloat32(qv, 0.0'f32); appendFloat32(qv, 1.0'f32)
-  var qi: seq[byte] = @[]
-  appendUint16(qi, 0'u16); appendUint16(qi, 1'u16); appendUint16(qi, 2'u16)
-  appendUint16(qi, 2'u16); appendUint16(qi, 3'u16); appendUint16(qi, 0'u16)
+  qvU8.writeFloat32(off, 0.1'f32); off += 4
+  qvU8.writeFloat32(off, 0.5'f32); off += 4
+  qvU8.writeFloat32(off, 0.0'f32); off += 4
+  qvU8.writeFloat32(off, 1.0'f32)
+
+  var qiU8: seq[uint8] = @[]
+  qiU8.setLen(6 * 2)
+  off = 0
+  qiU8.writeUint16(off, 0'u16); off += 2
+  qiU8.writeUint16(off, 1'u16); off += 2
+  qiU8.writeUint16(off, 2'u16); off += 2
+  qiU8.writeUint16(off, 2'u16); off += 2
+  qiU8.writeUint16(off, 3'u16); off += 2
+  qiU8.writeUint16(off, 0'u16)
+
   let quadGeom = Geometry(
     name: "quad",
     format: XYUV,
-    vertexData: qv,
+    vertexData: cast[seq[byte]](qvU8),
     indexFormat: Index16,
-    indexData: qi
+    indexData: cast[seq[byte]](qiU8)
   )
   quadNode.addGeometry(quadGeom)
+
   let img = readImage("testTexture.png")
   let quadTex = newTextureNode("quadTex", img)
   quadNode.addTexture(quadTex)
-  let quadShader = SceneShader(key: "textured")
+
+  let quadShader = SceneShader(key: "textured", vertSrc: vertSrc, fragSrc: fragSrc)
   quadNode.attachShader(quadShader)
 
   # Create a window with Windy
@@ -93,5 +131,5 @@ when isMainModule:
     window.swapBuffers()
 
   while not window.closeRequested:
-    pollEvents()
+    pollEvents() 
 

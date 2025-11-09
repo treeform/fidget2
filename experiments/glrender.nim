@@ -28,6 +28,9 @@ proc linkProgram(vs, fs: GLuint): GLuint =
   let program = glCreateProgram()
   glAttachShader(program, vs)
   glAttachShader(program, fs)
+  # Bind attribute locations to match our VAO setup.
+  glBindAttribLocation(program, 0, "aPos")
+  glBindAttribLocation(program, 1, "aUv")
   glLinkProgram(program)
   var status: GLint
   glGetProgramiv(program, GL_LINK_STATUS, status.addr)
@@ -48,26 +51,33 @@ proc ensureProgram*(shader: SceneShader) =
       return
     if shader.programId != 0:
       return
-    let vertSrc = "#version 410 core\n" &
-      "layout(location=0) in vec2 aPos;\n" &
-      "layout(location=1) in vec2 aUv;\n" &
-      "out vec2 vUv;\n" &
-      "uniform mat3 uModel;\n" &
-      "void main(){\n" &
-      "  vec3 p = uModel * vec3(aPos, 1.0);\n" &
-      "  vUv = aUv;\n" &
-      "  gl_Position = vec4(p.xy, 0.0, 1.0);\n" &
-      "}\n"
-    let fragSrc = "#version 410 core\n" &
-      "in vec2 vUv;\n" &
-      "out vec4 FragColor;\n" &
-      "uniform vec4 uColor;\n" &
-      "uniform sampler2D uTex;\n" &
-      "uniform int uUseTex;\n" &
-      "void main(){\n" &
-      "  if (uUseTex == 1) { FragColor = texture(uTex, vUv); }\n" &
-      "  else { FragColor = uColor; }\n" &
-      "}\n"
+    # Use provided shader sources if available; otherwise use defaults.
+    let vertSrc =
+      if shader.vertSrc.len > 0: shader.vertSrc
+      else:
+        "#version 410 core\n" &
+        "layout(location=0) in vec2 aPos;\n" &
+        "layout(location=1) in vec2 aUv;\n" &
+        "out vec2 vUv;\n" &
+        "uniform mat3 uModel;\n" &
+        "void main(){\n" &
+        "  vec3 p = uModel * vec3(aPos, 1.0);\n" &
+        "  vUv = aUv;\n" &
+        "  gl_Position = vec4(p.xy, 0.0, 1.0);\n" &
+        "}\n"
+    let fragSrc =
+      if shader.fragSrc.len > 0: shader.fragSrc
+      else:
+        "#version 410 core\n" &
+        "in vec2 vUv;\n" &
+        "out vec4 FragColor;\n" &
+        "uniform vec4 uColor;\n" &
+        "uniform sampler2D uTex;\n" &
+        "uniform int uUseTex;\n" &
+        "void main(){\n" &
+        "  if (uUseTex == 1) { FragColor = texture(uTex, vUv); }\n" &
+        "  else { FragColor = uColor; }\n" &
+        "}\n"
     let vs = compileShader(GL_VERTEX_SHADER, vertSrc)
     let fs = compileShader(GL_FRAGMENT_SHADER, fragSrc)
     shader.programId = linkProgram(vs, fs)
