@@ -83,6 +83,7 @@ Avoid using emoji in the readme, avoid using fancy quotes, mdash, semicolon, and
 ## Indentation
 
 Use 2 spaces for indentation.
+
 Never use double lines even between types, procs or sections.	
 If breaking a large function call break it into a line per argument.
 
@@ -92,6 +93,24 @@ func(
   arg2,
   arg3
 )
+```
+
+Avoind hanging-indent at all cost.
+DO NOT DO THIS:
+```nim
+var foobar = call(arg1,
+                  arg2,
+                  arg3)
+```
+
+Prfer to indented ternary operators:
+
+```nim
+v =
+  if condition: 
+    value1
+  else: 
+    value2
 ```
 
 If body of a if or loop is too large, break it into a line per statement, but then indent the body by 4 spaces.
@@ -168,3 +187,22 @@ for i in 0 ..< 10:
   echo data[i * 3 + 2]
 ```
 
+
+## Enums
+
+You will find old style Nim code use enums such as nkStatment or ftFile. Don't use polish notation for enums. Use the const PascalCase notation for new style enum names:
+
+Name + Type
+
+Prefer one word for the name and type.
+
+nkStatement -> StatementNode
+ftFile -> FileType
+
+Use the new style enum names.
+
+```nim
+type
+  NodeKind = enum
+    DocumentNode, CanvasNode, RectangleNode, FrameNode
+```
