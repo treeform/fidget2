@@ -1,5 +1,5 @@
 import
-  chroma,
+  chroma, pixie,
   vmath,
   windy,
   opengl,
@@ -44,6 +44,40 @@ when isMainModule:
   let shader = SceneShader(key: "basic")
   node.attachShader(shader)
   node.setUniform("uColor", color(1, 0, 0, 1))
+
+  # Add a textured quad node
+  let quadNode = newNode(scene, "texturedQuad")
+  scene.root.addChild(quadNode)
+  var qv: seq[byte] = @[]
+  # XYUV for 4 vertices (two triangles). Place on the right side.
+  # v0
+  appendFloat32(qv, 0.1'f32); appendFloat32(qv, -0.5'f32)
+  appendFloat32(qv, 0.0'f32); appendFloat32(qv, 0.0'f32)
+  # v1
+  appendFloat32(qv, 0.9'f32); appendFloat32(qv, -0.5'f32)
+  appendFloat32(qv, 1.0'f32); appendFloat32(qv, 0.0'f32)
+  # v2
+  appendFloat32(qv, 0.9'f32); appendFloat32(qv, 0.5'f32)
+  appendFloat32(qv, 1.0'f32); appendFloat32(qv, 1.0'f32)
+  # v3
+  appendFloat32(qv, 0.1'f32); appendFloat32(qv, 0.5'f32)
+  appendFloat32(qv, 0.0'f32); appendFloat32(qv, 1.0'f32)
+  var qi: seq[byte] = @[]
+  appendUint16(qi, 0'u16); appendUint16(qi, 1'u16); appendUint16(qi, 2'u16)
+  appendUint16(qi, 2'u16); appendUint16(qi, 3'u16); appendUint16(qi, 0'u16)
+  let quadGeom = Geometry(
+    name: "quad",
+    format: XYUV,
+    vertexData: qv,
+    indexFormat: Index16,
+    indexData: qi
+  )
+  quadNode.addGeometry(quadGeom)
+  let img = readImage("testTexture.png")
+  let quadTex = newTextureNode("quadTex", img)
+  quadNode.addTexture(quadTex)
+  let quadShader = SceneShader(key: "textured")
+  quadNode.attachShader(quadShader)
 
   # Create a window with Windy
   var window = newWindow("SceneGraph Triangle", ivec2(800, 600))

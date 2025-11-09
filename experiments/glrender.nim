@@ -1,6 +1,6 @@
 import
   std/[tables],
-  chroma, opengl, vmath,
+  opengl, vmath, pixie,
   scenegraph
 
 const
@@ -50,15 +50,24 @@ proc ensureProgram*(shader: SceneShader) =
       return
     let vertSrc = "#version 410 core\n" &
       "layout(location=0) in vec2 aPos;\n" &
+      "layout(location=1) in vec2 aUv;\n" &
+      "out vec2 vUv;\n" &
       "uniform mat3 uModel;\n" &
       "void main(){\n" &
       "  vec3 p = uModel * vec3(aPos, 1.0);\n" &
+      "  vUv = aUv;\n" &
       "  gl_Position = vec4(p.xy, 0.0, 1.0);\n" &
       "}\n"
     let fragSrc = "#version 410 core\n" &
+      "in vec2 vUv;\n" &
       "out vec4 FragColor;\n" &
       "uniform vec4 uColor;\n" &
-      "void main(){ FragColor = uColor; }\n"
+      "uniform sampler2D uTex;\n" &
+      "uniform int uUseTex;\n" &
+      "void main(){\n" &
+      "  if (uUseTex == 1) { FragColor = texture(uTex, vUv); }\n" &
+      "  else { FragColor = uColor; }\n" &
+      "}\n"
     let vs = compileShader(GL_VERTEX_SHADER, vertSrc)
     let fs = compileShader(GL_FRAGMENT_SHADER, fragSrc)
     shader.programId = linkProgram(vs, fs)
@@ -131,6 +140,32 @@ proc ensureGeometry*(geom: Geometry) =
     configureAttributes(geom.format, stride)
     glBindVertexArray(0)
 
+proc ensureTexture*(tex: TextureNode) =
+  ## Ensures a GL texture is created and uploaded from the Pixie image.
+  when defined(useGL):
+    if tex == nil or tex.image == nil:
+      return
+    if tex.textureId != 0:
+      return
+    # OpenGL expects the first row to be the bottom row; Pixie images are top-left origin.
+    # Flip once before uploading.
+    tex.image.flipVertical()
+    glGenTextures(1, tex.textureId.addr)
+    glActiveTexture(GL_TEXTURE0)
+    glBindTexture(GL_TEXTURE_2D, tex.textureId)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+    let w = tex.image.width.GLsizei
+    let h = tex.image.height.GLsizei
+    let dataPtr = if tex.image.data.len == 0: nil else: cast[pointer](tex.image.data[0].addr)
+    glTexImage2D(
+      GL_TEXTURE_2D, 0, GLint(GL_RGBA8), w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataPtr
+    )
+    glGenerateMipmap(GL_TEXTURE_2D)
+
 proc setUniforms*(program: GLuint, uniforms: Table[string, Uniform]) =
   ## Sets known uniforms by name and type on the active program.
   # Color
@@ -180,6 +215,11 @@ proc renderNode*(node: SceneNode) =
   when defined(useGL):
     if node == nil or node.visible == false:
       return
+    var useTex = 0
+    if node.textures.len > 0:
+      ensureTexture(node.textures[0])
+      if node.textures[0].textureId != 0:
+        useTex = 1
     if node.shader != nil:
       ensureProgram(node.shader)
       glUseProgram(node.shader.programId)
@@ -193,6 +233,14 @@ proc renderNode*(node: SceneNode) =
       glUniformMatrix3fv(loc, 1, GL_FALSE, m[0].addr)
       # Other uniforms
       setUniforms(node.shader.programId, node.uniforms)
+      # Texture bindings
+      let useTexLoc = glGetUniformLocation(node.shader.programId, "uUseTex")
+      glUniform1i(useTexLoc, GLint(useTex))
+      if useTex == 1:
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, node.textures[0].textureId)
+        let texLoc = glGetUniformLocation(node.shader.programId, "uTex")
+        glUniform1i(texLoc, GLint(0))
 
     for geom in node.geometries:
       ensureGeometry(geom)
