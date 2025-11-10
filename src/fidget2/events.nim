@@ -78,6 +78,7 @@ type
     handler*: proc(thisNode: Node)
 
 var
+  currentContentScale: float32 = 0.0
   eventCbs: seq[EventCb]
   editableSelectors: seq[string]
   requestedFrame*: bool
@@ -860,6 +861,12 @@ proc display() {.measure.} =
   ## Called every frame by the main while loop.
   if window.minimized:
     return
+
+  # If content scale has changed, mark everything dirty.
+  if currentContentScale != window.contentScale():
+    if currentContentScale != 0.0:
+      thisFrame.markTreeDirty()
+    currentContentScale = window.contentScale()
 
   # Update cursor blink timing.
   if textBoxFocus != nil:

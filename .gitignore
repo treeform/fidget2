@@ -27,6 +27,7 @@ package.json
 tmp
 *.plist
 *.dSYM
+*.out
 
 # figma tmp files
 fidget
