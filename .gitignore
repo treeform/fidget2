@@ -20,6 +20,7 @@ nimcache
 *.pdb
 *.ilk
 .*
+!.github
 *.glsl
 node_modules
 package-lock.json

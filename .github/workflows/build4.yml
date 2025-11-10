@@ -1,0 +1,96 @@
+name: Run with Curl and Unzip in Parallel
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: treeform/setup-nim-action@v2
+
+      - name: Install system dependencies
+        if: runner.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Download dependency zips in parallel
+        run: |
+          set -e
+          cd ../../
+          pwd
+
+          # Start all downloads in background (master branch archives).
+          curl -L -o cligen.zip  https://github.com/c-blake/cligen/archive/refs/heads/master.zip &
+          curl -L -o jsony.zip   https://github.com/treeform/jsony/archive/refs/heads/master.zip &
+          curl -L -o puppy.zip   https://github.com/treeform/puppy/archive/refs/heads/master.zip &
+          curl -L -o libcurl.zip https://github.com/Araq/libcurl/archive/refs/heads/master.zip &
+          curl -L -o zippy.zip   https://github.com/guzba/zippy/archive/refs/heads/master.zip &
+          curl -L -o webby.zip   https://github.com/treeform/webby/archive/refs/heads/master.zip &
+          curl -L -o boxy.zip    https://github.com/treeform/boxy/archive/refs/heads/master.zip &
+          curl -L -o shady.zip   https://github.com/treeform/shady/archive/refs/heads/master.zip &
+          curl -L -o vmath.zip   https://github.com/treeform/vmath/archive/refs/heads/master.zip &
+          curl -L -o pixie.zip   https://github.com/treeform/pixie/archive/refs/heads/master.zip &
+          curl -L -o chroma.zip  https://github.com/treeform/chroma/archive/refs/heads/master.zip &
+          curl -L -o flatty.zip  https://github.com/treeform/flatty/archive/refs/heads/master.zip &
+          curl -L -o nimsimd.zip https://github.com/guzba/nimsimd/archive/refs/heads/master.zip &
+          curl -L -o bumpy.zip   https://github.com/treeform/bumpy/archive/refs/heads/master.zip &
+          curl -L -o crunchy.zip https://github.com/guzba/crunchy/archive/refs/heads/master.zip &
+          curl -L -o bitty.zip   https://github.com/treeform/bitty/archive/refs/heads/master.zip &
+          curl -L -o windy.zip   https://github.com/treeform/windy/archive/refs/heads/master.zip &
+          curl -L -o opengl.zip  https://github.com/nim-lang/opengl/archive/refs/heads/master.zip &
+          curl -L -o x11.zip     https://github.com/nim-lang/x11/archive/refs/heads/master.zip &
+          curl -L -o urlly.zip   https://github.com/treeform/urlly/archive/refs/heads/master.zip &
+          curl -L -o ws.zip      https://github.com/treeform/ws/archive/refs/heads/master.zip &
+          wait
+
+      - name: Unzip all archives in parallel
+        run: |
+          set -e
+          cd ../../
+          for z in cligen.zip jsony.zip puppy.zip libcurl.zip zippy.zip webby.zip boxy.zip shady.zip vmath.zip pixie.zip chroma.zip flatty.zip nimsimd.zip bumpy.zip crunchy.zip bitty.zip windy.zip opengl.zip x11.zip urlly.zip ws.zip; do
+            unzip -q "$z" &
+          done
+          wait
+
+      - name: Configure Nim paths
+        run: |
+          set -e
+          cd ../../
+          echo "--path:\"cligen-master/\"" >> nim.cfg
+          echo "--path:\"jsony-master/src\"" >> nim.cfg
+          echo "--path:\"puppy-master/src\"" >> nim.cfg
+          echo "--path:\"libcurl-master\"" >> nim.cfg
+          echo "--path:\"zippy-master/src\"" >> nim.cfg
+          echo "--path:\"webby-master/src\"" >> nim.cfg
+          echo "--path:\"boxy-master/src\"" >> nim.cfg
+          echo "--path:\"shady-master/src\"" >> nim.cfg
+          echo "--path:\"vmath-master/src\"" >> nim.cfg
+          echo "--path:\"pixie-master/src\"" >> nim.cfg
+          echo "--path:\"chroma-master/src\"" >> nim.cfg
+          echo "--path:\"flatty-master/src\"" >> nim.cfg
+          echo "--path:\"nimsimd-master/src\"" >> nim.cfg
+          echo "--path:\"bumpy-master/src\"" >> nim.cfg
+          echo "--path:\"crunchy-master/src\"" >> nim.cfg
+          echo "--path:\"bitty-master/src\"" >> nim.cfg
+          echo "--path:\"windy-master/src\"" >> nim.cfg
+          echo "--path:\"opengl-master/src\"" >> nim.cfg
+          echo "--path:\"x11-master\"" >> nim.cfg
+          echo "--path:\"urlly-master/src\"" >> nim.cfg
+          echo "--path:\"ws-master/src\"" >> nim.cfg
+          echo "==== nim.cfg ===="
+          cat nim.cfg
+
+      - name: Set Figma Token
+        run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
+
+      - name: Build and run tests
+        run: nim c -r --d:cpu -d:release tests/run_frames.nim
+
+

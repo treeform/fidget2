@@ -1,0 +1,79 @@
+
+name: Run with Git
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: treeform/setup-nim-action@v2
+
+
+      - name: Install system dependencies
+        if: runner.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+
+      - name: Install Nim packages without Nimble
+        run: |
+          cd ../../
+          pwd
+          git clone https://github.com/c-blake/cligen.git
+          echo "--path:\"cligen/\"" >> nim.cfg
+          git clone https://github.com/treeform/jsony.git
+          echo "--path:\"jsony/src\"" >> nim.cfg
+          git clone https://github.com/treeform/puppy.git
+          echo "--path:\"puppy/src\"" >> nim.cfg
+          git clone https://github.com/Araq/libcurl.git
+          echo "--path:\"libcurl\"" >> nim.cfg
+          git clone https://github.com/guzba/zippy.git
+          echo "--path:\"zippy/src\"" >> nim.cfg
+          git clone https://github.com/treeform/webby.git
+          echo "--path:\"webby/src\"" >> nim.cfg
+          git clone https://github.com/treeform/boxy.git
+          echo "--path:\"boxy/src\"" >> nim.cfg
+          git clone https://github.com/treeform/shady.git
+          echo "--path:\"shady/src\"" >> nim.cfg
+          git clone https://github.com/treeform/vmath.git
+          echo "--path:\"vmath/src\"" >> nim.cfg
+          git clone https://github.com/treeform/pixie.git
+          echo "--path:\"pixie/src\"" >> nim.cfg
+          git clone https://github.com/treeform/chroma.git
+          echo "--path:\"chroma/src\"" >> nim.cfg
+          git clone https://github.com/treeform/flatty.git
+          echo "--path:\"flatty/src\"" >> nim.cfg
+          git clone https://github.com/guzba/nimsimd.git
+          echo "--path:\"nimsimd/src\"" >> nim.cfg
+          git clone https://github.com/treeform/bumpy.git
+          echo "--path:\"bumpy/src\"" >> nim.cfg
+          git clone https://github.com/guzba/crunchy.git
+          echo "--path:\"crunchy/src\"" >> nim.cfg
+          git clone https://github.com/treeform/bitty.git
+          echo "--path:\"bitty/src\"" >> nim.cfg
+          git clone https://github.com/treeform/windy.git
+          echo "--path:\"windy/src\"" >> nim.cfg
+          git clone https://github.com/nim-lang/opengl.git
+          echo "--path:\"opengl/src\"" >> nim.cfg
+          git clone https://github.com/nim-lang/x11.git
+          echo "--path:\"x11\"" >> nim.cfg
+          git clone https://github.com/treeform/urlly.git
+          echo "--path:\"urlly/src\"" >> nim.cfg
+          git clone https://github.com/treeform/ws.git
+          echo "--path:\"ws/src\"" >> nim.cfg
+
+          cat nim.cfg
+
+      - name: Set Figma Token
+        run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
+
+      - name: Build and run tests
+        run: nim c -r --d:cpu -d:release tests/run_frames.nim
+
