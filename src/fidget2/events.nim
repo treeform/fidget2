@@ -300,12 +300,12 @@ proc setupTextBox(node: Node) =
   ## Sets up this node as a text box.
   keyboard.onUnfocusNode = textBoxFocus.Node()
   textBoxFocus = node.internal
-  node.dirty = true
+  node.internal.dirtyText = true
   keyboard.onFocusNode = textBoxFocus.Node()
 
   if keyboard.onUnfocusNode != nil:
-    keyboard.onUnfocusNode.dirty = true
-  keyboard.onFocusNode.dirty = true
+    keyboard.onUnfocusNode.internal.dirtyRaster = true
+  keyboard.onFocusNode.internal.dirtyRaster = true
 
   # TODO: handle these properties better
   node.wordWrap = false
@@ -399,7 +399,7 @@ proc textBoxKeyboardAction(button: Button) =
           discard
 
     let oldSingleline = textBoxFocus.singleline
-    textBoxFocus.makeTextDirty()
+    textBoxFocus.dirtyText = true
 
     for cb in eventCbs:
       if cb.kind == OnEdit and cb.glob == textBoxFocus.path:
@@ -408,7 +408,7 @@ proc textBoxKeyboardAction(button: Button) =
 
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
-      textBoxFocus.makeTextDirty()
+      textBoxFocus.dirtyText = true
 
 proc onRune(rune: Rune) =
   ## The user typed a character, needed for unicode entry.
@@ -424,7 +424,7 @@ proc onRune(rune: Rune) =
 
     # If singleline changed during onEdit, refresh the arrangement
     if textBoxFocus.singleline != oldSingleline:
-      textBoxFocus.makeTextDirty()
+      textBoxFocus.dirtyText = true
 
 proc onScroll() =
   ## Handles the scroll wheel.
@@ -442,7 +442,7 @@ proc onScroll() =
       # TODO make it scroll both x and y.
       node.scrollPos.y -= window.scrollDelta.y * 50
 
-      node.dirty = true
+      node.dirtyRaster = true
 
       let bounds = node.computeScrollBounds()
       if node.scrollPos.y > bounds.h:
@@ -539,7 +539,7 @@ proc simulateClick*(glob: string) =
 proc updateWindowSize() =
   ## Handles window resize.
   requestedFrame = true
-  thisFrame.dirty = true
+  thisFrame.internal.dirtyLayout = true
 
 proc onResize() =
   ## Handles window resize.
@@ -817,9 +817,8 @@ proc `imageUrl=`*(paint: schema.Paint, url: string) =
           for child in node.children:
             visit(child)
           if node.fills.len > 0 and node.fills[0].imageRef == url:
-            node.dirty = true
+            node.internal.dirtyRaster = true
         visit(thisFrame)
-        thisFrame.markTreeDirty()
         echo "Image fetched: ", url
       fetchRequests[url].onError = proc(error: string) =
         echo "Error fetching image: ", error
@@ -841,14 +840,16 @@ proc navigateTo*(fullPath: string, smart = false) =
   thisFrame = find(fullPath)
   if thisFrame == nil:
     raise newException(FidgetError, &"Frame '{fullPath}' not found")
-  thisFrame.markTreeDirty()
+  thisFrame.internal.dirtyLayout = true
+  thisFrame.internal.dirtyRaster = true
 
 proc navigateBack*() =
   ## Navigates back through the navigation history.
   if navigationHistory.len == 0:
     return
   thisFrame = navigationHistory.pop()
-  thisFrame.markTreeDirty()
+  thisFrame.internal.dirtyLayout = true
+  thisFrame.internal.dirtyRaster = true
 
 proc absolutePosition*(node: Node): Vec2 =
   ## Gets the absolute position of the node.
@@ -876,18 +877,15 @@ proc display() {.measure.} =
       # Toggle cursor visible state.
       cursorVisible = not cursorVisible
       # Mark text box dirty if cursor is visible.
-      textBoxFocus.makeTextDirty()
+      textBoxFocus.dirtyText = true
 
   keyboard.onFocusNode = Node(nil)
   keyboard.onUnfocusNode = Node(nil)
 
   window.runeInputEnabled = textBoxFocus != nil
 
-  # thisFrame.dirty = true
-  thisFrame.internal.checkDirty()
-  if thisFrame.dirty:
-    drawToScreen(thisFrame.internal)
-    swapBuffers()
+  drawToScreen(thisFrame.internal)
+  swapBuffers()
 
 proc sleepJustEnough(fps = 60.0) =
   let thisTime = epochTime()
@@ -951,8 +949,7 @@ proc setupWindowAndEvents*(
 
   window.onImeChange = proc() =
     if textBoxFocus != nil:
-      textBoxFocus.dirty = true
-      textBoxFocus.makeTextDirty()
+      textBoxFocus.dirtyText = true
 
   window.onCloseRequest = proc() =
     internal.running = false
