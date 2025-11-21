@@ -32,7 +32,7 @@ proc userFontPath*(fontPostScriptName: string): string =
   ## Gets the user font path.
   dataDir / "fonts" / fontPostScriptName & ".ttf"
 
-when defined(emscripten) or defined(fidgetUseCached):
+when defined(emscripten) or not defined(figmaLive):
 
   import webby
 
