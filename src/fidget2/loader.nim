@@ -32,24 +32,7 @@ proc userFontPath*(fontPostScriptName: string): string =
   ## Gets the user font path.
   dataDir / "fonts" / fontPostScriptName & ".ttf"
 
-when defined(emscripten) or not defined(figmaLive):
-
-  import webby
-
-  proc loadFigmaUrl*(figmaUrl: string): FigmaFile =
-    ## Use the Figma URL as a new figmaFile.
-    ## Will download the full file if it needs to.
-    var figmaFileKey: string
-
-    let parsed = parseUrl(figmaUrl)
-    if parsed.paths.len >= 2:
-      figmaFileKey = parsed.paths[1]
-    else:
-      raise newException(FidgetError, "Invalid Figma URL: " & figmaUrl)
-
-    return loadFigmaFile(figmaFileKey)
-
-else:
+when defined(figmaLive):
 
   import
     std/[json, strutils, sets, tables],
@@ -278,4 +261,21 @@ else:
       raise newException(FidgetError, "Invalid Figma URL: " & figmaUrl)
 
     downloadFigmaFile(figmaFileKey)
+    return loadFigmaFile(figmaFileKey)
+
+else:
+
+  import webby
+
+  proc loadFigmaUrl*(figmaUrl: string): FigmaFile =
+    ## Use the Figma URL as a new figmaFile.
+    ## Will download the full file if it needs to.
+    var figmaFileKey: string
+
+    let parsed = parseUrl(figmaUrl)
+    if parsed.paths.len >= 2:
+      figmaFileKey = parsed.paths[1]
+    else:
+      raise newException(FidgetError, "Invalid Figma URL: " & figmaUrl)
+
     return loadFigmaFile(figmaFileKey)
