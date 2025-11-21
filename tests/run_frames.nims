@@ -3,4 +3,4 @@
 --deepcopy:on
 --tlsEmulation:off
 
--d:figmaLive
+--define:figmaLive
