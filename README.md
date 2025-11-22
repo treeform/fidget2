@@ -247,7 +247,7 @@ This does go against the Fidget philosophy, but I get it. You are a propgrammer,
 * Scrolling: `scrollable: bool`, `scrollPos: Vec2`
 
 
-## How is it different form Fitget 1?
+## How is it different from Fidget 1?
 
 It is a little bit of a departure from the Fidget1 model, but the main idea is the same. You should not need to design a UI once in a design program like Figma, and then rebuild it again in code using boxes, elements, CSS, or whatever. The basic idea is that you design your UI in Figma, and it just stays in Figma forever. You take that UI and bring it into programming land. You add hooks, events, and small pieces of logic, but you continue to work with the design itself. You can always go back to the Figma file and modify it slightly, and you should not need to modify the code very much. If you add new nodes, new elements, or rename things, in your design: then you will need code changes. But if you only move things around or change colors, sizes, or fonts, then no code changes are necessary!
 
@@ -255,7 +255,9 @@ It is a little bit of a departure from the Fidget1 model, but the main idea is t
 
 One really cool aspect of this new system is that I use the Figma API directly. In Fidget1 you had to use a plugin to export Figma code. After export you could no longer really design, since the code was stuck. If you wanted to make changes you had to go back to Figma, export new code, and copy paste it in. That was cumbersome, and I wanted to fix it. That is why I went full Figma API. No more copying code around. The library connects to Figma and downloads the design directly.
 
-Another cool feature is "live reload" using the F5 button. In development mode, every Fidget app has a keyboard shortcut. You press F5, and it reloads the Figma file. It fetches the new design and re-renders the app. If the names and node structure remain the same, it updates live without changes to the code. This means you can design and test features at the same time. A designer can run the app, make changes in Figma, press F5, and immediately see the new design in the live app. This makes very rapid iteration possible, something that designers have not had access to before.
+When you compile with `-d:figmaLive` the app will automatically reload the Figma file when the app starts and when the F5 button is pressed. It fetches the new design and re-renders the app. If the names and node structure remain the same, it updates live without changes to the code. This means you can design and test features at the same time. A designer can run the app, make changes in Figma, press F5, and immediately see the new design in the live app. This makes very rapid iteration possible, something that designers have not had access to before.
+
+You need to get a Figma API key and put it in `~/.figmatoken`. You can get one by creating a new personal access token in Figma and copying the token to the file.
 
 ## Testing
 
