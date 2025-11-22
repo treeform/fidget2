@@ -3,4 +3,4 @@ nim	figmaFile	fidget2/loader.html#figmaFile	var figmaFile		8
 nim	figmaImagePath	fidget2/loader.html#figmaImagePath,string	proc figmaImagePath(imageRef: string): string		23
 nim	figmaFontPath	fidget2/loader.html#figmaFontPath,string	proc figmaFontPath(fontPostScriptName: string): string		27
 nim	userFontPath	fidget2/loader.html#userFontPath,string	proc userFontPath(fontPostScriptName: string): string		31
-nim	loadFigmaUrl	fidget2/loader.html#loadFigmaUrl,string	proc loadFigmaUrl(figmaUrl: string): FigmaFile		269
+nim	loadFigmaUrl	fidget2/loader.html#loadFigmaUrl,string	proc loadFigmaUrl(figmaUrl: string): FigmaFile		270
