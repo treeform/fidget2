@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
-      - uses: treeform/setup-nim-action@v2
+      - uses: treeform/setup-nim-action@v5
       - uses: mymindstorm/setup-emsdk@v14
 
       - name: Install system dependencies
@@ -23,10 +23,10 @@ jobs:
           sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
 
       - name: Install Nim packages
-        run: nimble install -y
+        run: nimby install fidget2.nimble
 
       - name: List Installed Nim packages
-        run: nimble list -i --ver
+        run: nimby tree fidget2
 
       - name: Set Figma Token
         run: echo ${{ secrets.FIGMA_TOKEN }} > ~/.figmatoken
