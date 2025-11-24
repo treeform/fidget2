@@ -369,7 +369,7 @@ proc setupWindow*(
   echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
 
   # Setup bxy
-  bxy = newBoxy(atlasSize = 1024*8)
+  bxy = newBoxy(atlasSize = 1024*8, tileSize = 128, tileMargin = 2)
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Reads the GPU pixels from the screen.
