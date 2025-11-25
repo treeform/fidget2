@@ -1,5 +1,5 @@
 import
-  std/[tables],
+  std/[tables, sets],
   boxy, bumpy, pixie, opengl, vmath, windy,
   common, cpurender, internal, layout, loader, inodes, measure, schema
 
@@ -11,6 +11,12 @@ export cpurender.underMouse
 
 var
   bxy*: Boxy
+  usedImages: HashSet[string]
+
+proc useImage(bxy: Boxy, name: string, image: Image) =
+  ## Adds an image to the atlas.
+  bxy.addImage(name, image, mipmaps=false)
+  usedImages.incl(name)
 
 proc quasiEqual(a, b: Rect): bool =
   ## Quasi-equal. Equals everything except integer translation.
@@ -121,14 +127,15 @@ proc rasterize(node: INode, level: int) {.measure.} =
             imageCache[paint.imageRef] = image
           else:
             image = imageCache[paint.imageRef]
-          bxy.addImage(paint.imageRef, image)
+          bxy.useImage(paint.imageRef, image)
+
 
       else:
         layer = newImage(node.pixelBox.w.int, node.pixelBox.h.int)
         let prevBoundsMat = mat
         mat = translate(-node.pixelBox.xy) * mat
         node.drawNodeInternal(withChildren=node.collapse)
-        bxy.addImage(node.id, layer)
+        bxy.useImage(node.id, layer)
         mat = prevBoundsMat
 
       if node.clipsContent:
@@ -139,10 +146,8 @@ proc rasterize(node: INode, level: int) {.measure.} =
         var mask = node.maskSelfImage()
         layer.draw(mask, blendMode = MaskBlend)
 
-        bxy.addImage(node.id & ".mask", layer)
+        bxy.useImage(node.id & ".mask", layer)
         mat = prevBoundsMat
-    else:
-      bxy.removeImage(node.id)
 
   if not node.collapse:
     for child in node.children:
@@ -308,6 +313,30 @@ proc rasterPass*(node: INode) {.measure.} =
   ## Performs a raster pass on a node.
   rasterize(node, 0)
 
+  # Walk all nodes and find images to remove.
+  var inUse: HashSet[string]
+  proc walk(node: INode) =
+    for fill in node.fills:
+      if fill.imageRef != "":
+        inUse.incl(fill.imageRef)
+    for stroke in node.strokes:
+      if stroke.imageRef != "":
+        inUse.incl(stroke.imageRef)
+    if node.willDrawSomething():
+      inUse.incl(node.id)
+    if node.clipsContent:
+      inUse.incl(node.id & ".mask")
+    for child in node.children:
+      walk(child)
+  walk(node)
+
+  let usedImages2 = usedImages
+  for name in usedImages2:
+    if name notin inUse:
+      if name in bxy:
+        bxy.removeImage(name)
+      usedImages.excl(name)
+
 proc compositePass*(node: INode) {.measure.} =
   ## Performs a compositing pass on a node.
   composite(node)
@@ -369,7 +398,7 @@ proc setupWindow*(
   echo "GL_SHADING_LANGUAGE_VERSION: ", cast[cstring](glGetString(GL_SHADING_LANGUAGE_VERSION))
 
   # Setup bxy
-  bxy = newBoxy(atlasSize = 1024*8, tileSize = 128, tileMargin = 2)
+  bxy = newBoxy(atlasSize = 1024, tileSize = 64, tileMargin = 2)
 
 proc readGpuPixelsFromScreen*(): pixie.Image =
   ## Reads the GPU pixels from the screen.
