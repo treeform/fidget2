@@ -235,25 +235,25 @@ proc composite(node: INode) {.measure.} =
         bxy.restoreTransform()
 
       of StretchScaleMode:
-        var mat: Mat3
-        mat[0, 0] = paint.imageTransform[0][0]
-        mat[0, 1] = paint.imageTransform[0][1]
-        mat[1, 0] = paint.imageTransform[1][0]
-        mat[1, 1] = paint.imageTransform[1][1]
-        mat[2, 0] = paint.imageTransform[0][2]
-        mat[2, 1] = paint.imageTransform[1][2]
-        mat[2, 2] = 1
-        mat = mat.inverse()
-        mat[2, 0] = mat[2, 0] * node.size.x
-        mat[2, 1] = mat[2, 1] * node.size.y
+        var m: Mat3
+        m[0, 0] = paint.imageTransform[0][0]
+        m[0, 1] = paint.imageTransform[0][1]
+        m[1, 0] = paint.imageTransform[1][0]
+        m[1, 1] = paint.imageTransform[1][1]
+        m[2, 0] = paint.imageTransform[0][2]
+        m[2, 1] = paint.imageTransform[1][2]
+        m[2, 2] = 1
+        m = m.inverse()
+        m[2, 0] = m[2, 0] * node.size.x
+        m[2, 1] = m[2, 1] * node.size.y
         let
           ratioW = image.width.float32 / node.size.x
           ratioH = image.height.float32 / node.size.y
           scale = min(ratioW, ratioH)
-        mat = mat * scale(vec2(1/scale))
+        m = m * scale(vec2(1/scale))
         bxy.saveTransform()
         bxy.applyTransform(node.mat)
-        bxy.applyTransform(mat)
+        bxy.applyTransform(m)
         bxy.drawImage(paint.imageRef, pos = vec2(0, 0))
         bxy.restoreTransform()
 

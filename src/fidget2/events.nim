@@ -865,10 +865,11 @@ proc display() {.measure.} =
   # If content scale has changed, mark everything dirty.
   let contentScale = window.contentScale()
   if currentContentScale != contentScale:
-    if currentContentScale != 0.0:
-      thisFrame.markTreeDirty()
-
+    thisFrame.markTreeDirty()
     currentContentScale = contentScale
+    # Skip 1 frame to avoid the odd state of the context.
+    return
+
 
   # Update cursor blink timing.
   if textBoxFocus != nil:
@@ -885,7 +886,6 @@ proc display() {.measure.} =
 
   window.runeInputEnabled = textBoxFocus != nil
 
-  # thisFrame.dirty = true
   thisFrame.internal.checkDirty()
   if thisFrame.dirty:
     drawToScreen(thisFrame.internal)
