@@ -863,10 +863,12 @@ proc display() {.measure.} =
     return
 
   # If content scale has changed, mark everything dirty.
-  if currentContentScale != window.contentScale():
+  let contentScale = window.contentScale()
+  if currentContentScale != contentScale:
     if currentContentScale != 0.0:
       thisFrame.markTreeDirty()
-    currentContentScale = window.contentScale()
+
+    currentContentScale = contentScale
 
   # Update cursor blink timing.
   if textBoxFocus != nil:
