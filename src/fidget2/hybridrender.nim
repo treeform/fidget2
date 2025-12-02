@@ -341,16 +341,18 @@ proc compositePass*(node: INode) {.measure.} =
   ## Performs a compositing pass on a node.
   composite(node)
 
+proc contentSize*(window: Window): IVec2 =
+  ## Returns the content size of the window.
+  (window.size.vec2 / window.contentScale).ivec2
+
 proc drawToScreen*(screenNode: INode) {.measure.} =
   ## Draws the current node onto the screen.
 
-  if window.size.vec2 != screenNode.size:
-    if window.style == DecoratedResizable:
-      # Stretch the current frame to fit the window.
-      screenNode.size = window.size.vec2 / window.contentScale
-    else:
-      # Stretch the window to fit the current frame.
-      window.size = (screenNode.size.vec2 * window.contentScale).ivec2
+  if window.contentSize.vec2 != screenNode.size:
+    # Stretch the current frame to fit the window.
+    echo "content size changed to: ", window.contentSize.vec2
+    screenNode.dirty = true
+    screenNode.size = window.contentSize.vec2
 
   bxy.beginFrame(window.size, clearFrame=clearFrame)
 
@@ -365,6 +367,7 @@ proc drawToScreen*(screenNode: INode) {.measure.} =
   if screenNode.dirty:
     rasterPass(screenNode)
 
+  echo "screenNode.mat: ", screenNode.mat
   compositePass(screenNode)
 
   bxy.endFrame()
