@@ -350,7 +350,6 @@ proc drawToScreen*(screenNode: INode) {.measure.} =
 
   if window.contentSize.vec2 != screenNode.size:
     # Stretch the current frame to fit the window.
-    echo "content size changed to: ", window.contentSize.vec2
     screenNode.dirty = true
     screenNode.size = window.contentSize.vec2
 
@@ -367,7 +366,6 @@ proc drawToScreen*(screenNode: INode) {.measure.} =
   if screenNode.dirty:
     rasterPass(screenNode)
 
-  echo "screenNode.mat: ", screenNode.mat
   compositePass(screenNode)
 
   bxy.endFrame()
