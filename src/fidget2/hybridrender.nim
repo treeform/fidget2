@@ -275,8 +275,8 @@ proc composite(node: INode) {.measure.} =
   elif node.id in bxy:
     doAssert fract(node.pixelBox.x) == 0
     doAssert fract(node.pixelBox.y) == 0
-    doAssert node.willDrawSomething()
-    bxy.drawImage(node.id, pos = node.pixelBox.xy)
+    if node.willDrawSomething():
+      bxy.drawImage(node.id, pos = node.pixelBox.xy)
 
   if node.onRenderCallback != nil:
     node.onRenderCallback(node)
