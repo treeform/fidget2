@@ -341,17 +341,18 @@ proc compositePass*(node: INode) {.measure.} =
   ## Performs a compositing pass on a node.
   composite(node)
 
-proc contentSize*(window: Window): IVec2 =
-  ## Returns the content size of the window.
-  (window.size.vec2 / window.contentScale).ivec2
-
 proc drawToScreen*(screenNode: INode) {.measure.} =
   ## Draws the current node onto the screen.
 
-  if window.contentSize.vec2 != screenNode.size:
-    # Stretch the current frame to fit the window.
-    screenNode.dirty = true
-    screenNode.size = window.contentSize.vec2
+  if window.size.vec2 != screenNode.size:
+    if window.style == DecoratedResizable:
+      # Stretch the current frame to fit the window.
+      if screenNode.size != window.size.vec2 / window.contentScale:
+        screenNode.dirty = true
+        screenNode.size = window.size.vec2 / window.contentScale
+    else:
+      # Stretch the window to fit the current frame.
+      window.size = (screenNode.size.vec2 * window.contentScale).ivec2
 
   bxy.beginFrame(window.size, clearFrame=clearFrame)
 
