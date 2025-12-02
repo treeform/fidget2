@@ -870,7 +870,6 @@ proc display() {.measure.} =
     # Skip 1 frame to avoid the odd state of the context.
     return
 
-
   # Update cursor blink timing.
   if textBoxFocus != nil:
     let currentTime = epochTime()
