@@ -14,6 +14,9 @@ jobs:
       - uses: actions/checkout@v3
       - uses: treeform/setup-nim-action@v5
 
+      - name: Mark nimble as executable
+        run: chmod +x $HOME/.nimby/nim/bin/nimble
+
       - name: Install Nim packages
         run: nimby install fidget2.nimble
 
