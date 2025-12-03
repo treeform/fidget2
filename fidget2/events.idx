@@ -70,11 +70,11 @@ nim	image=	fidget2/events.html#image=,,Image	proc image=(paint: schema.Paint; im
 nim	navigateTo	fidget2/events.html#navigateTo,string	proc navigateTo(fullPath: string; smart = false)		837
 nim	navigateBack	fidget2/events.html#navigateBack	proc navigateBack()		846
 nim	absolutePosition	fidget2/events.html#absolutePosition,Node	proc absolutePosition(node: Node): Vec2		853
-nim	tickFidget	fidget2/events.html#tickFidget	proc tickFidget()		902
-nim	setupWindowAndEvents	fidget2/events.html#setupWindowAndEvents,string	proc setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)		910
-nim	startFidget	fidget2/events.html#startFidget,FigmaFile,string,string,string	proc startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		973
-nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		999
-nim	isRunning	fidget2/events.html#isRunning	proc isRunning(): bool		1017
-nim	closeFidget	fidget2/events.html#closeFidget	proc closeFidget()		1021
+nim	tickFidget	fidget2/events.html#tickFidget	proc tickFidget()		903
+nim	setupWindowAndEvents	fidget2/events.html#setupWindowAndEvents,string	proc setupWindowAndEvents(windowTitle: string; windowStyle = DecoratedResizable)		911
+nim	startFidget	fidget2/events.html#startFidget,FigmaFile,string,string,string	proc startFidget(figmaFile: FigmaFile; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		974
+nim	startFidget	fidget2/events.html#startFidget,string,string,string,string	proc startFidget(figmaUrl: string; windowTitle: string; entryFrame: string;\n            windowStyle = DecoratedResizable; dataDir = "data")		1000
+nim	isRunning	fidget2/events.html#isRunning	proc isRunning(): bool		1018
+nim	closeFidget	fidget2/events.html#closeFidget	proc closeFidget()		1022
 nimgrp	relativemousepos	fidget2/events.html#relativeMousePos-procs-all	proc		315
-nimgrp	startfidget	fidget2/events.html#startFidget-procs-all	proc		973
+nimgrp	startfidget	fidget2/events.html#startFidget-procs-all	proc		974
