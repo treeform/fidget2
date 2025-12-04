@@ -34,5 +34,8 @@ jobs:
       - name: Build and run tests
         run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
+      - name: Install examples dependencies
+        run: nimby install chrono
+
       - name: Compile Examples
         run: nim c -r tests/compile_examples.nim
