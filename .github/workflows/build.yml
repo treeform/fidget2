@@ -34,20 +34,5 @@ jobs:
       - name: Build and run tests
         run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
-      - name: Compile Calculator Natively
-        run: cd examples/calculator && nim c calculator.nim
-
-      - name: Compile Calculator for Emscripten
-        run: cd examples/calculator && nim c -d:emscripten calculator.nim
-
-      - name: Compile Dragon Natively
-        run: cd examples/dragon && nim c dragon.nim
-
-      - name: Compile Dragon for Emscripten
-        run: cd examples/dragon && nim c -d:emscripten dragon.nim
-
-      - name: Compile Panels Natively
-        run: cd examples/panels && nim c panels.nim
-
-      - name: Compile Panels for Emscripten
-        run: cd examples/panels && nim c -d:emscripten panels.nim
+      - name: Compile Examples
+        run: nim c -r tests/compile_examples.nim
