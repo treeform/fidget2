@@ -14,77 +14,106 @@ nim	id	fidget2/nodes.html#id,Node	proc id(node: Node): string		42
 nim	componentId	fidget2/nodes.html#componentId,Node	proc componentId(node: Node): string		45
 nim	position	fidget2/nodes.html#position,Node	proc position(node: Node): Vec2		48
 nim	position=	fidget2/nodes.html#position=,Node,Vec2	proc position=(node: Node; value: Vec2)		51
-nim	mat	fidget2/nodes.html#mat,Node	proc mat(node: Node): Mat3		55
-nim	NodeSize	fidget2/nodes.html#NodeSize	type NodeSize		58
-nim	size	fidget2/nodes.html#size,Node	proc size(node: Node): Vec2		60
-nim	size=	fidget2/nodes.html#size=,Node,Vec2	proc size=(node: Node; value: Vec2)		63
-nim	scale	fidget2/nodes.html#scale,Node	proc scale(node: Node): Vec2		67
-nim	rotation	fidget2/nodes.html#rotation,Node	proc rotation(node: Node): float32		70
-nim	flipHorizontal	fidget2/nodes.html#flipHorizontal,Node	proc flipHorizontal(node: Node): bool		73
-nim	flipVertical	fidget2/nodes.html#flipVertical,Node	proc flipVertical(node: Node): bool		76
-nim	fillGeometry	fidget2/nodes.html#fillGeometry,Node	proc fillGeometry(node: Node): seq[Geometry]		79
-nim	strokeWeight	fidget2/nodes.html#strokeWeight,Node	proc strokeWeight(node: Node): float32		82
-nim	strokeAlign	fidget2/nodes.html#strokeAlign,Node	proc strokeAlign(node: Node): StrokeAlign		85
-nim	strokeGeometry	fidget2/nodes.html#strokeGeometry,Node	proc strokeGeometry(node: Node): seq[Geometry]		88
-nim	cornerRadius	fidget2/nodes.html#cornerRadius,Node	proc cornerRadius(node: Node): float32		91
-nim	rectangleCornerRadii	fidget2/nodes.html#rectangleCornerRadii,Node	proc rectangleCornerRadii(node: Node): array[4, float32]		94
-nim	blendMode	fidget2/nodes.html#blendMode,Node	proc blendMode(node: Node): BlendMode		97
-nim	fills	fidget2/nodes.html#fills,Node	proc fills(node: Node): seq[Paint]		100
-nim	strokes	fidget2/nodes.html#strokes,Node	proc strokes(node: Node): seq[Paint]		103
-nim	effects	fidget2/nodes.html#effects,Node	proc effects(node: Node): seq[Effect]		106
-nim	children	fidget2/nodes.html#children,Node	proc children(node: Node): seq[Node]		109
-nim	parent	fidget2/nodes.html#parent,Node	proc parent(node: Node): Node		112
-nim	wordWrap	fidget2/nodes.html#wordWrap,Node	proc wordWrap(node: Node): bool		115
-nim	wordWrap=	fidget2/nodes.html#wordWrap=,Node,bool	proc wordWrap=(node: Node; value: bool)		118
-nim	scrollable	fidget2/nodes.html#scrollable,Node	proc scrollable(node: Node): bool		122
-nim	scrollable=	fidget2/nodes.html#scrollable=,Node,bool	proc scrollable=(node: Node; value: bool)		125
-nim	scrollPos	fidget2/nodes.html#scrollPos,Node	proc scrollPos(node: Node): Vec2		129
-nim	scrollPos=	fidget2/nodes.html#scrollPos=,Node,Vec2	proc scrollPos=(node: Node; value: Vec2)		132
-nim	editable	fidget2/nodes.html#editable,Node	proc editable(node: Node): bool		136
-nim	editable=	fidget2/nodes.html#editable=,Node,bool	proc editable=(node: Node; value: bool)		139
-nim	dirty	fidget2/nodes.html#dirty,Node	proc dirty(node: Node): bool		143
-nim	dirty=	fidget2/nodes.html#dirty=,Node,bool	proc dirty=(node: Node; value: bool)		146
-nim	prototypeStartNodeID	fidget2/nodes.html#prototypeStartNodeID,Node	proc prototypeStartNodeID(node: Node): string		149
-nim	path	fidget2/nodes.html#path,Node	proc path(node: Node): string		152
-nim	markTreeDirty	fidget2/nodes.html#markTreeDirty,Node	proc markTreeDirty(node: Node)		156
-nim	makeTextDirty	fidget2/nodes.html#makeTextDirty,Node	proc makeTextDirty(node: Node)		159
-nim	text	fidget2/nodes.html#text,Node	proc text(node: Node): string		162
-nim	text=	fidget2/nodes.html#text=,Node,string	proc text=(node: Node; value: string)		168
-nim	show	fidget2/nodes.html#show,Node	proc show(node: Node)		172
-nim	hide	fidget2/nodes.html#hide,Node	proc hide(node: Node)		177
-nim	show	fidget2/nodes.html#show,seq[Node]	proc show(nodes: seq[Node])		182
-nim	hide	fidget2/nodes.html#hide,seq[Node]	proc hide(nodes: seq[Node])		187
-nim	visible	fidget2/nodes.html#visible,Node	proc visible(node: Node): bool		192
-nim	visible=	fidget2/nodes.html#visible=,Node,bool	proc visible=(node: Node; value: bool)		196
-nim	opacity	fidget2/nodes.html#opacity,Node	proc opacity(node: Node): float32		202
-nim	opacity=	fidget2/nodes.html#opacity=,Node,float32	proc opacity=(node: Node; value: float32)		205
-nim	addChild	fidget2/nodes.html#addChild,Node,Node	proc addChild(parent, child: Node)		209
-nim	removeChild	fidget2/nodes.html#removeChild,Node,Node	proc removeChild(parent: Node; child: Node)		214
-nim	removeChildren	fidget2/nodes.html#removeChildren,Node,seq[Node]	proc removeChildren(parent: Node; children: seq[Node])		219
-nim	remove	fidget2/nodes.html#remove,Node	proc remove(node: Node)		225
-nim	remove	fidget2/nodes.html#remove,seq[Node]	proc remove(nodes: seq[Node])		229
-nim	removeChildren	fidget2/nodes.html#removeChildren,Node	proc removeChildren(node: Node)		234
-nim	copy	fidget2/nodes.html#copy,Node	proc copy(node: Node): Node		239
-nim	newInstance	fidget2/nodes.html#newInstance,Node	proc newInstance(node: Node): Node		242
-nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		249
-nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		254
-nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		258
-nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		262
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		266
-nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		271
-nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		276
-nim	childIndex	fidget2/nodes.html#childIndex,Node	proc childIndex(node: Node): int		283
-nim	inTree	fidget2/nodes.html#inTree,Node,Node	proc inTree(node, other: Node): bool		287
-nim	sendToFront	fidget2/nodes.html#sendToFront,Node	proc sendToFront(node: Node)		291
-nim	sendToBack	fidget2/nodes.html#sendToBack,Node	proc sendToBack(node: Node)		297
-nim	sendForward	fidget2/nodes.html#sendForward,Node	proc sendForward(node: Node)		303
-nim	sendBackward	fidget2/nodes.html#sendBackward,Node	proc sendBackward(node: Node)		310
-nim	dumpTree	fidget2/nodes.html#dumpTree,Node	proc dumpTree(node: Node): string		317
-nim	onRenderCallback=	fidget2/nodes.html#onRenderCallback=,Node,proc(Node)	proc onRenderCallback=(node: Node; callback: proc (thisNode: Node) {.closure.})		320
-nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		266
-nimgrp	removechildren	fidget2/nodes.html#removeChildren-procs-all	proc		219
+nim	origPosition=	fidget2/nodes.html#origPosition=,Node,Vec2	proc origPosition=(node: Node; value: Vec2)		55
+nim	origPosition	fidget2/nodes.html#origPosition,Node	proc origPosition(node: Node): Vec2		59
+nim	mat	fidget2/nodes.html#mat,Node	proc mat(node: Node): Mat3		62
+nim	NodeSize	fidget2/nodes.html#NodeSize	type NodeSize		65
+nim	size=	fidget2/nodes.html#size=,Node,Vec2	proc size=(node: Node; value: Vec2)		67
+nim	size	fidget2/nodes.html#size,Node	proc size(node: Node): Vec2		71
+nim	origSize=	fidget2/nodes.html#origSize=,Node,Vec2	proc origSize=(node: Node; value: Vec2)		74
+nim	origSize	fidget2/nodes.html#origSize,Node	proc origSize(node: Node): Vec2		78
+nim	scale	fidget2/nodes.html#scale,Node	proc scale(node: Node): Vec2		81
+nim	rotation	fidget2/nodes.html#rotation,Node	proc rotation(node: Node): float32		84
+nim	flipHorizontal	fidget2/nodes.html#flipHorizontal,Node	proc flipHorizontal(node: Node): bool		87
+nim	flipVertical	fidget2/nodes.html#flipVertical,Node	proc flipVertical(node: Node): bool		90
+nim	fillGeometry	fidget2/nodes.html#fillGeometry,Node	proc fillGeometry(node: Node): seq[Geometry]		93
+nim	strokeWeight=	fidget2/nodes.html#strokeWeight=,Node,float32	proc strokeWeight=(node: Node; value: float32)		96
+nim	strokeWeight	fidget2/nodes.html#strokeWeight,Node	proc strokeWeight(node: Node): float32		100
+nim	strokeAlign=	fidget2/nodes.html#strokeAlign=,Node,StrokeAlign	proc strokeAlign=(node: Node; value: StrokeAlign)		103
+nim	strokeAlign	fidget2/nodes.html#strokeAlign,Node	proc strokeAlign(node: Node): StrokeAlign		107
+nim	strokeGeometry	fidget2/nodes.html#strokeGeometry,Node	proc strokeGeometry(node: Node): seq[Geometry]		110
+nim	cornerRadius=	fidget2/nodes.html#cornerRadius=,Node,float32	proc cornerRadius=(node: Node; value: float32)		113
+nim	rectangleCornerRadii	fidget2/nodes.html#rectangleCornerRadii,Node	proc rectangleCornerRadii(node: Node): array[4, float32]		117
+nim	blendMode	fidget2/nodes.html#blendMode,Node	proc blendMode(node: Node): BlendMode		120
+nim	fills=	fidget2/nodes.html#fills=,Node,seq[Paint]	proc fills=(node: Node; value: seq[Paint])		123
+nim	fills	fidget2/nodes.html#fills,Node	proc fills(node: Node): seq[Paint]		127
+nim	strokes=	fidget2/nodes.html#strokes=,Node,seq[Paint]	proc strokes=(node: Node; value: seq[Paint])		130
+nim	strokes	fidget2/nodes.html#strokes,Node	proc strokes(node: Node): seq[Paint]		134
+nim	effects	fidget2/nodes.html#effects,Node	proc effects(node: Node): seq[Effect]		137
+nim	children	fidget2/nodes.html#children,Node	proc children(node: Node): seq[Node]		140
+nim	parent	fidget2/nodes.html#parent,Node	proc parent(node: Node): Node		143
+nim	wordWrap	fidget2/nodes.html#wordWrap,Node	proc wordWrap(node: Node): bool		146
+nim	wordWrap=	fidget2/nodes.html#wordWrap=,Node,bool	proc wordWrap=(node: Node; value: bool)		149
+nim	scrollable	fidget2/nodes.html#scrollable,Node	proc scrollable(node: Node): bool		153
+nim	scrollable=	fidget2/nodes.html#scrollable=,Node,bool	proc scrollable=(node: Node; value: bool)		156
+nim	scrollPos	fidget2/nodes.html#scrollPos,Node	proc scrollPos(node: Node): Vec2		160
+nim	scrollPos=	fidget2/nodes.html#scrollPos=,Node,Vec2	proc scrollPos=(node: Node; value: Vec2)		163
+nim	editable	fidget2/nodes.html#editable,Node	proc editable(node: Node): bool		167
+nim	editable=	fidget2/nodes.html#editable=,Node,bool	proc editable=(node: Node; value: bool)		170
+nim	dirty	fidget2/nodes.html#dirty,Node	proc dirty(node: Node): bool		174
+nim	dirty=	fidget2/nodes.html#dirty=,Node,bool	proc dirty=(node: Node; value: bool)		177
+nim	prototypeStartNodeID	fidget2/nodes.html#prototypeStartNodeID,Node	proc prototypeStartNodeID(node: Node): string		180
+nim	clipsContent=	fidget2/nodes.html#clipsContent=,Node,bool	proc clipsContent=(node: Node; value: bool)		183
+nim	clipsContent	fidget2/nodes.html#clipsContent,Node	proc clipsContent(node: Node): bool		187
+nim	constraints=	fidget2/nodes.html#constraints=,Node,LayoutConstraint	proc constraints=(node: Node; value: LayoutConstraint)		190
+nim	constraints	fidget2/nodes.html#constraints,Node	proc constraints(node: Node): LayoutConstraint		194
+nim	layoutMode=	fidget2/nodes.html#layoutMode=,Node,LayoutMode	proc layoutMode=(node: Node; value: LayoutMode)		197
+nim	layoutMode	fidget2/nodes.html#layoutMode,Node	proc layoutMode(node: Node): LayoutMode		201
+nim	layoutAlign=	fidget2/nodes.html#layoutAlign=,Node,LayoutAlign	proc layoutAlign=(node: Node; value: LayoutAlign)		204
+nim	layoutAlign	fidget2/nodes.html#layoutAlign,Node	proc layoutAlign(node: Node): LayoutAlign		208
+nim	counterAxisSizingMode=	fidget2/nodes.html#counterAxisSizingMode=,Node,AxisSizingMode	proc counterAxisSizingMode=(node: Node; value: AxisSizingMode)		211
+nim	counterAxisSizingMode	fidget2/nodes.html#counterAxisSizingMode,Node	proc counterAxisSizingMode(node: Node): AxisSizingMode		215
+nim	paddingLeft=	fidget2/nodes.html#paddingLeft=,Node,float32	proc paddingLeft=(node: Node; value: float32)		218
+nim	paddingRight=	fidget2/nodes.html#paddingRight=,Node,float32	proc paddingRight=(node: Node; value: float32)		222
+nim	paddingTop=	fidget2/nodes.html#paddingTop=,Node,float32	proc paddingTop=(node: Node; value: float32)		226
+nim	paddingBottom=	fidget2/nodes.html#paddingBottom=,Node,float32	proc paddingBottom=(node: Node; value: float32)		230
+nim	itemSpacing=	fidget2/nodes.html#itemSpacing=,Node,float32	proc itemSpacing=(node: Node; value: float32)		234
+nim	overflowDirection=	fidget2/nodes.html#overflowDirection=,Node,OverflowDirection	proc overflowDirection=(node: Node; value: OverflowDirection)		238
+nim	overflowDirection	fidget2/nodes.html#overflowDirection,Node	proc overflowDirection(node: Node): OverflowDirection		242
+nim	path	fidget2/nodes.html#path,Node	proc path(node: Node): string		245
+nim	markTreeDirty	fidget2/nodes.html#markTreeDirty,Node	proc markTreeDirty(node: Node)		249
+nim	makeTextDirty	fidget2/nodes.html#makeTextDirty,Node	proc makeTextDirty(node: Node)		252
+nim	text	fidget2/nodes.html#text,Node	proc text(node: Node): string		255
+nim	text=	fidget2/nodes.html#text=,Node,string	proc text=(node: Node; value: string)		261
+nim	singleline=	fidget2/nodes.html#singleline=,Node,bool	proc singleline=(node: Node; value: bool)		265
+nim	singleline	fidget2/nodes.html#singleline,Node	proc singleline(node: Node): bool		269
+nim	style=	fidget2/nodes.html#style=,Node,TypeStyle	proc style=(node: Node; value: TypeStyle)		272
+nim	style	fidget2/nodes.html#style,Node	proc style(node: Node): TypeStyle		276
+nim	show	fidget2/nodes.html#show,Node	proc show(node: Node)		279
+nim	hide	fidget2/nodes.html#hide,Node	proc hide(node: Node)		284
+nim	show	fidget2/nodes.html#show,seq[Node]	proc show(nodes: seq[Node])		289
+nim	hide	fidget2/nodes.html#hide,seq[Node]	proc hide(nodes: seq[Node])		294
+nim	visible	fidget2/nodes.html#visible,Node	proc visible(node: Node): bool		299
+nim	visible=	fidget2/nodes.html#visible=,Node,bool	proc visible=(node: Node; value: bool)		303
+nim	opacity	fidget2/nodes.html#opacity,Node	proc opacity(node: Node): float32		309
+nim	opacity=	fidget2/nodes.html#opacity=,Node,float32	proc opacity=(node: Node; value: float32)		312
+nim	addChild	fidget2/nodes.html#addChild,Node,Node	proc addChild(parent, child: Node)		316
+nim	removeChild	fidget2/nodes.html#removeChild,Node,Node	proc removeChild(parent: Node; child: Node)		321
+nim	removeChildren	fidget2/nodes.html#removeChildren,Node,seq[Node]	proc removeChildren(parent: Node; children: seq[Node])		326
+nim	remove	fidget2/nodes.html#remove,Node	proc remove(node: Node)		332
+nim	remove	fidget2/nodes.html#remove,seq[Node]	proc remove(nodes: seq[Node])		336
+nim	removeChildren	fidget2/nodes.html#removeChildren,Node	proc removeChildren(node: Node)		341
+nim	copy	fidget2/nodes.html#copy,Node	proc copy(node: Node): Node		346
+nim	newInstance	fidget2/nodes.html#newInstance,Node	proc newInstance(node: Node): Node		349
+nim	isInstance	fidget2/nodes.html#isInstance,Node	proc isInstance(node: Node): bool		356
+nim	masterComponent	fidget2/nodes.html#masterComponent,Node	proc masterComponent(node: Node): Node		361
+nim	hasVariant	fidget2/nodes.html#hasVariant,Node,string,string	proc hasVariant(node: Node; name, value: string): bool		365
+nim	getVariant	fidget2/nodes.html#getVariant,Node,string	proc getVariant(node: Node; name: string): string		369
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,string	proc setVariant(node: Node; name, value: string)		373
+nim	setVariant	fidget2/nodes.html#setVariant,seq[Node],string,string	proc setVariant(nodes: seq[Node]; name, value: string)		378
+nim	setVariant	fidget2/nodes.html#setVariant,Node,string,bool	proc setVariant(node: Node; name: string; value: bool)		383
+nim	childIndex	fidget2/nodes.html#childIndex,Node	proc childIndex(node: Node): int		390
+nim	inTree	fidget2/nodes.html#inTree,Node,Node	proc inTree(node, other: Node): bool		394
+nim	sendToFront	fidget2/nodes.html#sendToFront,Node	proc sendToFront(node: Node)		398
+nim	sendToBack	fidget2/nodes.html#sendToBack,Node	proc sendToBack(node: Node)		404
+nim	sendForward	fidget2/nodes.html#sendForward,Node	proc sendForward(node: Node)		410
+nim	sendBackward	fidget2/nodes.html#sendBackward,Node	proc sendBackward(node: Node)		417
+nim	dumpTree	fidget2/nodes.html#dumpTree,Node	proc dumpTree(node: Node): string		424
+nim	onRenderCallback=	fidget2/nodes.html#onRenderCallback=,Node,proc(Node)	proc onRenderCallback=(node: Node; callback: proc (thisNode: Node) {.closure.})		427
+nimgrp	setvariant	fidget2/nodes.html#setVariant-procs-all	proc		373
+nimgrp	removechildren	fidget2/nodes.html#removeChildren-procs-all	proc		326
 nimgrp	!=	fidget2/nodes.html#!=-procs-all	proc		21
-nimgrp	remove	fidget2/nodes.html#remove-procs-all	proc		225
 nimgrp	==	fidget2/nodes.html#==-procs-all	proc		18
-nimgrp	show	fidget2/nodes.html#show-procs-all	proc		172
-nimgrp	hide	fidget2/nodes.html#hide-procs-all	proc		177
+nimgrp	remove	fidget2/nodes.html#remove-procs-all	proc		332
+nimgrp	show	fidget2/nodes.html#show-procs-all	proc		279
+nimgrp	hide	fidget2/nodes.html#hide-procs-all	proc		284

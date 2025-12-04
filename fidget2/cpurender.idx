@@ -3,17 +3,17 @@ nim	layer	fidget2/cpurender.html#layer	var layer		15
 nim	maskLayer	fidget2/cpurender.html#maskLayer	var maskLayer		17
 nim	computeIntBounds	fidget2/cpurender.html#computeIntBounds,INode,Mat3	proc computeIntBounds(node: INode; mat: Mat3; withChildren = false): Rect		27
 nim	underMouse	fidget2/cpurender.html#underMouse,INode,Vec2	proc underMouse(screenNode: INode; mousePos: Vec2): seq[INode]		93
-nim	drawPaint	fidget2/cpurender.html#drawPaint,INode,seq[Paint],seq[Geometry]	proc drawPaint(node: INode; paints: seq[Paint]; geometries: seq[Geometry])		253
-nim	drawInnerShadowEffect	fidget2/cpurender.html#drawInnerShadowEffect,Effect,INode,Image	proc drawInnerShadowEffect(effect: Effect; node: INode; fillMask: Image)		298
-nim	maskSelfImage	fidget2/cpurender.html#maskSelfImage,INode	proc maskSelfImage(node: INode): Image		315
-nim	drawGeometry	fidget2/cpurender.html#drawGeometry,INode	proc drawGeometry(node: INode)		336
-nim	drawDropShadowEffect	fidget2/cpurender.html#drawDropShadowEffect,Image,Image,Effect,INode	proc drawDropShadowEffect(lowerLayer: Image; layer: Image; effect: Effect;\n                     node: INode)		390
-nim	drawBackgroundBlur	fidget2/cpurender.html#drawBackgroundBlur,Image,Effect	proc drawBackgroundBlur(lowerLayer: Image; effect: Effect)		398
-nim	drawText	fidget2/cpurender.html#drawText,INode	proc drawText(node: INode)		408
-nim	drawNode	fidget2/cpurender.html#drawNode,INode	proc drawNode(node: INode; withChildren = true)		476
-nim	drawBooleanNode	fidget2/cpurender.html#drawBooleanNode,INode,BlendMode	proc drawBooleanNode(node: INode; blendMode: BlendMode)		478
-nim	drawBoolean	fidget2/cpurender.html#drawBoolean,INode	proc drawBoolean(node: INode)		510
-nim	drawNodeInternal	fidget2/cpurender.html#drawNodeInternal,INode	proc drawNodeInternal(node: INode; withChildren = true)		522
-nim	layoutPass	fidget2/cpurender.html#layoutPass,INode	proc layoutPass(node: INode)		651
-nim	drawCompleteFrame	fidget2/cpurender.html#drawCompleteFrame,INode	proc drawCompleteFrame(node: INode): pixie.Image		657
-nim	setupWindow	fidget2/cpurender.html#setupWindow,IVec2	proc setupWindow(size: IVec2; visible = true; style = Decorated)		674
+nim	drawPaint	fidget2/cpurender.html#drawPaint,INode,seq[Paint],seq[Geometry]	proc drawPaint(node: INode; paints: seq[Paint]; geometries: seq[Geometry])		259
+nim	drawInnerShadowEffect	fidget2/cpurender.html#drawInnerShadowEffect,Effect,INode,Image	proc drawInnerShadowEffect(effect: Effect; node: INode; fillMask: Image)		304
+nim	maskSelfImage	fidget2/cpurender.html#maskSelfImage,INode	proc maskSelfImage(node: INode): Image		321
+nim	drawGeometry	fidget2/cpurender.html#drawGeometry,INode	proc drawGeometry(node: INode)		342
+nim	drawDropShadowEffect	fidget2/cpurender.html#drawDropShadowEffect,Image,Image,Effect,INode	proc drawDropShadowEffect(lowerLayer: Image; layer: Image; effect: Effect;\n                     node: INode)		396
+nim	drawBackgroundBlur	fidget2/cpurender.html#drawBackgroundBlur,Image,Effect	proc drawBackgroundBlur(lowerLayer: Image; effect: Effect)		404
+nim	drawText	fidget2/cpurender.html#drawText,INode	proc drawText(node: INode)		414
+nim	drawNode	fidget2/cpurender.html#drawNode,INode	proc drawNode(node: INode; withChildren = true)		482
+nim	drawBooleanNode	fidget2/cpurender.html#drawBooleanNode,INode,BlendMode	proc drawBooleanNode(node: INode; blendMode: BlendMode)		484
+nim	drawBoolean	fidget2/cpurender.html#drawBoolean,INode	proc drawBoolean(node: INode)		516
+nim	drawNodeInternal	fidget2/cpurender.html#drawNodeInternal,INode	proc drawNodeInternal(node: INode; withChildren = true)		528
+nim	layoutPass	fidget2/cpurender.html#layoutPass,INode	proc layoutPass(node: INode)		657
+nim	drawCompleteFrame	fidget2/cpurender.html#drawCompleteFrame,INode	proc drawCompleteFrame(node: INode): pixie.Image		663
+nim	setupWindow	fidget2/cpurender.html#setupWindow,IVec2	proc setupWindow(size: IVec2; visible = true; style = Decorated)		680
