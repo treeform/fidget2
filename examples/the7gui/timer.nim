@@ -21,13 +21,13 @@ proc currentTime(): float64 =
 find "/UI/TimerFrame":
   find "TimeGroup/ProgressBar/progress":
     onDisplay:
-      thisNode.size.x = currentTime() / duration * 272
+      thisNode.size = vec2(currentTime() / duration * 272, thisNode.size.y)
       thisNode.dirty = true
 
   find "Label/text":
     onDisplay:
       let s = currentTime()
-      thisNode.characters = &"{s:0.2f}s"
+      thisNode.text = &"{s:0.2f}s"
       thisNode.dirty = true
 
   find "Button":
@@ -35,12 +35,12 @@ find "/UI/TimerFrame":
       if not running:
         startTime = epochTime()
         running = true
-        find("text").characters = "stop"
+        find("text").text = "stop"
         find("text").dirty = true
       else:
         stoppedTime = epochTime()
         running = false
-        find("text").characters = "start"
+        find("text").text = "start"
         find("text").dirty = true
 
 startFidget(

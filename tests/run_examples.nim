@@ -10,7 +10,7 @@ const examples = [
   "examples/the7gui/cells.nim",
   "examples/the7gui/circles.nim",
   "examples/the7gui/crud.nim",
-  # "examples/the7gui/timer.nim",
+  "examples/the7gui/timer.nim",
   "examples/calculator/calculator.nim",
   "examples/panels/panels.nim",
   "examples/writer/writer.nim",
