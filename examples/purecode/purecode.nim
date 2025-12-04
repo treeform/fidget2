@@ -37,7 +37,7 @@ proc newButtonConstraints(): LayoutConstraint =
 var audoID = 0
 proc newNode(name: string, kind: NodeKind): Node =
   ## Initialize common node properties
-  let node = Node()
+  var node = INode()
   node.id = "auto:" & $audoID
   inc audoID
   node.name = name
@@ -50,7 +50,7 @@ proc newNode(name: string, kind: NodeKind): Node =
   node.strokeAlign = InsideStroke
   node.blendMode = NormalBlend
   node.constraints = newButtonConstraints()
-  return node
+  return Node(node)
 
 # Create the FigmaFile object and set it as the global figmaFile
 figmaFile = FigmaFile()
@@ -58,16 +58,16 @@ figmaFile.name = "Purecode"
 
 # Create the document structure manually
 let documentNode = newNode("Document", DocumentNode)
-figmaFile.document = documentNode
+figmaFile.document = documentNode.internal
 
 let canvasNode = newNode("UI", CanvasNode)
 documentNode.addChild(canvasNode)
 
 let menuFrame = newNode("Menu", FrameNode)
-menuFrame.position = vec2(0.0, 0.0)
-menuFrame.size = vec2(283.0, 338.0)
-menuFrame.origPosition = menuFrame.position
-menuFrame.origSize = menuFrame.size
+menuFrame.origPosition = vec2(0.0, 0.0)
+menuFrame.origSize = vec2(283.0, 338.0)
+menuFrame.position = menuFrame.position
+menuFrame.size = menuFrame.size
 menuFrame.clipsContent = true
 menuFrame.layoutMode = VerticalLayout
 menuFrame.counterAxisSizingMode = FixedAxis
@@ -100,9 +100,9 @@ newGameText.position = vec2(0.0, 0.0)
 newGameText.size = vec2(180.0, 50.0)
 newGameText.origPosition = newGameText.position
 newGameText.origSize = newGameText.size
-newGameText.characters = "New Game"
 newGameText.style = newButtonStyle()
 newGameText.fills = @[newSolidPaint(color(0.0, 0.0, 0.0, 1.0))]
+newGameText.text = "New Game"
 newGameText.strokeAlign = OutsideStroke
 newGameText.constraints = newButtonConstraints()
 newGameButton.addChild(newGameText)
@@ -127,9 +127,9 @@ continueText.position = vec2(0.0, 0.0)
 continueText.size = vec2(180.0, 50.0)
 continueText.origPosition = continueText.position
 continueText.origSize = continueText.size
-continueText.characters = "Continue"
 continueText.style = newButtonStyle()
 continueText.fills = @[newSolidPaint(color(0.0, 0.0, 0.0, 1.0))]
+continueText.text = "Continue"
 continueText.strokeAlign = OutsideStroke
 continueButton.addChild(continueText)
 
@@ -153,9 +153,9 @@ settingsText.position = vec2(0.0, 0.0)
 settingsText.size = vec2(180.0, 50.0)
 settingsText.origPosition = settingsText.position
 settingsText.origSize = settingsText.size
-settingsText.characters = "Settings"
 settingsText.style = newButtonStyle()
 settingsText.fills = @[newSolidPaint(color(0.0, 0.0, 0.0, 1.0))]
+settingsText.text = "Settings"
 settingsText.strokeAlign = OutsideStroke
 settingsButton.addChild(settingsText)
 
@@ -179,9 +179,9 @@ quitText.position = vec2(0.0, 0.0)
 quitText.size = vec2(180.0, 50.0)
 quitText.origPosition = quitText.position
 quitText.origSize = quitText.size
-quitText.characters = "Quit"
 quitText.style = newButtonStyle()
 quitText.fills = @[newSolidPaint(color(0.0, 0.0, 0.0, 1.0))]
+quitText.text = "Quit"
 quitText.strokeAlign = OutsideStroke
 quitButton.addChild(quitText)
 

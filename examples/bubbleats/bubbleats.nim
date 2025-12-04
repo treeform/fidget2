@@ -113,8 +113,8 @@ onFrame:
     player.playerNode.dirty = true
 
     player.shadowNode.position = player.pos - player.shadowNode.size / 2 + vec2(0, 40)
-    if player.scoreNode.characters != $player.score:
-      player.scoreNode.characters = $player.score
+    if player.scoreNode.text != $player.score:
+      player.scoreNode.text = $player.score
       player.scoreNode.makeTextDirty()
 
     var i = 0

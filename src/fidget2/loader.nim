@@ -231,6 +231,9 @@ when defined(figmaLive):
       response = fetch(request)
 
     if response.code != 200:
+      for (key, value) in response.headers:
+        if key.toLowerAscii().startsWith("x-figma"):
+          echo key, ": ", value
       raise newException(
         FidgetError,
         "Error downloading Figma file, status code: " & $response.code & "\n" &

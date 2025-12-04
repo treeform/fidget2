@@ -34,9 +34,9 @@ find "/UI/BookingFrame":
       find "text":
         onDisplay:
           if flightType == OneWayFlight:
-            thisNode.characters = "one-way flight"
+            thisNode.text = "one-way flight"
           else:
-            thisNode.characters = "return flight"
+            thisNode.text = "return flight"
       onClick:
         find("/UI/BookingFrame/Picker").visible = true
 

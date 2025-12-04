@@ -52,17 +52,31 @@ proc `position=`*(node: Node, value: Vec2) =
   node.internal.position = value
   node.internal.dirty = true
 
+proc `origPosition=`*(node: Node, value: Vec2) =
+  node.internal.origPosition = value
+  node.internal.markTreeDirty()
+
+proc origPosition*(node: Node): Vec2 {.inline.} =
+  node.internal.origPosition
+
 proc mat*(node: Node): Mat3 {.inline.} =
   node.internal.mat
 
 type NodeSize* = distinct INode
 
-proc size*(node: Node): Vec2 {.inline.} =
-  node.internal.size
-
 proc `size=`*(node: Node, value: Vec2) =
   node.internal.size = value
   node.internal.markTreeDirty()
+
+proc size*(node: Node): Vec2 {.inline.} =
+  node.internal.size
+
+proc `origSize=`*(node: Node, value: Vec2) =
+  node.internal.origSize = value
+  node.internal.markTreeDirty()
+
+proc origSize*(node: Node): Vec2 {.inline.} =
+  node.internal.origSize
 
 proc scale*(node: Node): Vec2 {.inline.} =
   node.internal.scale
@@ -79,8 +93,16 @@ proc flipVertical*(node: Node): bool {.inline.} =
 proc fillGeometry*(node: Node): seq[Geometry] {.inline.} =
   node.internal.fillGeometry
 
+proc `strokeWeight=`*(node: Node, value: float32) =
+  node.internal.strokeWeight = value
+  node.internal.markTreeDirty()
+
 proc strokeWeight*(node: Node): float32 {.inline.} =
   node.internal.strokeWeight
+
+proc `strokeAlign=`*(node: Node, value: StrokeAlign) =
+  node.internal.strokeAlign = value
+  node.internal.markTreeDirty()
 
 proc strokeAlign*(node: Node): StrokeAlign {.inline.} =
   node.internal.strokeAlign
@@ -88,8 +110,9 @@ proc strokeAlign*(node: Node): StrokeAlign {.inline.} =
 proc strokeGeometry*(node: Node): seq[Geometry] {.inline.} =
   node.internal.strokeGeometry
 
-proc cornerRadius*(node: Node): float32 {.inline.} =
-  node.internal.cornerRadius
+proc `cornerRadius=`*(node: Node, value: float32) =
+  node.internal.cornerRadius = value
+  node.internal.markTreeDirty()
 
 proc rectangleCornerRadii*(node: Node): array[4, float32] {.inline.} =
   node.internal.rectangleCornerRadii
@@ -97,8 +120,16 @@ proc rectangleCornerRadii*(node: Node): array[4, float32] {.inline.} =
 proc blendMode*(node: Node): BlendMode {.inline.} =
   node.internal.blendMode
 
+proc `fills=`*(node: Node, value: seq[Paint]) =
+  node.internal.fills = value
+  node.internal.markTreeDirty()
+
 proc fills*(node: Node): seq[Paint] {.inline.} =
   node.internal.fills
+
+proc `strokes=`*(node: Node, value: seq[Paint]) =
+  node.internal.strokes = value
+  node.internal.markTreeDirty()
 
 proc strokes*(node: Node): seq[Paint] {.inline.} =
   node.internal.strokes
@@ -149,6 +180,68 @@ proc `dirty=`*(node: Node, value: bool) =
 proc prototypeStartNodeID*(node: Node): string {.inline.} =
   node.internal.prototypeStartNodeID
 
+proc `clipsContent=`*(node: Node, value: bool) =
+  node.internal.clipsContent = value
+  node.internal.markTreeDirty()
+
+proc clipsContent*(node: Node): bool {.inline.} =
+  node.internal.clipsContent
+
+proc `constraints=`*(node: Node, value: LayoutConstraint) =
+  node.internal.constraints = value
+  node.internal.markTreeDirty()
+
+proc constraints*(node: Node): LayoutConstraint {.inline.} =
+  node.internal.constraints
+
+proc `layoutMode=`*(node: Node, value: LayoutMode) =
+  node.internal.layoutMode = value
+  node.internal.markTreeDirty()
+
+proc layoutMode*(node: Node): LayoutMode {.inline.} =
+  node.internal.layoutMode
+
+proc `layoutAlign=`*(node: Node, value: LayoutAlign) =
+  node.internal.layoutAlign = value
+  node.internal.markTreeDirty()
+
+proc layoutAlign*(node: Node): LayoutAlign {.inline.} =
+  node.internal.layoutAlign
+
+proc `counterAxisSizingMode=`*(node: Node, value: AxisSizingMode) =
+  node.internal.counterAxisSizingMode = value
+  node.internal.markTreeDirty()
+
+proc counterAxisSizingMode*(node: Node): AxisSizingMode {.inline.} =
+  node.internal.counterAxisSizingMode
+
+proc `paddingLeft=`*(node: Node, value: float32) =
+  node.internal.paddingLeft = value
+  node.internal.markTreeDirty()
+
+proc `paddingRight=`*(node: Node, value: float32) =
+  node.internal.paddingRight = value
+  node.internal.markTreeDirty()
+
+proc `paddingTop=`*(node: Node, value: float32) =
+  node.internal.paddingTop = value
+  node.internal.markTreeDirty()
+
+proc `paddingBottom=`*(node: Node, value: float32) =
+  node.internal.paddingBottom = value
+  node.internal.markTreeDirty()
+
+proc `itemSpacing=`*(node: Node, value: float32) =
+  node.internal.itemSpacing = value
+  node.internal.markTreeDirty()
+
+proc `overflowDirection=`*(node: Node, value: OverflowDirection) =
+  node.internal.overflowDirection = value
+  node.internal.markTreeDirty()
+
+proc overflowDirection*(node: Node): OverflowDirection {.inline.} =
+  node.internal.overflowDirection
+
 proc path*(node: Node): string =
   ## Returns the full path of the node back to the root.
   node.internal.path()
@@ -168,6 +261,20 @@ proc text*(node: Node): string =
 proc `text=`*(node: Node, value: string) =
   node.internal.text = value
   node.internal.markTreeDirty()
+
+proc `singleline=`*(node: Node, value: bool) =
+  node.internal.singleline = value
+  node.internal.markTreeDirty()
+
+proc singleline*(node: Node): bool {.inline.} =
+  node.internal.singleline
+
+proc `style=`*(node: Node, value: TypeStyle) =
+  node.internal.style = value
+  node.internal.markTreeDirty()
+
+proc style*(node: Node): TypeStyle {.inline.} =
+  node.internal.style
 
 proc show*(node: Node) =
   ## Shows a node by making it visible.
