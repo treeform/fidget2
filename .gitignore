@@ -29,9 +29,6 @@ tmp
 *.dSYM
 *.out
 
-# figma tmp files
-fidget
-
 # test tmp
 tests/frames/index.html
 tests/files/index.html

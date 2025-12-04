@@ -183,6 +183,12 @@ proc drawFill(node: INode, paint: Paint): Image {.measure.} =
     else:
       image = imageCache[paint.imageRef]
 
+    if paint.opacity != 1:
+      # Apply opacity to the image.
+      let fadedImage = image.copy()
+      fadedImage.applyOpacity(paint.opacity)
+      image = fadedImage
+
     case paint.scaleMode
     of FillScaleMode:
       let

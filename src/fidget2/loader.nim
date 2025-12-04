@@ -1,5 +1,6 @@
 import
   std/[os],
+  zippy,
   common, schema
 
 # Loader is responsible for loading the Figma file.
@@ -9,11 +10,11 @@ var figmaFile*: FigmaFile             ## Main Figma file.
 
 proc figmaFilePath(fileKey: string): string =
   ## Gets the Figma file path.
-  dataDir / "fidget" / fileKey & ".json"
+  dataDir / "fidget" / fileKey & ".json.z"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
   ## Loads the Figma file.
-  let data = readFile(figmaFilePath(fileKey))
+  let data = uncompress(readFile(figmaFilePath(fileKey)))
   parseFigmaFile(data)
 
 proc lastModifiedFilePath(fileKey: string): string =
@@ -230,6 +231,9 @@ when defined(figmaLive):
       response = fetch(request)
 
     if response.code != 200:
+      for (key, value) in response.headers:
+        if key.toLowerAscii().startsWith("x-figma"):
+          echo key, ": ", value
       raise newException(
         FidgetError,
         "Error downloading Figma file, status code: " & $response.code & "\n" &
@@ -245,7 +249,7 @@ when defined(figmaLive):
     # in the event the API returns an error.
     downloadImages(fileKey, liveFile)
     downloadFonts(liveFile)
-    writeFile(figmaFilePath, pretty(json))
+    writeFile(figmaFilePath, compress($json))
     writeFile(lastModifiedFilePath, liveFile.lastModified)
     echo "Downloaded latest Figma file."
 
