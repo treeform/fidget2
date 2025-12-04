@@ -10,7 +10,7 @@ var figmaFile*: FigmaFile             ## Main Figma file.
 
 proc figmaFilePath(fileKey: string): string =
   ## Gets the Figma file path.
-  dataDir / "fidget" / fileKey & ".json.s"
+  dataDir / "fidget" / fileKey & ".json.snappy"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
   ## Loads the Figma file.
