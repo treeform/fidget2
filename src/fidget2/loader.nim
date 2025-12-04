@@ -1,6 +1,6 @@
 import
   std/[os],
-  zippy,
+  supersnappy,
   common, schema
 
 # Loader is responsible for loading the Figma file.
@@ -10,7 +10,7 @@ var figmaFile*: FigmaFile             ## Main Figma file.
 
 proc figmaFilePath(fileKey: string): string =
   ## Gets the Figma file path.
-  dataDir / "fidget" / fileKey & ".json.z"
+  dataDir / "fidget" / fileKey & ".json.s"
 
 proc loadFigmaFile(fileKey: string): FigmaFile =
   ## Loads the Figma file.

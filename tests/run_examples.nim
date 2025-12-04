@@ -1,7 +1,7 @@
 import std/[os, strformat, strutils, osproc, terminal]
 import cligen
 
-const params = "-d:release " # -d:figmaLive
+const params = "-d:release -d:figmaLive"
 
 const examples = [
   "examples/the7gui/temperature.nim",
