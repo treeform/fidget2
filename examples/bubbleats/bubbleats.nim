@@ -149,8 +149,8 @@ onFrame:
     player.vel = player.vel * 0.5 + other.vel * 0.5
     other.vel = other.vel * 0.5 + player.vel * 0.5
 
-  playAreaNode.children.sort proc(a, b: Node): int =
-    cmp(a.position.y + a.size.y/2, b.position.y + b.size.y/2)
+  # playAreaNode.children.sort proc(a, b: Node): int =
+  #   cmp(a.position.y + a.size.y/2, b.position.y + b.size.y/2)
 
   var timerNode = find("/Main/PlayArea/Timer")
   let
@@ -158,8 +158,8 @@ onFrame:
     min = time div 60
     sec = time mod 60
     timeStr = &"{min}:{sec:02}"
-  if timerNode.characters != timeStr:
-    timerNode.characters = timeStr
+  if timerNode.text != timeStr:
+    timerNode.text = timeStr
     timerNode.makeTextDirty()
 
 startFidget(
