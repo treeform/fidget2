@@ -73,7 +73,21 @@ When iterating and only when using integers prefer to use `i`, `j`, `k` etc...
 
 At the top level prefer to use `const` over `let`. Note: in Nim const use CamelCase with capital first letter.
 Prefer to use `let` over `var` unless you need to mutate the variable.
-Merge multiple const, let, and var declarations into a single block declaration.
+Merge multiple const, let, and var declarations into a single block declaration:
+
+```nim
+var
+  a = 1
+  b = 2
+  c = 3
+```
+
+```nim
+let
+  x = 1
+  y = 2
+  z = 3
+```
 
 ## Readme
 
@@ -124,7 +138,8 @@ Start with a capital letter and end with a period.
 Make sure all functions have doc comments.
 Try to only use a single line per doc comment.
 Never more than 4 lines.
-Avoid top level section comments, especially surround with `=` or `#` characters.
+Avoid documenting args and return values.
+Avoid top level section comments, especially surrounded with `=` or `#` characters.
 
 ## Error Handling
 
