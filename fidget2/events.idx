@@ -1,4 +1,4 @@
-nimTitle	events	fidget2/events.html	module src/fidget2/events		0
+nimTitle	events	fidget2/events.html	module fidget2/events		0
 nim	Keyboard	fidget2/events.html#Keyboard	type Keyboard		19
 nim	OnClick	fidget2/events.html#OnClick	EventCbKind.OnClick		23
 nim	OnClickOutside	fidget2/events.html#OnClickOutside	EventCbKind.OnClickOutside		23

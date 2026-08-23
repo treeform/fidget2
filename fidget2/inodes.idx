@@ -1,4 +1,4 @@
-nimTitle	inodes	fidget2/inodes.html	module src/fidget2/inodes		0
+nimTitle	inodes	fidget2/inodes.html	module fidget2/inodes		0
 nim	markTreeDirty	fidget2/inodes.html#markTreeDirty,INode	proc markTreeDirty(node: INode)		8
 nim	markTreeClean	fidget2/inodes.html#markTreeClean,INode	proc markTreeClean(node: INode)		14
 nim	checkDirty	fidget2/inodes.html#checkDirty,INode	proc checkDirty(node: INode)		20

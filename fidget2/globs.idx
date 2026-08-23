@@ -1,4 +1,4 @@
-nimTitle	globs	fidget2/globs.html	module src/fidget2/globs		0
+nimTitle	globs	fidget2/globs.html	module fidget2/globs		0
 nim	`$`	fidget2/globs.html#$,Glob	proc `$`(glob: Glob): string		12
 nim	treeLen	fidget2/globs.html#treeLen,Node	proc treeLen(node: Node): int		16
 nim	scan	fidget2/globs.html#scan,Node	proc scan(node: Node): seq[Node]		22

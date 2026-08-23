@@ -1,4 +1,4 @@
-nimTitle	internal	fidget2/internal.html	module src/fidget2/internal		0
+nimTitle	internal	fidget2/internal.html	module fidget2/internal		0
 nim	typefaceCache	fidget2/internal.html#typefaceCache	var typefaceCache		9
 nim	imageCache	fidget2/internal.html#imageCache	var imageCache		11
 nim	fetchRequests	fidget2/internal.html#fetchRequests	var fetchRequests		12

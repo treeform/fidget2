@@ -1,4 +1,4 @@
-nimTitle	hybridrender	fidget2/hybridrender.html	module src/fidget2/hybridrender		0
+nimTitle	hybridrender	fidget2/hybridrender.html	module fidget2/hybridrender		0
 nim	bxy	fidget2/hybridrender.html#bxy	var bxy		13
 nim	isSimpleImage	fidget2/hybridrender.html#isSimpleImage,INode	proc isSimpleImage(node: INode): bool		55
 nim	rasterPass	fidget2/hybridrender.html#rasterPass,INode	proc rasterPass(node: INode)		317

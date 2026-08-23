@@ -1,4 +1,4 @@
-nimTitle	common	fidget2/common.html	module src/fidget2/common		0
+nimTitle	common	fidget2/common.html	module fidget2/common		0
 nim	FidgetError	fidget2/common.html#FidgetError	object FidgetError		5
 nim	window	fidget2/common.html#window	var window		8
 nim	dataDir	fidget2/common.html#dataDir	var dataDir		9

@@ -1,4 +1,4 @@
-nimTitle	cpurender	fidget2/cpurender.html	module src/fidget2/cpurender		0
+nimTitle	cpurender	fidget2/cpurender.html	module fidget2/cpurender		0
 nim	layer	fidget2/cpurender.html#layer	var layer		15
 nim	maskLayer	fidget2/cpurender.html#maskLayer	var maskLayer		17
 nim	computeIntBounds	fidget2/cpurender.html#computeIntBounds,INode,Mat3	proc computeIntBounds(node: INode; mat: Mat3; withChildren = false): Rect		27

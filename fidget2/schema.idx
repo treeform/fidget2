@@ -1,4 +1,4 @@
-nimTitle	schema	fidget2/schema.html	module src/fidget2/schema		0
+nimTitle	schema	fidget2/schema.html	module fidget2/schema		0
 nim	DocumentNode	fidget2/schema.html#DocumentNode	NodeKind.DocumentNode		7
 nim	CanvasNode	fidget2/schema.html#CanvasNode	NodeKind.CanvasNode		7
 nim	RectangleNode	fidget2/schema.html#RectangleNode	NodeKind.RectangleNode		7

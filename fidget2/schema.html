@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>src/fidget2/schema</title>
+<title>fidget2/schema</title>
 
 <!-- Google fonts -->
 <link href='https://fonts.googleapis.com/css?family=Lato:400,600,900' rel='stylesheet' type='text/css'/>
@@ -16,15 +16,18 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.6">
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.10">
 
 <!-- JS -->
-<script type="text/javascript" src="../dochack.js?v=2.2.6"></script>
+<script type="text/javascript" src="../dochack.js?v=2.2.10"></script>
 </head>
 <body>
   <div class="document" id="documentId">
+    <input type="checkbox" id="nav-toggle" hidden>
+    <label for="nav-toggle" id="nav-burger">&#9776;</label>
+    <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
-      <h1 class="title">src/fidget2/schema</h1>
+      <h1 class="title">fidget2/schema</h1>
       <div class="row">
   <div class="three columns">
     <div class="theme-select-wrapper">
@@ -292,7 +295,7 @@
   <h1><a class="toc-backref" href="#7">Types</a></h1>
   <dl class="item">
     <div id="AxisSizingMode">
-  <dt><pre><a href="schema.html#AxisSizingMode"><span class="Identifier">AxisSizingMode</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#AxisSizingMode"><span class="Identifier">AxisSizingMode</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">AutoAxis</span><span class="Other">,</span> <span class="Identifier">FixedAxis</span></pre></dt>
   <dd>
     
@@ -303,7 +306,7 @@
   </dd>
 </div>
 <div id="BooleanOperation">
-  <dt><pre><a href="schema.html#BooleanOperation"><span class="Identifier">BooleanOperation</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#BooleanOperation"><span class="Identifier">BooleanOperation</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">UnionOperation</span><span class="Other">,</span> <span class="Identifier">SubtractOperation</span><span class="Other">,</span> <span class="Identifier">IntersectOperation</span><span class="Other">,</span> <span class="Identifier">ExcludeOperation</span></pre></dt>
   <dd>
     
@@ -314,7 +317,7 @@
   </dd>
 </div>
 <div id="Component">
-  <dt><pre><a href="schema.html#Component"><span class="Identifier">Component</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#Component"><span class="Identifier">Component</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
   <span class="Identifier">key</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">description</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
@@ -327,7 +330,7 @@
   </dd>
 </div>
 <div id="ConstraintKind">
-  <dt><pre><a href="schema.html#ConstraintKind"><span class="Identifier">ConstraintKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#ConstraintKind"><span class="Identifier">ConstraintKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">MinConstraint</span><span class="Other">,</span> <span class="Identifier">MaxConstraint</span><span class="Other">,</span> <span class="Identifier">ScaleConstraint</span><span class="Other">,</span> <span class="Identifier">StretchConstraint</span><span class="Other">,</span>
   <span class="Identifier">CenterConstraint</span></pre></dt>
   <dd>
@@ -339,8 +342,8 @@
   </dd>
 </div>
 <div id="Effect">
-  <dt><pre><a href="schema.html#Effect"><span class="Identifier">Effect</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#EffectKind"><span class="Identifier">EffectKind</span></a>
+  <dt><pre><a href="#Effect"><span class="Identifier">Effect</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#EffectKind"><span class="Identifier">EffectKind</span></a>
   <span class="Identifier">visible</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">color</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Color</span>
   <span class="Identifier">blendMode</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">BlendMode</span>
@@ -356,7 +359,7 @@
   </dd>
 </div>
 <div id="EffectKind">
-  <dt><pre><a href="schema.html#EffectKind"><span class="Identifier">EffectKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#EffectKind"><span class="Identifier">EffectKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">DropShadow</span><span class="Other">,</span> <span class="Identifier">InnerShadow</span><span class="Other">,</span> <span class="Identifier">LayerBlur</span><span class="Other">,</span> <span class="Identifier">BackgroundBlur</span></pre></dt>
   <dd>
     
@@ -367,9 +370,9 @@
   </dd>
 </div>
 <div id="FigmaFile">
-  <dt><pre><a href="schema.html#FigmaFile"><span class="Identifier">FigmaFile</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">document</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a>
-  <span class="Identifier">components</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="schema.html#Component"><span class="Identifier">Component</span></a><span class="Other">]</span>
+  <dt><pre><a href="#FigmaFile"><span class="Identifier">FigmaFile</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">document</span><span class="Operator">*</span><span class="Other">:</span> <a href="#INode"><span class="Identifier">INode</span></a>
+  <span class="Identifier">components</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#Component"><span class="Identifier">Component</span></a><span class="Other">]</span>
   <span class="Identifier">schemaVersion</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
   <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">lastModified</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
@@ -385,7 +388,7 @@
   </dd>
 </div>
 <div id="Geometry">
-  <dt><pre><a href="schema.html#Geometry"><span class="Identifier">Geometry</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#Geometry"><span class="Identifier">Geometry</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">path</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Path</span>
   <span class="Identifier">windingRule</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">WindingRule</span>
   <span class="Identifier">mat</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Mat3</span>
@@ -401,7 +404,7 @@
   </dd>
 </div>
 <div id="GridAlign">
-  <dt><pre><a href="schema.html#GridAlign"><span class="Identifier">GridAlign</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#GridAlign"><span class="Identifier">GridAlign</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">MinGridAlign</span><span class="Other">,</span> <span class="Identifier">StretchGridAlign</span><span class="Other">,</span> <span class="Identifier">CenterGridAlign</span></pre></dt>
   <dd>
     
@@ -412,12 +415,12 @@
   </dd>
 </div>
 <div id="INode">
-  <dt><pre><a href="schema.html#INode"><span class="Identifier">INode</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#INode"><span class="Identifier">INode</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
   <span class="Identifier">id</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>                <span class="Comment">## A string uniquely identifying this node.</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#NodeKind"><span class="Identifier">NodeKind</span></a>            <span class="Comment">## The type of the node, refer to table below for details.</span>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#NodeKind"><span class="Identifier">NodeKind</span></a>            <span class="Comment">## The type of the node, refer to table below for details.</span>
   <span class="Identifier">name</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>              <span class="Comment">## The name given to the node by the user in the tool.</span>
-  <span class="Identifier">children</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">]</span>
-  <span class="Identifier">parent</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a>
+  <span class="Identifier">children</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#INode"><span class="Identifier">INode</span></a><span class="Other">]</span>
+  <span class="Identifier">parent</span><span class="Operator">*</span><span class="Other">:</span> <a href="#INode"><span class="Identifier">INode</span></a>
   <span class="Identifier">prototypeStartNodeID</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">componentId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">position</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>
@@ -426,26 +429,26 @@
   <span class="Identifier">rotation</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">flipHorizontal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">flipVertical</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
-  <span class="Identifier">fillGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
+  <span class="Identifier">fillGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
   <span class="Identifier">strokeWeight</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">strokeAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#StrokeAlign"><span class="Identifier">StrokeAlign</span></a>
-  <span class="Identifier">strokeGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
+  <span class="Identifier">strokeAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="#StrokeAlign"><span class="Identifier">StrokeAlign</span></a>
+  <span class="Identifier">strokeGeometry</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#Geometry"><span class="Identifier">Geometry</span></a><span class="Other">]</span>
   <span class="Identifier">cornerRadius</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>     <span class="Comment">## For any shape.</span>
   <span class="Identifier">rectangleCornerRadii</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">array</span><span class="Other">[</span><span class="DecNumber">4</span><span class="Other">,</span> <span class="Identifier">float32</span><span class="Other">]</span> <span class="Comment">## Only for rectangles.</span>
   <span class="Identifier">blendMode</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">BlendMode</span>      <span class="Comment">## Blend modes such as darken, screen, overlay...</span>
-  <span class="Identifier">fills</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>         <span class="Comment">## Fill colors and gradients.</span>
-  <span class="Identifier">strokes</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>       <span class="Comment">## Stroke colors and gradients.</span>
-  <span class="Identifier">effects</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Effect"><span class="Identifier">Effect</span></a><span class="Other">]</span>      <span class="Comment">## Effects such as shadows and blurs.</span>
+  <span class="Identifier">fills</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>         <span class="Comment">## Fill colors and gradients.</span>
+  <span class="Identifier">strokes</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>       <span class="Comment">## Stroke colors and gradients.</span>
+  <span class="Identifier">effects</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#Effect"><span class="Identifier">Effect</span></a><span class="Other">]</span>      <span class="Comment">## Effects such as shadows and blurs.</span>
   <span class="Identifier">opacity</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>          <span class="Comment">## Opacity, 0 .. 1</span>
   <span class="Identifier">visible</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>             <span class="Comment">## Visibility on/off.</span>
   <span class="Identifier">isMask</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>              <span class="Comment">## Used by masking</span>
   <span class="Identifier">isMaskOutline</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>       <span class="Comment">## ???</span>
-  <span class="Identifier">booleanOperation</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#BooleanOperation"><span class="Identifier">BooleanOperation</span></a> <span class="Comment">## Used by boolean nodes</span>
+  <span class="Identifier">booleanOperation</span><span class="Operator">*</span><span class="Other">:</span> <a href="#BooleanOperation"><span class="Identifier">BooleanOperation</span></a> <span class="Comment">## Used by boolean nodes</span>
   <span class="Identifier">clipsContent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>        <span class="Comment">## Used by frame nodes to cut children.</span>
   <span class="Identifier">characters</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">style</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#TypeStyle"><span class="Identifier">TypeStyle</span></a>
+  <span class="Identifier">style</span><span class="Operator">*</span><span class="Other">:</span> <a href="#TypeStyle"><span class="Identifier">TypeStyle</span></a>
   <span class="Identifier">characterStyleOverrides</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">int</span><span class="Other">]</span>
-  <span class="Identifier">styleOverrideTable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="schema.html#TypeStyle"><span class="Identifier">TypeStyle</span></a><span class="Other">]</span>
+  <span class="Identifier">styleOverrideTable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <a href="#TypeStyle"><span class="Identifier">TypeStyle</span></a><span class="Other">]</span>
   <span class="Identifier">spans</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">Span</span><span class="Other">]</span>
   <span class="Identifier">arrangement</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Arrangement</span>
   <span class="Identifier">cursor</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span>
@@ -455,17 +458,17 @@
   <span class="Identifier">savedX</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float</span>
   <span class="Identifier">undoStack</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">]</span>
   <span class="Identifier">redoStack</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Other">(</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">int</span><span class="Other">)</span><span class="Other">]</span>
-  <span class="Identifier">constraints</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutConstraint"><span class="Identifier">LayoutConstraint</span></a>
-  <span class="Identifier">layoutAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutAlign"><span class="Identifier">LayoutAlign</span></a>
-  <span class="Identifier">layoutGrids</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#LayoutGrid"><span class="Identifier">LayoutGrid</span></a><span class="Other">]</span>
-  <span class="Identifier">layoutMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutMode"><span class="Identifier">LayoutMode</span></a>
+  <span class="Identifier">constraints</span><span class="Operator">*</span><span class="Other">:</span> <a href="#LayoutConstraint"><span class="Identifier">LayoutConstraint</span></a>
+  <span class="Identifier">layoutAlign</span><span class="Operator">*</span><span class="Other">:</span> <a href="#LayoutAlign"><span class="Identifier">LayoutAlign</span></a>
+  <span class="Identifier">layoutGrids</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#LayoutGrid"><span class="Identifier">LayoutGrid</span></a><span class="Other">]</span>
+  <span class="Identifier">layoutMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="#LayoutMode"><span class="Identifier">LayoutMode</span></a>
   <span class="Identifier">itemSpacing</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">counterAxisSizingMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#AxisSizingMode"><span class="Identifier">AxisSizingMode</span></a>
+  <span class="Identifier">counterAxisSizingMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="#AxisSizingMode"><span class="Identifier">AxisSizingMode</span></a>
   <span class="Identifier">paddingLeft</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">paddingRight</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">paddingTop</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">paddingBottom</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">overflowDirection</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#OverflowDirection"><span class="Identifier">OverflowDirection</span></a>
+  <span class="Identifier">overflowDirection</span><span class="Operator">*</span><span class="Other">:</span> <a href="#OverflowDirection"><span class="Identifier">OverflowDirection</span></a>
   <span class="Identifier">dirty</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="DecNumber">true</span>        <span class="Comment">## Do the pixels need redrawing?</span>
   <span class="Identifier">pixels</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Image</span>             <span class="Comment">## Pixel image cache.</span>
   <span class="Identifier">pixelBox</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Rect</span>            <span class="Comment">## Pixel position and size.</span>
@@ -478,7 +481,7 @@
   <span class="Identifier">shown</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>               <span class="Comment">## for onShow/onHide events.</span>
   <span class="Identifier">scrollable</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>          <span class="Comment">## Can this node scroll.</span>
   <span class="Identifier">scrollPos</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Vec2</span>           <span class="Comment">## How does it scroll it's children.</span>
-  <span class="Identifier">onRenderCallback</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span>
+  <span class="Identifier">onRenderCallback</span><span class="Operator">*</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">thisNode</span><span class="Other">:</span> <a href="#INode"><span class="Identifier">INode</span></a><span class="Other">)</span>
   <span class="Identifier">userKey</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">userId</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
   <dd>
@@ -490,7 +493,7 @@
   </dd>
 </div>
 <div id="LayoutAlign">
-  <dt><pre><a href="schema.html#LayoutAlign"><span class="Identifier">LayoutAlign</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#LayoutAlign"><span class="Identifier">LayoutAlign</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">InheritLayout</span><span class="Other">,</span> <span class="Identifier">StretchLayout</span></pre></dt>
   <dd>
     
@@ -501,9 +504,9 @@
   </dd>
 </div>
 <div id="LayoutConstraint">
-  <dt><pre><a href="schema.html#LayoutConstraint"><span class="Identifier">LayoutConstraint</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">vertical</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#ConstraintKind"><span class="Identifier">ConstraintKind</span></a>
-  <span class="Identifier">horizontal</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#ConstraintKind"><span class="Identifier">ConstraintKind</span></a></pre></dt>
+  <dt><pre><a href="#LayoutConstraint"><span class="Identifier">LayoutConstraint</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <span class="Identifier">vertical</span><span class="Operator">*</span><span class="Other">:</span> <a href="#ConstraintKind"><span class="Identifier">ConstraintKind</span></a>
+  <span class="Identifier">horizontal</span><span class="Operator">*</span><span class="Other">:</span> <a href="#ConstraintKind"><span class="Identifier">ConstraintKind</span></a></pre></dt>
   <dd>
     
     
@@ -513,12 +516,12 @@
   </dd>
 </div>
 <div id="LayoutGrid">
-  <dt><pre><a href="schema.html#LayoutGrid"><span class="Identifier">LayoutGrid</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
-  <span class="Identifier">pattern</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LayoutPattern"><span class="Identifier">LayoutPattern</span></a>
+  <dt><pre><a href="#LayoutGrid"><span class="Identifier">LayoutGrid</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <span class="Identifier">pattern</span><span class="Operator">*</span><span class="Other">:</span> <a href="#LayoutPattern"><span class="Identifier">LayoutPattern</span></a>
   <span class="Identifier">sectionSize</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">visible</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">color</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Color</span>
-  <span class="Identifier">alignment</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#GridAlign"><span class="Identifier">GridAlign</span></a>      <span class="Comment">## Only min, stretch and center</span>
+  <span class="Identifier">alignment</span><span class="Operator">*</span><span class="Other">:</span> <a href="#GridAlign"><span class="Identifier">GridAlign</span></a>      <span class="Comment">## Only min, stretch and center</span>
   <span class="Identifier">gutterSize</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">offset</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">count</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
@@ -531,7 +534,7 @@
   </dd>
 </div>
 <div id="LayoutMode">
-  <dt><pre><a href="schema.html#LayoutMode"><span class="Identifier">LayoutMode</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#LayoutMode"><span class="Identifier">LayoutMode</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">NoneLayout</span><span class="Other">,</span> <span class="Identifier">HorizontalLayout</span><span class="Other">,</span> <span class="Identifier">VerticalLayout</span></pre></dt>
   <dd>
     
@@ -542,7 +545,7 @@
   </dd>
 </div>
 <div id="LayoutPattern">
-  <dt><pre><a href="schema.html#LayoutPattern"><span class="Identifier">LayoutPattern</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#LayoutPattern"><span class="Identifier">LayoutPattern</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">ColumnsLayoutPattern</span><span class="Other">,</span> <span class="Identifier">RowsLayoutPattern</span><span class="Other">,</span> <span class="Identifier">GridLayoutPattern</span></pre></dt>
   <dd>
     
@@ -553,7 +556,7 @@
   </dd>
 </div>
 <div id="LeadingTrim">
-  <dt><pre><a href="schema.html#LeadingTrim"><span class="Identifier">LeadingTrim</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#LeadingTrim"><span class="Identifier">LeadingTrim</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">NoLeadingTrim</span><span class="Other">,</span> <span class="Identifier">CapHeight</span></pre></dt>
   <dd>
     
@@ -564,7 +567,7 @@
   </dd>
 </div>
 <div id="LineHeightUnit">
-  <dt><pre><a href="schema.html#LineHeightUnit"><span class="Identifier">LineHeightUnit</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#LineHeightUnit"><span class="Identifier">LineHeightUnit</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">PixelUnit</span><span class="Other">,</span> <span class="Identifier">FontSizePercentUnit</span><span class="Other">,</span> <span class="Identifier">IntrinsicPercentUnit</span></pre></dt>
   <dd>
     
@@ -575,7 +578,7 @@
   </dd>
 </div>
 <div id="NodeKind">
-  <dt><pre><a href="schema.html#NodeKind"><span class="Identifier">NodeKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#NodeKind"><span class="Identifier">NodeKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">DocumentNode</span><span class="Other">,</span> <span class="Identifier">CanvasNode</span><span class="Other">,</span> <span class="Identifier">RectangleNode</span><span class="Other">,</span> <span class="Identifier">FrameNode</span><span class="Other">,</span> <span class="Identifier">GroupNode</span><span class="Other">,</span> <span class="Identifier">ComponentNode</span><span class="Other">,</span>
   <span class="Identifier">InstanceNode</span><span class="Other">,</span> <span class="Identifier">VectorNode</span><span class="Other">,</span> <span class="Identifier">StarNode</span><span class="Other">,</span> <span class="Identifier">EllipseNode</span><span class="Other">,</span> <span class="Identifier">LineNode</span><span class="Other">,</span> <span class="Identifier">RegularPolygonNode</span><span class="Other">,</span>
   <span class="Identifier">TextNode</span><span class="Other">,</span> <span class="Identifier">BooleanOperationNode</span><span class="Other">,</span> <span class="Identifier">ComponentSetNode</span><span class="Other">,</span> <span class="Identifier">SliceNode</span></pre></dt>
@@ -588,7 +591,7 @@
   </dd>
 </div>
 <div id="OpenTypeFlags">
-  <dt><pre><a href="schema.html#OpenTypeFlags"><span class="Identifier">OpenTypeFlags</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#OpenTypeFlags"><span class="Identifier">OpenTypeFlags</span></a> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">KERN</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">int</span></pre></dt>
   <dd>
     
@@ -599,7 +602,7 @@
   </dd>
 </div>
 <div id="OverflowDirection">
-  <dt><pre><a href="schema.html#OverflowDirection"><span class="Identifier">OverflowDirection</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#OverflowDirection"><span class="Identifier">OverflowDirection</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">NoScrolling</span><span class="Other">,</span> <span class="Identifier">HorizontalScrolling</span><span class="Other">,</span> <span class="Identifier">VerticalScrolling</span><span class="Other">,</span>
   <span class="Identifier">HorizontalAndVerticalScrolling</span></pre></dt>
   <dd>
@@ -611,15 +614,15 @@
   </dd>
 </div>
 <div id="Paint">
-  <dt><pre><a href="schema.html#Paint"><span class="Identifier">Paint</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#Paint"><span class="Identifier">Paint</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
   <span class="Identifier">blendMode</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">BlendMode</span>
-  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#PaintKind"><span class="Identifier">PaintKind</span></a>
+  <span class="Identifier">kind</span><span class="Operator">*</span><span class="Other">:</span> <a href="#PaintKind"><span class="Identifier">PaintKind</span></a>
   <span class="Identifier">visible</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">bool</span>
   <span class="Identifier">opacity</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">color</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Color</span>
-  <span class="Identifier">scaleMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#ScaleMode"><span class="Identifier">ScaleMode</span></a>
+  <span class="Identifier">scaleMode</span><span class="Operator">*</span><span class="Other">:</span> <a href="#ScaleMode"><span class="Identifier">ScaleMode</span></a>
   <span class="Identifier">imageRef</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
-  <span class="Identifier">imageTransform</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#Transform"><span class="Identifier">Transform</span></a>
+  <span class="Identifier">imageTransform</span><span class="Operator">*</span><span class="Other">:</span> <a href="#Transform"><span class="Identifier">Transform</span></a>
   <span class="Identifier">scalingFactor</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">rotation</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">gradientHandlePositions</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Identifier">Vec2</span><span class="Other">]</span>
@@ -633,7 +636,7 @@
   </dd>
 </div>
 <div id="PaintKind">
-  <dt><pre><a href="schema.html#PaintKind"><span class="Identifier">PaintKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#PaintKind"><span class="Identifier">PaintKind</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">pkSolid</span><span class="Other">,</span> <span class="Identifier">pkImage</span><span class="Other">,</span> <span class="Identifier">pkGradientLinear</span><span class="Other">,</span> <span class="Identifier">pkGradientRadial</span><span class="Other">,</span> <span class="Identifier">pkGradientAngular</span><span class="Other">,</span>
   <span class="Identifier">pkGradientDiamond</span></pre></dt>
   <dd>
@@ -645,7 +648,7 @@
   </dd>
 </div>
 <div id="ScaleMode">
-  <dt><pre><a href="schema.html#ScaleMode"><span class="Identifier">ScaleMode</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#ScaleMode"><span class="Identifier">ScaleMode</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">FillScaleMode</span><span class="Other">,</span> <span class="Identifier">FitScaleMode</span><span class="Other">,</span> <span class="Identifier">StretchScaleMode</span><span class="Other">,</span> <span class="Identifier">TileScaleMode</span></pre></dt>
   <dd>
     
@@ -656,7 +659,7 @@
   </dd>
 </div>
 <div id="StrokeAlign">
-  <dt><pre><a href="schema.html#StrokeAlign"><span class="Identifier">StrokeAlign</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#StrokeAlign"><span class="Identifier">StrokeAlign</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">InsideStroke</span><span class="Other">,</span> <span class="Identifier">OutsideStroke</span><span class="Other">,</span> <span class="Identifier">CenterStroke</span></pre></dt>
   <dd>
     
@@ -667,7 +670,7 @@
   </dd>
 </div>
 <div id="TextAutoResize">
-  <dt><pre><a href="schema.html#TextAutoResize"><span class="Identifier">TextAutoResize</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#TextAutoResize"><span class="Identifier">TextAutoResize</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">FixedTextResize</span><span class="Other">,</span> <span class="Identifier">HeightTextResize</span><span class="Other">,</span> <span class="Identifier">WidthAndHeightTextResize</span></pre></dt>
   <dd>
     
@@ -678,7 +681,7 @@
   </dd>
 </div>
 <div id="TextDecoration">
-  <dt><pre><a href="schema.html#TextDecoration"><span class="Identifier">TextDecoration</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <dt><pre><a href="#TextDecoration"><span class="Identifier">TextDecoration</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
   <span class="Identifier">Strikethrough</span><span class="Other">,</span> <span class="Identifier">Underline</span></pre></dt>
   <dd>
     
@@ -689,7 +692,7 @@
   </dd>
 </div>
 <div id="Transform">
-  <dt><pre><a href="schema.html#Transform"><span class="Identifier">Transform</span></a> <span class="Other">=</span> <span class="Identifier">array</span><span class="Other">[</span><span class="DecNumber">2</span><span class="Other">,</span> <span class="Identifier">array</span><span class="Other">[</span><span class="DecNumber">3</span><span class="Other">,</span> <span class="Identifier">float32</span><span class="Other">]</span><span class="Other">]</span></pre></dt>
+  <dt><pre><a href="#Transform"><span class="Identifier">Transform</span></a> <span class="Other">=</span> <span class="Identifier">array</span><span class="Other">[</span><span class="DecNumber">2</span><span class="Other">,</span> <span class="Identifier">array</span><span class="Other">[</span><span class="DecNumber">3</span><span class="Other">,</span> <span class="Identifier">float32</span><span class="Other">]</span><span class="Other">]</span></pre></dt>
   <dd>
     
     A 2D affine transformation matrix that can be used to calculate the affine transforms applied to a layer, including scaling, rotation, shearing, and translation.
@@ -699,7 +702,7 @@
   </dd>
 </div>
 <div id="TypeStyle">
-  <dt><pre><a href="schema.html#TypeStyle"><span class="Identifier">TypeStyle</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
+  <dt><pre><a href="#TypeStyle"><span class="Identifier">TypeStyle</span></a> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
   <span class="Identifier">fontFamily</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">fontPostScriptName</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">string</span>
   <span class="Identifier">paragraphSpacing</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
@@ -708,18 +711,18 @@
   <span class="Identifier">fontWeight</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">fontSize</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">textCase</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><span class="Identifier">TextCase</span><span class="Other">]</span>
-  <span class="Identifier">textDecoration</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#TextDecoration"><span class="Identifier">TextDecoration</span></a>
-  <span class="Identifier">textAutoResize</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#TextAutoResize"><span class="Identifier">TextAutoResize</span></a>
+  <span class="Identifier">textDecoration</span><span class="Operator">*</span><span class="Other">:</span> <a href="#TextDecoration"><span class="Identifier">TextDecoration</span></a>
+  <span class="Identifier">textAutoResize</span><span class="Operator">*</span><span class="Other">:</span> <a href="#TextAutoResize"><span class="Identifier">TextAutoResize</span></a>
   <span class="Identifier">textAlignHorizontal</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">HorizontalAlignment</span>
   <span class="Identifier">textAlignVertical</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">VerticalAlignment</span>
   <span class="Identifier">letterSpacing</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">fills</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>
+  <span class="Identifier">fills</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#Paint"><span class="Identifier">Paint</span></a><span class="Other">]</span>
   <span class="Identifier">lineHeightPx</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">lineHeightPercent</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
   <span class="Identifier">lineHeightPercentFontSize</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">float32</span>
-  <span class="Identifier">lineHeightUnit</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="schema.html#LineHeightUnit"><span class="Identifier">LineHeightUnit</span></a><span class="Other">]</span>
-  <span class="Identifier">opentypeFlags</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#OpenTypeFlags"><span class="Identifier">OpenTypeFlags</span></a>
-  <span class="Identifier">leadingTrim</span><span class="Operator">*</span><span class="Other">:</span> <a href="schema.html#LeadingTrim"><span class="Identifier">LeadingTrim</span></a></pre></dt>
+  <span class="Identifier">lineHeightUnit</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#LineHeightUnit"><span class="Identifier">LineHeightUnit</span></a><span class="Other">]</span>
+  <span class="Identifier">opentypeFlags</span><span class="Operator">*</span><span class="Other">:</span> <a href="#OpenTypeFlags"><span class="Identifier">OpenTypeFlags</span></a>
+  <span class="Identifier">leadingTrim</span><span class="Operator">*</span><span class="Other">:</span> <a href="#LeadingTrim"><span class="Identifier">LeadingTrim</span></a></pre></dt>
   <dd>
     
     
@@ -736,7 +739,7 @@
   <dl class="item">
     <div id="$-procs-all">
   <div id="$,INode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#%24%2CINode"><span class="Identifier">`$`</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#%24%2CINode"><span class="Identifier">`$`</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Returns a string representation of a node.
@@ -749,7 +752,7 @@
 </div>
 <div id="parseFigmaFile-procs-all">
   <div id="parseFigmaFile,string">
-  <dt><pre><span class="Keyword">proc</span> <a href="#parseFigmaFile%2Cstring"><span class="Identifier">parseFigmaFile</span></a><span class="Other">(</span><span class="Identifier">data</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="schema.html#FigmaFile"><span class="Identifier">FigmaFile</span></a> {.
+  <dt><pre><span class="Keyword">proc</span> <a href="#parseFigmaFile%2Cstring"><span class="Identifier">parseFigmaFile</span></a><span class="Other">(</span><span class="Identifier">data</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <a href="#FigmaFile"><span class="Identifier">FigmaFile</span></a> {.
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">JsonError</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">,</span> <span class="Identifier">FidgetError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">PixieError</span><span class="Other">]</span><span class="Other">,</span>
     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
@@ -764,7 +767,7 @@
 </div>
 <div id="path-procs-all">
   <div id="path,INode">
-  <dt><pre><span class="Keyword">proc</span> <a href="#path%2CINode"><span class="Identifier">path</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#path%2CINode"><span class="Identifier">path</span></a><span class="Other">(</span><span class="Identifier">node</span><span class="Other">:</span> <a href="#INode"><span class="Identifier">INode</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Returns the full path of the node back to the root.
@@ -777,7 +780,7 @@
 </div>
 <div id="similar-procs-all">
   <div id="similar,Paint,Paint">
-  <dt><pre><span class="Keyword">proc</span> <a href="#similar%2CPaint%2CPaint"><span class="Identifier">similar</span></a><span class="Other">(</span><span class="Identifier">a</span><span class="Other">:</span> <a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">;</span> <span class="Identifier">b</span><span class="Other">:</span> <a href="schema.html#Paint"><span class="Identifier">Paint</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
+  <dt><pre><span class="Keyword">proc</span> <a href="#similar%2CPaint%2CPaint"><span class="Identifier">similar</span></a><span class="Other">(</span><span class="Identifier">a</span><span class="Other">:</span> <a href="#Paint"><span class="Identifier">Paint</span></a><span class="Other">;</span> <span class="Identifier">b</span><span class="Other">:</span> <a href="#Paint"><span class="Identifier">Paint</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">forbids</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
   <dd>
     
     Checks if two Paint objects are similar.
@@ -798,7 +801,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-12-16 23:05:16 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-23 22:11:33 UTC</small>
       </div>
     </div>
   </div>

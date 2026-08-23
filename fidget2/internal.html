@@ -5,7 +5,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>src/fidget2/internal</title>
+<title>fidget2/internal</title>
 
 <!-- Google fonts -->
 <link href='https://fonts.googleapis.com/css?family=Lato:400,600,900' rel='stylesheet' type='text/css'/>
@@ -16,15 +16,18 @@
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAB3RJTUUH4QQQEwksSS9ZWwAAAk1JREFUWMPtll2ITVEUx39nn/O7Y5qR8f05wtCUUr6ZIS++8pEnkZInPImneaCQ5METNdOkeFBKUhMPRIkHKfEuUZSUlGlKPN2TrgfncpvmnntnmlEyq1Z7t89/rf9a6+y99oZxGZf/XeIq61EdtgKXgdXA0xrYAvBjOIF1AI9zvjcC74BSpndrJPkBWDScTF8Aa4E3wDlgHbASaANmVqlcCnwHvgDvgVfAJ+AikAAvgfVZwLnSVZHZaOuKoQi3ZOMi4NkYkpe1p4J7A8BpYAD49hfIy/oqG0+hLomiKP2L5L+1ubn5115S+3OAn4EnwBlgMzCjyt6ZAnQCJ4A7wOs88iRJHvw50HoujuPBoCKwHWiosy8MdfZnAdcHk8dxXFJ3VQbQlCTJvRBCGdRbD4M6uc5glpY3eAihpN5S5w12diSEcCCEcKUO4ljdr15T76ur1FDDLIQQ3qv71EdDOe3Kxj3leRXyk+pxdWnFWod6Wt2bY3de3aSuUHcPBVimHs7mK9WrmeOF6lR1o9qnzskh2ar2qm1qizpfXaPeVGdlmGN5pb09qMxz1Xb1kLqgzn1RyH7JUXW52lr5e/Kqi9qpto7V1atuUzfnARrV7jEib1T76gG2qxdGmXyiekkt1GswPTtek0aBfJp6YySGBfWg2tPQ0FAYgf1stUfdmdcjarbYJEniKIq6gY/Aw+zWHAC+p2labGpqiorFYgGYCEzN7oQdQClN07O1/EfDyGgC0ALMBdYAi4FyK+4H3gLPsxfR1zRNi+NP7nH5J+QntnXe5B5mpfQAAAAASUVORK5CYII=">
 
 <!-- CSS -->
-<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.6">
+<link rel="stylesheet" type="text/css" href="../nimdoc.out.css?v=2.2.10">
 
 <!-- JS -->
-<script type="text/javascript" src="../dochack.js?v=2.2.6"></script>
+<script type="text/javascript" src="../dochack.js?v=2.2.10"></script>
 </head>
 <body>
   <div class="document" id="documentId">
+    <input type="checkbox" id="nav-toggle" hidden>
+    <label for="nav-toggle" id="nav-burger">&#9776;</label>
+    <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
-      <h1 class="title">src/fidget2/internal</h1>
+      <h1 class="title">fidget2/internal</h1>
       <div class="row">
   <div class="three columns">
     <div class="theme-select-wrapper">
@@ -180,7 +183,7 @@
   <h1><a class="toc-backref" href="#8">Vars</a></h1>
   <dl class="item">
     <div id="currentFigmaUrl">
-  <dt><pre><a href="internal.html#currentFigmaUrl"><span class="Identifier">currentFigmaUrl</span></a><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <dt><pre><a href="#currentFigmaUrl"><span class="Identifier">currentFigmaUrl</span></a><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
     
@@ -190,7 +193,7 @@
   </dd>
 </div>
 <div id="cursorBlinkDuration">
-  <dt><pre><a href="internal.html#cursorBlinkDuration"><span class="Identifier">cursorBlinkDuration</span></a> <span class="Other">=</span> <span class="FloatNumber">0.53</span></pre></dt>
+  <dt><pre><a href="#cursorBlinkDuration"><span class="Identifier">cursorBlinkDuration</span></a> <span class="Other">=</span> <span class="FloatNumber">0.53</span></pre></dt>
   <dd>
     
     
@@ -200,7 +203,7 @@
   </dd>
 </div>
 <div id="cursorBlinkTime">
-  <dt><pre><a href="internal.html#cursorBlinkTime"><span class="Identifier">cursorBlinkTime</span></a><span class="Other">:</span> <span class="Identifier">float64</span></pre></dt>
+  <dt><pre><a href="#cursorBlinkTime"><span class="Identifier">cursorBlinkTime</span></a><span class="Other">:</span> <span class="Identifier">float64</span></pre></dt>
   <dd>
     
     
@@ -210,7 +213,7 @@
   </dd>
 </div>
 <div id="cursorVisible">
-  <dt><pre><a href="internal.html#cursorVisible"><span class="Identifier">cursorVisible</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <dt><pre><a href="#cursorVisible"><span class="Identifier">cursorVisible</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
   <dd>
     
     
@@ -220,7 +223,7 @@
   </dd>
 </div>
 <div id="defaultTextBackgroundHighlightColor">
-  <dt><pre><a href="internal.html#defaultTextBackgroundHighlightColor"><span class="Identifier">defaultTextBackgroundHighlightColor</span></a> <span class="Other">=</span> <span class="Identifier">rgbx</span><span class="Other">(</span><span class="DecNumber">50</span><span class="Other">,</span> <span class="DecNumber">150</span><span class="Other">,</span> <span class="DecNumber">250</span><span class="Other">,</span> <span class="DecNumber">255</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#defaultTextBackgroundHighlightColor"><span class="Identifier">defaultTextBackgroundHighlightColor</span></a> <span class="Other">=</span> <span class="Identifier">rgbx</span><span class="Other">(</span><span class="DecNumber">50</span><span class="Other">,</span> <span class="DecNumber">150</span><span class="Other">,</span> <span class="DecNumber">250</span><span class="Other">,</span> <span class="DecNumber">255</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -230,7 +233,7 @@
   </dd>
 </div>
 <div id="defaultTextHighlightColor">
-  <dt><pre><a href="internal.html#defaultTextHighlightColor"><span class="Identifier">defaultTextHighlightColor</span></a> <span class="Other">=</span> <span class="Identifier">color</span><span class="Other">(</span><span class="DecNumber">1</span><span class="Other">,</span> <span class="DecNumber">1</span><span class="Other">,</span> <span class="DecNumber">1</span><span class="Other">,</span> <span class="DecNumber">1</span><span class="Other">)</span></pre></dt>
+  <dt><pre><a href="#defaultTextHighlightColor"><span class="Identifier">defaultTextHighlightColor</span></a> <span class="Other">=</span> <span class="Identifier">color</span><span class="Other">(</span><span class="DecNumber">1</span><span class="Other">,</span> <span class="DecNumber">1</span><span class="Other">,</span> <span class="DecNumber">1</span><span class="Other">,</span> <span class="DecNumber">1</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
@@ -240,7 +243,7 @@
   </dd>
 </div>
 <div id="entryFramePath">
-  <dt><pre><a href="internal.html#entryFramePath"><span class="Identifier">entryFramePath</span></a><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
+  <dt><pre><a href="#entryFramePath"><span class="Identifier">entryFramePath</span></a><span class="Other">:</span> <span class="Identifier">string</span></pre></dt>
   <dd>
     
     
@@ -250,7 +253,7 @@
   </dd>
 </div>
 <div id="fetchRequests">
-  <dt><pre><a href="internal.html#fetchRequests"><span class="Identifier">fetchRequests</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">HttpRequestHandle</span><span class="Other">]</span></pre></dt>
+  <dt><pre><a href="#fetchRequests"><span class="Identifier">fetchRequests</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">HttpRequestHandle</span><span class="Other">]</span></pre></dt>
   <dd>
     
     
@@ -260,7 +263,7 @@
   </dd>
 </div>
 <div id="fetchResponses">
-  <dt><pre><a href="internal.html#fetchResponses"><span class="Identifier">fetchResponses</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">HttpResponse</span><span class="Other">]</span></pre></dt>
+  <dt><pre><a href="#fetchResponses"><span class="Identifier">fetchResponses</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">HttpResponse</span><span class="Other">]</span></pre></dt>
   <dd>
     
     
@@ -270,7 +273,7 @@
   </dd>
 </div>
 <div id="hoverNode">
-  <dt><pre><a href="internal.html#hoverNode"><span class="Identifier">hoverNode</span></a><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a></pre></dt>
+  <dt><pre><a href="#hoverNode"><span class="Identifier">hoverNode</span></a><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a></pre></dt>
   <dd>
     
     
@@ -280,7 +283,7 @@
   </dd>
 </div>
 <div id="imageCache">
-  <dt><pre><a href="internal.html#imageCache"><span class="Identifier">imageCache</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">Image</span><span class="Other">]</span></pre></dt>
+  <dt><pre><a href="#imageCache"><span class="Identifier">imageCache</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">Image</span><span class="Other">]</span></pre></dt>
   <dd>
     
     
@@ -290,7 +293,7 @@
   </dd>
 </div>
 <div id="mat">
-  <dt><pre><a href="internal.html#mat"><span class="Identifier">mat</span></a><span class="Other">:</span> <span class="Identifier">Mat3</span></pre></dt>
+  <dt><pre><a href="#mat"><span class="Identifier">mat</span></a><span class="Other">:</span> <span class="Identifier">Mat3</span></pre></dt>
   <dd>
     
     
@@ -300,7 +303,7 @@
   </dd>
 </div>
 <div id="rtl">
-  <dt><pre><a href="internal.html#rtl"><span class="Identifier">rtl</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <dt><pre><a href="#rtl"><span class="Identifier">rtl</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
   <dd>
     
     
@@ -310,7 +313,7 @@
   </dd>
 </div>
 <div id="running">
-  <dt><pre><a href="internal.html#running"><span class="Identifier">running</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
+  <dt><pre><a href="#running"><span class="Identifier">running</span></a><span class="Other">:</span> <span class="Identifier">bool</span></pre></dt>
   <dd>
     
     
@@ -320,7 +323,7 @@
   </dd>
 </div>
 <div id="textBoxFocus">
-  <dt><pre><a href="internal.html#textBoxFocus"><span class="Identifier">textBoxFocus</span></a><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a></pre></dt>
+  <dt><pre><a href="#textBoxFocus"><span class="Identifier">textBoxFocus</span></a><span class="Other">:</span> <a href="schema.html#INode"><span class="Identifier">INode</span></a></pre></dt>
   <dd>
     
     
@@ -330,7 +333,7 @@
   </dd>
 </div>
 <div id="typefaceCache">
-  <dt><pre><a href="internal.html#typefaceCache"><span class="Identifier">typefaceCache</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">Typeface</span><span class="Other">]</span></pre></dt>
+  <dt><pre><a href="#typefaceCache"><span class="Identifier">typefaceCache</span></a><span class="Other">:</span> <span class="Identifier">Table</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">,</span> <span class="Identifier">Typeface</span><span class="Other">]</span></pre></dt>
   <dd>
     
     
@@ -596,7 +599,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2025-12-16 23:05:16 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-08-23 22:11:33 UTC</small>
       </div>
     </div>
   </div>

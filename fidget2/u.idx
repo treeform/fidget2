@@ -1,4 +1,4 @@
-nimTitle	u	fidget2/u.html	module src/fidget2/u		0
+nimTitle	u	fidget2/u.html	module fidget2/u		0
 nim	u	fidget2/u.html#u,string	proc u(s: var string): U		11
 nim	add	fidget2/u.html#add,U,Rune	proc add(u: U; r: Rune)		19
 nim	len	fidget2/u.html#len,U	proc len(u: U): int		26

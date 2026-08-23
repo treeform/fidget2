@@ -1,4 +1,4 @@
-nimTitle	loader	fidget2/loader.html	module src/fidget2/loader		0
+nimTitle	loader	fidget2/loader.html	module fidget2/loader		0
 nim	figmaFile	fidget2/loader.html#figmaFile	var figmaFile		9
 nim	figmaImagePath	fidget2/loader.html#figmaImagePath,string	proc figmaImagePath(imageRef: string): string		24
 nim	figmaFontPath	fidget2/loader.html#figmaFontPath,string	proc figmaFontPath(fontPostScriptName: string): string		28

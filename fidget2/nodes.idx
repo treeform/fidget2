@@ -1,4 +1,4 @@
-nimTitle	nodes	fidget2/nodes.html	module src/fidget2/nodes		0
+nimTitle	nodes	fidget2/nodes.html	module fidget2/nodes		0
 nim	Node	fidget2/nodes.html#Node	type Node		10
 nim	internal	fidget2/nodes.html#internal.t,Node	template internal(node: Node): INode		12
 nim	`$`	fidget2/nodes.html#$,Node	proc `$`(node: Node): string		15

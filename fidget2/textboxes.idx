@@ -1,4 +1,4 @@
-nimTitle	textboxes	fidget2/textboxes.html	module src/fidget2/textboxes		0
+nimTitle	textboxes	fidget2/textboxes.html	module fidget2/textboxes		0
 nim	getSelection	fidget2/textboxes.html#getSelection,Arrangement,int,int	proc getSelection(arrangement: Arrangement; start, stop: int): seq[Rect]		46
 nim	pickGlyphAt	fidget2/textboxes.html#pickGlyphAt,Arrangement,Vec2	proc pickGlyphAt(arrangement: Arrangement; pos: Vec2): int		62
 nim	layout	fidget2/textboxes.html#layout,INode	proc layout(node: INode): seq[Rect]		77
