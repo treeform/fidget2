@@ -12,18 +12,30 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: treeform/setup-nim-action@v5
+      - uses: actions/checkout@v5
+      - uses: treeform/setup-nim-action@v6
       - uses: mymindstorm/setup-emsdk@v14
 
       - name: Install system dependencies
-        if: runner.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
 
+      # Nimby installs packages as siblings of the workspace root, so the
+      # workspace has to be the parent of this checkout: fidget2 then sits
+      # inside it next to its dependencies and nim finds nim.cfg by walking up.
+      - name: Create a Nimby workspace
+        shell: bash
+        run: |
+          cd ..
+          nimby create
+
       - name: Install Nim packages
-        run: nimby install fidget2.nimble
+        shell: bash
+        run: |
+          cd ..
+          nimby install fidget2/fidget2.nimble
 
       - name: List Installed Nim packages
         run: nimby tree fidget2
@@ -35,7 +47,8 @@ jobs:
         run: nim c -r --d:cpu -d:release tests/run_frames.nim
 
       - name: Install examples dependencies
-        run: nimby install chrono
+        shell: bash
+        run: cd .. && nimby install chrono
 
       - name: Compile Examples
         run: nim c -r tests/compile_examples.nim

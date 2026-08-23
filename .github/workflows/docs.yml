@@ -11,11 +11,23 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: treeform/setup-nim-action@v5
+      - uses: actions/checkout@v5
+      - uses: treeform/setup-nim-action@v6
+
+      # Nimby installs packages as siblings of the workspace root, so the
+      # workspace has to be the parent of this checkout: fidget2 then sits
+      # inside it next to its dependencies and nim finds nim.cfg by walking up.
+      - name: Create a Nimby workspace
+        shell: bash
+        run: |
+          cd ..
+          nimby create
 
       - name: Install Nim packages
-        run: nimby install fidget2.nimble
+        shell: bash
+        run: |
+          cd ..
+          nimby install fidget2/fidget2.nimble
 
       - name: Generate documentation
         run: nim doc --index:on --project --git.url:https://github.com/${{ github.repository }} --git.commit:master  --out:${{ env.deploy-dir }} ${{ env.nim-src }}
