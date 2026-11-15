@@ -6,11 +6,12 @@ import os, pixie, strformat, strutils, times, windy,
 
 import fidget2/hybridrender, boxy
 
-use("https://www.figma.com/file/TQOSRucXGFQpuOpyTkDYj1/")
+loader.figmaFile = loadFigmaUrl(
+  "https://www.figma.com/file/TQOSRucXGFQpuOpyTkDYj1/"
+)
 assert figmaFile.document != nil, "Empty document?"
 
 setupWindow(
-  figmaFile.document.children[0].children[0],
   size = ivec2(800, 600),
   visible = false,
   style = Decorated

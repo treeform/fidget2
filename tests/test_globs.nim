@@ -1,16 +1,21 @@
 import sequtils, strutils, algorithm
 include fidget2/globs
 
+proc newNode(name: string): Node =
+  ## Creates a node for the glob test tree.
+  Node(INode(name: name))
+
 proc mk(path: string): Node =
+  ## Creates a rooted tree from a slash-separated path.
   for p in path.split("/").reversed():
-    var n = Node(name: p)
+    var n = newNode(p)
     if result != nil:
-      n.children.add(result)
+      n.addChild(result)
     result = n
 
-  var n = Node(name: "")
+  var n = newNode("")
   if result != nil:
-      n.children.add(result)
+    n.addChild(result)
   result = n
 
 doAssert globMatchOne("foo", "foo") == true
@@ -41,13 +46,13 @@ doAssert globMatchOne("foo", "f[ophjkl]o") == true
 doAssert globMatchOne("foo", "f[phjklo]o") == true
 doAssert globMatchOne("foo", "f[phjkl]o") == false
 
-doAssertRaises GlobbyError:
+doAssertRaises FidgetError:
   discard globMatchOne("foo", "f[phjklo")
 
-doAssertRaises GlobbyError:
+doAssertRaises FidgetError:
   discard globMatchOne("foo", "f[]")
 
-doAssertRaises GlobbyError:
+doAssertRaises FidgetError:
   discard globMatchOne("foo", "f[[]")
 
 doAssert globMatchOne("foo", "f[a-z]o") == true
@@ -56,26 +61,31 @@ doAssert globMatchOne("fooA", "foo[0-9]") == false
 doAssert globMatchOne("fooA", "foo[A-Z]") == true
 doAssert globMatchOne("fooa", "foo[A-Z]") == false
 
-doAssertRaises GlobbyError:
+doAssertRaises FidgetError:
   discard globMatchOne("foo", "f[a-")
 
-doAssertRaises GlobbyError:
+doAssertRaises FidgetError:
   discard globMatchOne("foo", "f[a-z")
 
 doAssert mk("foo/bar").walk().len == 2
 
 doAssert mk("foo/bar").find("/foo").name == "foo"
 doAssert mk("foo/bar").find("/foo/bar").name == "bar"
-doAssert mk("foo/bar").find("/foo/baz") == nil
+doAssertRaises FidgetError:
+  discard mk("foo/bar").find("/foo/baz")
 
 doAssert mk("foo/bar/baz").find("foo/bar/*") != nil
 doAssert mk("foo/bar/baz").find("foo/*/baz") != nil
 doAssert mk("foo/bar/baz").find("*/bar/baz") != nil
-doAssert mk("foo/baz/baz").find("foo/bar/*") == nil
-doAssert mk("foo/baz/baz").find("foz/*/bar") == nil
-doAssert mk("foo/baz/baz").find("*/bar/baz") == nil
+doAssertRaises FidgetError:
+  discard mk("foo/baz/baz").find("foo/bar/*")
+doAssertRaises FidgetError:
+  discard mk("foo/baz/baz").find("foz/*/bar")
+doAssertRaises FidgetError:
+  discard mk("foo/baz/baz").find("*/bar/baz")
 
-doAssert mk("foo/bar").find("foo/bar.text") == nil
+doAssertRaises FidgetError:
+  discard mk("foo/bar").find("foo/bar.text")
 
 doAssert mk("foo/bar").find("foo/bar/../bar") != nil
 doAssert mk("foo/bar").find("foo/zzz/../bar") != nil
@@ -99,9 +109,11 @@ doAssert mk("foo/bar/baz/1").find("**/baz/1") != nil
 doAssert mk("foo/bar/baz/1").find("**/bar/baz/1") != nil
 doAssert mk("foo/bar/baz/1").find("foo/**/baz/1") != nil
 doAssert mk("foo/bar/baz/1").find("foo/**/1") != nil
-doAssert mk("foo/bar/baz/2").find("foo/**/baz/1") == nil
+doAssertRaises FidgetError:
+  discard mk("foo/bar/baz/2").find("foo/**/baz/1")
 
-doAssert mk("foo/bar/baz").find("foo/bar/baz/**") == nil
+doAssertRaises FidgetError:
+  discard mk("foo/bar/baz").find("foo/bar/baz/**")
 doAssert mk("foo/bar/baz").find("foo/bar/baz**") != nil
 doAssert mk("foo/bar/baz/1").find("foo/bar/baz/**") != nil
 doAssert mk("foo/bar/baz/1").find("foo/bar/**") != nil
@@ -114,17 +126,17 @@ doAssert mk("foo/bar/baz/at1").find("foo/*/???/at*") != nil
 doAssert mk("foo/bar/baz/at1").find("**/bar*/???/at*") != nil
 
 block:
-  var tree = Node(name: "") # Root node needs to have no name
-  var foo = Node(name: "foo")
-  var bar = Node(name: "bar")
-  var baz = Node(name: "baz")
-  tree.children.add(foo)
-  foo.children.add(bar)
-  bar.children.add(baz)
-  baz.children.add Node(name: "1")
-  baz.children.add Node(name: "2")
-  baz.children.add Node(name: "z")
-  baz.children.add Node(name: "z")
+  var tree = newNode("") # Root node needs to have no name
+  var foo = newNode("foo")
+  var bar = newNode("bar")
+  var baz = newNode("baz")
+  tree.addChild(foo)
+  foo.addChild(bar)
+  bar.addChild(baz)
+  baz.addChild(newNode("1"))
+  baz.addChild(newNode("2"))
+  baz.addChild(newNode("z"))
+  baz.addChild(newNode("z"))
 
   doAssert tree.treeLen == 8
   doAssert baz.treeLen == 5
